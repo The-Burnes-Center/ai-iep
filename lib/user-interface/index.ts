@@ -31,19 +31,20 @@ export class UserInterface extends Construct {
 
     const uploadLogsBucket = new s3.Bucket(this, "WebsiteLogsBucket", {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      autoDeleteObjects: false,
       enforceSSL: true,
+      versioned: true,
     });
 
     const websiteBucket = new s3.Bucket(this, "WebsiteBucket", {
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      autoDeleteObjects: true,
-      // bucketName: props.config.privateWebsite ? props.config.domain : undefined,
+      autoDeleteObjects: false,
       websiteIndexDocument: "index.html",
       websiteErrorDocument: "index.html",
       enforceSSL: true,
+      versioned: true,
       serverAccessLogsBucket: uploadLogsBucket,
     });
 
@@ -63,10 +64,10 @@ export class UserInterface extends Construct {
         userPoolId: props.userPoolId,
         userPoolWebClientId: props.userPoolClientId,
         oauth: {
-          domain: props.cognitoDomain.concat(".auth.us-east-1.amazoncognito.com"),
+          domain: props.cognitoDomain.concat(`.auth.${cdk.Aws.REGION}.amazoncognito.com`),
           scope: ["aws.cognito.signin.user.admin","email", "openid", "profile"],
           redirectSignIn: "https://" + distribution.distributionDomainName,
-          // redirectSignOut: "https://myapplications.microsoft.com/",
+          redirectSignOut: "https://" + distribution.distributionDomainName,
           responseType: "code"
         }
       },
@@ -99,11 +100,22 @@ export class UserInterface extends Construct {
                 },
               };
 
+              console.log('Installing dependencies...');
               execSync(`npm --silent --prefix "${appPath}" ci`, options);
+              
+              console.log('Building application...');
               execSync(`npm --silent --prefix "${appPath}" run build`, options);
-              Utils.copyDirRecursive(buildPath, outputDir);
+              
+              console.log('Copying build files...');
+              try {
+                Utils.copyDirRecursive(buildPath, outputDir);
+                console.log('Build process completed successfully');
+              } catch (e) {
+                console.error('Failed to copy build files:', e);
+                return false;
+              }
             } catch (e) {
-              console.error(e);
+              console.error('Build process failed:', e);
               return false;
             }
 

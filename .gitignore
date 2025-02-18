@@ -8,3 +8,75 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# TypeScript
+*.tsbuildinfo
+.tscache/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Environment variables and secrets
+.env
+.env.*
+*.pem
+*.key
+.secrets
+credentials.json
+aws-exports.js
+awsconfiguration.json
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.so
+.pytest_cache/
+.python-version
+venv/
+.env/
+
+# AWS SAM
+.aws-sam/
+samconfig.toml
+
+# Amplify
+amplify/\#current-cloud-backend
+amplify/.config/local-*
+amplify/mock-data
+amplify/backend/amplify-meta.json
+amplify/backend/awscloudformation
+amplifyconfiguration.json
+amplify-build-config.json
+amplify-gradle-config.json
+amplifyxc.config
+
+# Dependencies
+package-lock.json
+yarn.lock

@@ -66,7 +66,15 @@ export class Website extends Construct {
         },
         originConfigs: [
           {
-            behaviors: [{ isDefaultBehavior: true }],
+            behaviors: [{ 
+              isDefaultBehavior: true,
+              defaultTtl: cdk.Duration.hours(1),
+              maxTtl: cdk.Duration.days(1),
+              minTtl: cdk.Duration.minutes(5),
+              compress: true,
+              allowedMethods: cf.CloudFrontAllowedMethods.GET_HEAD_OPTIONS,
+              cachedMethods: cf.CloudFrontAllowedCachedMethods.GET_HEAD,
+            }],
             s3OriginSource: {
               s3BucketSource: props.websiteBucket,
               originAccessIdentity,
@@ -79,6 +87,10 @@ export class Website extends Construct {
                 allowedMethods: cf.CloudFrontAllowedMethods.ALL,
                 viewerProtocolPolicy: cf.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 defaultTtl: cdk.Duration.seconds(0),
+                maxTtl: cdk.Duration.minutes(5),
+                minTtl: cdk.Duration.seconds(0),
+                compress: true,
+                cachedMethods: cf.CloudFrontAllowedCachedMethods.GET_HEAD,
                 forwardedValues: {
                   queryString: true,
                   headers: [

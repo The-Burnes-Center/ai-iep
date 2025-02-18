@@ -1,4 +1,3 @@
-
 import * as cdk from "aws-cdk-lib";
 
 import { AuthorizationStack } from '../authorization'
@@ -65,24 +64,20 @@ export class ChatBotApi extends Construct {
     const wsAuthorizer = new WebSocketLambdaAuthorizer('WebSocketAuthorizer', props.authentication.lambdaAuthorizer, {identitySource: ['route.request.querystring.Authorization']});
 
     websocketBackend.wsAPI.addRoute('getChatbotResponse', {
-      integration: new WebSocketLambdaIntegration('chatbotResponseIntegration', lambdaFunctions.chatFunction),
-      // authorizer: wsAuthorizer
+      integration: new WebSocketLambdaIntegration('chatbotResponseIntegration', lambdaFunctions.chatFunction)
     });
     websocketBackend.wsAPI.addRoute('$connect', {
       integration: new WebSocketLambdaIntegration('chatbotConnectionIntegration', lambdaFunctions.chatFunction),
       authorizer: wsAuthorizer
     });
     websocketBackend.wsAPI.addRoute('$default', {
-      integration: new WebSocketLambdaIntegration('chatbotConnectionIntegration', lambdaFunctions.chatFunction),
-      // authorizer: wsAuthorizer
+      integration: new WebSocketLambdaIntegration('chatbotConnectionIntegration', lambdaFunctions.chatFunction)
     });
     websocketBackend.wsAPI.addRoute('$disconnect', {
-      integration: new WebSocketLambdaIntegration('chatbotDisconnectionIntegration', lambdaFunctions.chatFunction),
-      // authorizer: wsAuthorizer
+      integration: new WebSocketLambdaIntegration('chatbotDisconnectionIntegration', lambdaFunctions.chatFunction)
     }); 
     websocketBackend.wsAPI.addRoute('generateConflictReport', {
-      integration: new WebSocketLambdaIntegration('chatbotDisconnectionIntegration', lambdaFunctions.chatFunction),
-      // authorizer: wsAuthorizer
+      integration: new WebSocketLambdaIntegration('chatbotDisconnectionIntegration', lambdaFunctions.chatFunction)
     });    
 
     websocketBackend.wsAPI.grantManageConnections(lambdaFunctions.chatFunction);
