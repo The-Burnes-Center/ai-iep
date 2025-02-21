@@ -25,6 +25,8 @@ interface LambdaFunctionStackProps {
   readonly activeSystemPromptsTable : Table;
   readonly evalSummariesTable : Table;
   readonly evalResutlsTable : Table;
+  readonly userProfilesTable : Table;
+  readonly iepDocumentsTable : Table;
 }
 
 export class LambdaFunctionStack extends cdk.Stack {  
@@ -41,6 +43,7 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly handleEvalResultsFunction : lambda.Function;
   public readonly stepFunctionsStack : StepFunctionsStack;
   public readonly systemPromptsFunction : lambda.Function;
+  public readonly userProfileFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
@@ -128,7 +131,7 @@ export class LambdaFunctionStack extends cdk.Stack {
             Conflict <conflict_example> Document A: "Massachusetts state parks are open year-round and 
             free for all residents." Document B: "Massachusetts state parks are closed during the winter 
             season." Conflict Reason: The statements directly conflict on whether parks remain open 
-            year-round, which is relevant to the user’s query. inclusion: This conflict would be included 
+            year-round, which is relevant to the user's query. inclusion: This conflict would be included 
             as a conflict for the given user query. It is a clear factual conflict, and it is relevant to 
             the example user query. </conflict_example> Example of a Non-Conflict <non_conflict_example> 
             Document A: "Massachusetts state parks offer seasonal programs." Document B: "Some parks may 
@@ -139,7 +142,7 @@ export class LambdaFunctionStack extends cdk.Stack {
             on trails" Document D: "State parks in western Massachusetts allow pets on trails as long as 
             they are leashed." Reason: While these statements conflict on whether pets are allowed at 
             parks, niether statement is about year-round park access or costs to access parks, which is 
-            the focus of the user’s query. inclusion: This would not be included as a conflict for the 
+            the focus of the user's query. inclusion: This would not be included as a conflict for the 
             given user query. Although it is a factual conflict, it is not relevant to the given user 
             query. </irrelevant_conflict_example>`
           },
@@ -393,5 +396,36 @@ export class LambdaFunctionStack extends cdk.Stack {
             systemPromptsHandlerName: systemPromptsAPIHandlerFunction.functionName
           });
     
+    const userProfileHandlerFunction = new lambda.Function(scope, 'UserProfileHandlerFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'user-profile-handler')),
+      handler: 'lambda_function.lambda_handler',
+      environment: {
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName
+      },
+      timeout: cdk.Duration.seconds(30)
+    });
+
+    // Add permissions for DynamoDB tables
+    userProfileHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:PutItem',
+        'dynamodb:UpdateItem',
+        'dynamodb:DeleteItem',
+        'dynamodb:Query',
+        'dynamodb:Scan'
+      ],
+      resources: [
+        props.userProfilesTable.tableArn,
+        props.userProfilesTable.tableArn + "/index/*",
+        props.iepDocumentsTable.tableArn,
+        props.iepDocumentsTable.tableArn + "/index/*"
+      ]
+    }));
+
+    this.userProfileFunction = userProfileHandlerFunction;
   }
 }

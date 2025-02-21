@@ -59,6 +59,8 @@ export class ChatBotApi extends Construct {
         evalTestCasesBucket : buckets.evalTestCasesBucket,
         stagedSystemPromptsTable : tables.stagedSystemPromptsTable,
         activeSystemPromptsTable : tables.activeSystemPromptsTable,
+        userProfilesTable: tables.userProfilesTable,
+        iepDocumentsTable: tables.iepDocumentsTable
       })
 
     const wsAuthorizer = new WebSocketLambdaAuthorizer('WebSocketAuthorizer', props.authentication.lambdaAuthorizer, {identitySource: ['route.request.querystring.Authorization']});
@@ -212,6 +214,47 @@ export class ChatBotApi extends Construct {
       path: "/system-prompts-handler",
       methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
       integration: systemPromptsAPIIntegration,
+      authorizer: httpAuthorizer,
+    });
+
+    const userProfileAPIIntegration = new HttpLambdaIntegration(
+      'UserProfileAPIIntegration', 
+      lambdaFunctions.userProfileFunction
+    );
+
+    // Add routes for user profile management
+    restBackend.restAPI.addRoutes({
+      path: "/profile",
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT, apigwv2.HttpMethod.OPTIONS],
+      integration: userProfileAPIIntegration,
+      authorizer: httpAuthorizer,
+    });
+
+    restBackend.restAPI.addRoutes({
+      path: "/profile/kids",
+      methods: [apigwv2.HttpMethod.POST, apigwv2.HttpMethod.OPTIONS],
+      integration: userProfileAPIIntegration,
+      authorizer: httpAuthorizer,
+    });
+
+    restBackend.restAPI.addRoutes({
+      path: "/profile/kids/{kidId}/documents",
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.OPTIONS],
+      integration: userProfileAPIIntegration,
+      authorizer: httpAuthorizer,
+    });
+
+    restBackend.restAPI.addRoutes({
+      path: "/documents/{iepId}/status",
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.OPTIONS],
+      integration: userProfileAPIIntegration,
+      authorizer: httpAuthorizer,
+    });
+
+    restBackend.restAPI.addRoutes({
+      path: "/summary",
+      methods: [apigwv2.HttpMethod.POST, apigwv2.HttpMethod.OPTIONS],
+      integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 

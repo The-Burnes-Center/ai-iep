@@ -1,6 +1,8 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Attribute, AttributeType, Table, ProjectionType } from 'aws-cdk-lib/aws-dynamodb';
+import * as cdk from 'aws-cdk-lib';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 
 export class TableStack extends Stack {
   public readonly historyTable : Table;
@@ -9,6 +11,8 @@ export class TableStack extends Stack {
   public readonly evalSummaryTable : Table;
   public readonly activeSystemPromptsTable : Table;
   public readonly stagedSystemPromptsTable : Table;
+  public readonly userProfilesTable: dynamodb.Table;
+  public readonly iepDocumentsTable: dynamodb.Table;
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
@@ -80,5 +84,42 @@ export class TableStack extends Stack {
     });
     this.stagedSystemPromptsTable = stagedSystemPromptsTable;
 
+    // Create User Profiles Table
+    this.userProfilesTable = new dynamodb.Table(scope, 'UserProfilesTable', {
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      timeToLiveAttribute: 'ttl',
+    });
+
+    // Create IEP Documents Table
+    this.iepDocumentsTable = new dynamodb.Table(scope, 'IepDocumentsTable', {
+      partitionKey: { name: 'iepId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'kidId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      timeToLiveAttribute: 'ttl',
+    });
+
+    // Add GSI for querying documents by userId
+    this.iepDocumentsTable.addGlobalSecondaryIndex({
+      indexName: 'byUserId',
+      partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.NUMBER },
+    });
+
+    // Add GSI for querying documents by kidId
+    this.iepDocumentsTable.addGlobalSecondaryIndex({
+      indexName: 'byKidId',
+      partitionKey: { name: 'kidId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.NUMBER },
+    });
+
+    // Add GSI for querying documents by status
+    this.iepDocumentsTable.addGlobalSecondaryIndex({
+      indexName: 'byStatus',
+      partitionKey: { name: 'status', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.NUMBER },
+    });
   }
 }
