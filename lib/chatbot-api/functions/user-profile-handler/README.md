@@ -2,6 +2,25 @@
 
 This system manages user profiles, their children's information, and associated IEP documents in the AI-IEP platform.
 
+## Profile Creation
+
+User profiles are automatically created in two ways:
+
+1. **Primary Method - Cognito Post Confirmation Trigger**:
+   - A profile is automatically created when a user confirms their account
+   - The trigger creates a basic profile with:
+     - User ID (from Cognito)
+     - Email (from Cognito attributes)
+     - Creation timestamp
+     - Empty kids array
+
+2. **Fallback Method - API Endpoint**:
+   - If a profile doesn't exist when accessing `/profile` endpoint
+   - Handles cases where:
+     - The Cognito trigger failed
+     - Legacy users from before trigger implementation
+     - Profile was accidentally deleted
+
 ## Database Schema
 
 ### UserProfilesTable
@@ -20,6 +39,7 @@ This system manages user profiles, their children's information, and associated 
       schoolCity: string  // City where child attends school
     }
   ],
+  createdAt: number,      // Creation timestamp
   updatedAt: number,      // Last update timestamp
   ttl?: number           // Optional TTL for record expiration
 }
@@ -32,15 +52,52 @@ This system manages user profiles, their children's information, and associated 
   kidId: string,          // Sort key
   userId: string,         // Owner's user ID
   documentUrl: string,    // S3 URL to the document
-  status: string,         // Document processing status: PROCESSING | PROCESSED | FAILED
   summaries: {            // Document summaries in different languages
     [languageCode: string]: string
   },
+  status: string,         // Document processing status (PROCESSING, PROCESSED, FAILED)
   createdAt: number,      // Creation timestamp
   updatedAt: number,      // Last update timestamp
   ttl?: number           // Optional TTL for record expiration
 }
 ```
+
+## File Upload Process
+
+### 1. Get Upload URL
+```http
+POST /signed-url-knowledge
+Authorization: Bearer <jwt-token>
+Content-Type: application/json
+
+{
+  "fileName": "string",
+  "fileType": "string",
+  "operation": "upload",
+  "kidId": "string"
+}
+```
+
+**Response (200)**
+```json
+{
+  "signedUrl": "string",    // Pre-signed S3 URL for upload
+  "iepId": "string",        // Unique document ID
+  "documentUrl": "string"   // S3 URL where document will be stored
+}
+```
+
+### 2. File Storage Structure
+Files are stored in S3 with the following path structure:
+```
+s3://<bucket>/<userId>/<kidId>/<iepId>/<fileName>
+```
+
+### 3. Document Processing
+After upload:
+1. Document record is created in IepDocumentsTable
+2. Automatic processing begins for generating summaries
+3. Status is tracked and can be monitored via API
 
 ## API Endpoints
 
@@ -49,7 +106,7 @@ This system manages user profiles, their children's information, and associated 
 GET /profile
 Authorization: Bearer <jwt-token>
 ```
-Returns the user's profile information.
+Returns the user's profile information. Creates a default profile if none exists.
 
 **Response (200)**
 ```json
@@ -67,7 +124,9 @@ Returns the user's profile information.
         "name": "string",
         "schoolCity": "string"
       }
-    ]
+    ],
+    "createdAt": number,
+    "updatedAt": number
   }
 }
 ```
@@ -117,7 +176,9 @@ Content-Type: application/json
 ```json
 {
   "message": "Kid added successfully",
-  "kidId": "string"
+  "kidId": "string",
+  "createdAt": number,
+  "updatedAt": number
 }
 ```
 
@@ -135,7 +196,7 @@ Authorization: Bearer <jwt-token>
       "iepId": "string",
       "kidId": "string",
       "documentUrl": "string",
-      "status": "PROCESSING|PROCESSED|FAILED",
+      "status": "string",
       "summaries": {
         "en": "string",
         "es": "string",
@@ -158,7 +219,7 @@ Authorization: Bearer <jwt-token>
 **Response (200)**
 ```json
 {
-  "status": "PROCESSING|PROCESSED|FAILED",
+  "status": "string",
   "documentUrl": "string",
   "createdAt": number,
   "updatedAt": number
@@ -182,24 +243,9 @@ Content-Type: application/json
 {
   "summary": "string",
   "documentUrl": "string",
-  "status": "PROCESSED"
+  "status": "string"
 }
 ```
-
-**Response (400) - If document is not processed**
-```json
-{
-  "message": "Document is not yet processed",
-  "status": "PROCESSING"
-}
-```
-
-## Document Processing Status
-
-Documents can have one of three statuses:
-- `PROCESSING`: Initial state when document is uploaded, being processed
-- `PROCESSED`: Document has been successfully processed, summaries are available
-- `FAILED`: Document processing failed
 
 ## Language Support
 
@@ -213,7 +259,7 @@ The system supports the following languages:
 
 All endpoints return appropriate HTTP status codes:
 - 200: Success
-- 400: Bad Request (invalid input or document not processed)
+- 400: Bad Request (invalid input)
 - 401: Unauthorized (invalid/missing token)
 - 403: Forbidden (accessing unauthorized resource)
 - 404: Not Found
@@ -231,15 +277,23 @@ Error responses include a message:
 1. **Authentication**
    - All endpoints require JWT token from Cognito
    - Token must be included in Authorization header
+   - Profile creation tied to Cognito user confirmation
 
 2. **Authorization**
    - Users can only access their own profile
    - Users can only access documents belonging to their children
+   - Document uploads are automatically linked to the correct user and child
 
 3. **CORS**
    - Cross-Origin Resource Sharing enabled
    - Supports OPTIONS preflight requests
    - Configurable allowed origins
+
+4. **File Upload Security**
+   - Pre-signed URLs with 5-minute expiration
+   - Automatic file path isolation by user and child
+   - Content type verification
+   - Secure S3 bucket configuration
 
 ## Database Indexes
 
@@ -254,25 +308,27 @@ Error responses include a message:
    - Sort Key: createdAt
    - Use: Retrieve all documents for a specific child
 
-3. **byStatus** (GSI)
-   - Partition Key: status
-   - Sort Key: createdAt
-   - Use: Query documents by processing status
-
 ## Infrastructure
 
 The system is deployed using AWS CDK and includes:
 1. DynamoDB tables with auto-scaling
-2. Lambda function with Python 3.12 runtime
-3. API Gateway v2 HTTP API endpoints
-4. Cognito integration for authentication
-5. IAM roles and permissions
-6. CORS configuration
+2. S3 bucket for document storage
+3. Lambda functions:
+   - Main API handler for profile operations
+   - Cognito Post Confirmation trigger for automatic profile creation
+   - Upload handler for generating pre-signed URLs
+   - Document processing handler
+4. API Gateway v2 HTTP API endpoints
+5. Cognito integration for authentication
+6. IAM roles and permissions
+7. CORS configuration
 
 ## Dependencies
 - AWS SDK for Python (boto3)
+- AWS SDK for JavaScript (v3)
 - AWS CDK
 - API Gateway v2
 - Cognito User Pools
 - DynamoDB
-- Lambda 
+- Lambda
+- S3 

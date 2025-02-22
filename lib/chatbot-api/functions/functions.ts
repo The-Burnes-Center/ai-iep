@@ -10,6 +10,7 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as bedrock from "aws-cdk-lib/aws-bedrock";
 import { StepFunctionsStack } from './step-functions/step-functions';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
 
 
 interface LambdaFunctionStackProps {  
@@ -27,6 +28,7 @@ interface LambdaFunctionStackProps {
   readonly evalResutlsTable : Table;
   readonly userProfilesTable : Table;
   readonly iepDocumentsTable : Table;
+  readonly userPool: cognito.UserPool;
 }
 
 export class LambdaFunctionStack extends cdk.Stack {  
@@ -44,6 +46,7 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly stepFunctionsStack : StepFunctionsStack;
   public readonly systemPromptsFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
+  public readonly cognitoTriggerFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
@@ -288,11 +291,12 @@ export class LambdaFunctionStack extends cdk.Stack {
     this.syncKBFunction = kbSyncAPIHandlerFunction;
 
     const uploadS3KnowledgeAPIHandlerFunction = new lambda.Function(scope, 'UploadS3KnowledgeFilesHandlerFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X, // Choose any supported Node.js runtime
-      code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/upload-s3')), // Points to the lambda directory
-      handler: 'index.handler', // Points to the 'hello' file in the lambda directory
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/upload-s3')),
+      handler: 'index.handler',
       environment: {
-        "BUCKET" : props.knowledgeBucket.bucketName,        
+        "BUCKET": props.knowledgeBucket.bucketName,
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName
       },
       timeout: cdk.Duration.seconds(30)
     });
@@ -302,7 +306,16 @@ export class LambdaFunctionStack extends cdk.Stack {
       actions: [
         's3:*'
       ],
-      resources: [props.knowledgeBucket.bucketArn,props.knowledgeBucket.bucketArn+"/*"]
+      resources: [props.knowledgeBucket.bucketArn, props.knowledgeBucket.bucketArn + "/*"]
+    }));
+
+    // Add DynamoDB permissions for IEP documents table
+    uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:PutItem'
+      ],
+      resources: [props.iepDocumentsTable.tableArn]
     }));
     this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
 
@@ -427,5 +440,40 @@ export class LambdaFunctionStack extends cdk.Stack {
     }));
 
     this.userProfileFunction = userProfileHandlerFunction;
+
+    // Add Cognito Post Confirmation Trigger Lambda
+    const cognitoTriggerFunction = new lambda.Function(scope, 'CognitoTriggerFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'user-profile-handler')),
+      handler: 'cognito_trigger.lambda_handler',
+      environment: {
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName
+      },
+      timeout: cdk.Duration.seconds(30)
+    });
+
+    // Grant DynamoDB permissions to Cognito trigger
+    cognitoTriggerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:PutItem'
+      ],
+      resources: [props.userProfilesTable.tableArn]
+    }));
+
+    // Allow Cognito to invoke the Lambda
+    cognitoTriggerFunction.addPermission('CognitoInvocation', {
+      principal: new iam.ServicePrincipal('cognito-idp.amazonaws.com'),
+      action: 'lambda:InvokeFunction',
+      sourceArn: props.userPool.userPoolArn
+    });
+
+    // Add the Lambda trigger to Cognito User Pool
+    props.userPool.addTrigger(
+      cdk.aws_cognito.UserPoolOperation.POST_CONFIRMATION,
+      cognitoTriggerFunction
+    );
+
+    this.cognitoTriggerFunction = cognitoTriggerFunction;
   }
 }

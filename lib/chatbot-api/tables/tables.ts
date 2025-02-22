@@ -114,12 +114,5 @@ export class TableStack extends Stack {
       partitionKey: { name: 'kidId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.NUMBER },
     });
-
-    // Add GSI for querying documents by status
-    this.iepDocumentsTable.addGlobalSecondaryIndex({
-      indexName: 'byStatus',
-      partitionKey: { name: 'status', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.NUMBER },
-    });
   }
 }

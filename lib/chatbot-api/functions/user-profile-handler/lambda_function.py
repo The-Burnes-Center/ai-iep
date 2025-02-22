@@ -69,7 +69,7 @@ def validate_language(lang: str) -> bool:
 
 def get_user_profile(event: Dict) -> Dict:
     """
-    Get user profile information.
+    Get user profile information. If profile doesn't exist, creates a default one.
     
     Args:
         event (Dict): API Gateway event object containing user context
@@ -83,13 +83,24 @@ def get_user_profile(event: Dict) -> Dict:
     try:
         # Get userId from the requestContext (set by Cognito authorizer)
         user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
+        email = event['requestContext']['authorizer']['jwt']['claims'].get('email', '')
         
         response = user_profiles_table.get_item(
             Key={'userId': user_id}
         )
         
         if 'Item' not in response:
-            return create_response(404, {'message': 'User profile not found'})
+            # Create a new profile if it doesn't exist (fallback in case Cognito trigger failed)
+            current_time = int(datetime.now().timestamp())
+            new_profile = {
+                'userId': user_id,
+                'email': email,
+                'createdAt': current_time,
+                'updatedAt': current_time,
+                'kids': []  # Initialize empty kids array
+            }
+            user_profiles_table.put_item(Item=new_profile)
+            return create_response(200, {'profile': new_profile})
             
         return create_response(200, {'profile': response['Item']})
         
@@ -112,11 +123,12 @@ def update_user_profile(event: Dict) -> Dict:
     try:
         user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
         body = json.loads(event['body'])
+        current_time = int(datetime.now().timestamp())
         
         # Start building update expression and values
         update_parts = []
         expr_values = {
-            ':updatedAt': int(datetime.now().timestamp())
+            ':updatedAt': current_time
         }
         update_parts.append('updatedAt = :updatedAt')
         
@@ -187,6 +199,7 @@ def add_kid(event: Dict) -> Dict:
     try:
         user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
         body = json.loads(event['body'])
+        current_time = int(datetime.now().timestamp())
         
         # Validate required fields
         if 'name' not in body or 'schoolCity' not in body:
@@ -197,21 +210,29 @@ def add_kid(event: Dict) -> Dict:
         new_kid = {
             'kidId': kid_id,
             'name': body['name'],
-            'schoolCity': body['schoolCity']
+            'schoolCity': body['schoolCity'],
+            'createdAt': current_time,
+            'updatedAt': current_time
         }
         
-        # Add kid to user's profile
+        # Add kid to user's profile and update timestamps
         user_profiles_table.update_item(
             Key={'userId': user_id},
-            UpdateExpression='SET #kids = list_append(if_not_exists(#kids, :empty_list), :new_kid)',
+            UpdateExpression='SET #kids = list_append(if_not_exists(#kids, :empty_list), :new_kid), updatedAt = :updatedAt',
             ExpressionAttributeNames={'#kids': 'kids'},
             ExpressionAttributeValues={
                 ':empty_list': [],
-                ':new_kid': [new_kid]
+                ':new_kid': [new_kid],
+                ':updatedAt': current_time
             }
         )
         
-        return create_response(200, {'message': 'Kid added successfully', 'kidId': kid_id})
+        return create_response(200, {
+            'message': 'Kid added successfully',
+            'kidId': kid_id,
+            'createdAt': current_time,
+            'updatedAt': current_time
+        })
         
     except Exception as e:
         return create_response(500, {'message': f'Error adding kid: {str(e)}'})
