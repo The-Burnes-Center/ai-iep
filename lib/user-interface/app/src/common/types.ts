@@ -31,3 +31,33 @@ export type AdminDataType =
 | "evaluationSummary"
 | "detailedEvaluation"
 | "prompt";
+
+// In src/common/types.ts
+export interface Kid {
+  kidId?: string;
+  name: string;
+  schoolCity: string;
+}
+
+export interface UserProfile {
+  userId: string;
+  email: string;
+  phone: string;
+  primaryLanguage: string;
+  secondaryLanguage: string;
+  city: string;
+  kids: Kid[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ProfileResponse {
+  profile: UserProfile;
+}
+
+export interface KidResponse {
+  message: string;
+  kidId: string;
+  createdAt: number;
+  updatedAt: number;
+}

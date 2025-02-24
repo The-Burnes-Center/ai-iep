@@ -3,6 +3,7 @@ import { SessionsClient } from "./sessions-client";
 import { KnowledgeManagementClient } from "./knowledge-management-client";
 import { UserFeedbackClient } from "./user-feedback-client";
 import { EvaluationsClient } from "./evaluations-client";
+import { ProfileClient } from "./profile-client";
 
 export class ApiClient {
 
@@ -11,7 +12,7 @@ export class ApiClient {
   private _knowledgeManagementClient : KnowledgeManagementClient | undefined;
   private _userFeedbackClient: UserFeedbackClient | undefined;
   private _evaluationsClient: EvaluationsClient | undefined;
-
+  private _profileClient: ProfileClient | undefined;
  
 
   /** Construct the Knowledge Management sub-client */
@@ -21,6 +22,13 @@ export class ApiClient {
     }
 
     return this._knowledgeManagementClient;
+  }
+
+  public get profile() {
+    if (!this._profileClient) {
+      this._profileClient = new ProfileClient(this._appConfig);
+    }
+    return this._profileClient;
   }
 
   /** Construct the Sessions sub-client */

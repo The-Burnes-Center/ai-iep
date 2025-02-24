@@ -7,10 +7,15 @@ import App from "../app";
 import { Amplify, Auth } from "aws-amplify";
 import { AppConfig } from "../common/types";
 import { AppContext } from "../common/app-context";
+import { AuthContext } from "../common/auth-context"; // Import AuthContext
 import { Alert, StatusIndicator } from "@cloudscape-design/components";
 import { StorageHelper } from "../common/helpers/storage-helper";
 import { Mode } from "@cloudscape-design/global-styles";
 import "@aws-amplify/ui-react/styles.css";
+import CustomLogin from "./CustomLogin";
+
+// AppConfigured component is a wrapper around the app component which has the global header and different routes
+// In main.tsx , the application renders AppConfigured as the root component
 
 export default function AppConfigured() {
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -18,54 +23,59 @@ export default function AppConfigured() {
   const [authenticated, setAuthenticated] = useState<boolean>(null);
   const [theme, setTheme] = useState(StorageHelper.getTheme());
   const [configured, setConfigured] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // trigger authentication state when needed
+// This useEffect hook runs once when the component mounts and handles two critical setup tasks:
+// 1. Loads and configures AWS services using aws-exports.json
+// 2. Checks if there's an existing authenticated user session
   useEffect(() => {
-    (async () => {
-      let currentConfig: AppConfig;
+    const loadConfig = async () => {
+      // Load AWS Configuration
+      // Fetch AWS configuration from aws-exports.json which contains: Cognito User Pool settings, API endpoints & OAuth settings
       try {
         const result = await fetch("/aws-exports.json");
         const awsExports = await result.json();
-        currentConfig = Amplify.configure(awsExports) as AppConfig | null;
-        const user = await Auth.currentAuthenticatedUser();
-        if (user) {
-          setAuthenticated(true);
-        }
+
+        // Configure Amplify with the loaded settings
+        // This sets up authentication, API clients, and other AWS services
+        Amplify.configure(awsExports);
+
+        // Store configuration in state
         setConfig(awsExports);
         setConfigured(true);
-      } catch (e) {
-        // If you get to this state, then this means the user check failed
-        // technically it is possible that loading aws-exports.json failed too or some other step
-        // but that is very unlikely
-        console.error("Authentication check error:", e);
+        
+        // Attempt to retrieve the current authenticated user session
         try {
-          if (currentConfig.federatedSignInProvider != "") {
-            Auth.federatedSignIn({ customProvider: currentConfig.federatedSignInProvider });
-          } else {
-            Auth.federatedSignIn();
+          const user = await Auth.currentAuthenticatedUser();
+          // If a valid session exists, update authentication state
+          if (user) {
+            setAuthenticated(true);
           }
-        } catch (error) {
-          // however, just in case, we'll add another try catch
-          setError(true);
+        } catch (e) {
+          // User will need to log in through CustomLogin component
+          console.log("No authenticated user found");
         }
+      } catch (e) {
+        // Unable to load AWS configuration
+        console.error("Error loading configuration:", e);
+        setError(true);
+      } finally {
+        setIsLoading(false);
       }
-    })();
+    };
+  
+    loadConfig();
   }, []);
 
-  // whenever the authentication state changes, if it's changed to un-authenticated, re-verify
-  useEffect(() => {
-    if (!authenticated && configured) {
-      console.log("No authenticated user, initiating sign-in.");
-      if (config.federatedSignInProvider != "") {
-        Auth.federatedSignIn({ customProvider: config.federatedSignInProvider });
-      } else {
-        Auth.federatedSignIn();
-      }
-    }
-  }, [authenticated, configured]);
+    // When the login is successful in CustomLoginComponent this callback is called which causes re-render of AppConfigured 
+    // In the re-render authenticated is false and App component is returned
+    const handleLoginSuccess = () => {
+      setAuthenticated(true);
+    };
 
-  // dark/light theme
-  useEffect(() => {
+// This useEffect was specifically for Cloudscape Design System's theming
+// Will need to be reimplemented differently for React Bootstrap theming  
+useEffect(() => {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (
@@ -95,8 +105,24 @@ export default function AppConfigured() {
     };
   }, [theme]);
 
-  // display a loading screen while waiting for the config file to load
-  if (!config) {
+  // Initially set to true then set to false when the configurations are loaded
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <StatusIndicator type="loading">Loading</StatusIndicator>
+      </div>
+    );
+  }
+
+    // Intially see to false and displayed only if there is an error in displaying configurations
     if (error) {
       return (
         <div
@@ -119,23 +145,15 @@ export default function AppConfigured() {
       );
     }
 
-    return (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <StatusIndicator type="loading">Loading</StatusIndicator>
-      </div>
-    );
+  // If not authenticated, show custom login
+  // In case of correct credentials CustomLogin component sets authenticated to true
+  if (!authenticated) {
+    return <CustomLogin onLoginSuccess={  handleLoginSuccess } />;
   }
 
-  // the main app - only display it when authenticated
+  // Auth.currentAuthenticatedUser() returns true or user enters correct credentials and 
   return (
+  <AuthContext.Provider value={{ authenticated, setAuthenticated }}>
     <AppContext.Provider value={config}>
       <ThemeProvider
         theme={{
@@ -144,13 +162,9 @@ export default function AppConfigured() {
         }}
         colorMode={theme === Mode.Dark ? "dark" : "light"}
       >
-        {authenticated ? (
-          <App />
-        ) : (
-          // <TextContent>Are we authenticated: {authenticated}</TextContent>
-          <></>
-        )}
+        <App />
       </ThemeProvider>
     </AppContext.Provider>
+    </AuthContext.Provider>
   );
 }
