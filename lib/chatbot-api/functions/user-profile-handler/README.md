@@ -10,7 +10,6 @@ User profiles are automatically created in two ways:
    - A profile is automatically created when a user confirms their account
    - The trigger creates a basic profile with:
      - User ID (from Cognito)
-     - Email (from Cognito attributes)
      - Creation timestamp
      - Empty kids array
 
@@ -21,14 +20,21 @@ User profiles are automatically created in two ways:
      - Legacy users from before trigger implementation
      - Profile was accidentally deleted
 
+## User Identity Management
+
+User identity information (email, etc.) is managed exclusively through Amazon Cognito:
+- Email addresses are stored and managed in Cognito User Pool
+- Email verification and updates must be done through Cognito
+- Applications should retrieve email from Cognito tokens/claims
+- Profile data focuses on application-specific information only
+
 ## Database Schema
 
 ### UserProfilesTable
 ```typescript
 {
   userId: string,           // Partition key (from Cognito)
-  email: string,           // User's email address
-  phone: string,           // User's phone number
+  phone: string,           // User's phone number (optional)
   primaryLanguage: string, // Primary language preference
   secondaryLanguage?: string, // Optional secondary language
   city: string,           // User's city of residence
@@ -113,7 +119,6 @@ Returns the user's profile information. Creates a default profile if none exists
 {
   "profile": {
     "userId": "string",
-    "email": "string",
     "phone": "string",
     "primaryLanguage": "string",
     "secondaryLanguage": "string",
@@ -138,7 +143,6 @@ Authorization: Bearer <jwt-token>
 Content-Type: application/json
 
 {
-  "email": "string",
   "phone": "string",
   "primaryLanguage": "string",
   "secondaryLanguage": "string",
@@ -152,6 +156,8 @@ Content-Type: application/json
   ]
 }
 ```
+
+**Note**: Email updates must be performed through Cognito user management, not through this API.
 
 **Response (200)**
 ```json

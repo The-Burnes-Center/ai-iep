@@ -21,10 +21,6 @@ def lambda_handler(event, context):
     try:
         # Get user attributes from the event
         user_id = event['userName']
-        user_attributes = event['request']['userAttributes']
-        
-        # Get email from user attributes
-        email = user_attributes.get('email', '')
         
         # Create timestamp
         current_time = int(datetime.now().timestamp())
@@ -32,7 +28,6 @@ def lambda_handler(event, context):
         # Create default profile
         new_profile = {
             'userId': user_id,
-            'email': email,
             'createdAt': current_time,
             'updatedAt': current_time,
             'kids': []  # Initialize empty kids array

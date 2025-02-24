@@ -1,0 +1,22 @@
+{
+    "Auth": {
+        "region": "us-east-1",
+        "userPoolId": "us-east-1_RDbKXQN7y",
+        "userPoolWebClientId": "7ge2akrdpbd20f6qs3h9f0cdco",
+        "oauth": {
+            "domain": "a-iep.auth.us-east-1.amazoncognito.com",
+            "scope": [
+                "aws.cognito.signin.user.admin",
+                "email",
+                "openid",
+                "profile"
+            ],
+            "redirectSignIn": "http://localhost:3000/",
+            "redirectSignOut": "http://localhost:3000/",
+            "responseType": "code"
+        }
+    },
+    "httpEndpoint": "https://aiako13za5.execute-api.us-east-1.amazonaws.com/",
+    "wsEndpoint": "wss://iva0r1gwne.execute-api.us-east-1.amazonaws.com/prod",
+    "federatedSignInProvider": ""
+}
