@@ -20,6 +20,7 @@ import ConfigurationPage from "./pages/admin/sys-prompt-config/sys_prompt_config
 import LlmEvaluationPage from "./pages/admin/llm-eval/llm-evaluation-page"; 
 import DetailedEvaluationPage from "./pages/admin/llm-eval/detailed-evaluation-page";
 import UserProfileForm from './pages/profile/UserProfileForm';
+import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
 
 function App() {
   const appContext = useContext(AppContext);
@@ -44,6 +45,7 @@ function App() {
                 element={<Navigate to={`/chatbot/playground/${uuidv4()}`} replace />}
             />             */}
             <Route path="/profile" element={<UserProfileForm />} />
+            <Route path="/iep-documents" element={<IEPDocumentView />} />
             <Route path="/chatbot" element={<Outlet />}>
               <Route path="playground/:sessionId" element={<Playground />} />
               <Route path="sessions" element={<SessionPage />} />              
