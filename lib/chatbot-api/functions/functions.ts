@@ -298,7 +298,7 @@ export class LambdaFunctionStack extends cdk.Stack {
         "BUCKET": props.knowledgeBucket.bucketName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName
       },
-      timeout: cdk.Duration.seconds(30)
+      timeout: cdk.Duration.seconds(300)
     });
 
     uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -343,33 +343,52 @@ export class LambdaFunctionStack extends cdk.Stack {
           runtime: lambda.Runtime.PYTHON_3_12,
           code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler')),
           handler: 'lambda_function.lambda_handler',
-          timeout: cdk.Duration.seconds(30),
+          timeout: cdk.Duration.seconds(900),
           environment: {
             "BUCKET": props.knowledgeBucket.bucketName,
-            "KB_ID": props.knowledgeBase.attrKnowledgeBaseId
+            "KB_ID": props.knowledgeBase.attrKnowledgeBaseId,
+            "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+            "KB_SOURCE_ID": props.knowledgeBaseSource.attrDataSourceId,
+            "USER_PROFILES_TABLE": props.userProfilesTable.tableName
           },
         });
-    
-    
     
         metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
-            's3:*' ,// Grants full access to all S3 actions (read, write, delete, etc.)
+            's3:*',
             'bedrock:InvokeModel',
             'bedrock:Retrieve',
           ],
           resources: [
-            props.knowledgeBucket.bucketArn,               // Grants access to the bucket itself (for actions like ListBucket)
-            props.knowledgeBucket.bucketArn + "/*" ,        // Grants access to all objects within the bucket
-            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',  // Add the Bedrock model resource explicitly
+            props.knowledgeBucket.bucketArn,
+            props.knowledgeBucket.bucketArn + "/*",
+            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',
             props.knowledgeBase.attrKnowledgeBaseArn,
-    
           ]
         }));
     
+        // Add DynamoDB permissions for updating document status and user profiles
+        metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            'dynamodb:GetItem',
+            'dynamodb:UpdateItem'
+          ],
+          resources: [
+            props.iepDocumentsTable.tableArn,
+            props.userProfilesTable.tableArn
+          ]
+        }));
     
-    // Trigger the lambda function when a document is uploaded
+        // Add permission to invoke KB sync function
+        metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            'bedrock:StartIngestionJob'
+          ],
+          resources: [props.knowledgeBase.attrKnowledgeBaseArn]
+        }));
     
         this.metadataHandlerFunction = metadataHandlerFunction;
     
@@ -417,7 +436,7 @@ export class LambdaFunctionStack extends cdk.Stack {
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName
       },
-      timeout: cdk.Duration.seconds(30)
+      timeout: cdk.Duration.seconds(300)
     });
 
     // Add permissions for DynamoDB tables

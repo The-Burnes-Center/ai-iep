@@ -107,7 +107,7 @@ export class StepFunctionsStack extends Construct {
                 'KB_ID' : props.knowledgeBase.attrKnowledgeBaseId,
                 'SYSTEM_PROMPTS_HANDLER_ARN' : props.systemPromptsHandlerName
               },
-            timeout: cdk.Duration.seconds(30)
+            timeout: cdk.Duration.seconds(300)
         });
         generateResponseFunction.addToRolePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,

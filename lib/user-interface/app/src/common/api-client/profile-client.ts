@@ -11,8 +11,12 @@ export class ProfileClient {
   async getProfile(): Promise<UserProfile> {
     const auth = await Utils.authenticate();
     const response = await fetch(`${this.API}/profile`, {
+      method: 'GET',
+      mode: 'cors',
       headers: {
-        'Authorization': auth,
+        'Authorization': 'Bearer ' + auth,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
     });
     
@@ -28,9 +32,11 @@ export class ProfileClient {
     const auth = await Utils.authenticate();
     const response = await fetch(`${this.API}/profile`, {
       method: 'PUT',
+      mode: 'cors',
       headers: {
-        'Authorization': auth,
-        'Content-Type': 'application/json'
+        'Authorization': 'Bearer ' + auth,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(profile)
     });
@@ -44,9 +50,11 @@ export class ProfileClient {
     const auth = await Utils.authenticate();
     const response = await fetch(`${this.API}/profile/kids`, {
       method: 'POST',
+      mode: 'cors',
       headers: {
-        'Authorization': auth,
-        'Content-Type': 'application/json'
+        'Authorization': 'Bearer ' + auth,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify({ name, schoolCity })
     });

@@ -2,7 +2,7 @@
     "Auth": {
         "region": "us-east-1",
         "userPoolId": "us-east-1_RDbKXQN7y",
-        "userPoolWebClientId": "7ge2akrdpbd20f6qs3h9f0cdco",
+        "userPoolWebClientId": "s8n36k7egnkn0fje15canjbl6",
         "oauth": {
             "domain": "a-iep.auth.us-east-1.amazoncognito.com",
             "scope": [

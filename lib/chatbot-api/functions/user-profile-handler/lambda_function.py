@@ -26,11 +26,33 @@ class DecimalEncoder(json.JSONEncoder):
             return int(obj) if obj % 1 == 0 else float(obj)
         return super(DecimalEncoder, self).default(obj)
 
-def create_response(status_code: int, body: Dict) -> Dict:
+def get_origin_from_event(event: Dict) -> str:
+    """
+    Extract origin from event headers in a case-insensitive way.
+    
+    Args:
+        event (Dict): The API Gateway event object
+        
+    Returns:
+        str: The origin header value or default localhost
+    """
+    headers = event.get('headers', {})
+    print("Request headers:", json.dumps(headers, indent=2))
+    
+    # Case-insensitive search for origin header
+    origin_header = next(
+        (headers[key] for key in headers if key.lower() == 'origin'),
+        'http://localhost:3000'
+    )
+    print("Found origin:", origin_header)
+    return origin_header
+
+def create_response(event: Dict, status_code: int, body: Dict) -> Dict:
     """
     Create a standardized API response with CORS headers.
     
     Args:
+        event (Dict): The API Gateway event object
         status_code (int): HTTP status code
         body (Dict): Response body to be JSON serialized
         
@@ -42,16 +64,19 @@ def create_response(status_code: int, body: Dict) -> Dict:
         'headers': {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,PUT,POST,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
+            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST, PUT, DELETE',
+            'Access-Control-Allow-Headers': 'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
         },
         'body': json.dumps(body, cls=DecimalEncoder)
     }
 
-def handle_options() -> Dict:
+def handle_options(event: Dict) -> Dict:
     """
     Handle OPTIONS requests for CORS preflight.
     
+    Args:
+        event (Dict): The API Gateway event object
+        
     Returns:
         Dict: API Gateway response with CORS headers
     """
@@ -59,8 +84,8 @@ def handle_options() -> Dict:
         'statusCode': 200,
         'headers': {
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,PUT,POST,OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
+            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS, POST, PUT, DELETE',
+            'Access-Control-Allow-Headers': 'Content-Type, X-Amz-Date, Authorization, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
         },
         'body': ''
     }
@@ -104,7 +129,6 @@ def get_user_profile(event: Dict) -> Dict:
         Exception: If there's an error accessing DynamoDB
     """
     try:
-        # Get userId from the requestContext (set by Cognito authorizer)
         claims = event['requestContext']['authorizer']['jwt']['claims']
         print("Full Cognito claims:", json.dumps(claims, indent=2))
         
@@ -119,26 +143,24 @@ def get_user_profile(event: Dict) -> Dict:
         
         if 'Item' not in response:
             print(f"No existing profile found for userId: {user_id}, creating new profile")
-            # Create a new profile if it doesn't exist
             new_profile = {
                 'userId': user_id,
                 'createdAt': times['timestamp'],
                 'createdAtISO': times['datetime'],
                 'updatedAt': times['timestamp'],
                 'updatedAtISO': times['datetime'],
-                'kids': []  # Initialize empty kids array
+                'kids': []
             }
             user_profiles_table.put_item(Item=new_profile)
-            return create_response(200, {'profile': new_profile})
+            return create_response(event, 200, {'profile': new_profile})
         
-        # Profile exists
         existing_profile = response['Item']
-        return create_response(200, {'profile': existing_profile})
+        return create_response(event, 200, {'profile': existing_profile})
         
     except Exception as e:
         print(f"Error in get_user_profile: {str(e)}")
         print(f"Event data: {json.dumps(event, default=str)}")
-        return create_response(500, {'message': f'Error getting user profile: {str(e)}'})
+        return create_response(event, 500, {'message': f'Error getting user profile: {str(e)}'})
 
 def update_user_profile(event: Dict) -> Dict:
     """
@@ -178,7 +200,7 @@ def update_user_profile(event: Dict) -> Dict:
 
         # If email is in the request, return an error
         if 'email' in body:
-            return create_response(400, {
+            return create_response(event, 400, {
                 'message': 'Email cannot be updated directly. Please update your email through account settings.'
             })
         
@@ -187,7 +209,7 @@ def update_user_profile(event: Dict) -> Dict:
                 # Special validation for language fields
                 if field in ['primaryLanguage', 'secondaryLanguage']:
                     if body[field] and not validate_language(body[field]):
-                        return create_response(400, {
+                        return create_response(event, 400, {
                             'message': f'Unsupported language for {field}. Supported languages: {SUPPORTED_LANGUAGES}'
                         })
                 
@@ -199,7 +221,7 @@ def update_user_profile(event: Dict) -> Dict:
             # Validate kid data
             for kid in body['kids']:
                 if 'name' not in kid or 'schoolCity' not in kid:
-                    return create_response(400, {'message': 'Each kid must have name and schoolCity'})
+                    return create_response(event, 400, {'message': 'Each kid must have name and schoolCity'})
                 if 'kidId' not in kid:
                     kid['kidId'] = str(uuid.uuid4())
             
@@ -208,7 +230,7 @@ def update_user_profile(event: Dict) -> Dict:
         
         # If no fields to update
         if len(update_parts) == 1:  # only updatedAt
-            return create_response(400, {'message': 'No fields to update provided'})
+            return create_response(event, 400, {'message': 'No fields to update provided'})
             
         # Construct final update expression
         update_expr = 'SET ' + ', '.join(update_parts)
@@ -219,10 +241,10 @@ def update_user_profile(event: Dict) -> Dict:
             ExpressionAttributeValues=expr_values
         )
         
-        return create_response(200, {'message': 'Profile updated successfully'})
+        return create_response(event, 200, {'message': 'Profile updated successfully'})
         
     except Exception as e:
-        return create_response(500, {'message': f'Error updating user profile: {str(e)}'})
+        return create_response(event, 500, {'message': f'Error updating user profile: {str(e)}'})
 
 def add_kid(event: Dict) -> Dict:
     """
@@ -244,7 +266,7 @@ def add_kid(event: Dict) -> Dict:
         
         # Validate required fields
         if 'name' not in body or 'schoolCity' not in body:
-            return create_response(400, {'message': 'Missing required fields: name and schoolCity required'})
+            return create_response(event, 400, {'message': 'Missing required fields: name and schoolCity required'})
             
         # Generate new kidId
         kid_id = str(uuid.uuid4())
@@ -271,7 +293,7 @@ def add_kid(event: Dict) -> Dict:
             }
         )
         
-        return create_response(200, {
+        return create_response(event, 200, {
             'message': 'Kid added successfully',
             'kidId': kid_id,
             'createdAt': times['timestamp'],
@@ -281,7 +303,7 @@ def add_kid(event: Dict) -> Dict:
         })
         
     except Exception as e:
-        return create_response(500, {'message': f'Error adding kid: {str(e)}'})
+        return create_response(event, 500, {'message': f'Error adding kid: {str(e)}'})
 
 def get_document_status(event: Dict) -> Dict:
     """
@@ -306,15 +328,15 @@ def get_document_status(event: Dict) -> Dict:
         )
         
         if 'Item' not in response:
-            return create_response(404, {'message': 'Document not found'})
+            return create_response(event, 404, {'message': 'Document not found'})
             
         document = response['Item']
         
         # Verify document belongs to requesting user
         if document['userId'] != user_id:
-            return create_response(403, {'message': 'Not authorized to access this document'})
+            return create_response(event, 403, {'message': 'Not authorized to access this document'})
             
-        return create_response(200, {
+        return create_response(event, 200, {
             'status': document.get('status', 'PROCESSING'),
             'documentUrl': document['documentUrl'],
             'createdAt': document['createdAt'],
@@ -322,7 +344,7 @@ def get_document_status(event: Dict) -> Dict:
         })
         
     except Exception as e:
-        return create_response(500, {'message': f'Error getting document status: {str(e)}'})
+        return create_response(event, 500, {'message': f'Error getting document status: {str(e)}'})
 
 def get_kid_documents(event: Dict) -> Dict:
     """
@@ -363,10 +385,10 @@ def get_kid_documents(event: Dict) -> Dict:
             if doc['userId'] == user_id
         ]
         
-        return create_response(200, {'documents': documents})
+        return create_response(event, 200, {'documents': documents})
         
     except Exception as e:
-        return create_response(500, {'message': f'Error getting kid documents: {str(e)}'})
+        return create_response(event, 500, {'message': f'Error getting kid documents: {str(e)}'})
 
 def get_document_summary(event: Dict) -> Dict:
     """
@@ -386,10 +408,10 @@ def get_document_summary(event: Dict) -> Dict:
         body = json.loads(event['body'])
         
         if 'iepId' not in body or 'langCode' not in body:
-            return create_response(400, {'message': 'Missing required fields: iepId and langCode'})
+            return create_response(event, 400, {'message': 'Missing required fields: iepId and langCode'})
             
         if not validate_language(body['langCode']):
-            return create_response(400, {'message': f'Unsupported language. Supported languages: {SUPPORTED_LANGUAGES}'})
+            return create_response(event, 400, {'message': f'Unsupported language. Supported languages: {SUPPORTED_LANGUAGES}'})
             
         # Get document
         response = iep_documents_table.get_item(
@@ -397,33 +419,33 @@ def get_document_summary(event: Dict) -> Dict:
         )
         
         if 'Item' not in response:
-            return create_response(404, {'message': 'Document not found'})
+            return create_response(event, 404, {'message': 'Document not found'})
             
         document = response['Item']
         
         # Verify document belongs to requesting user
         if document['userId'] != user_id:
-            return create_response(403, {'message': 'Not authorized to access this document'})
+            return create_response(event, 403, {'message': 'Not authorized to access this document'})
 
         # Check if document is processed
         if document.get('status') != 'PROCESSED':
-            return create_response(400, {
+            return create_response(event, 400, {
                 'message': 'Document is not yet processed',
                 'status': document.get('status', 'PROCESSING')
             })
             
         # Get summary in requested language
         if 'summaries' not in document or body['langCode'] not in document['summaries']:
-            return create_response(404, {'message': f'Summary not available in {body["langCode"]}'})
+            return create_response(event, 404, {'message': f'Summary not available in {body["langCode"]}'})
             
-        return create_response(200, {
+        return create_response(event, 200, {
             'summary': document['summaries'][body['langCode']],
             'documentUrl': document['documentUrl'],
             'status': document['status']
         })
         
     except Exception as e:
-        return create_response(500, {'message': f'Error getting document summary: {str(e)}'})
+        return create_response(event, 500, {'message': f'Error getting document summary: {str(e)}'})
 
 def lambda_handler(event: Dict, context) -> Dict:
     """
@@ -439,7 +461,7 @@ def lambda_handler(event: Dict, context) -> Dict:
     try:
         # Handle OPTIONS request for CORS
         if event['requestContext']['http']['method'] == 'OPTIONS':
-            return handle_options()
+            return handle_options(event)
 
         # Get path and method
         path = event['rawPath']
@@ -466,7 +488,7 @@ def lambda_handler(event: Dict, context) -> Dict:
         return handler(event)
 
     except RouteNotFoundException as e:
-        return create_response(404, {'message': str(e)})
+        return create_response(event, 404, {'message': str(e)})
     except Exception as e:
         print(f"Error processing request: {str(e)}")
-        return create_response(500, {'message': f'Internal server error: {str(e)}'}) 
+        return create_response(event, 500, {'message': f'Internal server error: {str(e)}'}) 

@@ -226,35 +226,35 @@ export class ChatBotApi extends Construct {
     // Add routes for user profile management
     restBackend.restAPI.addRoutes({
       path: "/profile",
-      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT, apigwv2.HttpMethod.OPTIONS],
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 
     restBackend.restAPI.addRoutes({
       path: "/profile/kids",
-      methods: [apigwv2.HttpMethod.POST, apigwv2.HttpMethod.OPTIONS],
+      methods: [apigwv2.HttpMethod.POST],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 
     restBackend.restAPI.addRoutes({
       path: "/profile/kids/{kidId}/documents",
-      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.OPTIONS],
+      methods: [apigwv2.HttpMethod.GET],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 
     restBackend.restAPI.addRoutes({
       path: "/documents/{iepId}/status",
-      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.OPTIONS],
+      methods: [apigwv2.HttpMethod.GET],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 
     restBackend.restAPI.addRoutes({
       path: "/summary",
-      methods: [apigwv2.HttpMethod.POST, apigwv2.HttpMethod.OPTIONS],
+      methods: [apigwv2.HttpMethod.POST],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });

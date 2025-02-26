@@ -149,7 +149,7 @@ export class Utils {
       
       // console.log("new token:", token)
       // return currentSession.getAccessToken().getJwtToken();
-      return token
+      return token;
     } catch (error) {
       console.error('Error getting current user session:', error);
       throw new Error('Authentication failed');
