@@ -349,7 +349,14 @@ export class LambdaFunctionStack extends cdk.Stack {
             "KB_ID": props.knowledgeBase.attrKnowledgeBaseId,
             "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
             "KB_SOURCE_ID": props.knowledgeBaseSource.attrDataSourceId,
-            "USER_PROFILES_TABLE": props.userProfilesTable.tableName
+            "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
+            // Google Cloud Document AI environment variables
+            "DOCUMENT_AI_PROJECT_ID": "documentai-449419",
+            "DOCUMENT_AI_LOCATION": "us-central1",
+            "DOCUMENT_AI_PROCESSOR_ID": "fd58e4a3475a1ef0",
+            "GOOGLE_API_KEY": "AIzaSyBevemdE86CQq3VBUoACrjcC9SLo74Z_Ko",
+            "GOOGLE_CLOUD_PROJECT": "documentai-449419",
+            "GOOGLE_LOCATION": "us-central1"
           },
         });
     
