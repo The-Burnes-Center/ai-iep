@@ -79,4 +79,12 @@ amplifyxc.config
 
 # Dependencies
 package-lock.json
-yarn.lock
+yarn.locklib/chatbot-api/functions/metadata-handler/DocumentAI Lambda Access.json
+
+# Custom ignores
+cryptography-layer.zip
+deploy.sh
+lambda-layer/
+lib/google-docai-layer/
+*.bak*
+*_backup.*

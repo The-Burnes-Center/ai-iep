@@ -339,6 +339,8 @@ def get_document_status(event: Dict) -> Dict:
         return create_response(event, 200, {
             'status': document.get('status', 'PROCESSING'),
             'documentUrl': document['documentUrl'],
+            'summaries': document.get('summaries', {}),
+            'sections': document.get('sections', {}),
             'createdAt': document['createdAt'],
             'updatedAt': document['updatedAt']
         })
@@ -371,19 +373,20 @@ def get_kid_documents(event: Dict) -> Dict:
         )
         
         # Verify the documents belong to the requesting user and include status
-        documents = [
-            {
-                'iepId': doc['iepId'],
-                'kidId': doc['kidId'],
-                'documentUrl': doc['documentUrl'],
-                'status': doc.get('status', 'PROCESSING'),
-                'summaries': doc.get('summaries', {}),
-                'createdAt': doc['createdAt'],
-                'updatedAt': doc['updatedAt']
-            }
-            for doc in response['Items']
-            if doc['userId'] == user_id
-        ]
+        documents = []
+        for doc in response['Items']:
+            # Only include document if userId is not present or it matches the authenticated user
+            if 'userId' not in doc or doc['userId'] == user_id:
+                documents.append({
+                    'iepId': doc['iepId'],
+                    'kidId': doc['kidId'],
+                    'documentUrl': doc.get('documentUrl', f"s3://{os.environ.get('BUCKET', '')}/{doc['iepId']}"),
+                    'status': doc.get('status', 'PROCESSING'),
+                    'summaries': doc.get('summaries', {}),
+                    'sections': doc.get('sections', {}),
+                    'createdAt': doc.get('createdAt', ''),
+                    'updatedAt': doc.get('updatedAt', '')
+                })
         
         return create_response(event, 200, {'documents': documents})
         
