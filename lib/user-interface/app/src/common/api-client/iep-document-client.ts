@@ -100,6 +100,72 @@ export class IEPDocumentClient {
     }
   }
 
+  // Get most recent processed document with its summary
+  async getMostRecentDocumentWithSummary() {
+    try {
+      const result = await this.getDocuments();
+      
+      // From the screenshot, we can see that the documents is actually in result.documents
+      // or documents.Array, not directly in documents
+      let documents = [];
+      
+      // Check both possible locations based on the screenshot
+      if (result && result.documents && Array.isArray(result.documents)) {
+        documents = result.documents;
+      } else if (result && result.Array && Array.isArray(result.Array)) {
+        documents = result.Array;
+      } else if (result && Array.isArray(result)) {
+        // Direct array case
+        documents = result;
+      } else {
+        console.log("Document structure:", result);
+        return null;
+      }
+      
+      // Return null if documents is empty
+      if (documents.length === 0) {
+        return null;
+      }
+      
+      // Based on the screenshot, we should look for documents with "PROCESSED" status
+      const processedDocs = documents.filter(doc => doc.status === "PROCESSED");
+      
+      // If no processed documents, return null
+      if (processedDocs.length === 0) {
+        return null;
+      }
+      
+      // Sort processed documents by createdAt in descending order (most recent first)
+      const sortedDocs = [...processedDocs].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      
+      // Get the most recent processed document
+      const mostRecentDoc = sortedDocs[0];
+      
+      // Extract the summary if available
+      let summary = null;
+      if (mostRecentDoc.summaries) {
+        try {
+          // Try to extract English summary from M > en > S path
+          summary = mostRecentDoc.summaries.M?.en?.S || null;
+        } catch (error) {
+          console.error("Error extracting summary from document:", error);
+        }
+      }
+      
+      // Return the document with its summary
+      return {
+        ...mostRecentDoc,
+        summary: summary
+      };
+    } catch (error) {
+      console.error('Error fetching most recent document with summary:', error);
+      throw error;
+    }
+  }
   // Delete a document
   async deleteFile(iepId: string) {
     try {

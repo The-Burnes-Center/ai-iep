@@ -21,6 +21,7 @@ import LlmEvaluationPage from "./pages/admin/llm-eval/llm-evaluation-page";
 import DetailedEvaluationPage from "./pages/admin/llm-eval/detailed-evaluation-page";
 import UserProfileForm from './pages/profile/UserProfileForm';
 import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
+import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslationsPage';
 
 function App() {
   const appContext = useContext(AppContext);
@@ -46,6 +47,7 @@ function App() {
             />             */}
             <Route path="/profile" element={<UserProfileForm />} />
             <Route path="/iep-documents" element={<IEPDocumentView />} />
+            <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} />            
             <Route path="/chatbot" element={<Outlet />}>
               <Route path="playground/:sessionId" element={<Playground />} />
               <Route path="sessions" element={<SessionPage />} />              
