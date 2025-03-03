@@ -15,11 +15,12 @@ import { aws_apigatewayv2 as apigwv2 } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { OpenSearchStack } from "./opensearch/opensearch";
 import { KnowledgeBaseStack } from "./knowledge-base/knowledge-base"
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 
 // import { NagSuppressions } from "cdk-nag";
 
 export interface ChatBotApiProps {
-  readonly authentication: AuthorizationStack; 
+  readonly authentication: AuthorizationStack;
 }
 
 export class ChatBotApi extends Construct {

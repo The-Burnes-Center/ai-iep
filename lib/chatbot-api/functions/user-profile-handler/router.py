@@ -1,6 +1,7 @@
 import re
 from typing import Dict, Callable, Tuple, Any
 from functools import wraps
+import json
 
 class RouteNotFoundException(Exception):
     """Exception raised when no matching route is found."""
@@ -18,22 +19,48 @@ def route(path: str, method: str):
     return decorator
 
 class Router:
+    """Router for handling API requests."""
     def __init__(self):
         self.routes = {}
+        print("Router initialized")
 
     def add_route(self, path: str, method: str, handler: Callable):
         """Register a new route with its handler."""
         if path not in self.routes:
             self.routes[path] = {}
         self.routes[path][method] = handler
+        print(f"Route registered: {method} {path} -> {handler.__name__}")
 
     def match_route(self, path: str, method: str) -> Tuple[Callable, Dict[str, Any]]:
         """Match a path and method to a registered route."""
+        print(f"Attempting to match route: {method} {path}")
+        print(f"Available routes: {json.dumps([(k, list(v.keys())) for k, v in self.routes.items()])}")
+        
+        # Check for common typos and log suggestions
+        if 'stauts' in path:
+            corrected_path = path.replace('stauts', 'status')
+            print(f"WARNING: Possible route typo detected. '{path}' might be '{corrected_path}'")
+            
         for route_path in self.routes:
             pattern = self._path_to_pattern(route_path)
             match = pattern.match(path)
+            print(f"Checking pattern '{pattern.pattern}' against path '{path}': {'Match' if match else 'No match'}")
             if match and method in self.routes[route_path]:
+                print(f"Route matched: {method} {path} -> {route_path}")
                 return self.routes[route_path][method], match.groupdict()
+                
+        # If no match found, look for similar routes to suggest
+        similar_routes = []
+        for route_path in self.routes:
+            if method in self.routes[route_path]:
+                # Simple similarity check - count differing characters 
+                similarity = sum(1 for a, b in zip(route_path, path) if a == b)
+                if similarity > len(route_path) * 0.7:  # If more than 70% similar
+                    similar_routes.append(route_path)
+                    
+        if similar_routes:
+            print(f"No exact route match, but found similar routes: {similar_routes}")
+            
         raise RouteNotFoundException(f"No route found for {method} {path}")
 
     def _path_to_pattern(self, path: str) -> re.Pattern:
@@ -62,14 +89,4 @@ class UserProfileRouter:
     @route('/profile/kids/{kidId}/documents', 'GET')
     def get_kid_documents(self, event: Dict) -> Dict:
         from lambda_function import get_kid_documents
-        return get_kid_documents(event)
-    
-    @route('/documents/{iepId}/status', 'GET')
-    def get_document_status(self, event: Dict) -> Dict:
-        from lambda_function import get_document_status
-        return get_document_status(event)
-    
-    @route('/summary', 'POST')
-    def get_document_summary(self, event: Dict) -> Dict:
-        from lambda_function import get_document_summary
-        return get_document_summary(event) 
+        return get_kid_documents(event) 

@@ -341,7 +341,19 @@ export class LambdaFunctionStack extends cdk.Stack {
         // Define the Lambda function for metadata
         const metadataHandlerFunction = new lambda.Function(scope, 'MetadataHandlerFunction', {
           runtime: lambda.Runtime.PYTHON_3_12,
-          code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler')),
+          code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
+            bundling: {
+              image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+              command: [
+                'bash', '-c', [
+                  'pip install -r requirements.txt -t /asset-output',
+                  'cp -r * /asset-output',
+                  'echo "Done installing dependencies"'
+                ].join(' && '),
+              ],
+              user: 'root',
+            },
+          }),
           handler: 'lambda_function.lambda_handler',
           timeout: cdk.Duration.seconds(900),
           environment: {
@@ -354,24 +366,34 @@ export class LambdaFunctionStack extends cdk.Stack {
             "DOCUMENT_AI_PROJECT_ID": "documentai-449419",
             "DOCUMENT_AI_LOCATION": "us-central1",
             "DOCUMENT_AI_PROCESSOR_ID": "fd58e4a3475a1ef0",
+            // Use AWS Secrets Manager for Google Cloud service account
+            "GOOGLE_SERVICE_ACCOUNT_SECRET": "GoogleDocumentAICredentials",
+            // API key for Google AI services
             "GOOGLE_API_KEY": "AIzaSyBevemdE86CQq3VBUoACrjcC9SLo74Z_Ko",
             "GOOGLE_CLOUD_PROJECT": "documentai-449419",
-            "GOOGLE_LOCATION": "us-central1"
+            "GOOGLE_LOCATION": "us-central1",
+            // Use Claude 3.5 Sonnet
+            "CLAUDE_MODEL_ID": "anthropic.claude-3-5-sonnet-20240620-v1:0"
           },
         });
-    
+        
         metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
             's3:*',
             'bedrock:InvokeModel',
             'bedrock:Retrieve',
+            'bedrock-agent-runtime:Retrieve',
+            // Add permission to access the secret in AWS Secrets Manager
+            'secretsmanager:GetSecretValue',
           ],
           resources: [
             props.knowledgeBucket.bucketArn,
             props.knowledgeBucket.bucketArn + "/*",
-            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',
+            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
             props.knowledgeBase.attrKnowledgeBaseArn,
+            // Add the ARN of the secret in AWS Secrets Manager
+            'arn:aws:secretsmanager:us-east-1:530075910224:secret:GoogleDocumentAICredentials*',
           ]
         }));
     
@@ -380,7 +402,10 @@ export class LambdaFunctionStack extends cdk.Stack {
           effect: iam.Effect.ALLOW,
           actions: [
             'dynamodb:GetItem',
-            'dynamodb:UpdateItem'
+            'dynamodb:PutItem',
+            'dynamodb:UpdateItem',
+            'dynamodb:Query',
+            'dynamodb:Scan'
           ],
           resources: [
             props.iepDocumentsTable.tableArn,

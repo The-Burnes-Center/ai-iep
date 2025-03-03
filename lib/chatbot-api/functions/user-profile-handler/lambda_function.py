@@ -305,49 +305,6 @@ def add_kid(event: Dict) -> Dict:
     except Exception as e:
         return create_response(event, 500, {'message': f'Error adding kid: {str(e)}'})
 
-def get_document_status(event: Dict) -> Dict:
-    """
-    Get the processing status of a document.
-    
-    Args:
-        event (Dict): API Gateway event object containing user context and iepId
-        
-    Returns:
-        Dict: API Gateway response containing document status or error
-        
-    Raises:
-        Exception: If there's an error accessing DynamoDB
-    """
-    try:
-        user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
-        iep_id = event['pathParameters']['iepId']
-        
-        # Get document
-        response = iep_documents_table.get_item(
-            Key={'iepId': iep_id}
-        )
-        
-        if 'Item' not in response:
-            return create_response(event, 404, {'message': 'Document not found'})
-            
-        document = response['Item']
-        
-        # Verify document belongs to requesting user
-        if document['userId'] != user_id:
-            return create_response(event, 403, {'message': 'Not authorized to access this document'})
-            
-        return create_response(event, 200, {
-            'status': document.get('status', 'PROCESSING'),
-            'documentUrl': document['documentUrl'],
-            'summaries': document.get('summaries', {}),
-            'sections': document.get('sections', {}),
-            'createdAt': document['createdAt'],
-            'updatedAt': document['updatedAt']
-        })
-        
-    except Exception as e:
-        return create_response(event, 500, {'message': f'Error getting document status: {str(e)}'})
-
 def get_kid_documents(event: Dict) -> Dict:
     """
     Get documents associated with a specific child.
@@ -393,63 +350,6 @@ def get_kid_documents(event: Dict) -> Dict:
     except Exception as e:
         return create_response(event, 500, {'message': f'Error getting kid documents: {str(e)}'})
 
-def get_document_summary(event: Dict) -> Dict:
-    """
-    Get document summary in specified language.
-    
-    Args:
-        event (Dict): API Gateway event object containing user context, iepId and language code
-        
-    Returns:
-        Dict: API Gateway response containing document summary or error
-        
-    Raises:
-        Exception: If there's an error accessing DynamoDB
-    """
-    try:
-        user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
-        body = json.loads(event['body'])
-        
-        if 'iepId' not in body or 'langCode' not in body:
-            return create_response(event, 400, {'message': 'Missing required fields: iepId and langCode'})
-            
-        if not validate_language(body['langCode']):
-            return create_response(event, 400, {'message': f'Unsupported language. Supported languages: {SUPPORTED_LANGUAGES}'})
-            
-        # Get document
-        response = iep_documents_table.get_item(
-            Key={'iepId': body['iepId']}
-        )
-        
-        if 'Item' not in response:
-            return create_response(event, 404, {'message': 'Document not found'})
-            
-        document = response['Item']
-        
-        # Verify document belongs to requesting user
-        if document['userId'] != user_id:
-            return create_response(event, 403, {'message': 'Not authorized to access this document'})
-
-        # Check if document is processed
-        if document.get('status') != 'PROCESSED':
-            return create_response(event, 400, {
-                'message': 'Document is not yet processed',
-                'status': document.get('status', 'PROCESSING')
-            })
-            
-        # Get summary in requested language
-        if 'summaries' not in document or body['langCode'] not in document['summaries']:
-            return create_response(event, 404, {'message': f'Summary not available in {body["langCode"]}'})
-            
-        return create_response(event, 200, {
-            'summary': document['summaries'][body['langCode']],
-            'documentUrl': document['documentUrl'],
-            'status': document['status']
-        })
-        
-    except Exception as e:
-        return create_response(event, 500, {'message': f'Error getting document summary: {str(e)}'})
-
 def lambda_handler(event: Dict, context) -> Dict:
     """
     Main Lambda handler function that routes requests to appropriate handlers using the router.
@@ -461,14 +361,18 @@ def lambda_handler(event: Dict, context) -> Dict:
     Returns:
         Dict: API Gateway response
     """
+    print(f"Lambda handler invoked with event: {json.dumps(event, default=str)}")
+    
     try:
         # Handle OPTIONS request for CORS
         if event['requestContext']['http']['method'] == 'OPTIONS':
+            print("Handling OPTIONS request for CORS")
             return handle_options(event)
 
         # Get path and method
         path = event['rawPath']
         method = event['requestContext']['http']['method']
+        print(f"Processing {method} request for path: {path}")
 
         # Initialize router
         router = Router()
@@ -479,19 +383,26 @@ def lambda_handler(event: Dict, context) -> Dict:
             attr = getattr(profile_router, attr_name)
             if hasattr(attr, 'path') and hasattr(attr, 'method'):
                 router.add_route(attr.path, attr.method, getattr(profile_router, attr_name))
-
+                
+        print(f"Attempting to match route for path: {path}, method: {method}")
         # Match and execute route
         handler, path_params = router.match_route(path, method)
+        print(f"Route matched. Handler: {handler.__name__}, Path params: {path_params}")
         
         # Update path parameters
         if not event.get('pathParameters'):
             event['pathParameters'] = {}
         event['pathParameters'].update(path_params)
         
+        print(f"Invoking handler: {handler.__name__} with updated pathParameters: {event.get('pathParameters')}")
         return handler(event)
 
     except RouteNotFoundException as e:
+        print(f"Route not found: {path} with method {method}")
         return create_response(event, 404, {'message': str(e)})
     except Exception as e:
-        print(f"Error processing request: {str(e)}")
+        error_message = f"Error processing request: {str(e)}, Type: {type(e).__name__}"
+        print(error_message)
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         return create_response(event, 500, {'message': f'Internal server error: {str(e)}'}) 

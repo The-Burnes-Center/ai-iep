@@ -216,43 +216,6 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
-### 5. Get Document Status
-```http
-GET /documents/{iepId}/status
-Authorization: Bearer <jwt-token>
-```
-
-**Response (200)**
-```json
-{
-  "status": "string",
-  "documentUrl": "string",
-  "createdAt": number,
-  "updatedAt": number
-}
-```
-
-### 6. Get Document Summary
-```http
-POST /summary
-Authorization: Bearer <jwt-token>
-Content-Type: application/json
-
-{
-  "iepId": "string",
-  "langCode": "string"
-}
-```
-
-**Response (200)**
-```json
-{
-  "summary": "string",
-  "documentUrl": "string",
-  "status": "string"
-}
-```
-
 ## Language Support
 
 The system supports the following languages:
