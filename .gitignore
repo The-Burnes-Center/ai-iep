@@ -88,3 +88,7 @@ lambda-layer/
 lib/google-docai-layer/
 *.bak*
 *_backup.*
+
+# Generated output files
+output.json
+output2.json
