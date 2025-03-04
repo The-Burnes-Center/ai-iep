@@ -49,13 +49,18 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           if (mostRecentDocWithSummary.sections) {
             try {
               const extractedSections = [];
-              const sectionsData = mostRecentDocWithSummary.sections.M?.en?.M;
+              // Add type checking to ensure sections has the expected structure
+              const sectionsObj = mostRecentDocWithSummary.sections as any;
               
-              if (sectionsData) {
+              if (sectionsObj && sectionsObj.M && sectionsObj.M.en && sectionsObj.M.en.M) {
+                const sectionsData = sectionsObj.M.en.M;
+                
                 // Iterate through each section
                 for (const [sectionName, sectionContent] of Object.entries(sectionsData)) {
-                  // Extract content by traversing M -> S -> S
-                  const content = sectionContent?.M?.S?.S || '';
+                  // Extract content by traversing M -> S -> S with type safety
+                  const sectionContentObj = sectionContent as any;
+                  const content = sectionContentObj?.M?.S?.S || '';
+                  
                   extractedSections.push({ 
                     name: sectionName, 
                     content: content
@@ -168,9 +173,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 <Row>
                   <Col md={12}>
                     <Card.Title>Document Details</Card.Title>
-                    {/* <p>
+                    <p>
                       <strong>Upload Date:</strong> {formatDate(recentDocument.createdAt || recentDocument.LastModified)}
-                    </p> */}
+                    </p>
+                    
                     {recentDocument.status === "PROCESSING" ? (
                       <Alert variant="warning">
                         <h5>Document is still processing</h5>
