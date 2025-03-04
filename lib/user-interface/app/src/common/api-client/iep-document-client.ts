@@ -100,7 +100,7 @@ export class IEPDocumentClient {
     }
   }
 
-  // Get most recent processed document with its summary
+  // Get most recent processed document with its summary and sections
   async getMostRecentDocumentWithSummary() {
     try {
       const result = await this.getDocuments();
@@ -156,16 +156,30 @@ export class IEPDocumentClient {
         }
       }
       
-      // Return the document with its summary
+      // Extract sections if available (they're at the same level as summaries)
+      // We need to traverse sections > M > en > M to get the section data
+      let extractedSections = null;
+      if (mostRecentDoc.sections) {
+        try {
+          // Get the sections object which should have the M > en > M structure
+          extractedSections = mostRecentDoc.sections;
+        } catch (error) {
+          console.error("Error extracting sections from document:", error);
+        }
+      }
+      
+      // Return the document with its summary and sections
       return {
         ...mostRecentDoc,
-        summary: summary
+        summary: summary,
+        sections: extractedSections
       };
     } catch (error) {
       console.error('Error fetching most recent document with summary:', error);
       throw error;
     }
   }
+  
   // Delete a document
   async deleteFile(iepId: string) {
     try {

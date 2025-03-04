@@ -7,7 +7,8 @@ import {
   Spinner, 
   Alert, 
   Button,
-  Badge
+  Badge,
+  Accordion
 } from 'react-bootstrap';
 import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
@@ -22,6 +23,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [recentDocument, setRecentDocument] = useState<any>(null);
   const [summary, setSummary] = useState<string>('');
+  const [sections, setSections] = useState<{name: string, content: string}[]>([]);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
 
   useEffect(() => {
@@ -36,15 +38,43 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         if (mostRecentDocWithSummary) {
           setRecentDocument(mostRecentDocWithSummary);
           
-          // Set the summary if available (the method now returns it directly)
+          // Set the summary if available
           if (mostRecentDocWithSummary.summary) {
             setSummary(mostRecentDocWithSummary.summary);
           } else {
             setSummary('');
           }
+          
+          // Extract sections if available
+          if (mostRecentDocWithSummary.sections) {
+            try {
+              const extractedSections = [];
+              const sectionsData = mostRecentDocWithSummary.sections.M?.en?.M;
+              
+              if (sectionsData) {
+                // Iterate through each section
+                for (const [sectionName, sectionContent] of Object.entries(sectionsData)) {
+                  // Extract content by traversing M -> S -> S
+                  const content = sectionContent?.M?.S?.S || '';
+                  extractedSections.push({ 
+                    name: sectionName, 
+                    content: content
+                  });
+                }
+              }
+              
+              setSections(extractedSections);
+            } catch (e) {
+              console.error("Error extracting sections:", e);
+              setSections([]);
+            }
+          } else {
+            setSections([]);
+          }
         } else {
           setRecentDocument(null);
           setSummary('');
+          setSections([]);
         }
       } catch (err) {
         console.error('Error fetching documents:', err);
@@ -139,9 +169,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   <Col md={12}>
                     <Card.Title>Document Details</Card.Title>
                     {/* <p>
-                      <strong>Upload Date:</strong> {recentDocument.createdAt}
+                      <strong>Upload Date:</strong> {formatDate(recentDocument.createdAt || recentDocument.LastModified)}
                     </p> */}
-                    
                     {recentDocument.status === "PROCESSING" ? (
                       <Alert variant="warning">
                         <h5>Document is still processing</h5>
@@ -154,16 +183,41 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                       </Alert>
                     ) : (
                       <>
-                        <Card.Title className="mt-4">Document Summary</Card.Title>
-                        <Card className="bg-light">
-                          <Card.Body>
-                            {summary ? (
-                              <p className="mb-0">{summary}</p>
-                            ) : (
-                              <p className="text-muted mb-0">No summary available for this document.</p>
-                            )}
-                          </Card.Body>
-                        </Card>
+                        {summary && (
+                          <>
+                            <Card.Title className="mt-4">Document Summary</Card.Title>
+                            <Card className="bg-light mb-4">
+                              <Card.Body>
+                                <p className="mb-0">{summary}</p>
+                              </Card.Body>
+                            </Card>
+                          </>
+                        )}
+                        
+                        {sections.length > 0 && (
+                          <>
+                            <Card.Title className="mt-4">Document Sections</Card.Title>
+                            <Accordion className="mb-3">
+                              {sections.map((section, index) => (
+                                <Accordion.Item key={index} eventKey={index.toString()}>
+                                  <Accordion.Header>
+                                    {section.name}
+                                  </Accordion.Header>
+                                  <Accordion.Body>
+                                    {section.content || 'No content available for this section.'}
+                                  </Accordion.Body>
+                                </Accordion.Item>
+                              ))}
+                            </Accordion>
+                          </>
+                        )}
+                        
+                        {!summary && sections.length === 0 && (
+                          <Alert variant="info">
+                            <h5>No Content Available</h5>
+                            <p>The document has been processed, but no summary or sections were found.</p>
+                          </Alert>
+                        )}
                       </>
                     )}
                   </Col>
