@@ -147,6 +147,27 @@ export class IEPDocumentClient {
       
       // Extract the summary if available
       let summary = null;
+
+      let translatedSummary = null;
+      
+      // Extract sections if available (they're at the same level as summaries)
+      // We need to traverse sections > M > en > M to get the section data
+      let extractedSections = null;
+
+      let extractedSectionsTranslated = null;
+
+      let documentUrl = null;
+
+      if (mostRecentDoc.summaries) {
+        try {
+          // Try to extract English summary from M > en > S path
+          summary = mostRecentDoc.summaries.M?.en?.S || null;
+          translatedSummary = mostRecentDoc.summaries.M?.vi.S || mostRecentDoc.summaries.M?.zh.S || mostRecentDoc.summaries.M?.es.S || null;
+        } catch (error) {
+          console.error("Error extracting summary from document:", error);
+        }
+      }
+
       if (mostRecentDoc.summaries) {
         try {
           // Try to extract English summary from M > en > S path
@@ -155,14 +176,21 @@ export class IEPDocumentClient {
           console.error("Error extracting summary from document:", error);
         }
       }
-      
-      // Extract sections if available (they're at the same level as summaries)
-      // We need to traverse sections > M > en > M to get the section data
-      let extractedSections = null;
+
       if (mostRecentDoc.sections) {
         try {
           // Get the sections object which should have the M > en > M structure
-          extractedSections = mostRecentDoc.sections;
+          extractedSections = mostRecentDoc.sections.M?.en?.M || null;
+          extractedSectionsTranslated = mostRecentDoc.sections.M?.vi?.M || mostRecentDoc.sections.M?.zh?.M || mostRecentDoc.sections.M?.es?.M || null;
+        } catch (error) {
+          console.error("Error extracting sections from document:", error);
+        }
+      }
+
+      if (mostRecentDoc.documentUrl) {
+        try {
+          // Get the sections object which should have the M > en > M structure
+          documentUrl = mostRecentDoc.documentUrl;
         } catch (error) {
           console.error("Error extracting sections from document:", error);
         }
@@ -172,7 +200,10 @@ export class IEPDocumentClient {
       return {
         ...mostRecentDoc,
         summary: summary,
-        sections: extractedSections
+        sections: extractedSections,
+        translatedSections : extractedSectionsTranslated,
+        documentUrl: documentUrl,
+        translatedSummary: translatedSummary
       };
     } catch (error) {
       console.error('Error fetching most recent document with summary:', error);

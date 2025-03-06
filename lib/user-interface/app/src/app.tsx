@@ -19,9 +19,12 @@ import "./styles/app.scss";
 import ConfigurationPage from "./pages/admin/sys-prompt-config/sys_prompt_config_page";
 import LlmEvaluationPage from "./pages/admin/llm-eval/llm-evaluation-page"; 
 import DetailedEvaluationPage from "./pages/admin/llm-eval/detailed-evaluation-page";
+import AgeAndCity from './pages/profile/AgeAndCity'; 
 import UserProfileForm from './pages/profile/UserProfileForm';
 import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
 import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslationsPage';
+import ViewAndAddChild from './pages/profile/ViewAndAddChild';
+import RightsAndOnboarding from './pages/RightsAndOnboarding';
 
 function App() {
   const appContext = useContext(AppContext);
@@ -35,11 +38,16 @@ function App() {
         <div>
           <Routes>    
           {/* "/" path now takes us to a Welcome page */}
+          <Route path="/" element={<AgeAndCity />} />
           <Route
                 index
-                path="/"
+                path="/welcome-page"
                 element={<WelcomePage />} 
             />        
+          <Route
+                path="/view-update-add-child"
+                element={<ViewAndAddChild />} 
+            />
             {/* <Route
                 index
                 path="/"
@@ -47,6 +55,7 @@ function App() {
             />             */}
             <Route path="/profile" element={<UserProfileForm />} />
             <Route path="/iep-documents" element={<IEPDocumentView />} />
+            <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} />            
             <Route path="/chatbot" element={<Outlet />}>
               <Route path="playground/:sessionId" element={<Playground />} />

@@ -8,12 +8,14 @@ import {
   Alert, 
   Button,
   Badge,
-  Accordion
+  Accordion,
+  Tabs,
+  Tab
 } from 'react-bootstrap';
 import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } from '@fortawesome/free-solid-svg-icons';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
@@ -23,8 +25,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [recentDocument, setRecentDocument] = useState<any>(null);
   const [summary, setSummary] = useState<string>('');
+  const [translatedSummary, setTranslatedSummary] = useState<string>('');
   const [sections, setSections] = useState<{name: string, content: string}[]>([]);
+  const [translatedSections, setTranslatedSections] = useState<{name: string, content: string}[]>([]);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState<string>('english');
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -45,16 +50,20 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             setSummary('');
           }
           
+          // Set the translated summary if available
+          if (mostRecentDocWithSummary.translatedSummary) {
+            setTranslatedSummary(mostRecentDocWithSummary.translatedSummary);
+          } else {
+            setTranslatedSummary('');
+          }
+          
           // Extract sections if available
           if (mostRecentDocWithSummary.sections) {
             try {
               const extractedSections = [];
-              // Add type checking to ensure sections has the expected structure
-              const sectionsObj = mostRecentDocWithSummary.sections as any;
+              const sectionsData = mostRecentDocWithSummary.sections;
               
-              if (sectionsObj && sectionsObj.M && sectionsObj.M.en && sectionsObj.M.en.M) {
-                const sectionsData = sectionsObj.M.en.M;
-                
+              if (sectionsData) {
                 // Iterate through each section
                 for (const [sectionName, sectionContent] of Object.entries(sectionsData)) {
                   // Extract content by traversing M -> S -> S with type safety
@@ -76,10 +85,41 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           } else {
             setSections([]);
           }
+          
+          // Extract translated sections if available
+          if (mostRecentDocWithSummary.translatedSections) {
+            try {
+              const extractedTranslatedSections = [];
+              const translatedSectionsData = mostRecentDocWithSummary.translatedSections;
+              
+              if (translatedSectionsData) {
+                // Iterate through each section
+                for (const [sectionName, sectionContent] of Object.entries(translatedSectionsData)) {
+                  // Extract content by traversing M -> S -> S with type safety
+                  const sectionContentObj = sectionContent as any;
+                  const content = sectionContentObj?.M?.S?.S || '';
+                  
+                  extractedTranslatedSections.push({ 
+                    name: sectionName, 
+                    content: content
+                  });
+                }
+              }
+              
+              setTranslatedSections(extractedTranslatedSections);
+            } catch (e) {
+              console.error("Error extracting translated sections:", e);
+              setTranslatedSections([]);
+            }
+          } else {
+            setTranslatedSections([]);
+          }
         } else {
           setRecentDocument(null);
           setSummary('');
+          setTranslatedSummary('');
           setSections([]);
+          setTranslatedSections([]);
         }
       } catch (err) {
         console.error('Error fetching documents:', err);
@@ -119,13 +159,22 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
+  // Extract filename from documentUrl 
+  const getFileName = (documentUrl: string) => {
+    if (!documentUrl) return 'Document';
+    return documentUrl.split('/').pop() || 'Document';
+  };
+
+  // Check if translated content exists
+  const hasTranslatedContent = translatedSummary || translatedSections.length > 0;
+
   return (
     <Container className="mt-4 mb-5">
       <Row>
         <Col>
           <h1>IEP Document Summary</h1>
           <p className="lead">
-            View the latest summary of your IEP document.
+            View a summary of your IEP document.
           </p>
           
           <Button 
@@ -151,7 +200,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           {loading && !error ? (
             <div className="text-center my-5">
               <Spinner animation="border" role="status">
-                <span className="visually-hidden">Loading...</span>
+                <span className="visually-hidden">Loading document summary...</span>
               </Spinner>
               <p className="mt-3">Loading document summary...</p>
             </div>
@@ -164,7 +213,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               <Card.Header className="d-flex justify-content-between align-items-center">
                 <div>
                   <FontAwesomeIcon icon={faFileAlt} className="me-2" />
-                  {recentDocument.Key ? recentDocument.Key.split('/').pop() : 'Document'}
+                  {recentDocument.documentUrl ? getFileName(recentDocument.documentUrl) : 'Document'}
                 </div>
                 {recentDocument.status && renderStatusBadge(recentDocument.status)}
               </Card.Header>
@@ -189,39 +238,114 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                       </Alert>
                     ) : (
                       <>
-                        {summary && (
-                          <>
-                            <Card.Title className="mt-4">Document Summary</Card.Title>
-                            <Card className="bg-light mb-4">
-                              <Card.Body>
-                                <p className="mb-0">{summary}</p>
-                              </Card.Body>
-                            </Card>
-                          </>
-                        )}
+                        <Tabs
+                          activeKey={activeTab}
+                          onSelect={(k) => k && setActiveTab(k)}
+                          className="mb-3 mt-4"
+                        >
+                          <Tab eventKey="english" title="English">
+                            {summary ? (
+                              <>
+                                <Card.Title className="mt-4">Document Summary</Card.Title>
+                                <Card className="bg-light mb-4">
+                                  <Card.Body>
+                                    <p className="mb-0">{summary}</p>
+                                  </Card.Body>
+                                </Card>
+                              </>
+                            ) : (
+                              <Alert variant="info">
+                                <h5>No Summary Available</h5>
+                                <p>No English summary was found for this document.</p>
+                              </Alert>
+                            )}
+                            
+                            {sections.length > 0 ? (
+                              <>
+                                <Card.Title className="mt-4">Document Sections</Card.Title>
+                                <Accordion className="mb-3">
+                                  {sections.map((section, index) => (
+                                    <Accordion.Item key={index} eventKey={index.toString()}>
+                                      <Accordion.Header>
+                                        {section.name}
+                                      </Accordion.Header>
+                                      <Accordion.Body>
+                                        {section.content || 'No content available for this section.'}
+                                      </Accordion.Body>
+                                    </Accordion.Item>
+                                  ))}
+                                </Accordion>
+                              </>
+                            ) : (
+                              <Alert variant="info">
+                                <h5>No Sections Available</h5>
+                                <p>No English sections were found for this document.</p>
+                              </Alert>
+                            )}
+                          </Tab>
+
+                          <Tab 
+                            eventKey="translated" 
+                            title={
+                              <span>
+                                <FontAwesomeIcon icon={faLanguage} className="me-1" />
+                                Preferred Language
+                              </span>
+                            }
+                            disabled={!hasTranslatedContent}
+                          >
+                            {translatedSummary ? (
+                              <>
+                                <Card.Title className="mt-4">Document Summary</Card.Title>
+                                <Card className="bg-light mb-4">
+                                  <Card.Body>
+                                    <p className="mb-0">{translatedSummary}</p>
+                                  </Card.Body>
+                                </Card>
+                              </>
+                            ) : (
+                              <Alert variant="info">
+                                <h5>No Translated Summary Available</h5>
+                                <p>No summary in your preferred language was found for this document.</p>
+                              </Alert>
+                            )}
+                            
+                            {translatedSections.length > 0 ? (
+                              <>
+                                <Card.Title className="mt-4">Document Sections</Card.Title>
+                                <Accordion className="mb-3">
+                                  {translatedSections.map((section, index) => (
+                                    <Accordion.Item key={index} eventKey={index.toString()}>
+                                      <Accordion.Header>
+                                        {section.name}
+                                      </Accordion.Header>
+                                      <Accordion.Body>
+                                        {section.content || 'No content available for this section.'}
+                                      </Accordion.Body>
+                                    </Accordion.Item>
+                                  ))}
+                                </Accordion>
+                              </>
+                            ) : (
+                              <Alert variant="info">
+                                <h5>No Translated Sections Available</h5>
+                                <p>No sections in your preferred language were found for this document.</p>
+                              </Alert>
+                            )}
+                            
+                            {!translatedSummary && translatedSections.length === 0 && (
+                              <Alert variant="warning">
+                                <h5>No Translated Content Available</h5>
+                                <p>No content in your preferred language was found for this document.</p>
+                              </Alert>
+                            )}
+                          </Tab>
+                        </Tabs>
                         
-                        {sections.length > 0 && (
-                          <>
-                            <Card.Title className="mt-4">Document Sections</Card.Title>
-                            <Accordion className="mb-3">
-                              {sections.map((section, index) => (
-                                <Accordion.Item key={index} eventKey={index.toString()}>
-                                  <Accordion.Header>
-                                    {section.name}
-                                  </Accordion.Header>
-                                  <Accordion.Body>
-                                    {section.content || 'No content available for this section.'}
-                                  </Accordion.Body>
-                                </Accordion.Item>
-                              ))}
-                            </Accordion>
-                          </>
-                        )}
-                        
-                        {!summary && sections.length === 0 && (
+                        {!summary && !translatedSummary && sections.length === 0 && translatedSections.length === 0 && (
                           <Alert variant="info">
                             <h5>No Content Available</h5>
-                            <p>The document has been processed, but no summary or sections were found.</p>
+                            <p>The document has been processed, but no summary or sections were found in any language.</p>
                           </Alert>
                         )}
                       </>

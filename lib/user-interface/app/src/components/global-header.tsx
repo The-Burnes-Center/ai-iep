@@ -4,11 +4,13 @@ import { Auth } from "aws-amplify";
 import { AuthContext } from "../common/auth-context"; 
 import { CHATBOT_NAME } from "../common/constants";
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function GlobalHeader() {
   const [userName, setUserName] = useState<string | null>(null);
   const { setAuthenticated } = useContext(AuthContext); 
+  const navigate = useNavigate();
 
   // This useEffect hook runs once when the component mounts and checks if the user is authenticated
   // If the user is not authenticated then they are signed out
@@ -41,6 +43,7 @@ export default function GlobalHeader() {
   // This triggers a re-render in AppConfigured which shows the LoginScreen
   const handleSignOut = async () => {
     try {
+      navigate('/', { replace: true });
       await Auth.signOut();
       setAuthenticated(false);
     } catch (error) {
