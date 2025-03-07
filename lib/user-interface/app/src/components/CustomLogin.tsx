@@ -6,11 +6,11 @@ import {
   Col, 
   Form, 
   Button, 
-  Card, 
   Alert, 
   Spinner 
 } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './CustomLogin.css'; // Import the custom CSS file
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -27,17 +27,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
 
-  // Form submission event triggers handleSignIn
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     
     try {
-      // singIn method sends credentrials to Cognito throught Amplify's API
-      // Cognito verifies the username exists in the user pool
-      // Validates the password using Secure Remote Password protocol
-      // Upon Success ID token, Access token and Refresh token are generated 
       const user = await Auth.signIn(username, password);
       console.log('Login successful', user);
       onLoginSuccess();
@@ -46,7 +41,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       if (err.code === 'UserNotConfirmedException') {
         setError('Please confirm your account through the link sent to your email');
       } else if (err.code === 'NotAuthorizedException') {
-        setError('Incorrect username or password');
+        setError('Incorrect email or password');
       } else if (err.code === 'UserNotFoundException') {
         setError('User does not exist');
       } else {
@@ -93,16 +88,15 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
   if (showForgotPassword) {
     return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <Card style={{ width: '400px' }} className="shadow">
-          <Card.Header className="bg-primary text-white text-center">
-            <h4>Reset Password</h4>
-          </Card.Header>
-          <Card.Body>
-            {!resetSent ? (
-              <Form onSubmit={handleForgotPassword}>
+      <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
+        <Col xs={12} md={6} lg={4}>
+          <h4 className="text-center mb-4 form-label-bold">Reset Password</h4>
+          
+          {!resetSent ? (
+            <Form onSubmit={handleForgotPassword}>
+              <div className="mobile-form-container">
                 <Form.Group className="mb-3">
-                  <Form.Label>Email</Form.Label>
+                  <Form.Label className="form-label-bold">Email</Form.Label>
                   <Form.Control
                     type="email"
                     placeholder="Enter your email"
@@ -115,22 +109,25 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 {error && <Alert variant="danger">{error}</Alert>}
                 
                 <div className="d-grid gap-2">
-                  <Button variant="primary" type="submit" disabled={loading}>
+                  <Button variant="primary" type="submit" disabled={loading} className="button-text">
                     {loading ? <Spinner animation="border" size="sm" /> : 'Send Reset Code'}
                   </Button>
                   <Button 
                     variant="link" 
                     onClick={() => setShowForgotPassword(false)}
                     disabled={loading}
+                    className="forgot-password-link"
                   >
                     Back to Sign In
                   </Button>
                 </div>
-              </Form>
-            ) : (
-              <Form onSubmit={handleResetPassword}>
+              </div>
+            </Form>
+          ) : (
+            <Form onSubmit={handleResetPassword}>
+              <div className="mobile-form-container">
                 <Form.Group className="mb-3">
-                  <Form.Label>Verification Code</Form.Label>
+                  <Form.Label className="form-label-bold">Verification Code</Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="Enter verification code"
@@ -141,7 +138,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 </Form.Group>
                 
                 <Form.Group className="mb-3">
-                  <Form.Label>New Password</Form.Label>
+                  <Form.Label className="form-label-bold">New Password</Form.Label>
                   <Form.Control
                     type="password"
                     placeholder="Enter new password"
@@ -154,47 +151,38 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 {error && <Alert variant="danger">{error}</Alert>}
                 
                 <div className="d-grid gap-2">
-                  <Button variant="primary" type="submit" disabled={loading}>
+                  <Button variant="primary" type="submit" disabled={loading} className="button-text">
                     {loading ? <Spinner animation="border" size="sm" /> : 'Reset Password'}
                   </Button>
                   <Button 
                     variant="link" 
                     onClick={() => setShowForgotPassword(false)}
                     disabled={loading}
+                    className="forgot-password-link"
                   >
                     Back to Sign In
                   </Button>
                 </div>
-              </Form>
-            )}
-          </Card.Body>
-        </Card>
+              </div>
+            </Form>
+          )}
+        </Col>
       </Container>
     );
   }
 
   return (
-    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-      <Card style={{ width: '400px' }} className="shadow">
-        <Card.Header className="bg-primary text-white text-center">
-          <h4>Welcome to AI-EP</h4>
-        </Card.Header>
-        <Card.Body>
-          <div className="text-center mb-4">
-            <img 
-              src="/images/stateseal-color.png" 
-              alt="Logo" 
-              style={{ width: '100px', height: 'auto' }} 
-            />
-            <h5 className="mt-2">Sign in to your account</h5>
-          </div>
-          
-          <Form onSubmit={handleSignIn}>
+    <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
+      <Col xs={12} md={6} lg={4}>
+        <h1 className="text-center mb-4 aiep-title">AIEP</h1>
+        
+        <Form onSubmit={handleSignIn}>
+          <div className="mobile-form-container">
             <Form.Group className="mb-3">
-              <Form.Label>Username or Email</Form.Label>
+              <Form.Label className="form-label-bold">Email</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Enter username or email"
+                placeholder="Enter email"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -202,7 +190,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Password</Form.Label>
+              <Form.Label className="form-label-bold">Password</Form.Label>
               <Form.Control
                 type="password"
                 placeholder="Enter password"
@@ -215,25 +203,21 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             {error && <Alert variant="danger">{error}</Alert>}
             
             <div className="d-grid gap-2">
-              <Button variant="primary" type="submit" disabled={loading}>
+              <Button variant="primary" type="submit" disabled={loading} className="button-text">
                 {loading ? <Spinner animation="border" size="sm" /> : 'Sign In'}
               </Button>
               <Button 
                 variant="link" 
                 onClick={() => setShowForgotPassword(true)}
                 disabled={loading}
+                className="forgot-password-link"
               >
                 Forgot Password?
               </Button>
             </div>
-          </Form>
-        </Card.Body>
-        <Card.Footer className="text-center text-muted">
-          <small>
-            An AI tool to help Massachusetts communities
-          </small>
-        </Card.Footer>
-      </Card>
+          </div>
+        </Form>
+      </Col>
     </Container>
   );
 };

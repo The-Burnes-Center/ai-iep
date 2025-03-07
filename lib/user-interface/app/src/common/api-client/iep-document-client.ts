@@ -162,7 +162,7 @@ export class IEPDocumentClient {
         try {
           // Try to extract English summary from M > en > S path
           summary = mostRecentDoc.summaries.M?.en?.S || null;
-          translatedSummary = mostRecentDoc.summaries.M?.vi.S || mostRecentDoc.summaries.M?.zh.S || mostRecentDoc.summaries.M?.es.S || null;
+          translatedSummary = mostRecentDoc.summaries.M?.es.S || mostRecentDoc.summaries.M?.vi.S || mostRecentDoc.summaries.M?.zh.S || null;
         } catch (error) {
           console.error("Error extracting summary from document:", error);
         }

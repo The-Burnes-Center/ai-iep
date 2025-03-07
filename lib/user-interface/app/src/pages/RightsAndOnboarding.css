@@ -1,0 +1,26 @@
+.rights-tab-content {
+    padding: 1rem 0;
+  }
+  
+  .tab-container {
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    width: 90%; /* Reduce to 90% of the original width */
+    margin: 0 auto; /* Center the content */
+  }
+  
+  .content-section {
+    margin-top: 1rem;
+  }
+  
+  .rights-nav-tabs {
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 1.5rem;
+  }
+  
+  .rights-list li {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }

@@ -5,6 +5,7 @@ import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile, Kid } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
+import './ProfileForms.css';
 
 export default function ViewAndAddChild() {
   const appContext = useContext(AppContext);
@@ -94,7 +95,7 @@ export default function ViewAndAddChild() {
 
   if (loading) {
     return (
-      <Container className="mt-4 text-center">
+      <Container className="text-center">
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
@@ -104,7 +105,7 @@ export default function ViewAndAddChild() {
 
   if (error) {
     return (
-      <Container className="mt-4">
+      <Container>
         <Alert variant="danger">{error}</Alert>
       </Container>
     );
@@ -113,27 +114,20 @@ export default function ViewAndAddChild() {
   return (
     <Container 
       fluid 
-      style={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#f8f9fa',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingTop: '64px'
-      }}
+      className="profile-form-container"
     >
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-center mb-4">
-              {hasExistingChild ? 'Update Child Details' : 'Add Child Details'}
+          <div className="profile-form">
+            <h2 className="text-center profile-title">
+              {hasExistingChild ? 'About Your Child' : 'About Your Child'}
             </h2>
             
             <Form>
               <Row className="mb-3">
                 <Col md={12}>
                   <Form.Group controlId="formChildName">
-                    <Form.Label>Child Name</Form.Label>
+                    <Form.Label className="form-label">Name</Form.Label>
                     <Form.Control 
                       type="text" 
                       placeholder="Enter child's name"
@@ -147,7 +141,7 @@ export default function ViewAndAddChild() {
               <Row className="mb-4">
                 <Col md={12}>
                   <Form.Group controlId="formSchoolCity">
-                    <Form.Label>City of School</Form.Label>
+                    <Form.Label className="form-label">School District</Form.Label>
                     <Form.Control 
                       type="text" 
                       placeholder="Enter school city"
@@ -163,6 +157,7 @@ export default function ViewAndAddChild() {
                   variant="primary" 
                   onClick={handleSaveAndContinue}
                   disabled={!isFormValid() || saving}
+                  className="button-text"
                 >
                   {saving ? 'Saving...' : 'Save & Continue'}
                 </Button>

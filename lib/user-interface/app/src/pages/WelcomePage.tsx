@@ -1,8 +1,9 @@
 import React, { useEffect, useContext, useState } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Auth } from 'aws-amplify';
 import { AuthContext } from '../common/auth-context';
 import { useNavigate } from 'react-router-dom';
+import './WelcomePage.css';
 
 export default function WelcomePage() {
   const { setAuthenticated } = useContext(AuthContext);
@@ -53,101 +54,60 @@ export default function WelcomePage() {
   }, [setAuthenticated, navigate]);
 
   return (
-    <Container fluid 
-      style={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#f8f9fa',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingTop: '64px'
-      }}
-    >
+    <Container fluid className="welcome-container">
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
+          {/* First Card - Rights and Onboarding */}
           <Card 
-            style={{ 
-              textAlign: 'center',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-              border: 'none',
-              borderRadius: '8px',
-              marginBottom: '2rem'
-            }}
+            className="mb-4 hover-effect option-card"
+            onClick={() => navigate('/rights-and-onboarding')}
           >
-            <Card.Body style={{ padding: '2rem' }}>
-              <h1 style={{ 
-                marginBottom: '1.5rem', 
-                color: '#0073bb',
-                fontSize: '2.5rem',
-                fontWeight: 'bold'
-              }}>
-                Welcome to AI-EP
-              </h1>
-              {/* First Card - Rights and Onboarding */}
-              <Card 
-                className="mb-4 hover-effect"
-                style={{ 
-                  cursor: 'pointer',
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                }}
-                onClick={() => navigate('/rights-and-onboarding')}
-              >
-                <Card.Body className="py-4">
-                  <div className="d-flex align-items-center">
-                    <div className="flex-shrink-0">
-                      <i className="bi bi-info-circle text-info" style={{ fontSize: '2rem' }}></i>
-                    </div>
-                    <div className="ms-4 text-start">
-                      <h3 className="mb-1">Your Rights</h3>
-                      <p className="text-muted mb-0">Learn about your rights and the IEP process</p>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-              
-              {/* Second Card - Upload IEP */}
-              <Card 
-                className="mb-4 hover-effect"
-                style={{ 
-                  cursor: 'pointer',
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                }}
-                onClick={() => navigate('/iep-documents')}
-              >
-                <Card.Body className="py-4">
-                  <div className="d-flex align-items-center">
-                    <div className="flex-shrink-0">
-                      <i className="bi bi-upload text-primary" style={{ fontSize: '2rem' }}></i>
-                    </div>
-                    <div className="ms-4 text-start">
-                      <h3 className="mb-1">Upload IEP</h3>
-                      <p className="text-muted mb-0">Upload and manage your IEP documents</p>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-              
-              {/* Third Card - Summary and Translation */}
-              <Card 
-                className="hover-effect"
-                style={{ 
-                  cursor: 'pointer',
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                }}
-                onClick={() => navigate('/summary-and-translations')}
-              >
-                <Card.Body className="py-4">
-                  <div className="d-flex align-items-center">
-                    <div className="flex-shrink-0">
-                      <i className="bi bi-translate text-success" style={{ fontSize: '2rem' }}></i>
-                    </div>
-                    <div className="ms-4 text-start">
-                      <h3 className="mb-1">Summary and Translation</h3>
-                      <p className="text-muted mb-0">View summaries and translations of your IEP documents</p>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
+            <Card.Body className="py-4">
+              <div className="d-flex align-items-center">
+                <div className="flex-shrink-0">
+                  <i className="bi bi-info-circle text-info" style={{ fontSize: '2rem' }}></i>
+                </div>
+                <div className="ms-4 text-start">
+                  <h3 className="mb-1">Your Rights</h3>
+                  <p className="text-muted mb-0">Learn about your rights and the IEP process</p>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+          
+          {/* Second Card - Upload IEP */}
+          <Card 
+            className="mb-4 hover-effect option-card"
+            onClick={() => navigate('/iep-documents')}
+          >
+            <Card.Body className="py-4">
+              <div className="d-flex align-items-center">
+                <div className="flex-shrink-0">
+                  <i className="bi bi-upload text-primary" style={{ fontSize: '2rem' }}></i>
+                </div>
+                <div className="ms-4 text-start">
+                  <h3 className="mb-1">Upload IEP</h3>
+                  <p className="text-muted mb-0">Upload and manage your IEP documents</p>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+          
+          {/* Third Card - Summary and Translation */}
+          <Card 
+            className="hover-effect option-card"
+            onClick={() => navigate('/summary-and-translations')}
+          >
+            <Card.Body className="py-4">
+              <div className="d-flex align-items-center">
+                <div className="flex-shrink-0">
+                  <i className="bi bi-translate text-success" style={{ fontSize: '2rem' }}></i>
+                </div>
+                <div className="ms-4 text-start">
+                  <h3 className="mb-1">Summary and Translation</h3>
+                  <p className="text-muted mb-0">View summaries and translations of your IEP documents</p>
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>
@@ -155,5 +115,3 @@ export default function WelcomePage() {
     </Container>
   );
 }
-
-          

@@ -1,0 +1,22 @@
+.upload-container {
+    background-color: transparent;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    box-shadow: none;
+    padding: 0;
+  }
+  
+  .upload-container .card-body {
+    padding: 1.5rem;
+  }
+  
+  .file-list {
+    margin: 1rem 0;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+  }
+  
+  .progress-container {
+    margin-top: 1rem;
+  }

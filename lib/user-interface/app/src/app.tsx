@@ -1,11 +1,11 @@
 import { useContext } from "react";
 import {
   BrowserRouter,
-  HashRouter,
   Outlet,
   Route,
   Routes,
   Navigate,
+  useLocation
 } from "react-router-dom";
 import { AppContext } from "./common/app-context";
 import GlobalHeader from "./components/global-header";
@@ -19,26 +19,36 @@ import "./styles/app.scss";
 import ConfigurationPage from "./pages/admin/sys-prompt-config/sys_prompt_config_page";
 import LlmEvaluationPage from "./pages/admin/llm-eval/llm-evaluation-page"; 
 import DetailedEvaluationPage from "./pages/admin/llm-eval/detailed-evaluation-page";
-import AgeAndCity from './pages/profile/AgeAndCity'; 
+import LanguageAndCity from './pages/profile/LanguageAndCity'; 
 import UserProfileForm from './pages/profile/UserProfileForm';
 import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
 import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslationsPage';
 import ViewAndAddChild from './pages/profile/ViewAndAddChild';
 import RightsAndOnboarding from './pages/RightsAndOnboarding';
+import ConsentForm from './pages/profile/ConsentForm';
 
-function App() {
+function AppContent() {
+  const location = useLocation();
   const appContext = useContext(AppContext);
-  const Router = BrowserRouter;
-
+  
+  // Routes where header should be hidden
+  const hideHeaderRoutes = ["/", "/consent-form", "/view-update-add-child"];
+  
+  // Check if current location is in the list of routes where header should be hidden
+  const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
+  
   return (
     <div style={{ height: "100%" }}>
-      <Router>
-        <GlobalHeader />
-        <div style={{ height: "56px", backgroundColor: "#000716" }}>&nbsp;</div>
-        <div>
-          <Routes>    
-          {/* "/" path now takes us to a Welcome page */}
-          <Route path="/" element={<AgeAndCity />} />
+      {shouldShowHeader && <GlobalHeader />}
+      <div style={{ 
+        height: shouldShowHeader ? "56px" : "0", 
+        backgroundColor: shouldShowHeader ? "#000716" : "transparent" 
+      }}>&nbsp;</div>
+      
+      <div>
+        <Routes>    
+          <Route path="/" element={<LanguageAndCity />} />
+          <Route path="/consent-form" element={<ConsentForm />} />
           <Route
                 index
                 path="/welcome-page"
@@ -48,11 +58,6 @@ function App() {
                 path="/view-update-add-child"
                 element={<ViewAndAddChild />} 
             />
-            {/* <Route
-                index
-                path="/"
-                element={<Navigate to={`/chatbot/playground/${uuidv4()}`} replace />}
-            />             */}
             <Route path="/profile" element={<UserProfileForm />} />
             <Route path="/iep-documents" element={<IEPDocumentView />} />
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
@@ -78,11 +83,18 @@ function App() {
           </Route>                          
             </Route>            
             <Route path="*" element={<Navigate to={`/chatbot/playground/${uuidv4()}`} replace />} />
-          </Routes>
-        </div>
-      </Router>
+        </Routes>
+      </div>
     </div>
   );
 }
 
-export default App;
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
+export default App; 

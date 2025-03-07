@@ -3,15 +3,15 @@ import {
   Container, 
   Row, 
   Col, 
-  Card, 
   Tabs, 
   Tab 
 } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLanguage } from '@fortawesome/free-solid-svg-icons';
+import './RightsAndOnboarding.css';
 
 const RightsAndOnboarding: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('english');
+  const [activeTab, setActiveTab] = useState<string>('spanish');
 
   const englishContent = {
     title: "Your Rights as a Parent",
@@ -43,52 +43,51 @@ const RightsAndOnboarding: React.FC = () => {
     <Container className="mt-4 mb-5">
       <Row>
         <Col>
-          <h1>Rights and Onboarding</h1>
+        <p></p>
+          {/* <h1>Rights and Onboarding</h1>
           <p className="lead">
             Learn about your rights and the IEP process.
           </p>
-          
-          <Card className="shadow-sm">
-            <Card.Body>
-              <Tabs
-                activeKey={activeTab}
-                onSelect={(k) => k && setActiveTab(k)}
-                className="mb-4"
+           */}
+          <div className="tab-container">
+            <Tabs
+              activeKey={activeTab}
+              onSelect={(k) => k && setActiveTab(k)}
+              className="mb-4 rights-nav-tabs"
+            >
+              <Tab 
+                eventKey="spanish" 
+                title={
+                  <span>
+                    <FontAwesomeIcon icon={faLanguage} className="me-1" />
+                    Spanish
+                  </span>
+                }
               >
-                <Tab eventKey="english" title="English">
-                  <div className="content-section">
-                    <h2>{englishContent.title}</h2>
-                    <p>{englishContent.description}</p>
-                    <ul className="mt-3">
-                      {englishContent.bulletPoints.map((point, index) => (
-                        <li key={index} className="mb-2">{point}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </Tab>
-                
-                <Tab 
-                  eventKey="spanish" 
-                  title={
-                    <span>
-                      <FontAwesomeIcon icon={faLanguage} className="me-1" />
-                      Preferred Language
-                    </span>
-                  }
-                >
-                  <div className="content-section">
-                    <h2>{spanishContent.title}</h2>
-                    <p>{spanishContent.description}</p>
-                    <ul className="mt-3">
-                      {spanishContent.bulletPoints.map((point, index) => (
-                        <li key={index} className="mb-2">{point}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </Tab>
-              </Tabs>
-            </Card.Body>
-          </Card>
+                <div className="content-section rights-tab-content">
+                  <h2>{spanishContent.title}</h2>
+                  <p>{spanishContent.description}</p>
+                  <ul className="mt-3 rights-list">
+                    {spanishContent.bulletPoints.map((point, index) => (
+                      <li key={index} className="mb-2">{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              </Tab>
+              
+              <Tab eventKey="english" title="English">
+                <div className="content-section rights-tab-content">
+                  <h2>{englishContent.title}</h2>
+                  <p>{englishContent.description}</p>
+                  <ul className="mt-3 rights-list">
+                    {englishContent.bulletPoints.map((point, index) => (
+                      <li key={index} className="mb-2">{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              </Tab>
+            </Tabs>
+          </div>
         </Col>
       </Row>
     </Container>

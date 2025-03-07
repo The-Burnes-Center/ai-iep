@@ -15,13 +15,10 @@ import { FileUploader } from '../../common/file-uploader';
 import { Utils } from '../../common/utils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faTimesCircle, faUpload } from '@fortawesome/free-solid-svg-icons';
+import './UploadIEPDocument.css';
 
 // Define allowed file types and MIME types
-const fileExtensions = new Set([
-  ".csv", ".doc", ".docx", ".epub", ".odt", ".pdf", ".ppt", ".pptx",
-  ".tsv", ".xlsx", ".eml", ".html", ".json", ".md", ".msg",
-  ".rst", ".rtf", ".txt", ".xml",
-]);
+const fileExtensions = new Set([".doc", ".docx", ".pdf"]);
 
 const mimeTypes = {
   '.pdf': 'application/pdf',
@@ -136,14 +133,13 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
   };
 
   return (
-    <Container>
-      <Card className="mt-4">
+    <Container className="p-0">
+      <Card className="upload-container">
         <Card.Body>
-          <Card.Title>Upload IEP Document</Card.Title>
-          <Card.Text>
-            Select a file to upload. Supported file types include PDF, Word, Excel, and other document formats.
+          <h4 className="mb-3">Upload IEP Document</h4>
+          <p>
             Maximum file size: 100MB.
-          </Card.Text>
+          </p>
           
           {globalError && (
             <Alert variant="danger">{globalError}</Alert>
@@ -151,7 +147,6 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
           
           <Form>
             <Form.Group controlId="formFile" className="mb-3">
-              <Form.Label>Choose file</Form.Label>
               <Form.Control 
                 type="file" 
                 onChange={handleFileChange}
@@ -168,7 +163,7 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
             </Form.Group>
             
             {file && (
-              <ListGroup className="mt-3 mb-3">
+              <ListGroup className="file-list">
                 <ListGroup.Item className="d-flex justify-content-between align-items-center">
                   <div>
                     <FontAwesomeIcon icon={faFileAlt} className="me-2" />
@@ -186,7 +181,7 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
             )}
             
             {uploadStatus === 'uploading' && (
-              <div className="mt-3">
+              <div className="progress-container">
                 <p>{currentFileName}</p>
                 <ProgressBar 
                   now={uploadProgress} 

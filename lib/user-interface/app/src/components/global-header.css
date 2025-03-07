@@ -1,0 +1,26 @@
+/* Google font imports */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap');
+
+.aiep-navbar {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 2rem;
+}
+
+/* Custom navbar background color */
+.custom-navbar {
+  background-color: #0040BA !important; /* Use !important to override Bootstrap's styles */
+}
+
+/* Ensuring text is properly visible against the background */
+.custom-navbar .navbar-brand,
+.custom-navbar .nav-link,
+.custom-navbar .dropdown-toggle {
+  color: white !important;
+}
+
+/* Hover effects for better user experience */
+.custom-navbar .nav-link:hover,
+.custom-navbar .dropdown-toggle:hover {
+  color: rgba(255, 255, 255, 0.8) !important;
+}

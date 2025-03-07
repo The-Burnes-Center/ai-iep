@@ -5,6 +5,7 @@ import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
+import './ProfileForms.css';
 
 const LANGUAGE_OPTIONS = [
   { value: 'en', label: 'English' },
@@ -13,7 +14,7 @@ const LANGUAGE_OPTIONS = [
   { value: 'vi', label: 'Vietnamese' }
 ];
 
-export default function AgeAndCity() {
+export default function LanguageAndCity() {
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ export default function AgeAndCity() {
       }
       
       // Always navigate to welcome page after clicking Next
-      navigate('/view-update-add-child');
+      navigate('/consent-form');
     } catch (err) {
       addNotification('error', 'Failed to update profile');
     } finally {
@@ -70,7 +71,7 @@ export default function AgeAndCity() {
 
   if (loading) {
     return (
-      <Container className="mt-4 text-center">
+      <Container className="text-center">
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
@@ -80,7 +81,7 @@ export default function AgeAndCity() {
 
   if (error) {
     return (
-      <Container className="mt-4">
+      <Container>
         <Alert variant="danger">{error}</Alert>
       </Container>
     );
@@ -89,25 +90,17 @@ export default function AgeAndCity() {
   return (
     <Container 
       fluid 
-      style={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#f8f9fa',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingTop: '64px'
-      }}
+      className="profile-form-container"
     >
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="text-center mb-4">Please select below to get started</h2>
-            
+          <div className="profile-form">
+            {/* <h2 className="text-center profile-title">Please select below to get started</h2> */}
             <Form>
               <Row className="mb-3">
                 <Col md={12}>
                   <Form.Group controlId="formPreferredLanguage">
-                    <Form.Label>Preferred Language</Form.Label>
+                    <Form.Label className="form-label">Preferred Language</Form.Label>
                     <Form.Select
                       value={profile?.secondaryLanguage || ''}
                       onChange={e => setProfile(prev => prev ? {...prev, secondaryLanguage: e.target.value} : null)}
@@ -126,7 +119,7 @@ export default function AgeAndCity() {
               <Row className="mb-4">
                 <Col md={12}>
                   <Form.Group controlId="formCity">
-                    <Form.Label>City of Residence</Form.Label>
+                    <Form.Label className="form-label">City of Residence</Form.Label>
                     <Form.Control 
                       type="text" 
                       placeholder="Enter city"
@@ -142,6 +135,7 @@ export default function AgeAndCity() {
                   variant="primary" 
                   onClick={handleNext}
                   disabled={saving}
+                  className="button-text"
                 >
                   {saving ? 'Saving...' : 'Next'}
                 </Button>

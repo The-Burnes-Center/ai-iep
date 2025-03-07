@@ -6,6 +6,7 @@ import { CHATBOT_NAME } from "../common/constants";
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './global-header.css';
 
 export default function GlobalHeader() {
   const [userName, setUserName] = useState<string | null>(null);
@@ -53,24 +54,14 @@ export default function GlobalHeader() {
 
   return (
     <Navbar 
-      bg="primary" 
       variant="dark" 
       expand="lg" 
       fixed="top"
-      style={{ 
-        backgroundColor: "#0073bb !important",
-        zIndex: 1002 
-      }}
+      className="custom-navbar" // Using the custom CSS class
     >
       <Container fluid>
-        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
-          <img
-            src="/images/stateseal-color.png"
-            alt={`${CHATBOT_NAME} Logo`}
-            height="30"
-            className="me-2"
-          />
-          <span>{CHATBOT_NAME}</span>
+        <Navbar.Brand as={Link} to="/welcome-page" className="d-flex align-items-center">
+          <span className="aiep-navbar">AIEP</span>
         </Navbar.Brand>
         
         <Navbar.Toggle aria-controls="basic-navbar-nav" />

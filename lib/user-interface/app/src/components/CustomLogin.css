@@ -1,0 +1,74 @@
+/* Google font imports */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+/* AIEP title style */
+.aiep-title {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 4rem;
+  animation: fadeIn 1.2s ease-in;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Form label styles */
+.form-label-bold {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+}
+
+/* Button text style */
+.button-text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+}
+
+/* Forgot Password link style */
+.forgot-password-link {
+  color: #0040BA !important;
+  text-decoration: none !important; 
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+}
+
+/* Apply styles to form controls for placeholder text */
+.form-control::placeholder {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  opacity: 0.7;
+}
+
+/* Background color for login container */
+.login-container {
+  background-color: #FFFFFF !important;
+}
+
+/* Primary button color override */
+.btn-primary {
+  background-color: #0040BA !important;
+  border-color: #0040BA !important;
+}
+
+/* Button hover effect */
+.btn-primary:hover {
+  background-color: #003399 !important;
+  border-color: #003399 !important;
+}
+
+/* Form control focus */
+.form-control:focus {
+  border-color: #0040BA;
+  box-shadow: 0 0 0 0.25rem rgba(0, 64, 186, 0.25);
+}
+
+/* Mobile responsive styling for form elements */
+@media (max-width: 767px) {
+  .mobile-form-container {
+    width: 80%;
+    margin: 0 auto;
+  }
+}

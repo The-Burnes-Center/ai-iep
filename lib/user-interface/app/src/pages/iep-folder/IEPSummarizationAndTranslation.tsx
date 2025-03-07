@@ -16,6 +16,7 @@ import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } from '@fortawesome/free-solid-svg-icons';
+import './IEPSummarizationAndTranslation.css';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
@@ -26,10 +27,51 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [recentDocument, setRecentDocument] = useState<any>(null);
   const [summary, setSummary] = useState<string>('');
   const [translatedSummary, setTranslatedSummary] = useState<string>('');
-  const [sections, setSections] = useState<{name: string, content: string}[]>([]);
-  const [translatedSections, setTranslatedSections] = useState<{name: string, content: string}[]>([]);
+  const [sections, setSections] = useState<{name: string, displayName: string, content: string}[]>([]);
+  const [translatedSections, setTranslatedSections] = useState<{name: string, displayName: string, content: string}[]>([]);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<string>('english');
+  const [activeTab, setActiveTab] = useState<string>('translated');
+
+  // Define the desired section order and display names
+  const sectionConfig = [
+    { apiName: "Student Information", displayName: "About Student" },
+    { apiName: "Accommodations", displayName: "Accommodations" },
+    { apiName: "Goals", displayName: "Goals" },
+    { apiName: "Services", displayName: "Services" },
+    { apiName: "Present Levels of Performance", displayName: "Present Levels of Performance" }
+  ];
+
+  // Function to get display name for a section
+  const getDisplayName = (apiName: string): string => {
+    const config = sectionConfig.find(s => s.apiName === apiName);
+    return config ? config.displayName : apiName;
+  };
+
+  // Function to sort sections based on the predefined order
+  const sortSections = (sectionsArray: {name: string, displayName: string, content: string}[]) => {
+    return [...sectionsArray].sort((a, b) => {
+      const indexA = sectionConfig.findIndex(s => s.apiName === a.name);
+      const indexB = sectionConfig.findIndex(s => s.apiName === b.name);
+      
+      // If both sections are in our predefined order list
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      
+      // If only section A is in our list, prioritize it
+      if (indexA !== -1) {
+        return -1;
+      }
+      
+      // If only section B is in our list, prioritize it
+      if (indexB !== -1) {
+        return 1;
+      }
+      
+      // If neither section is in our list, maintain their original order
+      return 0;
+    });
+  };
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -71,13 +113,16 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   const content = sectionContentObj?.M?.S?.S || '';
                   
                   extractedSections.push({ 
-                    name: sectionName, 
+                    name: sectionName,
+                    displayName: getDisplayName(sectionName), 
                     content: content
                   });
                 }
               }
               
-              setSections(extractedSections);
+              // Sort sections according to our defined order
+              const orderedSections = sortSections(extractedSections);
+              setSections(orderedSections);
             } catch (e) {
               console.error("Error extracting sections:", e);
               setSections([]);
@@ -100,13 +145,16 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   const content = sectionContentObj?.M?.S?.S || '';
                   
                   extractedTranslatedSections.push({ 
-                    name: sectionName, 
+                    name: sectionName,
+                    displayName: getDisplayName(sectionName), 
                     content: content
                   });
                 }
               }
               
-              setTranslatedSections(extractedTranslatedSections);
+              // Sort translated sections according to our defined order
+              const orderedTranslatedSections = sortSections(extractedTranslatedSections);
+              setTranslatedSections(orderedTranslatedSections);
             } catch (e) {
               console.error("Error extracting translated sections:", e);
               setTranslatedSections([]);
@@ -169,30 +217,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const hasTranslatedContent = translatedSummary || translatedSections.length > 0;
 
   return (
-    <Container className="mt-4 mb-5">
+    <Container className="summary-container mt-4 mb-5">
       <Row>
         <Col>
-          <h1>IEP Document Summary</h1>
-          <p className="lead">
-            View a summary of your IEP document.
-          </p>
-          
-          <Button 
-            variant="outline-primary" 
-            onClick={handleRefresh}
-            className="mb-4"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Spinner as="span" animation="border" size="sm" className="me-2" />
-                Refreshing...
-              </>
-            ) : (
-              'Refresh Status'
-            )}
-          </Button>
-          
+        <p></p>          
           {error && (
             <Alert variant="danger">{error}</Alert>
           )}
@@ -209,23 +237,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               No documents found. Please upload an IEP document first.
             </Alert>
           ) : (
-            <Card className="shadow-sm">
-              <Card.Header className="d-flex justify-content-between align-items-center">
-                <div>
-                  <FontAwesomeIcon icon={faFileAlt} className="me-2" />
-                  {recentDocument.documentUrl ? getFileName(recentDocument.documentUrl) : 'Document'}
-                </div>
-                {recentDocument.status && renderStatusBadge(recentDocument.status)}
-              </Card.Header>
-              
-              <Card.Body>
+            <Card className="summary-card">
+              <Card.Body className="summary-card-body">
                 <Row>
                   <Col md={12}>
-                    <Card.Title>Document Details</Card.Title>
-                    <p>
-                      <strong>Upload Date:</strong> {formatDate(recentDocument.createdAt || recentDocument.LastModified)}
-                    </p>
-                    
                     {recentDocument.status === "PROCESSING" ? (
                       <Alert variant="warning">
                         <h5>Document is still processing</h5>
@@ -241,63 +256,22 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         <Tabs
                           activeKey={activeTab}
                           onSelect={(k) => k && setActiveTab(k)}
-                          className="mb-3 mt-4"
+                          className="mb-3 mt-4 summary-tabs"
                         >
-                          <Tab eventKey="english" title="English">
-                            {summary ? (
-                              <>
-                                <Card.Title className="mt-4">Document Summary</Card.Title>
-                                <Card className="bg-light mb-4">
-                                  <Card.Body>
-                                    <p className="mb-0">{summary}</p>
-                                  </Card.Body>
-                                </Card>
-                              </>
-                            ) : (
-                              <Alert variant="info">
-                                <h5>No Summary Available</h5>
-                                <p>No English summary was found for this document.</p>
-                              </Alert>
-                            )}
-                            
-                            {sections.length > 0 ? (
-                              <>
-                                <Card.Title className="mt-4">Document Sections</Card.Title>
-                                <Accordion className="mb-3">
-                                  {sections.map((section, index) => (
-                                    <Accordion.Item key={index} eventKey={index.toString()}>
-                                      <Accordion.Header>
-                                        {section.name}
-                                      </Accordion.Header>
-                                      <Accordion.Body>
-                                        {section.content || 'No content available for this section.'}
-                                      </Accordion.Body>
-                                    </Accordion.Item>
-                                  ))}
-                                </Accordion>
-                              </>
-                            ) : (
-                              <Alert variant="info">
-                                <h5>No Sections Available</h5>
-                                <p>No English sections were found for this document.</p>
-                              </Alert>
-                            )}
-                          </Tab>
-
                           <Tab 
                             eventKey="translated" 
                             title={
                               <span>
                                 <FontAwesomeIcon icon={faLanguage} className="me-1" />
-                                Preferred Language
+                                Spanish
                               </span>
                             }
                             disabled={!hasTranslatedContent}
                           >
                             {translatedSummary ? (
                               <>
-                                <Card.Title className="mt-4">Document Summary</Card.Title>
-                                <Card className="bg-light mb-4">
+                                <h4 className="mt-4">Document Summary</h4>
+                                <Card className="summary-content mb-4">
                                   <Card.Body>
                                     <p className="mb-0">{translatedSummary}</p>
                                   </Card.Body>
@@ -312,12 +286,12 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                             
                             {translatedSections.length > 0 ? (
                               <>
-                                <Card.Title className="mt-4">Document Sections</Card.Title>
-                                <Accordion className="mb-3">
+                                <h4 className="mt-4">Document Sections</h4>
+                                <Accordion className="mb-3 summary-accordion">
                                   {translatedSections.map((section, index) => (
                                     <Accordion.Item key={index} eventKey={index.toString()}>
                                       <Accordion.Header>
-                                        {section.name}
+                                        {section.displayName}
                                       </Accordion.Header>
                                       <Accordion.Body>
                                         {section.content || 'No content available for this section.'}
@@ -340,6 +314,47 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                               </Alert>
                             )}
                           </Tab>
+                          
+                          <Tab eventKey="english" title="English">
+                            {summary ? (
+                              <>
+                                <h4 className="mt-4">Document Summary</h4>
+                                <Card className="summary-content mb-4">
+                                  <Card.Body>
+                                    <p className="mb-0">{summary}</p>
+                                  </Card.Body>
+                                </Card>
+                              </>
+                            ) : (
+                              <Alert variant="info">
+                                <h5>No Summary Available</h5>
+                                <p>No English summary was found for this document.</p>
+                              </Alert>
+                            )}
+                            
+                            {sections.length > 0 ? (
+                              <>
+                                <h4 className="mt-4">Document Sections</h4>
+                                <Accordion className="mb-3 summary-accordion">
+                                  {sections.map((section, index) => (
+                                    <Accordion.Item key={index} eventKey={index.toString()}>
+                                      <Accordion.Header>
+                                        {section.displayName}
+                                      </Accordion.Header>
+                                      <Accordion.Body>
+                                        {section.content || 'No content available for this section.'}
+                                      </Accordion.Body>
+                                    </Accordion.Item>
+                                  ))}
+                                </Accordion>
+                              </>
+                            ) : (
+                              <Alert variant="info">
+                                <h5>No Sections Available</h5>
+                                <p>No English sections were found for this document.</p>
+                              </Alert>
+                            )}
+                          </Tab>
                         </Tabs>
                         
                         {!summary && !translatedSummary && sections.length === 0 && translatedSections.length === 0 && (
@@ -353,6 +368,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   </Col>
                 </Row>
               </Card.Body>
+              <Card.Header className="summary-card-header d-flex justify-content-between align-items-center">
+                <div>
+                  <FontAwesomeIcon icon={faFileAlt} className="me-2" />
+                  {recentDocument.documentUrl ? getFileName(recentDocument.documentUrl) : 'Document'}
+                </div>
+                {recentDocument.status && renderStatusBadge(recentDocument.status)}
+              </Card.Header>
             </Card>
           )}
         </Col>

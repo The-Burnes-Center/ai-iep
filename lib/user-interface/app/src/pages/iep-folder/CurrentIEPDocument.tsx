@@ -6,6 +6,7 @@ import {
 } from 'react-bootstrap';
 import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
+import './CurrentIEPDocument.css';
 
 export interface CurrentIEPDocumentProps {
   onRefreshNeeded: () => void;
@@ -53,11 +54,9 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
   }, [onRefreshNeeded]);
 
   return (
-    <Card className="mt-4">
+    <Card className="current-document-container">
       <Card.Body>
-        <Card.Title className="d-flex justify-content-between align-items-center">
-          Current IEP Document
-        </Card.Title>
+        <h4 className="document-title">Current IEP Document</h4>
         
         {error && (
           <Alert variant="danger">{error}</Alert>
@@ -70,7 +69,7 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
             </Spinner>
           </div>
         ) : documentName ? (
-          <Alert variant="info" className="d-flex align-items-center">
+          <Alert variant="info" className="document-info-alert d-flex align-items-center">
             <i className="bi bi-file-earmark-text me-3" style={{ fontSize: '1.5rem' }}></i>
             <div>
               <p className="mb-0 fw-bold">{documentName}</p>
@@ -78,7 +77,7 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
             </div>
           </Alert>
         ) : (
-          <Alert variant="info">
+          <Alert variant="info" className="document-info-alert">
             No IEP document found. Please upload a document to get started.
           </Alert>
         )}
