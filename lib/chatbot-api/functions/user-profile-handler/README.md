@@ -11,7 +11,7 @@ User profiles are automatically created in two ways:
    - The trigger creates a basic profile with:
      - User ID (from Cognito)
      - Creation timestamp
-     - Empty kids array
+     - Empty children array
 
 2. **Fallback Method - API Endpoint**:
    - If a profile doesn't exist when accessing `/profile` endpoint

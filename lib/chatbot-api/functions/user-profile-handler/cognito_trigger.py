@@ -30,7 +30,7 @@ def lambda_handler(event, context):
             'userId': user_id,
             'createdAt': current_time,
             'updatedAt': current_time,
-            'kids': []  # Initialize empty kids array
+            'children': []  # Initialize empty children array
         }
         
         # Save to DynamoDB

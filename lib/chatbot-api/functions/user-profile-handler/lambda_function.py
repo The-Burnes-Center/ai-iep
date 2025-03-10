@@ -227,17 +227,6 @@ def update_user_profile(event: Dict) -> Dict:
             
             update_parts.append('children = :children')
             expr_values[':children'] = body['children']
-        # Legacy support for 'kids' field
-        elif 'kids' in body:
-            # Validate kid data
-            for kid in body['kids']:
-                if 'name' not in kid or 'schoolCity' not in kid:
-                    return create_response(event, 400, {'message': 'Each kid must have name and schoolCity'})
-                if 'childId' not in kid:
-                    kid['childId'] = str(uuid.uuid4())
-            
-            update_parts.append('children = :children')
-            expr_values[':children'] = body['kids']
         
         # If no fields to update
         if len(update_parts) == 1:  # only updatedAt
@@ -329,13 +318,13 @@ def get_child_documents(event: Dict) -> Dict:
     """
     try:
         user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
-        kid_id = event['pathParameters']['childId']
+        child_id = event['pathParameters']['childId']
         
         # Query documents by childId
         response = iep_documents_table.query(
             IndexName='byChildId',
             KeyConditionExpression='childId = :childId',
-            ExpressionAttributeValues={':childId': kid_id}
+            ExpressionAttributeValues={':childId': child_id}
         )
         
         # Verify the documents belong to the requesting user and include status
