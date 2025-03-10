@@ -12,6 +12,7 @@ The Metadata Handler is a serverless AWS Lambda function that processes IEP (Ind
 
 ## Workflow
 1. **Document Upload**: PDF is uploaded to S3 bucket, triggering Lambda via S3 event
+   - Any existing IEP documents for the same child are automatically deleted
 2. **Text Extraction**: System extracts text using Google Document AI with PyPDF2 fallback
 3. **Content Analysis**: Claude analyzes document to generate summary, sections, and tags
 4. **Translation**: Content is translated to languages configured in user profiles
@@ -41,7 +42,7 @@ The Metadata Handler is a serverless AWS Lambda function that processes IEP (Ind
 - `tags` (List): Categorization tags for the document
 
 ### User Profiles Reference
-Only references to documents are stored in the User Profiles table:
+Only references to documents are stored in the User Profiles table. Each child can only have one active IEP document at a time:
 ```json
 {
   "userId": "user123",
@@ -59,6 +60,7 @@ Only references to documents are stored in the User Profiles table:
   ]
 }
 ```
+**Note**: The `iepDocuments` array is maintained for backward compatibility, but will only contain one document reference per child.
 
 ## API Endpoints
 

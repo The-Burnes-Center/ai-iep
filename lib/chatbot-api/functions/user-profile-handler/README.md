@@ -101,9 +101,11 @@ s3://<bucket>/<userId>/<childId>/<iepId>/<fileName>
 
 ### 3. Document Processing
 After upload:
-1. Document record is created in IepDocumentsTable
+1. Document record is created in IepDocumentsTable (replacing any existing documents for that child)
 2. Automatic processing begins for generating summaries
 3. Status is tracked and can be monitored via API
+
+**Note**: Each child can only have one active IEP document at a time. When a new document is uploaded, any existing document for that child is automatically deleted and replaced with the new one.
 
 ## API Endpoints
 
@@ -215,6 +217,8 @@ Authorization: Bearer <jwt-token>
   ]
 }
 ```
+
+**Note**: The response contains an array for backward compatibility, but each child will only have one active document at a time.
 
 ## Language Support
 

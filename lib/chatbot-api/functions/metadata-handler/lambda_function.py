@@ -435,12 +435,11 @@ def update_user_profile_with_summary(child_id, iep_id, document_summary, user_id
                     if child_index is not None:
                         print(f"Child found at index {child_index}, updating document references")
                         
-                        # Update the user profile - now storing only the document reference
+                        # Update the user profile - replace existing document reference instead of appending
                         try:
-                            update_expr = f"SET children[{child_index}].iepDocuments = list_append(if_not_exists(children[{child_index}].iepDocuments, :empty_list), :doc_ref)"
+                            update_expr = f"SET children[{child_index}].iepDocuments = :doc_ref"
                             expr_attr_values = {
-                                ':doc_ref': [doc_reference],
-                                ':empty_list': []
+                                ':doc_ref': [doc_reference]  # Single item list with the latest document
                             }
                             
                             table.update_item(
@@ -521,12 +520,11 @@ def update_user_profile_with_summary(child_id, iep_id, document_summary, user_id
             
             print(f"Child found at index {child_index}, updating document references")
             
-            # Update the user profile - now storing only the document reference
+            # Update the user profile - replace existing document reference instead of appending
             try:
-                update_expr = f"SET children[{child_index}].iepDocuments = list_append(if_not_exists(children[{child_index}].iepDocuments, :empty_list), :doc_ref)"
+                update_expr = f"SET children[{child_index}].iepDocuments = :doc_ref"
                 expr_attr_values = {
-                    ':doc_ref': [doc_reference],
-                    ':empty_list': []
+                    ':doc_ref': [doc_reference]  # Single item list with the latest document
                 }
                 
                 table.update_item(
