@@ -228,9 +228,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           {loading && !error ? (
             <div className="text-center my-5">
               <Spinner animation="border" role="status">
-                <span className="visually-hidden">Loading document summary...</span>
+                <span className="visually-hidden">Loading IEP summary...</span>
               </Spinner>
-              <p className="mt-3">Loading document summary...</p>
+              <p className="mt-3">Loading IEP summary...</p>
             </div>
           ) : !recentDocument ? (
             <Alert variant="info">
@@ -270,7 +270,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           >
                             {translatedSummary ? (
                               <>
-                                <h4 className="mt-4">Document Summary</h4>
+                                <h4 className="mt-4">IEP Summary</h4>
                                 <Card className="summary-content mb-4">
                                   <Card.Body>
                                     <p className="mb-0">{translatedSummary}</p>
@@ -286,7 +286,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                             
                             {translatedSections.length > 0 ? (
                               <>
-                                <h4 className="mt-4">Document Sections</h4>
+                                <h4 className="mt-4">Key Insights</h4>
                                 <Accordion className="mb-3 summary-accordion">
                                   {translatedSections.map((section, index) => (
                                     <Accordion.Item key={index} eventKey={index.toString()}>
@@ -318,7 +318,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           <Tab eventKey="english" title="English">
                             {summary ? (
                               <>
-                                <h4 className="mt-4">Document Summary</h4>
+                                <h4 className="mt-4">IEP Summary</h4>
                                 <Card className="summary-content mb-4">
                                   <Card.Body>
                                     <p className="mb-0">{summary}</p>
@@ -334,7 +334,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                             
                             {sections.length > 0 ? (
                               <>
-                                <h4 className="mt-4">Document Sections</h4>
+                                <h4 className="mt-4">Key Insights</h4>
                                 <Accordion className="mb-3 summary-accordion">
                                   {sections.map((section, index) => (
                                     <Accordion.Item key={index} eventKey={index.toString()}>

@@ -75,3 +75,65 @@
   font-family: 'Roboto', sans-serif;
   font-weight: 300;
 }
+
+.language-button {
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.language-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Style for the selected language button */
+.btn-primary.language-button {
+  border-width: 2px;
+  position: relative;
+}
+
+.btn-primary.language-button::after {
+  content: "✓";
+  position: absolute;
+  right: 15px;
+  font-weight: bold;
+}
+
+/* Add these styles to your existing ProfileForms.css file */
+
+.language-button {
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.language-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Style for the selected language button */
+.btn-primary.language-button {
+  border-width: 2px;
+  position: relative;
+}
+
+.language-name {
+  font-weight: 400;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+/* Style for selected language */
+.btn-primary .language-name {
+  font-weight: 500;
+  opacity: 1;
+}

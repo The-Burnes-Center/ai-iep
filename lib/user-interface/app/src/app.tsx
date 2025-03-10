@@ -19,7 +19,8 @@ import "./styles/app.scss";
 import ConfigurationPage from "./pages/admin/sys-prompt-config/sys_prompt_config_page";
 import LlmEvaluationPage from "./pages/admin/llm-eval/llm-evaluation-page"; 
 import DetailedEvaluationPage from "./pages/admin/llm-eval/detailed-evaluation-page";
-import LanguageAndCity from './pages/profile/LanguageAndCity'; 
+import PreferredLanguage  from './pages/profile/PreferredLanguage'; 
+import City  from './pages/profile/City'; 
 import UserProfileForm from './pages/profile/UserProfileForm';
 import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
 import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslationsPage';
@@ -32,7 +33,7 @@ function AppContent() {
   const appContext = useContext(AppContext);
   
   // Routes where header should be hidden
-  const hideHeaderRoutes = ["/", "/consent-form", "/view-update-add-child"];
+  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child"];
   
   // Check if current location is in the list of routes where header should be hidden
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
@@ -47,7 +48,8 @@ function AppContent() {
       
       <div>
         <Routes>    
-          <Route path="/" element={<LanguageAndCity />} />
+          <Route path="/" element={<PreferredLanguage  />} />
+          <Route path="/city" element={<City />} />
           <Route path="/consent-form" element={<ConsentForm />} />
           <Route
                 index
