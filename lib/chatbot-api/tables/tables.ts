@@ -95,7 +95,7 @@ export class TableStack extends Stack {
     // Create IEP Documents Table
     this.iepDocumentsTable = new dynamodb.Table(scope, 'IepDocumentsTable', {
       partitionKey: { name: 'iepId', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'kidId', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'childId', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       timeToLiveAttribute: 'ttl',
@@ -108,10 +108,10 @@ export class TableStack extends Stack {
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.NUMBER },
     });
 
-    // Add GSI for querying documents by kidId
+    // Add GSI for querying documents by childId
     this.iepDocumentsTable.addGlobalSecondaryIndex({
-      indexName: 'byKidId',
-      partitionKey: { name: 'kidId', type: dynamodb.AttributeType.STRING },
+      indexName: 'byChildId',
+      partitionKey: { name: 'childId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.NUMBER },
     });
   }

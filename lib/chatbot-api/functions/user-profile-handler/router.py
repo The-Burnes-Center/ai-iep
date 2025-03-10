@@ -81,12 +81,12 @@ class UserProfileRouter:
         from lambda_function import update_user_profile
         return update_user_profile(event)
     
-    @route('/profile/kids', 'POST')
-    def add_kid(self, event: Dict) -> Dict:
-        from lambda_function import add_kid
-        return add_kid(event)
+    @route('/profile/children', 'POST')
+    def add_child(self, event: Dict) -> Dict:
+        from lambda_function import add_child
+        return add_child(event)
     
-    @route('/profile/kids/{kidId}/documents', 'GET')
-    def get_kid_documents(self, event: Dict) -> Dict:
-        from lambda_function import get_kid_documents
-        return get_kid_documents(event) 
+    @route('/profile/children/{childId}/documents', 'GET')
+    def get_child_documents(self, event: Dict) -> Dict:
+        from lambda_function import get_child_documents
+        return get_child_documents(event) 

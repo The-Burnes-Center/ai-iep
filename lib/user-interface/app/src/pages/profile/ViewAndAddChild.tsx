@@ -3,7 +3,7 @@ import { Container, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstr
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
-import { UserProfile, Kid } from '../../common/types';
+import { UserProfile, Child } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import './ProfileForms.css';
 
@@ -33,11 +33,11 @@ export default function ViewAndAddChild() {
       setProfile(data);
       
       // Check if the user has any children
-      if (data.kids && data.kids.length > 0) {
-        const firstChild = data.kids[0];
+      if (data.children && data.children.length > 0) {
+        const firstChild = data.children[0];
         setChildName(firstChild.name || '');
         setSchoolCity(firstChild.schoolCity || '');
-        setFirstChildId(firstChild.kidId || null);
+        setFirstChildId(firstChild.childId || null);
         setHasExistingChild(true);
       } else {
         setHasExistingChild(false);
@@ -62,13 +62,13 @@ export default function ViewAndAddChild() {
       if (hasExistingChild && firstChildId) {
         // Update existing child's information
         const updatedProfile = { ...profile };
-        if (updatedProfile.kids && updatedProfile.kids.length > 0) {
-          updatedProfile.kids[0] = {
-            ...updatedProfile.kids[0],
+        if (updatedProfile.children && updatedProfile.children.length > 0) {
+          updatedProfile.children[0] = {
+            ...updatedProfile.children[0],
             name: childName,
             schoolCity: schoolCity,
-            // Keep the existing kidId
-            kidId: firstChildId
+            // Keep the existing childId
+            childId: firstChildId
           };
           
           await apiClient.profile.updateProfile(updatedProfile);
@@ -76,7 +76,7 @@ export default function ViewAndAddChild() {
         }
       } else {
         // Add new child
-        await apiClient.profile.addKid(childName, schoolCity);
+        await apiClient.profile.addChild(childName, schoolCity);
         addNotification('success', 'Child added successfully');
       }
       

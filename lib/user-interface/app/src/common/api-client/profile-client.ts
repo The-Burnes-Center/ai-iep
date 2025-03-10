@@ -1,5 +1,5 @@
 import { Utils } from "../utils";
-import { AppConfig, UserProfile, KidResponse } from "../types";
+import { AppConfig, UserProfile, ChildResponse } from "../types";
 
 export class ProfileClient {
   private readonly API;
@@ -46,9 +46,9 @@ export class ProfileClient {
     }
   }
 
-  async addKid(name: string, schoolCity: string): Promise<KidResponse> {
+  async addChild(name: string, schoolCity: string): Promise<ChildResponse> {
     const auth = await Utils.authenticate();
-    const response = await fetch(`${this.API}/profile/kids`, {
+    const response = await fetch(`${this.API}/profile/children`, {
       method: 'POST',
       mode: 'cors',
       headers: {
@@ -60,7 +60,7 @@ export class ProfileClient {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to add kid');
+      throw new Error('Failed to add child');
     }
 
     return response.json();

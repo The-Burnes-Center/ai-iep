@@ -30,7 +30,7 @@ The Metadata Handler is a serverless AWS Lambda function that processes IEP (Ind
 
 ### IEP Documents Table
 - `iepId` (String, Partition Key): UUID of the document
-- `kidId` (String, Sort Key): ID of the child associated with the IEP
+- `childId` (String, Sort Key): ID of the child associated with the IEP
 - `userId` (String): ID of the parent/user who owns the document
 - `status` (String): Processing status ('PROCESSING', 'PROCESSED', 'FAILED')
 - `documentUrl` (String): S3 location of the original document
@@ -45,9 +45,9 @@ Only references to documents are stored in the User Profiles table:
 ```json
 {
   "userId": "user123",
-  "kids": [
+  "children": [
     {
-      "kidId": "kid456",
+      "childId": "child456",
       "iepDocuments": [
         {
           "iepId": "uuid-123",

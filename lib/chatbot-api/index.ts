@@ -233,14 +233,14 @@ export class ChatBotApi extends Construct {
     });
 
     restBackend.restAPI.addRoutes({
-      path: "/profile/kids",
+      path: "/profile/children",
       methods: [apigwv2.HttpMethod.POST],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 
     restBackend.restAPI.addRoutes({
-      path: "/profile/kids/{kidId}/documents",
+      path: "/profile/children/{childId}/documents",
       methods: [apigwv2.HttpMethod.GET],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,

@@ -73,7 +73,7 @@ def format_data_for_dynamodb(section_data):
         return {"S": str(section_data)}
 
 
-def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, summaries=None, user_id=None, object_key=None):
+def update_iep_document_status(iep_id, status, error_message=None, child_id=None, summaries=None, user_id=None, object_key=None):
     """
     Update the status of a document in the DynamoDB table.
     
@@ -81,7 +81,7 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
         iep_id (str): The IEP document ID
         status (str): The processing status (e.g., 'PROCESSING', 'PROCESSED', 'FAILED')
         error_message (str, optional): Error message if status is 'FAILED'
-        kid_id (str, optional): The kid ID associated with the document
+        child_id (str, optional): The child ID associated with the document
         summaries (dict, optional): Document summaries to store
         user_id (str, optional): The user ID associated with the document
         object_key (str, optional): The S3 object key for extracting user_id if not provided directly
@@ -93,7 +93,7 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
             return
             
         # Print the values we're using for debugging
-        print(f"Updating document status for iep_id: {iep_id}, status: {status}, kid_id: {kid_id}")
+        print(f"Updating document status for iep_id: {iep_id}, status: {status}, child_id: {child_id}")
         
         # Print summaries structure for debugging
         if summaries:
@@ -107,10 +107,10 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
         table = dynamodb.Table(os.environ['IEP_DOCUMENTS_TABLE'])
         
         # Define the correct key structure - IEP Documents table has iepId as the partition key
-        # and kidId as the sort key
+        # and childId as the sort key
         key = {'iepId': iep_id}
-        if kid_id:
-            key['kidId'] = kid_id
+        if child_id:
+            key['childId'] = child_id
         
         # Get the current timestamp
         current_time = datetime.now().isoformat()
@@ -152,7 +152,7 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
                     ':updated_at': current_time
                 }
                 
-                # Don't update kidId if it's part of the key
+                # Don't update childId if it's part of the key
                 
                 if user_id:
                     update_expr += ", userId = :user_id"
@@ -216,8 +216,8 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
                     'updatedAt': current_time
                 }
                 
-                if kid_id:
-                    item['kidId'] = kid_id
+                if child_id:
+                    item['childId'] = child_id
                 
                 if user_id:
                     item['userId'] = user_id
@@ -225,7 +225,7 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
                 # Add document URL field
                 bucket_name = os.environ.get('BUCKET', '')
                 filename = object_key.split('/')[-1] if object_key else iep_id
-                item['documentUrl'] = f"s3://{bucket_name}/{user_id}/{kid_id}/{iep_id}/{filename}"
+                item['documentUrl'] = f"s3://{bucket_name}/{user_id}/{child_id}/{iep_id}/{filename}"
                     
                 if error_message:
                     item['errorMessage'] = error_message
@@ -282,7 +282,7 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
                             ':updated_at': current_time
                         }
                         
-                        # Don't update kidId if it's part of the key in fallback either
+                        # Don't update childId if it's part of the key in fallback either
                         
                         if user_id:
                             update_expr += ", userId = :user_id"
@@ -292,7 +292,7 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
                         bucket_name = os.environ.get('BUCKET', '')
                         filename = object_key.split('/')[-1] if object_key else iep_id
                         update_expr += ", documentUrl = :doc_url"
-                        expr_attr_values[':doc_url'] = f"s3://{bucket_name}/{user_id}/{kid_id}/{iep_id}/{filename}"
+                        expr_attr_values[':doc_url'] = f"s3://{bucket_name}/{user_id}/{child_id}/{iep_id}/{filename}"
                             
                         if error_message:
                             update_expr += ", errorMessage = :error_message"
@@ -356,10 +356,10 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
                     # For terminal statuses (PROCESSED, FAILED), we should stop
                     raise
         
-        # If document was successfully processed and we have a kid ID, update the user profile
-        if status == 'PROCESSED' and kid_id and summaries:
+        # If document was successfully processed and we have a child ID, update the user profile
+        if status == 'PROCESSED' and child_id and summaries:
             try:
-                update_user_profile_with_summary(kid_id, iep_id, summaries, user_id, object_key)
+                update_user_profile_with_summary(child_id, iep_id, summaries, user_id, object_key)
             except Exception as profile_error:
                 print(f"Error updating user profile with summary: {profile_error}")
                 # Even if profile update fails, document processing is still considered successful
@@ -373,24 +373,24 @@ def update_iep_document_status(iep_id, status, error_message=None, kid_id=None, 
     return True
 
 
-def update_user_profile_with_summary(kid_id, iep_id, document_summary, user_id, object_key=None):
+def update_user_profile_with_summary(child_id, iep_id, document_summary, user_id, object_key=None):
     """
     Update the user profile with a reference to the IEP document.
     No longer stores the full summary and sections in the user profile.
     
     Args:
-        kid_id (str): The kid ID
+        child_id (str): The child ID
         iep_id (str): The IEP document ID
         document_summary (dict): The document summary information (not stored in profile)
         user_id (str): The user ID to directly look up the profile
         object_key (str, optional): The S3 object key for extracting user_id if not provided directly
     """
     try:
-        if not user_id or not iep_id or not kid_id:
-            print(f"Invalid user_id or iep_id or kid_id: {user_id}, {iep_id}, {kid_id}. Cannot update user profile.")
+        if not user_id or not iep_id or not child_id:
+            print(f"Invalid user_id or iep_id or child_id: {user_id}, {iep_id}, {child_id}. Cannot update user profile.")
             return
             
-        print(f"Updating user profile for user_id: {user_id} with reference to document: {iep_id} and kid_id: {kid_id}")
+        print(f"Updating user profile for user_id: {user_id} with reference to document: {iep_id} and child_id: {child_id}")
         
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(os.environ['USER_PROFILES_TABLE'])
@@ -421,23 +421,23 @@ def update_user_profile_with_summary(kid_id, iep_id, document_summary, user_id, 
                     
                     # Add documentUrl directly
                     filename = object_key.split('/')[-1] if object_key else iep_id
-                    doc_reference['documentUrl'] = f"s3://{os.environ['BUCKET']}/{user_id}/{kid_id}/{iep_id}/{filename}"
+                    doc_reference['documentUrl'] = f"s3://{os.environ['BUCKET']}/{user_id}/{child_id}/{iep_id}/{filename}"
                     
-                    # Find the kid in the user's kids array
-                    kids = user_profile.get('kids', [])
-                    kid_index = None
+                    # Find the child in the user's children array
+                    children = user_profile.get('children', [])
+                    child_index = None
                     
-                    for i, kid in enumerate(kids):
-                        if kid.get('kidId') == kid_id:
-                            kid_index = i
+                    for i, child in enumerate(children):
+                        if child.get('childId') == child_id:
+                            child_index = i
                             break
                     
-                    if kid_index is not None:
-                        print(f"Kid found at index {kid_index}, updating document references")
+                    if child_index is not None:
+                        print(f"Child found at index {child_index}, updating document references")
                         
                         # Update the user profile - now storing only the document reference
                         try:
-                            update_expr = f"SET kids[{kid_index}].iepDocuments = list_append(if_not_exists(kids[{kid_index}].iepDocuments, :empty_list), :doc_ref)"
+                            update_expr = f"SET children[{child_index}].iepDocuments = list_append(if_not_exists(children[{child_index}].iepDocuments, :empty_list), :doc_ref)"
                             expr_attr_values = {
                                 ':doc_ref': [doc_reference],
                                 ':empty_list': []
@@ -449,7 +449,7 @@ def update_user_profile_with_summary(kid_id, iep_id, document_summary, user_id, 
                                 ExpressionAttributeValues=expr_attr_values
                             )
                             
-                            print(f"Successfully updated user profile for kid {kid_id} with reference to document {iep_id}")
+                            print(f"Successfully updated user profile for child {child_id} with reference to document {iep_id}")
                             # Successfully updated, so return early
                             return
                         except ClientError as e:
@@ -462,9 +462,9 @@ def update_user_profile_with_summary(kid_id, iep_id, document_summary, user_id, 
                                 traceback.print_exc()
                                 raise
                     else:
-                        print(f"Kid ID {kid_id} not found in user profile for user {user_id}")
-                        print(f"Available kids in profile: {[kid.get('kidId') for kid in kids]}")
-                        # Kid not found in this user's profile, don't fall back to scan
+                        print(f"Child ID {child_id} not found in user profile for user {user_id}")
+                        print(f"Available children in profile: {[child.get('childId') for child in children]}")
+                        # Child not found in this user's profile, don't fall back to scan
                         return
                 else:
                     print(f"No user profile found with userId: {user_id}")
@@ -479,18 +479,18 @@ def update_user_profile_with_summary(kid_id, iep_id, document_summary, user_id, 
         # 2. We couldn't find a user profile with the userId we had
         
         # Fallback to scan if direct lookup failed or if we don't have a user_id
-        print(f"Falling back to scan operation to find profile with kid_id: {kid_id}")
+        print(f"Falling back to scan operation to find profile with child_id: {child_id}")
         # Import Attr at function level to avoid global import issues
         from boto3.dynamodb.conditions import Attr
         
         try:
             response = table.scan(
-                FilterExpression=Attr('kids').contains(kid_id)
+                FilterExpression=Attr('children').contains(child_id)
             )
             user_profiles = response.get('Items', [])
             
             if not user_profiles:
-                print(f"No user profile found with kid ID: {kid_id}")
+                print(f"No user profile found with child ID: {child_id}")
                 return
             
             user_profile = user_profiles[0]
@@ -504,26 +504,26 @@ def update_user_profile_with_summary(kid_id, iep_id, document_summary, user_id, 
             
             # Add documentUrl directly 
             filename = object_key.split('/')[-1] if object_key else iep_id
-            doc_reference['documentUrl'] = f"s3://{os.environ['BUCKET']}/{user_id}/{kid_id}/{iep_id}/{filename}"
+            doc_reference['documentUrl'] = f"s3://{os.environ['BUCKET']}/{user_id}/{child_id}/{iep_id}/{filename}"
             
-            # Find the kid in the user's kids array
-            kids = user_profile.get('kids', [])
-            kid_index = None
+            # Find the child in the user's children array
+            children = user_profile.get('children', [])
+            child_index = None
             
-            for i, kid in enumerate(kids):
-                if kid.get('kidId') == kid_id:
-                    kid_index = i
+            for i, child in enumerate(children):
+                if child.get('childId') == child_id:
+                    child_index = i
                     break
             
-            if kid_index is None:
-                print(f"Kid ID {kid_id} not found in user profile {user_profile.get('userId')}")
+            if child_index is None:
+                print(f"Child ID {child_id} not found in user profile {user_profile.get('userId')}")
                 return
             
-            print(f"Kid found at index {kid_index}, updating document references")
+            print(f"Child found at index {child_index}, updating document references")
             
             # Update the user profile - now storing only the document reference
             try:
-                update_expr = f"SET kids[{kid_index}].iepDocuments = list_append(if_not_exists(kids[{kid_index}].iepDocuments, :empty_list), :doc_ref)"
+                update_expr = f"SET children[{child_index}].iepDocuments = list_append(if_not_exists(children[{child_index}].iepDocuments, :empty_list), :doc_ref)"
                 expr_attr_values = {
                     ':doc_ref': [doc_reference],
                     ':empty_list': []
@@ -535,7 +535,7 @@ def update_user_profile_with_summary(kid_id, iep_id, document_summary, user_id, 
                     ExpressionAttributeValues=expr_attr_values
                 )
                 
-                print(f"Successfully updated user profile for kid {kid_id} with reference to document {iep_id}")
+                print(f"Successfully updated user profile for child {child_id} with reference to document {iep_id}")
             except ClientError as e:
                 if 'AccessDeniedException' in str(e):
                     print(f"WARNING: Cannot update user profile due to permission restrictions: {e}")
@@ -547,7 +547,7 @@ def update_user_profile_with_summary(kid_id, iep_id, document_summary, user_id, 
         except ClientError as e:
             if 'AccessDeniedException' in str(e):
                 print(f"WARNING: Cannot scan user profiles table due to permission restrictions: {e}")
-                print(f"User profile update for kid {kid_id} skipped")
+                print(f"User profile update for child {child_id} skipped")
                 return
             else:
                 print(f"Error during scan operation: {e}")
@@ -695,7 +695,7 @@ def translate_content(content, target_languages):
                     body=json.dumps({
                         'anthropic_version': 'bedrock-2023-05-31',
                         'max_tokens': 4000,
-                        'temperature': 0.1,
+                        'temperature': 0,
                         'system': 'You are an expert translator specializing in educational documents, particularly IEPs.',
                         'messages': [
                             {'role': 'user', 'content': prompt}
@@ -1346,9 +1346,9 @@ def get_document_metadata_by_id(event):
             'sections': sections
         }
         
-        # Add kidId and userId if available
-        if 'kidId' in document:
-            result['kidId'] = document['kidId']
+        # Add childId and userId if available
+        if 'childId' in document:
+            result['childId'] = document['childId']
             
         if 'userId' in document:
             result['userId'] = document['userId']
@@ -1418,21 +1418,21 @@ def handle_s3_upload_event(event):
         
         print(f"Processing document from S3 bucket: {bucket}, key: {key}")
         
-        # Extract user ID, kid ID, and IEP ID from the key
-        # Actual format: [userId]/[kidId]/[iepId]/[fileName]
+        # Extract user ID, child ID, and IEP ID from the key
+        # Actual format: [userId]/[childId]/[iepId]/[fileName]
         key_parts = key.split('/')
         user_id = None
-        kid_id = None
+        child_id = None
         iep_id = None
         
         if len(key_parts) >= 3:
             user_id = key_parts[0]
-            kid_id = key_parts[1]
+            child_id = key_parts[1]
             # The iepId part might be prefixed with "iep-" which we want to preserve
             if len(key_parts) >= 3:
                 iep_id = key_parts[2]
             
-            print(f"Extracted from key: userId={user_id}, kidId={kid_id}, iepId={iep_id}")
+            print(f"Extracted from key: userId={user_id}, childId={child_id}, iepId={iep_id}")
         else:
             print(f"Warning: S3 key doesn't match expected format. Key: {key}")
         
@@ -1569,7 +1569,7 @@ def handle_s3_upload_event(event):
         save_result = update_iep_document_status(
             iep_id=iep_id, 
             status='PROCESSED', 
-            kid_id=kid_id, 
+            child_id=child_id, 
             summaries=summaries,
             user_id=user_id,
             object_key=key

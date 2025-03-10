@@ -12,13 +12,13 @@ export class IEPDocumentClient {
     this.profileClient = new ProfileClient(_appConfig);
   }
   
-  // Get the kidId from the first child in the profile
-  private async getDefaultKidId(): Promise<string> {
+  // Get the childId from the first child in the profile
+  private async getDefaultChildId(): Promise<string> {
     const profile = await this.profileClient.getProfile();
-    if (!profile.kids || profile.kids.length === 0) {
-      throw new Error('No kids found in profile');
+    if (!profile.children || profile.children.length === 0) {
+      throw new Error('No children found in profile');
     }
-    return profile.kids[0].kidId;
+    return profile.children[0].childId;
   }
   
   // Get signed URL for upload/download
@@ -32,7 +32,7 @@ export class IEPDocumentClient {
     }
 
     try {
-      const kidId = await this.getDefaultKidId();
+      const childId = await this.getDefaultChildId();
       const auth = await Utils.authenticate();
       
       const response = await fetch(this.API + '/signed-url-knowledge', {
@@ -45,7 +45,7 @@ export class IEPDocumentClient {
           fileName, 
           fileType, 
           operation,
-          kidId 
+          childId 
         }),
       });
 
@@ -78,10 +78,10 @@ export class IEPDocumentClient {
   // Get all documents for the child
   async getDocuments() {
     try {
-      const kidId = await this.getDefaultKidId();
+      const childId = await this.getDefaultChildId();
       const auth = await Utils.authenticate();
       
-      const response = await fetch(`${this.API}/profile/kids/${kidId}/documents`, {
+      const response = await fetch(`${this.API}/profile/children/${childId}/documents`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -214,10 +214,10 @@ export class IEPDocumentClient {
   // Delete a document
   async deleteFile(iepId: string) {
     try {
-      const kidId = await this.getDefaultKidId();
+      const childId = await this.getDefaultChildId();
       const auth = await Utils.authenticate();
       
-      const response = await fetch(`${this.API}/profile/kids/${kidId}/documents/${iepId}`, {
+      const response = await fetch(`${this.API}/profile/children/${childId}/documents/${iepId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

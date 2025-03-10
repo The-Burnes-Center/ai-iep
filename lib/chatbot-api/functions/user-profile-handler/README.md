@@ -38,9 +38,9 @@ User identity information (email, etc.) is managed exclusively through Amazon Co
   primaryLanguage: string, // Primary language preference
   secondaryLanguage?: string, // Optional secondary language
   city: string,           // User's city of residence
-  kids: [                 // Array of children
+  children: [                 // Array of children
     {
-      kidId: string,      // Unique identifier for child
+      childId: string,      // Unique identifier for child
       name: string,       // Child's name
       schoolCity: string  // City where child attends school
     }
@@ -55,7 +55,7 @@ User identity information (email, etc.) is managed exclusively through Amazon Co
 ```typescript
 {
   iepId: string,          // Partition key
-  kidId: string,          // Sort key
+  childId: string,          // Sort key
   userId: string,         // Owner's user ID
   documentUrl: string,    // S3 URL to the document
   summaries: {            // Document summaries in different languages
@@ -80,7 +80,7 @@ Content-Type: application/json
   "fileName": "string",
   "fileType": "string",
   "operation": "upload",
-  "kidId": "string"
+  "childId": "string"
 }
 ```
 
@@ -96,7 +96,7 @@ Content-Type: application/json
 ### 2. File Storage Structure
 Files are stored in S3 with the following path structure:
 ```
-s3://<bucket>/<userId>/<kidId>/<iepId>/<fileName>
+s3://<bucket>/<userId>/<childId>/<iepId>/<fileName>
 ```
 
 ### 3. Document Processing
@@ -123,9 +123,9 @@ Returns the user's profile information. Creates a default profile if none exists
     "primaryLanguage": "string",
     "secondaryLanguage": "string",
     "city": "string",
-    "kids": [
+    "children": [
       {
-        "kidId": "string",
+        "childId": "string",
         "name": "string",
         "schoolCity": "string"
       }
@@ -147,9 +147,9 @@ Content-Type: application/json
   "primaryLanguage": "string",
   "secondaryLanguage": "string",
   "city": "string",
-  "kids": [
+  "children": [
     {
-      "kidId": "string",
+      "childId": "string",
       "name": "string",
       "schoolCity": "string"
     }
@@ -168,7 +168,7 @@ Content-Type: application/json
 
 ### 3. Add Child
 ```http
-POST /profile/kids
+POST /profile/children
 Authorization: Bearer <jwt-token>
 Content-Type: application/json
 
@@ -182,7 +182,7 @@ Content-Type: application/json
 ```json
 {
   "message": "Kid added successfully",
-  "kidId": "string",
+  "childId": "string",
   "createdAt": number,
   "updatedAt": number
 }
@@ -190,7 +190,7 @@ Content-Type: application/json
 
 ### 4. Get Child's Documents
 ```http
-GET /profile/kids/{kidId}/documents
+GET /profile/children/{childId}/documents
 Authorization: Bearer <jwt-token>
 ```
 
@@ -200,7 +200,7 @@ Authorization: Bearer <jwt-token>
   "documents": [
     {
       "iepId": "string",
-      "kidId": "string",
+      "childId": "string",
       "documentUrl": "string",
       "status": "string",
       "summaries": {
@@ -272,8 +272,8 @@ Error responses include a message:
    - Sort Key: createdAt
    - Use: Retrieve all documents for a user
 
-2. **byKidId** (GSI)
-   - Partition Key: kidId
+2. **byChildId** (GSI)
+   - Partition Key: childId
    - Sort Key: createdAt
    - Use: Retrieve all documents for a specific child
 

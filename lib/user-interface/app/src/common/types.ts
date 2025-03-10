@@ -33,8 +33,8 @@ export type AdminDataType =
 | "prompt";
 
 // In src/common/types.ts
-export interface Kid {
-  kidId?: string;
+export interface Child {
+  childId?: string;
   name: string;
   schoolCity: string;
 }
@@ -46,7 +46,7 @@ export interface UserProfile {
   primaryLanguage: string;
   secondaryLanguage: string;
   city: string;
-  kids: Kid[];
+  children: Child[];
   createdAt: number;
   updatedAt: number;
 }
@@ -55,9 +55,9 @@ export interface ProfileResponse {
   profile: UserProfile;
 }
 
-export interface KidResponse {
+export interface ChildResponse {
   message: string;
-  kidId: string;
+  childId: string;
   createdAt: number;
   updatedAt: number;
 }

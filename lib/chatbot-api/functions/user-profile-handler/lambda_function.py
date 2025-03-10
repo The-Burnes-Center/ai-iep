@@ -149,7 +149,7 @@ def get_user_profile(event: Dict) -> Dict:
                 'createdAtISO': times['datetime'],
                 'updatedAt': times['timestamp'],
                 'updatedAtISO': times['datetime'],
-                'kids': []
+                'children': []
             }
             user_profiles_table.put_item(Item=new_profile)
             return create_response(event, 200, {'profile': new_profile})
@@ -216,17 +216,28 @@ def update_user_profile(event: Dict) -> Dict:
                 update_parts.append(f'{attr_name} = :{field}')
                 expr_values[f':{field}'] = body[field]
             
-        # Handle kids array if present
-        if 'kids' in body:
+        # Handle children array if present
+        if 'children' in body:
+            # Validate child data
+            for child in body['children']:
+                if 'name' not in child or 'schoolCity' not in child:
+                    return create_response(event, 400, {'message': 'Each child must have name and schoolCity'})
+                if 'childId' not in child:
+                    child['childId'] = str(uuid.uuid4())
+            
+            update_parts.append('children = :children')
+            expr_values[':children'] = body['children']
+        # Legacy support for 'kids' field
+        elif 'kids' in body:
             # Validate kid data
             for kid in body['kids']:
                 if 'name' not in kid or 'schoolCity' not in kid:
                     return create_response(event, 400, {'message': 'Each kid must have name and schoolCity'})
-                if 'kidId' not in kid:
-                    kid['kidId'] = str(uuid.uuid4())
+                if 'childId' not in kid:
+                    kid['childId'] = str(uuid.uuid4())
             
-            update_parts.append('kids = :kids')
-            expr_values[':kids'] = body['kids']
+            update_parts.append('children = :children')
+            expr_values[':children'] = body['kids']
         
         # If no fields to update
         if len(update_parts) == 1:  # only updatedAt
@@ -246,7 +257,7 @@ def update_user_profile(event: Dict) -> Dict:
     except Exception as e:
         return create_response(event, 500, {'message': f'Error updating user profile: {str(e)}'})
 
-def add_kid(event: Dict) -> Dict:
+def add_child(event: Dict) -> Dict:
     """
     Add a new child to user's profile.
     
@@ -254,7 +265,7 @@ def add_kid(event: Dict) -> Dict:
         event (Dict): API Gateway event object containing user context and child data
         
     Returns:
-        Dict: API Gateway response containing new kidId or error
+        Dict: API Gateway response containing new childId or error
         
     Raises:
         Exception: If there's an error accessing DynamoDB
@@ -268,10 +279,10 @@ def add_kid(event: Dict) -> Dict:
         if 'name' not in body or 'schoolCity' not in body:
             return create_response(event, 400, {'message': 'Missing required fields: name and schoolCity required'})
             
-        # Generate new kidId
-        kid_id = str(uuid.uuid4())
-        new_kid = {
-            'kidId': kid_id,
+        # Generate new childId
+        child_id = str(uuid.uuid4())
+        new_child = {
+            'childId': child_id,
             'name': body['name'],
             'schoolCity': body['schoolCity'],
             'createdAt': times['timestamp'],
@@ -280,37 +291,35 @@ def add_kid(event: Dict) -> Dict:
             'updatedAtISO': times['datetime']
         }
         
-        # Add kid to user's profile and update timestamps
+        # Add child to user's profile and update timestamps
         user_profiles_table.update_item(
             Key={'userId': user_id},
-            UpdateExpression='SET #kids = list_append(if_not_exists(#kids, :empty_list), :new_kid), updatedAt = :updatedAt, updatedAtISO = :updatedAtISO',
-            ExpressionAttributeNames={'#kids': 'kids'},
+            UpdateExpression='SET #children = list_append(if_not_exists(#children, :empty_list), :new_child), updatedAt = :updatedAt, updatedAtISO = :updatedAtISO',
+            ExpressionAttributeNames={'#children': 'children'},
             ExpressionAttributeValues={
                 ':empty_list': [],
-                ':new_kid': [new_kid],
+                ':new_child': [new_child],
                 ':updatedAt': times['timestamp'],
                 ':updatedAtISO': times['datetime']
             }
         )
         
         return create_response(event, 200, {
-            'message': 'Kid added successfully',
-            'kidId': kid_id,
+            'message': 'Child added successfully',
+            'childId': child_id,
             'createdAt': times['timestamp'],
             'createdAtISO': times['datetime'],
-            'updatedAt': times['timestamp'],
-            'updatedAtISO': times['datetime']
         })
         
     except Exception as e:
-        return create_response(event, 500, {'message': f'Error adding kid: {str(e)}'})
+        return create_response(event, 500, {'message': f'Error adding child: {str(e)}'})
 
-def get_kid_documents(event: Dict) -> Dict:
+def get_child_documents(event: Dict) -> Dict:
     """
     Get documents associated with a specific child.
     
     Args:
-        event (Dict): API Gateway event object containing user context and kidId
+        event (Dict): API Gateway event object containing user context and childId
         
     Returns:
         Dict: API Gateway response containing list of documents or error
@@ -320,13 +329,13 @@ def get_kid_documents(event: Dict) -> Dict:
     """
     try:
         user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
-        kid_id = event['pathParameters']['kidId']
+        kid_id = event['pathParameters']['childId']
         
-        # Query documents by kidId
+        # Query documents by childId
         response = iep_documents_table.query(
-            IndexName='byKidId',
-            KeyConditionExpression='kidId = :kidId',
-            ExpressionAttributeValues={':kidId': kid_id}
+            IndexName='byChildId',
+            KeyConditionExpression='childId = :childId',
+            ExpressionAttributeValues={':childId': kid_id}
         )
         
         # Verify the documents belong to the requesting user and include status
@@ -336,7 +345,7 @@ def get_kid_documents(event: Dict) -> Dict:
             if 'userId' not in doc or doc['userId'] == user_id:
                 documents.append({
                     'iepId': doc['iepId'],
-                    'kidId': doc['kidId'],
+                    'childId': doc['childId'],
                     'documentUrl': doc.get('documentUrl', f"s3://{os.environ.get('BUCKET', '')}/{doc['iepId']}"),
                     'status': doc.get('status', 'PROCESSING'),
                     'summaries': doc.get('summaries', {}),
@@ -348,7 +357,7 @@ def get_kid_documents(event: Dict) -> Dict:
         return create_response(event, 200, {'documents': documents})
         
     except Exception as e:
-        return create_response(event, 500, {'message': f'Error getting kid documents: {str(e)}'})
+        return create_response(event, 500, {'message': f'Error getting child documents: {str(e)}'})
 
 def lambda_handler(event: Dict, context) -> Dict:
     """

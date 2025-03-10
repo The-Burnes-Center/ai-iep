@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
-import { UserProfile, Kid } from '../../common/types';
+import { UserProfile, Child } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 
 const LANGUAGE_OPTIONS = [
@@ -20,7 +20,7 @@ export default function UserProfileForm() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [newKid, setNewKid] = useState<Kid | null>(null);
+  const [newChild, setNewChild] = useState<Child | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -55,17 +55,17 @@ export default function UserProfileForm() {
     }
   };
 
-  const handleAddKid = async () => {
-    if (!newKid?.name || !newKid?.schoolCity) {
+  const handleAddChild = async () => {
+    if (!newChild?.name || !newChild?.schoolCity) {
       addNotification('error', 'Please fill in all fields for the child');
       return;
     }
     
     try {
       setSaving(true);
-      await apiClient.profile.addKid(newKid.name, newKid.schoolCity);
+      await apiClient.profile.addChild(newChild.name, newChild.schoolCity);
       await loadProfile();
-      setNewKid(null);
+      setNewChild(null);
       addNotification('success', 'Child added successfully');
     } catch (err) {
       addNotification('error', 'Failed to add child');
@@ -174,34 +174,34 @@ export default function UserProfileForm() {
         </Row>
 
         <h3 className="mb-3">Children</h3>
-        {profile?.kids && profile.kids.length > 0 ? (
+        {profile?.children && profile.children.length > 0 ? (
           <>
-            {profile.kids.map((kid, index) => (
-              <Row key={kid.kidId || index} className="mb-3">
+            {profile.children.map((child, index) => (
+              <Row key={child.childId || index} className="mb-3">
                 <Col md={5}>
-                  <Form.Group controlId={`formKidName${index}`}>
+                  <Form.Group controlId={`formChildName${index}`}>
                     <Form.Label className="small">Name</Form.Label>
                     <Form.Control 
                       type="text" 
-                      value={kid.name}
+                      value={child.name}
                       onChange={e => {
-                        const newKids = [...profile.kids];
-                        newKids[index] = {...kid, name: e.target.value};
-                        setProfile(prev => prev ? {...prev, kids: newKids} : null);
+                        const newChildren = [...profile.children];
+                        newChildren[index] = {...child, name: e.target.value};
+                        setProfile(prev => prev ? {...prev, children: newChildren} : null);
                       }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={5}>
-                  <Form.Group controlId={`formKidSchool${index}`}>
+                  <Form.Group controlId={`formChildSchool${index}`}>
                     <Form.Label className="small">School City</Form.Label>
                     <Form.Control 
                       type="text" 
-                      value={kid.schoolCity}
+                      value={child.schoolCity}
                       onChange={e => {
-                        const newKids = [...profile.kids];
-                        newKids[index] = {...kid, schoolCity: e.target.value};
-                        setProfile(prev => prev ? {...prev, kids: newKids} : null);
+                        const newChildren = [...profile.children];
+                        newChildren[index] = {...child, schoolCity: e.target.value};
+                        setProfile(prev => prev ? {...prev, children: newChildren} : null);
                       }}
                     />
                   </Form.Group>
@@ -213,34 +213,34 @@ export default function UserProfileForm() {
           <Alert variant="info">No children added yet</Alert>
         )}
 
-        {newKid && (
+        {newChild && (
           <Row className="mb-3 mt-3 border-top pt-3">
             <Col md={5}>
-              <Form.Group controlId="formNewKidName">
+              <Form.Group controlId="formNewChildName">
                 <Form.Label>Name</Form.Label>
                 <Form.Control 
                   type="text" 
                   placeholder="Enter child's name"
-                  value={newKid.name}
-                  onChange={e => setNewKid(prev => prev ? {...prev, name: e.target.value} : null)}
+                  value={newChild.name}
+                  onChange={e => setNewChild(prev => prev ? {...prev, name: e.target.value} : null)}
                 />
               </Form.Group>
             </Col>
             <Col md={5}>
-              <Form.Group controlId="formNewKidSchool">
+              <Form.Group controlId="formNewChildSchool">
                 <Form.Label>School City</Form.Label>
                 <Form.Control 
                   type="text" 
                   placeholder="Enter school city"
-                  value={newKid.schoolCity}
-                  onChange={e => setNewKid(prev => prev ? {...prev, schoolCity: e.target.value} : null)}
+                  value={newChild.schoolCity}
+                  onChange={e => setNewChild(prev => prev ? {...prev, schoolCity: e.target.value} : null)}
                 />
               </Form.Group>
             </Col>
             <Col md={2} className="d-flex align-items-end">
               <Button 
                 variant="success" 
-                onClick={handleAddKid}
+                onClick={handleAddChild}
                 disabled={saving}
                 className="mb-3"
               >
@@ -260,8 +260,8 @@ export default function UserProfileForm() {
           </Button>
           <Button 
             variant="secondary" 
-            onClick={() => setNewKid({name: '', schoolCity: ''})}
-            disabled={!!newKid || saving}
+            onClick={() => setNewChild({name: '', schoolCity: ''})}
+            disabled={!!newChild || saving}
           >
             Add Child
           </Button>
