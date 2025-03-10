@@ -110,7 +110,7 @@ export class TableStack extends Stack {
 
     // Add GSI for querying documents by childId
     this.iepDocumentsTable.addGlobalSecondaryIndex({
-      indexName: 'byChildId',
+      indexName: 'byKidId',
       partitionKey: { name: 'childId', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.NUMBER },
     });
