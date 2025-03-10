@@ -42,7 +42,12 @@ User identity information (email, etc.) is managed exclusively through Amazon Co
     {
       childId: string,      // Unique identifier for child
       name: string,       // Child's name
-      schoolCity: string  // City where child attends school
+      schoolCity: string,  // City where child attends school
+      iepDocument: {        // Most recent IEP document for this child
+        iepId: string,      // Unique document ID
+        documentUrl: string, // S3 URL to the document
+        updatedAt: string    // Last update timestamp
+      }
     }
   ],
   createdAt: number,      // Creation timestamp
@@ -199,26 +204,29 @@ Authorization: Bearer <jwt-token>
 **Response (200)**
 ```json
 {
-  "documents": [
-    {
-      "iepId": "string",
-      "childId": "string",
-      "documentUrl": "string",
-      "status": "string",
-      "summaries": {
-        "en": "string",
-        "es": "string",
-        "zh": "string",
-        "vi": "string"
-      },
-      "createdAt": number,
-      "updatedAt": number
-    }
-  ]
+  "iepId": "string",
+  "childId": "string",
+  "documentUrl": "string",
+  "status": "string",
+  "summaries": {
+    "en": "string",
+    "es": "string",
+    "zh": "string",
+    "vi": "string"
+  },
+  "createdAt": number,
+  "updatedAt": number
 }
 ```
 
-**Note**: The response contains an array for backward compatibility, but each child will only have one active document at a time.
+**Response (404)**
+```json
+{
+  "message": "No document found for this child"
+}
+```
+
+**Note**: Only the most recent document for a child is returned. When a new document is uploaded for a child, any existing documents for that child are automatically deleted.
 
 ## Language Support
 

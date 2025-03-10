@@ -49,18 +49,16 @@ Only references to documents are stored in the User Profiles table. Each child c
   "children": [
     {
       "childId": "child456",
-      "iepDocuments": [
-        {
-          "iepId": "uuid-123",
-          "documentUrl": "s3://bucket/uuid-123",
-          "updatedAt": "2023-01-01T12:00:00"
-        }
-      ]
+      "iepDocument": {
+        "iepId": "uuid-123",
+        "documentUrl": "s3://bucket/uuid-123",
+        "updatedAt": "2023-01-01T12:00:00"
+      }
     }
   ]
 }
 ```
-**Note**: The `iepDocuments` array is maintained for backward compatibility, but will only contain one document reference per child.
+**Note**: Previously, documents were stored in an `iepDocuments` array for backward compatibility, but now each child has a single `iepDocument` object.
 
 ## API Endpoints
 

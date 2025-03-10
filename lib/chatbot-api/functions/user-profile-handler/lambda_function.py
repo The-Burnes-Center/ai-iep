@@ -305,13 +305,14 @@ def add_child(event: Dict) -> Dict:
 
 def get_child_documents(event: Dict) -> Dict:
     """
-    Get documents associated with a specific child.
+    Get document associated with a specific child.
     
     Args:
         event (Dict): API Gateway event object containing user context and childId
         
     Returns:
-        Dict: API Gateway response containing list of documents or error
+        Dict: API Gateway response containing the document or error.
+        Only returns the most recent document for the child.
         
     Raises:
         Exception: If there's an error accessing DynamoDB
@@ -327,26 +328,36 @@ def get_child_documents(event: Dict) -> Dict:
             ExpressionAttributeValues={':childId': child_id}
         )
         
-        # Verify the documents belong to the requesting user and include status
-        documents = []
+        # Find the latest document
+        latest_doc = None
+        latest_timestamp = 0
+        
         for doc in response['Items']:
             # Only include document if userId is not present or it matches the authenticated user
             if 'userId' not in doc or doc['userId'] == user_id:
-                documents.append({
-                    'iepId': doc['iepId'],
-                    'childId': doc['childId'],
-                    'documentUrl': doc.get('documentUrl', f"s3://{os.environ.get('BUCKET', '')}/{doc['iepId']}"),
-                    'status': doc.get('status', 'PROCESSING'),
-                    'summaries': doc.get('summaries', {}),
-                    'sections': doc.get('sections', {}),
-                    'createdAt': doc.get('createdAt', ''),
-                    'updatedAt': doc.get('updatedAt', '')
-                })
+                # Find the document with the latest createdAt timestamp
+                created_at = doc.get('createdAt', 0)
+                if created_at > latest_timestamp:
+                    latest_timestamp = created_at
+                    latest_doc = {
+                        'iepId': doc['iepId'],
+                        'childId': doc['childId'],
+                        'documentUrl': doc.get('documentUrl', f"s3://{os.environ.get('BUCKET', '')}/{doc['iepId']}"),
+                        'status': doc.get('status', 'PROCESSING'),
+                        'summaries': doc.get('summaries', {}),
+                        'sections': doc.get('sections', {}),
+                        'createdAt': doc.get('createdAt', ''),
+                        'updatedAt': doc.get('updatedAt', '')
+                    }
         
-        return create_response(event, 200, {'documents': documents})
+        # If no document found
+        if not latest_doc:
+            return create_response(event, 404, {'message': 'No document found for this child'})
+        
+        return create_response(event, 200, latest_doc)
         
     except Exception as e:
-        return create_response(event, 500, {'message': f'Error getting child documents: {str(e)}'})
+        return create_response(event, 500, {'message': f'Error retrieving document: {str(e)}'})
 
 def lambda_handler(event: Dict, context) -> Dict:
     """

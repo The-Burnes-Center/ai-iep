@@ -435,11 +435,11 @@ def update_user_profile_with_summary(child_id, iep_id, document_summary, user_id
                     if child_index is not None:
                         print(f"Child found at index {child_index}, updating document references")
                         
-                        # Update the user profile - replace existing document reference instead of appending
+                        # Update the user profile - store as a single document object instead of an array
                         try:
-                            update_expr = f"SET children[{child_index}].iepDocuments = :doc_ref"
+                            update_expr = f"SET children[{child_index}].iepDocument = :doc_ref"
                             expr_attr_values = {
-                                ':doc_ref': [doc_reference]  # Single item list with the latest document
+                                ':doc_ref': doc_reference  # Single document object, not in an array
                             }
                             
                             table.update_item(
@@ -520,11 +520,11 @@ def update_user_profile_with_summary(child_id, iep_id, document_summary, user_id
             
             print(f"Child found at index {child_index}, updating document references")
             
-            # Update the user profile - replace existing document reference instead of appending
+            # Update the user profile - store as a single document object instead of an array
             try:
-                update_expr = f"SET children[{child_index}].iepDocuments = :doc_ref"
+                update_expr = f"SET children[{child_index}].iepDocument = :doc_ref"
                 expr_attr_values = {
-                    ':doc_ref': [doc_reference]  # Single item list with the latest document
+                    ':doc_ref': doc_reference  # Single document object, not in an array
                 }
                 
                 table.update_item(
