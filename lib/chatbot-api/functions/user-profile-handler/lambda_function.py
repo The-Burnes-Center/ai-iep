@@ -333,7 +333,7 @@ def get_child_documents(event: Dict) -> Dict:
         
         # Query documents by childId
         response = iep_documents_table.query(
-            IndexName='byKidId',
+            IndexName='byChildId',
             KeyConditionExpression='childId = :childId',
             ExpressionAttributeValues={':childId': kid_id}
         )
