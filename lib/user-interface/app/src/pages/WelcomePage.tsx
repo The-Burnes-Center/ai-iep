@@ -57,7 +57,7 @@ export default function WelcomePage() {
     <Container fluid className="welcome-container">
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
-          {/* Second Card - Upload IEP */}
+          {/* First Card - Upload IEP */}
           <Card 
             className="mb-4 hover-effect option-card"
             onClick={() => navigate('/iep-documents')}
@@ -75,7 +75,7 @@ export default function WelcomePage() {
             </Card.Body>
           </Card>
           
-          {/* Third Card - Summary and Translation */}
+          {/* Second Card - Summary and Translation */}
           <Card 
             className="hover-effect option-card"
             onClick={() => navigate('/summary-and-translations')}
@@ -88,6 +88,23 @@ export default function WelcomePage() {
                 <div className="ms-4 text-start">
                   <h3 className="mb-1">Summary and Translation</h3>
                   <p className="text-muted mb-0">View summaries and translations of your IEP documents</p>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+          {/* Third Card - Rights and Onboarding */}
+          <Card 
+            className="mb-4 hover-effect option-card"
+            onClick={() => navigate('/rights-and-onboarding')}
+          >
+            <Card.Body className="py-4">
+              <div className="d-flex align-items-center">
+                <div className="flex-shrink-0">
+                  <i className="bi bi-info-circle text-info" style={{ fontSize: '2rem' }}></i>
+                </div>
+                <div className="ms-4 text-start">
+                  <h3 className="mb-1">Your Rights</h3>
+                  <p className="text-muted mb-0">Learn about your rights and the IEP process</p>
                 </div>
               </div>
             </Card.Body>

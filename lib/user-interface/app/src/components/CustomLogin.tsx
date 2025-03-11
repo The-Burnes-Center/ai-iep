@@ -133,31 +133,39 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  // Render password change form when required
   if (passwordChangeRequired) {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
           <h4 className="text-center mb-4">Set New Password</h4>
-          
+  
           <Form onSubmit={handleCompleteNewPassword}>
             <div className="mobile-form-container">
-              <Alert variant="info">
-                You need to set a new password before continuing.
-              </Alert>
-              
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">New Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Enter new password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              
+            <Form.Group className="mb-3">
+  {/* Add bottom margin to create vertical space */}
+  <Container className="mt-3 mb-3 p-3 border rounded bg-light">
+    <Form.Text className="text-muted">
+      Password must be at least 8 characters long and include:
+      <ul>
+        <li>At least 1 number</li>
+        <li>At least 1 lowercase letter</li>
+        <li>At least 1 uppercase letter</li>
+        <li>At least 1 special character (^ $ * . [ ] &#123; &#125; ( ) ? - " ! @ # % &amp; / \ , &gt; &lt; ' : ; | _ ~ ` + =)</li>
+      </ul>
+    </Form.Text>
+  </Container>
+
+  <Form.Label className="form-label-bold">New Password</Form.Label>
+  <Form.Control
+    type="password"
+    placeholder="Enter new password"
+    value={newPassword}
+    onChange={(e) => setNewPassword(e.target.value)}
+    required
+  />
+</Form.Group>
+  
               <Form.Group className="mb-3">
                 <Form.Label className="form-label-bold">Confirm Password</Form.Label>
                 <Form.Control
@@ -168,9 +176,9 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   required
                 />
               </Form.Group>
-              
+  
               {error && <Alert variant="danger">{error}</Alert>}
-              
+  
               <div className="d-grid gap-2">
                 <Button variant="primary" type="submit" disabled={loading} className="button-text">
                   {loading ? <Spinner animation="border" size="sm" /> : 'Set New Password'}
@@ -182,7 +190,6 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       </Container>
     );
   }
-
   if (showForgotPassword) {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>

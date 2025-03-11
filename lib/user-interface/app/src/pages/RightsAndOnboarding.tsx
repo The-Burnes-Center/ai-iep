@@ -54,27 +54,7 @@ const RightsAndOnboarding: React.FC = () => {
               activeKey={activeTab}
               onSelect={(k) => k && setActiveTab(k)}
               className="mb-4 rights-nav-tabs"
-            >
-              <Tab 
-                eventKey="spanish" 
-                title={
-                  <span>
-                    <FontAwesomeIcon icon={faLanguage} className="me-1" />
-                    Spanish
-                  </span>
-                }
-              >
-                <div className="content-section rights-tab-content">
-                  <h2>{spanishContent.title}</h2>
-                  <p>{spanishContent.description}</p>
-                  <ul className="mt-3 rights-list">
-                    {spanishContent.bulletPoints.map((point, index) => (
-                      <li key={index} className="mb-2">{point}</li>
-                    ))}
-                  </ul>
-                </div>
-              </Tab>
-              
+            >        
               <Tab eventKey="english" title="English">
                 <div className="content-section rights-tab-content">
                   <h2>{englishContent.title}</h2>

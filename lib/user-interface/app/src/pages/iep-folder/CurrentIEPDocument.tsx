@@ -41,7 +41,7 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
       }
     } catch (err) {
       console.error('Error fetching document:', err);
-      setError('Failed to load document. Please try again.');
+      // setError('Failed to load document. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -61,9 +61,7 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
 
   return (
     <Card className="current-document-container">
-      <Card.Body>
-        <h4 className="document-title">To view summary of your existing IEP document click below</h4>
-        
+      <Card.Body>        
         {error && (
           <Alert variant="danger">{error}</Alert>
         )}
@@ -75,6 +73,8 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
             </Spinner>
           </div>
         ) : documentName ? (
+        <>
+        <h4 className="document-title">To view summary of your existing IEP document click below</h4>
           <Alert 
             variant="info" 
             className="document-info-alert d-flex align-items-center"
@@ -87,6 +87,7 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
               <small>Current IEP document on file</small>
             </div>
           </Alert>
+          </>
         ) : (
           <Alert variant="info" className="document-info-alert">
             No IEP document found. Please upload a document to get started.

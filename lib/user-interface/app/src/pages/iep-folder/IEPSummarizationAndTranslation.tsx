@@ -214,7 +214,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         setError(null);
       } catch (err) {
         console.error('Error fetching documents:', err);
-        setError('Failed to load documents. Please try again.');
+        // setError('Failed to load documents. Please try again.');
       } finally {
         // Only turn off initial loading after first fetch
         if (initialLoading) {
