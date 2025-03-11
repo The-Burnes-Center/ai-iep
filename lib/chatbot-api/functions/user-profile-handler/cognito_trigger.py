@@ -30,7 +30,8 @@ def lambda_handler(event, context):
             'userId': user_id,
             'createdAt': current_time,
             'updatedAt': current_time,
-            'children': []  # Initialize empty children array
+            'children': [],  # Initialize empty children array
+            'consentGiven': False  # Add new field with default value of false
         }
         
         # Save to DynamoDB
@@ -38,10 +39,9 @@ def lambda_handler(event, context):
         
         print(f"Created default profile for user {user_id}")
         
+        # Return the event back to Cognito
+        return event
     except Exception as e:
         print(f"Error creating user profile: {str(e)}")
-        # Don't raise the error - we want the user to be created even if profile creation fails
-        # They can create/update their profile later through the API
-        
-    # Return event back to Cognito
-    return event 
+        # Still return event to allow user creation even if profile creation fails
+        return event 

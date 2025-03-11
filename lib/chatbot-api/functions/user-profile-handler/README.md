@@ -12,6 +12,7 @@ User profiles are automatically created in two ways:
      - User ID (from Cognito)
      - Creation timestamp
      - Empty children array
+     - consentGiven set to false by default
 
 2. **Fallback Method - API Endpoint**:
    - If a profile doesn't exist when accessing `/profile` endpoint
@@ -38,6 +39,7 @@ User identity information (email, etc.) is managed exclusively through Amazon Co
   primaryLanguage: string, // Primary language preference
   secondaryLanguage?: string, // Optional secondary language
   city: string,           // User's city of residence
+  consentGiven: boolean,    // User's consent status (defaults to false)
   children: [                 // Array of children
     {
       childId: string,      // Unique identifier for child
@@ -130,6 +132,7 @@ Returns the user's profile information. Creates a default profile if none exists
     "primaryLanguage": "string",
     "secondaryLanguage": "string",
     "city": "string",
+    "consentGiven": boolean,
     "children": [
       {
         "childId": "string",
@@ -154,6 +157,7 @@ Content-Type: application/json
   "primaryLanguage": "string",
   "secondaryLanguage": "string",
   "city": "string",
+  "consentGiven": boolean,
   "children": [
     {
       "childId": "string",
@@ -164,12 +168,19 @@ Content-Type: application/json
 }
 ```
 
-**Note**: Email updates must be performed through Cognito user management, not through this API.
+**Note**: Email updates must be performed through Cognito user management, not through this API. The consentGiven field must be a valid JSON boolean value (true or false, lowercase without quotes).
 
 **Response (200)**
 ```json
 {
   "message": "Profile updated successfully"
+}
+```
+
+**Response (400) - Invalid consentGiven type**
+```json
+{
+  "message": "consentGiven must be a boolean value (true or false)"
 }
 ```
 

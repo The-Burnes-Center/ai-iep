@@ -149,7 +149,8 @@ def get_user_profile(event: Dict) -> Dict:
                 'createdAtISO': times['datetime'],
                 'updatedAt': times['timestamp'],
                 'updatedAtISO': times['datetime'],
-                'children': []
+                'children': [],
+                'consentGiven': False
             }
             user_profiles_table.put_item(Item=new_profile)
             return create_response(event, 200, {'profile': new_profile})
@@ -195,7 +196,8 @@ def update_user_profile(event: Dict) -> Dict:
             'phone': 'phone',
             'city': 'city',
             'primaryLanguage': 'primaryLanguage',
-            'secondaryLanguage': 'secondaryLanguage'
+            'secondaryLanguage': 'secondaryLanguage',
+            'consentGiven': 'consentGiven'
         }
 
         # If email is in the request, return an error
@@ -212,6 +214,12 @@ def update_user_profile(event: Dict) -> Dict:
                         return create_response(event, 400, {
                             'message': f'Unsupported language for {field}. Supported languages: {SUPPORTED_LANGUAGES}'
                         })
+                
+                # Validation for consentGiven boolean field
+                if field == 'consentGiven' and not isinstance(body[field], bool):
+                    return create_response(event, 400, {
+                        'message': 'consentGiven must be a boolean value (true or false)'
+                    })
                 
                 update_parts.append(f'{attr_name} = :{field}')
                 expr_values[f':{field}'] = body[field]
