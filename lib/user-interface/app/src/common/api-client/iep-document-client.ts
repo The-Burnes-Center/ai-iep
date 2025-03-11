@@ -100,30 +100,41 @@ export class IEPDocumentClient {
     }
   }
 
-  // Get most recent processed document with its summary and sections
-  async getMostRecentDocumentWithSummary() {
-    try {
-      const result = await this.getDocuments();
-      
-      // The API now directly returns the most recent document
-      const mostRecentDoc = result;
-      
-      // If no document is found, return null
-      if (!mostRecentDoc || Object.keys(mostRecentDoc).length === 0) {
-        console.log("No document found");
-        return null;
-      }
-      
-      // Extract the summary if available
-      let summary = null;
-      let translatedSummary = null;
-      
-      // Extract sections if available (they're at the same level as summaries)
-      // We need to traverse sections > M > en > M to get the section data
-      let extractedSections = null;
-      let extractedSectionsTranslated = null;
-      let documentUrl = null;
+// Get most recent processed document with its summary and sections
+async getMostRecentDocumentWithSummary() {
+  try {
+    const result = await this.getDocuments();
+    
+    // The API now directly returns the most recent document
+    const mostRecentDoc = result;
+    
+    // If no document is found, return null
+    if (!mostRecentDoc || Object.keys(mostRecentDoc).length === 0) {
+      console.log("No document found");
+      return null;
+    }
+    
+    // Always return the status regardless of whether the document is processed or not
+    // This allows the component to handle the different states (PROCESSING, PROCESSED, FAILED)
+    
+    // Extract the summary if available - only do this for PROCESSED documents
+    let summary = null;
+    let translatedSummary = null;
+    let extractedSections = null;
+    let extractedSectionsTranslated = null;
+    let documentUrl = null;
 
+    // Always extract the document URL if available
+    if (mostRecentDoc.documentUrl) {
+      try {
+        documentUrl = mostRecentDoc.documentUrl;
+      } catch (error) {
+        console.error("Error extracting document URL:", error);
+      }
+    }
+    
+    // Only extract summaries and sections if the document is processed
+    if (mostRecentDoc.status === "PROCESSED") {
       if (mostRecentDoc.summaries) {
         try {
           // Try to extract English summary from M > en > S path
@@ -151,29 +162,24 @@ export class IEPDocumentClient {
           console.error("Error extracting sections from document:", error);
         }
       }
-
-      if (mostRecentDoc.documentUrl) {
-        try {
-          documentUrl = mostRecentDoc.documentUrl;
-        } catch (error) {
-          console.error("Error extracting document URL:", error);
-        }
-      }
-      
-      // Return the document with its summary and sections
-      return {
-        ...mostRecentDoc,
-        summary: summary,
-        sections: extractedSections,
-        translatedSections: extractedSectionsTranslated,
-        documentUrl: documentUrl,
-        translatedSummary: translatedSummary
-      };
-    } catch (error) {
-      console.error('Error fetching most recent document with summary:', error);
-      throw error;
+    } else {
+      console.log(`Document status is ${mostRecentDoc.status}, not extracting content.`);
     }
+    
+    // Return the document with its summary and sections
+    return {
+      ...mostRecentDoc,
+      summary: summary,
+      sections: extractedSections,
+      translatedSections: extractedSectionsTranslated,
+      documentUrl: documentUrl,
+      translatedSummary: translatedSummary
+    };
+  } catch (error) {
+    console.error('Error fetching most recent document with summary:', error);
+    throw error;
   }
+}
   
   // Delete a document
   async deleteFile(iepId: string) {

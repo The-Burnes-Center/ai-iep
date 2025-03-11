@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { 
   Container, 
   Row, 
@@ -31,6 +31,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [translatedSections, setTranslatedSections] = useState<{name: string, displayName: string, content: string}[]>([]);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>('translated');
+  
+  // Reference to store the polling interval
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Define the desired section order and display names
   const sectionConfig = [
@@ -73,6 +76,24 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     });
   };
 
+  // Function to start polling if document is processing
+  const startPollingIfProcessing = (document: any) => {
+    // Clear any existing polling interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    
+    // If the document is processing, start polling every 5 seconds
+    if (document && document.status === "PROCESSING") {
+      console.log("Document is processing. Starting polling...");
+      pollingIntervalRef.current = setInterval(() => {
+        console.log("Polling for document status updates...");
+        setRefreshCounter(prev => prev + 1);
+      }, 5000); // Poll every 5 seconds
+    }
+  };
+
   useEffect(() => {
     const fetchDocuments = async () => {
       setLoading(true);
@@ -84,6 +105,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         
         if (mostRecentDocWithSummary) {
           setRecentDocument(mostRecentDocWithSummary);
+          
+          // Start or stop polling based on document status
+          startPollingIfProcessing(mostRecentDocWithSummary);
           
           // Set the summary if available
           if (mostRecentDocWithSummary.summary) {
@@ -178,6 +202,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     };
 
     fetchDocuments();
+
+    // Cleanup function to clear interval when component unmounts
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, [refreshCounter]);
 
   const handleRefresh = () => {
@@ -245,6 +276,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                       <Alert variant="warning">
                         <h5>Document is still processing</h5>
                         <p>Please check back later for the summary. Processing can take a few minutes.</p>
+                        <p>This page will automatically refresh when processing is complete.</p>
                       </Alert>
                     ) : recentDocument.status === "FAILED" ? (
                       <Alert variant="danger">
