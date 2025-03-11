@@ -32,9 +32,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [sections, setSections] = useState<{name: string, displayName: string, content: string}[]>([]);
   const [translatedSections, setTranslatedSections] = useState<{name: string, displayName: string, content: string}[]>([]);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<string>('translated');
+  // Initialize activeTab state - will be set properly in the useEffect below
+  const [activeTab, setActiveTab] = useState<string>('english');
   const navigate = useNavigate();
-  
   
   // Reference to store the polling interval
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -236,6 +236,18 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     };
   }, [refreshCounter]);
 
+  // Check if translated content exists
+  const hasTranslatedContent = translatedSummary || translatedSections.length > 0;
+
+  // Set the appropriate active tab based on translated content availability
+  useEffect(() => {
+    if (hasTranslatedContent) {
+      setActiveTab('translated');
+    } else {
+      setActiveTab('english');
+    }
+  }, [hasTranslatedContent]);
+
   const handleRefresh = () => {
     setRefreshCounter(prev => prev + 1);
   };
@@ -269,9 +281,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     return documentUrl.split('/').pop() || 'Document';
   };
 
-  // Check if translated content exists
-  const hasTranslatedContent = translatedSummary || translatedSections.length > 0;
-
   // Determine if we're in initial loading or processing state
   const isProcessing = recentDocument && recentDocument.status === "PROCESSING";
 
@@ -282,8 +291,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   return (
     <Container className="summary-container mt-4 mb-5">
       <div className="mt-3 text-start">
-        <Button variant="secondary" onClick={handleBackClick}>
-        ← Back
+        <Button variant="outline-secondary" onClick={handleBackClick}>
+          ← Back
         </Button>
       </div>
       <Row>
@@ -342,62 +351,57 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           onSelect={(k) => k && setActiveTab(k)}
                           className="mb-3 mt-4 summary-tabs"
                         >
-                          <Tab 
-                            eventKey="translated" 
-                            title={
-                              <span>
-                                <FontAwesomeIcon icon={faLanguage} className="me-1" />
-                                Preferred Language
-                              </span>
-                            }
-                            disabled={!hasTranslatedContent}
-                          >
-                            {translatedSummary ? (
-                              <>
-                                <h4 className="mt-4">IEP Summary</h4>
-                                <Card className="summary-content mb-4">
-                                  <Card.Body>
-                                    <p className="mb-0">{translatedSummary}</p>
-                                  </Card.Body>
-                                </Card>
-                              </>
-                            ) : (
-                              <Alert variant="info">
-                                <h5>No Translated Summary Available</h5>
-                                <p>No summary in your preferred language was found for this document.</p>
-                              </Alert>
-                            )}
-                            
-                            {translatedSections.length > 0 ? (
-                              <>
-                                <h4 className="mt-4">Key Insights</h4>
-                                <Accordion className="mb-3 summary-accordion">
-                                  {translatedSections.map((section, index) => (
-                                    <Accordion.Item key={index} eventKey={index.toString()}>
-                                      <Accordion.Header>
-                                        {section.displayName}
-                                      </Accordion.Header>
-                                      <Accordion.Body>
-                                        {section.content || 'No content available for this section.'}
-                                      </Accordion.Body>
-                                    </Accordion.Item>
-                                  ))}
-                                </Accordion>
-                              </>
-                            ) : (
-                              <Alert variant="info">
-                                <h5>No Translated Sections Available</h5>
-                                <p>No sections in your preferred language were found for this document.</p>
-                              </Alert>
-                            )}
-                            
-                            {!translatedSummary && translatedSections.length === 0 && (
-                              <Alert variant="warning">
-                                <h5>No Translated Content Available</h5>
-                                <p>No content in your preferred language was found for this document.</p>
-                              </Alert>
-                            )}
-                          </Tab>
+                          {/* Only render the Preferred Language tab if translated content exists */}
+                          {hasTranslatedContent && (
+                            <Tab 
+                              eventKey="translated" 
+                              title={
+                                <span>
+                                  <FontAwesomeIcon icon={faLanguage} className="me-1" />
+                                  Preferred Language
+                                </span>
+                              }
+                            >
+                              {translatedSummary ? (
+                                <>
+                                  <h4 className="mt-4">IEP Summary</h4>
+                                  <Card className="summary-content mb-4">
+                                    <Card.Body>
+                                      <p className="mb-0">{translatedSummary}</p>
+                                    </Card.Body>
+                                  </Card>
+                                </>
+                              ) : (
+                                <Alert variant="info">
+                                  <h5>No Translated Summary Available</h5>
+                                  <p>No summary in your preferred language was found for this document.</p>
+                                </Alert>
+                              )}
+                              
+                              {translatedSections.length > 0 ? (
+                                <>
+                                  <h4 className="mt-4">Key Insights</h4>
+                                  <Accordion className="mb-3 summary-accordion">
+                                    {translatedSections.map((section, index) => (
+                                      <Accordion.Item key={index} eventKey={index.toString()}>
+                                        <Accordion.Header>
+                                          {section.displayName}
+                                        </Accordion.Header>
+                                        <Accordion.Body>
+                                          {section.content || 'No content available for this section.'}
+                                        </Accordion.Body>
+                                      </Accordion.Item>
+                                    ))}
+                                  </Accordion>
+                                </>
+                              ) : (
+                                <Alert variant="info">
+                                  <h5>No Translated Sections Available</h5>
+                                  <p>No sections in your preferred language were found for this document.</p>
+                                </Alert>
+                              )}
+                            </Tab>
+                          )}
                           
                           <Tab eventKey="english" title="English">
                             {summary ? (

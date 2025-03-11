@@ -24,11 +24,11 @@ const IEPDocumentView: React.FC = () => {
 
   return (
     <Container className="document-container mt-4 mb-5">
-        <div className="mt-3 text-start">
-          <Button variant="secondary" onClick={handleBackClick}>
-            ← Back
-          </Button>
-        </div>
+      <div className="mt-3 text-start">
+        <Button variant="outline-secondary" onClick={handleBackClick}>
+          ← Back
+        </Button>
+      </div>
       <Row>
         <Col>
           <h1 className="document-title"></h1>          
