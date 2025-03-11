@@ -105,73 +105,34 @@ export class IEPDocumentClient {
     try {
       const result = await this.getDocuments();
       
-      // From the screenshot, we can see that the documents is actually in result.documents
-      // or documents.Array, not directly in documents
-      let documents = [];
+      // The API now directly returns the most recent document
+      const mostRecentDoc = result;
       
-      // Check both possible locations based on the screenshot
-      if (result && result.documents && Array.isArray(result.documents)) {
-        documents = result.documents;
-      } else if (result && result.Array && Array.isArray(result.Array)) {
-        documents = result.Array;
-      } else if (result && Array.isArray(result)) {
-        // Direct array case
-        documents = result;
-      } else {
-        console.log("Document structure:", result);
+      // If no document is found, return null
+      if (!mostRecentDoc || Object.keys(mostRecentDoc).length === 0) {
+        console.log("No document found");
         return null;
       }
-      
-      // Return null if documents is empty
-      if (documents.length === 0) {
-        return null;
-      }
-      
-      // Based on the screenshot, we should look for documents with "PROCESSED" status
-      const processedDocs = documents.filter(doc => doc.status === "PROCESSED");
-      
-      // If no processed documents, return null
-      if (processedDocs.length === 0) {
-        return null;
-      }
-      
-      // Sort processed documents by createdAt in descending order (most recent first)
-      const sortedDocs = [...processedDocs].sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA;
-      });
-      
-      // Get the most recent processed document
-      const mostRecentDoc = sortedDocs[0];
       
       // Extract the summary if available
       let summary = null;
-
       let translatedSummary = null;
       
       // Extract sections if available (they're at the same level as summaries)
       // We need to traverse sections > M > en > M to get the section data
       let extractedSections = null;
-
       let extractedSectionsTranslated = null;
-
       let documentUrl = null;
 
       if (mostRecentDoc.summaries) {
         try {
           // Try to extract English summary from M > en > S path
           summary = mostRecentDoc.summaries.M?.en?.S || null;
-          translatedSummary = mostRecentDoc.summaries.M?.es.S || mostRecentDoc.summaries.M?.vi.S || mostRecentDoc.summaries.M?.zh.S || null;
-        } catch (error) {
-          console.error("Error extracting summary from document:", error);
-        }
-      }
-
-      if (mostRecentDoc.summaries) {
-        try {
-          // Try to extract English summary from M > en > S path
-          summary = mostRecentDoc.summaries.M?.en?.S || null;
+          
+          // Try to extract translated summary (prefer Spanish, then Vietnamese, then Chinese)
+          translatedSummary = mostRecentDoc.summaries.M?.es?.S || 
+                             mostRecentDoc.summaries.M?.vi?.S || 
+                             mostRecentDoc.summaries.M?.zh?.S || null;
         } catch (error) {
           console.error("Error extracting summary from document:", error);
         }
@@ -181,7 +142,11 @@ export class IEPDocumentClient {
         try {
           // Get the sections object which should have the M > en > M structure
           extractedSections = mostRecentDoc.sections.M?.en?.M || null;
-          extractedSectionsTranslated = mostRecentDoc.sections.M?.vi?.M || mostRecentDoc.sections.M?.zh?.M || mostRecentDoc.sections.M?.es?.M || null;
+          
+          // Get translated sections (prefer Spanish, then Vietnamese, then Chinese)
+          extractedSectionsTranslated = mostRecentDoc.sections.M?.es?.M || 
+                                       mostRecentDoc.sections.M?.vi?.M || 
+                                       mostRecentDoc.sections.M?.zh?.M || null;
         } catch (error) {
           console.error("Error extracting sections from document:", error);
         }
@@ -189,10 +154,9 @@ export class IEPDocumentClient {
 
       if (mostRecentDoc.documentUrl) {
         try {
-          // Get the sections object which should have the M > en > M structure
           documentUrl = mostRecentDoc.documentUrl;
         } catch (error) {
-          console.error("Error extracting sections from document:", error);
+          console.error("Error extracting document URL:", error);
         }
       }
       
@@ -201,7 +165,7 @@ export class IEPDocumentClient {
         ...mostRecentDoc,
         summary: summary,
         sections: extractedSections,
-        translatedSections : extractedSectionsTranslated,
+        translatedSections: extractedSectionsTranslated,
         documentUrl: documentUrl,
         translatedSummary: translatedSummary
       };
