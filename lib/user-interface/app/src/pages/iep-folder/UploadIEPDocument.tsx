@@ -9,6 +9,7 @@ import {
   Card,
   ListGroup
 } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import { FileUploader } from '../../common/file-uploader';
@@ -50,6 +51,7 @@ export interface UploadIEPDocumentProps {
 const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete }) => {
   const appContext = useContext(AppContext);
   const apiClient = new IEPDocumentClient(appContext);
+  const navigate = useNavigate();
   
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -118,6 +120,9 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
       setFile(null);
       // Call the callback function to notify parent component
       onUploadComplete();
+      
+      // Navigate to summary page immediately after successful upload
+      navigate('/summary-and-translations');
     }
   };
 

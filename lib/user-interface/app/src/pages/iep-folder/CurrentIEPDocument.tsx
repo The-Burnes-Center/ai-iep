@@ -4,6 +4,7 @@ import {
   Card,
   Spinner
 } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import './CurrentIEPDocument.css';
@@ -15,6 +16,7 @@ export interface CurrentIEPDocumentProps {
 const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded }) => {
   const appContext = useContext(AppContext);
   const apiClient = new IEPDocumentClient(appContext);
+  const navigate = useNavigate();
   
   const [documentName, setDocumentName] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -53,10 +55,14 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
     }
   }, [onRefreshNeeded]);
 
+  const handleAlertClick = () => {
+    navigate('/summary-and-translations');
+  };
+
   return (
     <Card className="current-document-container">
       <Card.Body>
-        <h4 className="document-title">Current IEP Document</h4>
+        <h4 className="document-title">To view summary of your existing IEP document click below</h4>
         
         {error && (
           <Alert variant="danger">{error}</Alert>
@@ -69,7 +75,12 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
             </Spinner>
           </div>
         ) : documentName ? (
-          <Alert variant="info" className="document-info-alert d-flex align-items-center">
+          <Alert 
+            variant="info" 
+            className="document-info-alert d-flex align-items-center"
+            onClick={handleAlertClick}
+            style={{ cursor: 'pointer' }}
+          >
             <i className="bi bi-file-earmark-text me-3" style={{ fontSize: '1.5rem' }}></i>
             <div>
               <p className="mb-0 fw-bold">{documentName}</p>
