@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Alert, Button } from 'react-bootstrap';
 import UploadIEPDocument from './UploadIEPDocument';
 import CurrentIEPDocument from './CurrentIEPDocument';
 import './IEPDocumentView.css';
 
 const IEPDocumentView: React.FC = () => {
+  const navigate = useNavigate();
+  
   const [refreshNeeded, setRefreshNeeded] = useState(false);
 
   const handleUploadComplete = () => {
@@ -15,8 +18,17 @@ const IEPDocumentView: React.FC = () => {
     setRefreshNeeded(false);
   };
 
+  const handleBackClick = () => {
+    navigate('/welcome-page');
+  };
+
   return (
     <Container className="document-container mt-4 mb-5">
+        <div className="mt-3 text-start">
+          <Button variant="secondary" onClick={handleBackClick}>
+            ← Back
+          </Button>
+        </div>
       <Row>
         <Col>
           <h1 className="document-title"></h1>          

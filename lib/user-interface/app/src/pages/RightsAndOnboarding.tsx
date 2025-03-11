@@ -1,8 +1,12 @@
 import React from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Button } from 'react-bootstrap';
 import './RightsAndOnboarding.css';
 
 const RightsAndOnboarding: React.FC = () => {
+  const navigate = useNavigate();
+
+
   const englishContent = {
     title: "Your Rights as a Parent",
     description: "Hi! We're here to help you understand your child's Individualized Education Program (IEP) better. Navigating this process can feel overwhelming, but you have important rights as a parent. Here are some things you should know:",
@@ -16,8 +20,18 @@ const RightsAndOnboarding: React.FC = () => {
     ]
   };
 
+  const handleBackClick = () => {
+    navigate('/welcome-page');
+  };
+
+
   return (
     <Container className="mt-4 mb-5">
+      <div className="mt-3 text-start">
+        <Button variant="secondary" onClick={handleBackClick}>
+          ← Back
+        </Button>
+      </div>
       <Row>
         <Col>
           <div className="content-section rights-tab-content">

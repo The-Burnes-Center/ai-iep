@@ -15,6 +15,7 @@ import {
 import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useNavigate } from 'react-router-dom';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
 
@@ -32,6 +33,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [translatedSections, setTranslatedSections] = useState<{name: string, displayName: string, content: string}[]>([]);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>('translated');
+  const navigate = useNavigate();
+  
   
   // Reference to store the polling interval
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -272,8 +275,17 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Determine if we're in initial loading or processing state
   const isProcessing = recentDocument && recentDocument.status === "PROCESSING";
 
+  const handleBackClick = () => {
+    navigate('/welcome-page');
+  };
+
   return (
     <Container className="summary-container mt-4 mb-5">
+      <div className="mt-3 text-start">
+        <Button variant="secondary" onClick={handleBackClick}>
+        ← Back
+        </Button>
+      </div>
       <Row>
         <Col>
         <p></p>          
