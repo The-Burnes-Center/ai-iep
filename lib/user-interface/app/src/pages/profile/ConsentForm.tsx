@@ -39,7 +39,7 @@ export default function ConsentForm() {
             
             <div className="consent-box">
               <p className="consent-text">
-                Para utilizar nuestra herramienta de Ayuda para IEP, necesitamos su permiso. Al marcar esta casilla, nos autoriza a procesar la información del IEP de su hijo para brindarle apoyo y recomendaciones personalizadas. Mantenemos toda la información privada y segura. Puede retirar su consentimiento en cualquier momento contactándonos.
+              To use our IEP Helper tool, we need your permission. By checking this box, you allow us to process your child’s IEP information to provide personalized support and recommendations. We keep all information private and secure. You can withdraw your consent at any time by contacting us.
               </p>
               
               <Form.Group controlId="consentCheckbox">
@@ -52,7 +52,7 @@ export default function ConsentForm() {
                     type="checkbox"
                     checked={isChecked}
                     onChange={handleChange}
-                    label={<span className="checkbox-label">Estoy de acuerdo</span>}
+                    label={<span className="checkbox-label">I Agree</span>}
                   />
                 </OverlayTrigger>
               </Form.Group>

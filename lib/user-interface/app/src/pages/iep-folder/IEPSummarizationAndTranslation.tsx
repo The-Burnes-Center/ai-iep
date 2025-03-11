@@ -22,7 +22,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
   const apiClient = new IEPDocumentClient(appContext);
   
-  const [loading, setLoading] = useState<boolean>(true);
+  // Track whether this is the first load
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [recentDocument, setRecentDocument] = useState<any>(null);
   const [summary, setSummary] = useState<string>('');
@@ -34,6 +35,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   
   // Reference to store the polling interval
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isFirstRender = useRef<boolean>(true);
 
   // Define the desired section order and display names
   const sectionConfig = [
@@ -96,95 +98,109 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   useEffect(() => {
     const fetchDocuments = async () => {
-      setLoading(true);
-      setError(null);
+      // Only set loading on initial fetch
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+      }
       
       try {
         // Use our combined method to get the most recent document with its summary
         const mostRecentDocWithSummary = await apiClient.getMostRecentDocumentWithSummary();
         
         if (mostRecentDocWithSummary) {
-          setRecentDocument(mostRecentDocWithSummary);
+          // Only update the document if there's an actual change
+          setRecentDocument(prev => {
+            // Only trigger re-render if status or other key properties changed
+            if (!prev || 
+                prev.status !== mostRecentDocWithSummary.status || 
+                prev.createdAt !== mostRecentDocWithSummary.createdAt) {
+              return mostRecentDocWithSummary;
+            }
+            return prev; // No change needed
+          });
           
           // Start or stop polling based on document status
           startPollingIfProcessing(mostRecentDocWithSummary);
           
-          // Set the summary if available
-          if (mostRecentDocWithSummary.summary) {
-            setSummary(mostRecentDocWithSummary.summary);
-          } else {
-            setSummary('');
-          }
-          
-          // Set the translated summary if available
-          if (mostRecentDocWithSummary.translatedSummary) {
-            setTranslatedSummary(mostRecentDocWithSummary.translatedSummary);
-          } else {
-            setTranslatedSummary('');
-          }
-          
-          // Extract sections if available
-          if (mostRecentDocWithSummary.sections) {
-            try {
-              const extractedSections = [];
-              const sectionsData = mostRecentDocWithSummary.sections;
-              
-              if (sectionsData) {
-                // Iterate through each section
-                for (const [sectionName, sectionContent] of Object.entries(sectionsData)) {
-                  // Extract content by traversing M -> S -> S with type safety
-                  const sectionContentObj = sectionContent as any;
-                  const content = sectionContentObj?.M?.S?.S || '';
-                  
-                  extractedSections.push({ 
-                    name: sectionName,
-                    displayName: getDisplayName(sectionName), 
-                    content: content
-                  });
+          // Only update state if document is processed - prevents unnecessary re-renders during polling
+          if (mostRecentDocWithSummary.status === "PROCESSED") {
+            // Set the summary if available
+            if (mostRecentDocWithSummary.summary) {
+              setSummary(mostRecentDocWithSummary.summary);
+            } else {
+              setSummary('');
+            }
+            
+            // Set the translated summary if available
+            if (mostRecentDocWithSummary.translatedSummary) {
+              setTranslatedSummary(mostRecentDocWithSummary.translatedSummary);
+            } else {
+              setTranslatedSummary('');
+            }
+            
+            // Extract sections if available
+            if (mostRecentDocWithSummary.sections) {
+              try {
+                const extractedSections = [];
+                const sectionsData = mostRecentDocWithSummary.sections;
+                
+                if (sectionsData) {
+                  // Iterate through each section
+                  for (const [sectionName, sectionContent] of Object.entries(sectionsData)) {
+                    // Extract content by traversing M -> S -> S with type safety
+                    const sectionContentObj = sectionContent as any;
+                    const content = sectionContentObj?.M?.S?.S || '';
+                    
+                    extractedSections.push({ 
+                      name: sectionName,
+                      displayName: getDisplayName(sectionName), 
+                      content: content
+                    });
+                  }
                 }
+                
+                // Sort sections according to our defined order
+                const orderedSections = sortSections(extractedSections);
+                setSections(orderedSections);
+              } catch (e) {
+                console.error("Error extracting sections:", e);
+                setSections([]);
               }
-              
-              // Sort sections according to our defined order
-              const orderedSections = sortSections(extractedSections);
-              setSections(orderedSections);
-            } catch (e) {
-              console.error("Error extracting sections:", e);
+            } else {
               setSections([]);
             }
-          } else {
-            setSections([]);
-          }
-          
-          // Extract translated sections if available
-          if (mostRecentDocWithSummary.translatedSections) {
-            try {
-              const extractedTranslatedSections = [];
-              const translatedSectionsData = mostRecentDocWithSummary.translatedSections;
-              
-              if (translatedSectionsData) {
-                // Iterate through each section
-                for (const [sectionName, sectionContent] of Object.entries(translatedSectionsData)) {
-                  // Extract content by traversing M -> S -> S with type safety
-                  const sectionContentObj = sectionContent as any;
-                  const content = sectionContentObj?.M?.S?.S || '';
-                  
-                  extractedTranslatedSections.push({ 
-                    name: sectionName,
-                    displayName: getDisplayName(sectionName), 
-                    content: content
-                  });
+            
+            // Extract translated sections if available
+            if (mostRecentDocWithSummary.translatedSections) {
+              try {
+                const extractedTranslatedSections = [];
+                const translatedSectionsData = mostRecentDocWithSummary.translatedSections;
+                
+                if (translatedSectionsData) {
+                  // Iterate through each section
+                  for (const [sectionName, sectionContent] of Object.entries(translatedSectionsData)) {
+                    // Extract content by traversing M -> S -> S with type safety
+                    const sectionContentObj = sectionContent as any;
+                    const content = sectionContentObj?.M?.S?.S || '';
+                    
+                    extractedTranslatedSections.push({ 
+                      name: sectionName,
+                      displayName: getDisplayName(sectionName), 
+                      content: content
+                    });
+                  }
                 }
+                
+                // Sort translated sections according to our defined order
+                const orderedTranslatedSections = sortSections(extractedTranslatedSections);
+                setTranslatedSections(orderedTranslatedSections);
+              } catch (e) {
+                console.error("Error extracting translated sections:", e);
+                setTranslatedSections([]);
               }
-              
-              // Sort translated sections according to our defined order
-              const orderedTranslatedSections = sortSections(extractedTranslatedSections);
-              setTranslatedSections(orderedTranslatedSections);
-            } catch (e) {
-              console.error("Error extracting translated sections:", e);
+            } else {
               setTranslatedSections([]);
             }
-          } else {
-            setTranslatedSections([]);
           }
         } else {
           setRecentDocument(null);
@@ -193,11 +209,17 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           setSections([]);
           setTranslatedSections([]);
         }
+        
+        // Clear any errors
+        setError(null);
       } catch (err) {
         console.error('Error fetching documents:', err);
         setError('Failed to load documents. Please try again.');
       } finally {
-        setLoading(false);
+        // Only turn off initial loading after first fetch
+        if (initialLoading) {
+          setInitialLoading(false);
+        }
       }
     };
 
@@ -247,6 +269,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Check if translated content exists
   const hasTranslatedContent = translatedSummary || translatedSections.length > 0;
 
+  // Determine if we're in initial loading or processing state
+  const isProcessing = recentDocument && recentDocument.status === "PROCESSING";
+
   return (
     <Container className="summary-container mt-4 mb-5">
       <Row>
@@ -256,7 +281,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             <Alert variant="danger">{error}</Alert>
           )}
           
-          {loading && !error ? (
+          {initialLoading ? (
             <div className="text-center my-5">
               <Spinner animation="border" role="status">
                 <span className="visually-hidden">Loading IEP summary...</span>
@@ -272,12 +297,27 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               <Card.Body className="summary-card-body">
                 <Row>
                   <Col md={12}>
-                    {recentDocument.status === "PROCESSING" ? (
-                      <Alert variant="warning">
-                        <h5>Document is still processing</h5>
-                        <p>Please check back later for the summary. Processing can take a few minutes.</p>
-                        <p>This page will automatically refresh when processing is complete.</p>
-                      </Alert>
+                    {isProcessing ? (
+                      <div className="text-center my-5">
+                        <Spinner animation="border" variant="warning" role="status">
+                          <span className="visually-hidden">Processing document...</span>
+                        </Spinner>
+                        <Alert variant="warning" className="mt-3">
+                          <h5>Document is being processed</h5>
+                          <p>This may take a few minutes. Meanwhile, please take a look at your rights as a parent:</p>
+                          <div className="text-start">
+                            <p>Hi! We're here to help you understand your child's Individualized Education Program (IEP) better. Navigating this process can feel overwhelming, but you have important rights as a parent. Here are some things you should know:</p>
+                            <ul className="mt-3 text-start">
+                              <li className="mb-2">You can request a translator for IEP meetings to ensure clear communication.</li>
+                              <li className="mb-2">You have the right to take your time before signing an IEP - you don't need to sign until you're ready.</li>
+                              <li className="mb-2">You can consent to all, some, or none of the proposed services - your child won't receive new services without your approval.</li>
+                              <li className="mb-2">You have the right to request an IEP meeting at any time, not just at the annual review, and the school must schedule it within 30 days.</li>
+                              <li className="mb-2">If an administrator isn't present at the meeting, you have the right to reschedule for a time when they can attend.</li>
+                              <li className="mb-2">By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting.</li>
+                            </ul>
+                          </div>
+                        </Alert>
+                      </div>
                     ) : recentDocument.status === "FAILED" ? (
                       <Alert variant="danger">
                         <h5>Processing Failed</h5>
@@ -295,7 +335,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                             title={
                               <span>
                                 <FontAwesomeIcon icon={faLanguage} className="me-1" />
-                                Spanish
+                                Preferred Language
                               </span>
                             }
                             disabled={!hasTranslatedContent}
