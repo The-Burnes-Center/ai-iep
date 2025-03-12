@@ -360,7 +360,7 @@ def get_child_documents(event: Dict) -> Dict:
         
         # If no document found
         if not latest_doc:
-            return create_response(event, 404, {'message': 'No document found for this child'})
+            return create_response(event, 200, {'documents': [], 'message': 'No document found for this child'})
         
         return create_response(event, 200, latest_doc)
         
