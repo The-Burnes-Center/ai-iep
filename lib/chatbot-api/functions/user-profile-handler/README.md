@@ -239,6 +239,33 @@ Authorization: Bearer <jwt-token>
 
 **Note**: Only the most recent document for a child is returned. When a new document is uploaded for a child, any existing documents for that child are automatically deleted.
 
+### 5. Delete Child's IEP Documents
+```http
+DELETE /profile/children/{childId}/documents
+Authorization: Bearer <jwt-token>
+```
+
+Deletes all IEP-related data for a specific child, including:
+1. All IEP documents stored in S3
+2. All IEP document records in the database
+
+This operation does not delete the child's profile information, only their IEP-related data.
+
+**Response (200)**
+```json
+{
+  "message": "IEP documents successfully deleted",
+  "childId": "string"
+}
+```
+
+**Response (500)**
+```json
+{
+  "message": "Error deleting IEP documents: [error details]"
+}
+```
+
 ## Language Support
 
 The system supports the following languages:

@@ -367,6 +367,94 @@ def get_child_documents(event: Dict) -> Dict:
     except Exception as e:
         return create_response(event, 500, {'message': f'Error retrieving document: {str(e)}'})
 
+def delete_child_documents(event: Dict) -> Dict:
+    """
+    Delete all IEP-related data for a specific child.
+    This includes:
+    1. S3 files (actual IEP documents)
+    2. Records in IEP documents table
+    
+    Args:
+        event (Dict): API Gateway event object containing user context and childId
+        
+    Returns:
+        Dict: API Gateway response indicating success or error
+        
+    Raises:
+        Exception: If there's an error during deletion process
+    """
+    try:
+        user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
+        child_id = event['pathParameters']['childId']
+        
+        print(f"Processing request to delete IEP documents for childId: {child_id} by userId: {user_id}")
+        
+        # 1. First delete files from S3
+        try:
+            # Initialize S3 client
+            s3 = boto3.client('s3')
+            bucket_name = os.environ.get('BUCKET', '')
+            
+            # Create the S3 key prefix for this child (all objects under userId/childId/)
+            prefix = f"{user_id}/{child_id}/"
+            
+            print(f"Listing S3 objects with prefix: {prefix} in bucket: {bucket_name}")
+            
+            # List all objects with this prefix
+            paginator = s3.get_paginator('list_objects_v2')
+            objects_deleted = 0
+            
+            for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
+                if 'Contents' in page:
+                    for obj in page['Contents']:
+                        s3.delete_object(Bucket=bucket_name, Key=obj['Key'])
+                        print(f"Deleted S3 object: {obj['Key']}")
+                        objects_deleted += 1
+            
+            print(f"Deleted {objects_deleted} S3 objects for childId: {child_id}")
+            
+        except Exception as s3_error:
+            print(f"Error deleting S3 objects: {str(s3_error)}")
+            # Continue with other deletions even if S3 deletion fails
+        
+        # 2. Delete records from IEP documents table
+        try:
+            # Query documents by childId
+            response = iep_documents_table.query(
+                IndexName='byChildId',
+                KeyConditionExpression='childId = :childId',
+                ExpressionAttributeValues={':childId': child_id}
+            )
+            
+            documents_deleted = 0
+            
+            # Delete each document record that belongs to this user
+            for doc in response['Items']:
+                if 'userId' not in doc or doc['userId'] == user_id:
+                    iep_documents_table.delete_item(
+                        Key={
+                            'iepId': doc['iepId'],
+                            'childId': doc['childId']
+                        }
+                    )
+                    print(f"Deleted IEP document record with iepId: {doc['iepId']} for childId: {child_id}")
+                    documents_deleted += 1
+            
+            print(f"Deleted {documents_deleted} IEP document records for childId: {child_id}")
+            
+        except Exception as ddb_error:
+            print(f"Error deleting document records: {str(ddb_error)}")
+            
+        # Return success response
+        return create_response(event, 200, {
+            'message': 'IEP documents successfully deleted',
+            'childId': child_id
+        })
+        
+    except Exception as e:
+        print(f"Error in delete_child_documents: {str(e)}")
+        return create_response(event, 500, {'message': f'Error deleting IEP documents: {str(e)}'})
+
 def lambda_handler(event: Dict, context) -> Dict:
     """
     Main Lambda handler function that routes requests to appropriate handlers using the router.
