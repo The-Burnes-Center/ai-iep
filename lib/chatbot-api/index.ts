@@ -241,7 +241,7 @@ export class ChatBotApi extends Construct {
 
     restBackend.restAPI.addRoutes({
       path: "/profile/children/{childId}/documents",
-      methods: [apigwv2.HttpMethod.GET],
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.DELETE],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });

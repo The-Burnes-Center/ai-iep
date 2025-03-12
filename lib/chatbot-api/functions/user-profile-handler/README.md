@@ -212,7 +212,7 @@ GET /profile/children/{childId}/documents
 Authorization: Bearer <jwt-token>
 ```
 
-**Response (200)**
+**Response (200) - Document Found**
 ```json
 {
   "iepId": "string",
@@ -230,14 +230,48 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
-**Response (404)**
+**Response (200) - No Document Found**
 ```json
 {
+  "documents": [],
   "message": "No document found for this child"
 }
 ```
 
 **Note**: Only the most recent document for a child is returned. When a new document is uploaded for a child, any existing documents for that child are automatically deleted.
+
+### 5. Delete Child's IEP Documents
+```http
+DELETE /profile/children/{childId}/documents
+Authorization: Bearer <jwt-token>
+```
+
+Deletes all IEP-related data for a specific child, including:
+1. All IEP documents stored in S3
+2. All IEP document records in the database
+3. IEP document references in the user's profile
+
+This operation does not delete the child's profile information, only their IEP-related data.
+
+**S3 Deletion Process:**
+- The operation identifies all S3 objects with the prefix `{userId}/{childId}/`
+- Each object is individually deleted from the S3 bucket
+- The process is resilient: if S3 deletion fails, the function will still attempt to clean up database records
+
+**Response (200)**
+```json
+{
+  "message": "IEP documents successfully deleted",
+  "childId": "string"
+}
+```
+
+**Response (500)**
+```json
+{
+  "message": "Error deleting IEP documents: [error details]"
+}
+```
 
 ## Language Support
 
@@ -254,7 +288,7 @@ All endpoints return appropriate HTTP status codes:
 - 400: Bad Request (invalid input)
 - 401: Unauthorized (invalid/missing token)
 - 403: Forbidden (accessing unauthorized resource)
-- 404: Not Found
+- 404: Not Found (endpoint not found)
 - 500: Internal Server Error
 
 Error responses include a message:
@@ -265,62 +299,3 @@ Error responses include a message:
 ```
 
 ## Security
-
-1. **Authentication**
-   - All endpoints require JWT token from Cognito
-   - Token must be included in Authorization header
-   - Profile creation tied to Cognito user confirmation
-
-2. **Authorization**
-   - Users can only access their own profile
-   - Users can only access documents belonging to their children
-   - Document uploads are automatically linked to the correct user and child
-
-3. **CORS**
-   - Cross-Origin Resource Sharing enabled
-   - Supports OPTIONS preflight requests
-   - Configurable allowed origins
-
-4. **File Upload Security**
-   - Pre-signed URLs with 5-minute expiration
-   - Automatic file path isolation by user and child
-   - Content type verification
-   - Secure S3 bucket configuration
-
-## Database Indexes
-
-### IepDocumentsTable Indexes
-1. **byUserId** (GSI)
-   - Partition Key: userId
-   - Sort Key: createdAt
-   - Use: Retrieve all documents for a user
-
-2. **byChildId** (GSI)
-   - Partition Key: childId
-   - Sort Key: createdAt
-   - Use: Retrieve all documents for a specific child
-
-## Infrastructure
-
-The system is deployed using AWS CDK and includes:
-1. DynamoDB tables with auto-scaling
-2. S3 bucket for document storage
-3. Lambda functions:
-   - Main API handler for profile operations
-   - Cognito Post Confirmation trigger for automatic profile creation
-   - Upload handler for generating pre-signed URLs
-   - Document processing handler
-4. API Gateway v2 HTTP API endpoints
-5. Cognito integration for authentication
-6. IAM roles and permissions
-7. CORS configuration
-
-## Dependencies
-- AWS SDK for Python (boto3)
-- AWS SDK for JavaScript (v3)
-- AWS CDK
-- API Gateway v2
-- Cognito User Pools
-- DynamoDB
-- Lambda
-- S3 

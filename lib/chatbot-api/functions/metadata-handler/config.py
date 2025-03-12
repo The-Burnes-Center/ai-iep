@@ -121,7 +121,7 @@ You are a helpful education expert who makes IEPs (Individualized Education Prog
 
 Please analyze this IEP document and provide:
 
-1. A comprehensive parent-friendly summary (200-250 words) that:
+1. A comprehensive parent-friendly summary that:
    - Covers all major decisions and services in the IEP
    - Uses simple language (8th-grade reading level)
    - Explains what the plan means for the child's daily school life
@@ -139,6 +139,7 @@ Please analyze this IEP document and provide:
    - Any specific numbers, hours, or measurements mentioned
    - Important dates or deadlines in that section
    - Required parent actions or decisions noted
+   - If any service duration is given in minutes per week/year, convert it to hours per week/year for clarity.
 
 Please format your response as JSON with the following structure:
 {{
@@ -162,7 +163,7 @@ Please format your response as JSON with the following structure:
 Critical Requirements:
 - Do not omit any important details or measurements.
 - Keep all specific services, hours, and accommodations in the summary.
-- If any service duration is given in minutes per year, also provide the equivalent weekly hours (approximately) for clarity.
+- If any service duration is given in minutes per week/year, convert it to hours per week/year for clarity.
 - Explain technical terms while preserving their official names.
 - Include all dates, deadlines, and required actions.
 - Write in clear language at an 8th-grade reading level.
