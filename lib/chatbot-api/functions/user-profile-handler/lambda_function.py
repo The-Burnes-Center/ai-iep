@@ -373,6 +373,7 @@ def delete_child_documents(event: Dict) -> Dict:
     This includes:
     1. S3 files (actual IEP documents)
     2. Records in IEP documents table
+    3. IEP references in the user's profile
     
     Args:
         event (Dict): API Gateway event object containing user context and childId
@@ -444,6 +445,49 @@ def delete_child_documents(event: Dict) -> Dict:
             
         except Exception as ddb_error:
             print(f"Error deleting document records: {str(ddb_error)}")
+        
+        # 3. Update the user profile to remove any IEP document references for this child
+        try:
+            # First get the current user profile
+            user_profile_response = user_profiles_table.get_item(
+                Key={'userId': user_id}
+            )
+            
+            if 'Item' in user_profile_response:
+                user_profile = user_profile_response['Item']
+                updated_profile = False
+                
+                # Check if there are children in the profile
+                if 'children' in user_profile and isinstance(user_profile['children'], list):
+                    children = user_profile['children']
+                    
+                    # Find the child and remove any IEP document references
+                    for i, child in enumerate(children):
+                        if child.get('childId') == child_id:
+                            # Remove any IEP document data if present
+                            if 'iepDocument' in child:
+                                del children[i]['iepDocument']
+                                updated_profile = True
+                                print(f"Removed IEP document reference from child {child_id} in user profile")
+                    
+                    # Update the profile if changes were made
+                    if updated_profile:
+                        times = get_timestamps()
+                        user_profiles_table.update_item(
+                            Key={'userId': user_id},
+                            UpdateExpression='SET #children = :children, updatedAt = :updatedAt, updatedAtISO = :updatedAtISO',
+                            ExpressionAttributeNames={'#children': 'children'},
+                            ExpressionAttributeValues={
+                                ':children': children,
+                                ':updatedAt': times['timestamp'],
+                                ':updatedAtISO': times['datetime']
+                            }
+                        )
+                        print(f"Updated user profile to remove IEP document references")
+            
+        except Exception as profile_error:
+            print(f"Error updating user profile: {str(profile_error)}")
+            # Continue even if profile update fails
             
         # Return success response
         return create_response(event, 200, {

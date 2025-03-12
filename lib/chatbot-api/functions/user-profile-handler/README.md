@@ -248,6 +248,7 @@ Authorization: Bearer <jwt-token>
 Deletes all IEP-related data for a specific child, including:
 1. All IEP documents stored in S3
 2. All IEP document records in the database
+3. IEP document references in the user's profile
 
 This operation does not delete the child's profile information, only their IEP-related data.
 
