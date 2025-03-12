@@ -486,7 +486,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       handler: 'lambda_function.lambda_handler',
       environment: {
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
-        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "BUCKET": props.knowledgeBucket.bucketName
       },
       timeout: cdk.Duration.seconds(300)
     });
@@ -507,6 +508,20 @@ export class LambdaFunctionStack extends cdk.Stack {
         props.userProfilesTable.tableArn + "/index/*",
         props.iepDocumentsTable.tableArn,
         props.iepDocumentsTable.tableArn + "/index/*"
+      ]
+    }));
+    
+    // Add S3 permissions
+    userProfileHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        's3:ListBucket',
+        's3:GetObject',
+        's3:DeleteObject'
+      ],
+      resources: [
+        props.knowledgeBucket.bucketArn,
+        props.knowledgeBucket.bucketArn + "/*"
       ]
     }));
 
