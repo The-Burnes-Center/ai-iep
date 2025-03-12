@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import './CurrentIEPDocument.css';
+import { useLanguage } from '../../common/language-context';
 
 export interface CurrentIEPDocumentProps {
   onRefreshNeeded: () => void;
@@ -21,6 +22,8 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
   const [documentName, setDocumentName] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { t } = useLanguage();
 
   const fetchDocument = async () => {
     setLoading(true);
@@ -69,12 +72,12 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
         {loading ? (
           <div className="text-center my-4">
             <Spinner animation="border" role="status">
-              <span className="visually-hidden">Loading...</span>
+              <span className="visually-hidden">{t('current.loading')}</span>
             </Spinner>
           </div>
         ) : documentName ? (
         <>
-        <h4 className="document-title">To view summary of your existing IEP document click below</h4>
+        <h4 className="document-title">{t('current.title')}</h4>
           <Alert 
             variant="info" 
             className="document-info-alert d-flex align-items-center"
@@ -84,13 +87,13 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
             <i className="bi bi-file-earmark-text me-3" style={{ fontSize: '1.5rem' }}></i>
             <div>
               <p className="mb-0 fw-bold">{documentName}</p>
-              <small>Current IEP document on file</small>
+              <small>{t('current.documentOnFile')}</small>
             </div>
           </Alert>
           </>
         ) : (
           <Alert variant="info" className="document-info-alert">
-            No IEP document found. Please upload a document to get started.
+            {t('current.noDocument')}
           </Alert>
         )}
       </Card.Body>

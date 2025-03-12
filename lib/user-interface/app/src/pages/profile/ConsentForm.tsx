@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Container, Form, Button, Row, Col, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../common/language-context'; // Updated import
 import './ProfileForms.css';
 
 export default function ConsentForm() {
   const [isChecked, setIsChecked] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsChecked(e.target.checked);
@@ -23,7 +25,7 @@ export default function ConsentForm() {
 
   const renderTooltip = (props) => (
     <Tooltip id="consent-tooltip" className="consent-tooltip" {...props}>
-      Please check the box to continue
+      {t('consent.tooltip')}
     </Tooltip>
   );
 
@@ -35,11 +37,11 @@ export default function ConsentForm() {
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
           <div className="profile-form">
-            <h2 className="text-center profile-title">Before we Begin</h2>
+            <h2 className="text-center profile-title">{t('consent.title')}</h2>
             
             <div className="consent-box">
               <p className="consent-text">
-              To use our IEP Helper tool, we need your permission. By checking this box, you allow us to process your child’s IEP information to provide personalized support and recommendations. We keep all information private and secure. You can withdraw your consent at any time by contacting us.
+                {t('consent.text')}
               </p>
               
               <Form.Group controlId="consentCheckbox">
@@ -52,7 +54,7 @@ export default function ConsentForm() {
                     type="checkbox"
                     checked={isChecked}
                     onChange={handleChange}
-                    label={<span className="checkbox-label">I Agree</span>}
+                    label={<span className="checkbox-label">{t('consent.checkbox')}</span>}
                   />
                 </OverlayTrigger>
               </Form.Group>
@@ -65,7 +67,7 @@ export default function ConsentForm() {
                 disabled={!isChecked}
                 className="button-text"
               >
-                Agree and Continue
+                {t('consent.button')}
               </Button>
             </div>
           </div>

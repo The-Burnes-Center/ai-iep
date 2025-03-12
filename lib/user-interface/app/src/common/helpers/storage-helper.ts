@@ -72,4 +72,17 @@ export abstract class StorageHelper {
   static setSelectedWorkspaceId(workspaceId: string) {
     localStorage.setItem(SELECTED_WORKSPACE_STORAGE_NAME, workspaceId);
   }
+
+  // Add these methods to the existing StorageHelper class
+static getItem(key: string): string | null {
+  return localStorage.getItem(key);
+}
+
+static setItem(key: string, value: string): void {
+  localStorage.setItem(key, value);
+}
+
+static removeItem(key: string): void {
+  localStorage.removeItem(key);
+}
 }

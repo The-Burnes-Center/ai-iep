@@ -5,6 +5,7 @@ import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile, Child } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
+import { useLanguage } from '../../common/language-context'; // Updated import
 import './ProfileForms.css';
 
 export default function ViewAndAddChild() {
@@ -12,6 +13,7 @@ export default function ViewAndAddChild() {
   const apiClient = new ApiClient(appContext);
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,17 +122,17 @@ export default function ViewAndAddChild() {
         <Col xs={12} md={8} lg={6}>
           <div className="profile-form">
             <h2 className="text-center profile-title">
-              {hasExistingChild ? 'About Your Child' : 'About Your Child'}
+              {t('child.title')}
             </h2>
             
             <Form>
               <Row className="mb-3">
                 <Col md={12}>
                   <Form.Group controlId="formChildName">
-                    <Form.Label className="form-label">Name</Form.Label>
+                    <Form.Label className="form-label">{t('child.name.label')}</Form.Label>
                     <Form.Control 
                       type="text" 
-                      placeholder="Enter child's name"
+                      placeholder={t('child.name.placeholder')}
                       value={childName} 
                       onChange={(e) => setChildName(e.target.value)}
                     />
@@ -141,10 +143,10 @@ export default function ViewAndAddChild() {
               <Row className="mb-4">
                 <Col md={12}>
                   <Form.Group controlId="formSchoolCity">
-                    <Form.Label className="form-label">School District</Form.Label>
+                    <Form.Label className="form-label">{t('child.school.label')}</Form.Label>
                     <Form.Control 
                       type="text" 
-                      placeholder="Enter school city"
+                      placeholder={t('child.school.placeholder')}
                       value={schoolCity} 
                       onChange={(e) => setSchoolCity(e.target.value)}
                     />
@@ -159,7 +161,7 @@ export default function ViewAndAddChild() {
                   disabled={!isFormValid() || saving}
                   className="button-text"
                 >
-                  {saving ? 'Saving...' : 'Save & Continue'}
+                  {saving ? t('child.button.saving') : t('child.button.save')}
                 </Button>
               </div>
             </Form>
