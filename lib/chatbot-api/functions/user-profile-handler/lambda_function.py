@@ -390,104 +390,108 @@ def delete_child_documents(event: Dict) -> Dict:
         
         print(f"Processing request to delete IEP documents for childId: {child_id} by userId: {user_id}")
         
-        # 1. First delete files from S3
+        # Delete all IEP-related data
         try:
-            # Initialize S3 client
+            # Initialize clients
             s3 = boto3.client('s3')
             bucket_name = os.environ.get('BUCKET', '')
             
-            # Create the S3 key prefix for this child (all objects under userId/childId/)
-            prefix = f"{user_id}/{child_id}/"
-            
-            print(f"Listing S3 objects with prefix: {prefix} in bucket: {bucket_name}")
-            
-            # List all objects with this prefix
-            paginator = s3.get_paginator('list_objects_v2')
-            objects_deleted = 0
-            
-            for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
-                if 'Contents' in page:
-                    for obj in page['Contents']:
-                        s3.delete_object(Bucket=bucket_name, Key=obj['Key'])
-                        print(f"Deleted S3 object: {obj['Key']}")
-                        objects_deleted += 1
-            
-            print(f"Deleted {objects_deleted} S3 objects for childId: {child_id}")
-            
-        except Exception as s3_error:
-            print(f"Error deleting S3 objects: {str(s3_error)}")
-            # Continue with other deletions even if S3 deletion fails
-        
-        # 2. Delete records from IEP documents table
-        try:
-            # Query documents by childId
-            response = iep_documents_table.query(
-                IndexName='byChildId',
-                KeyConditionExpression='childId = :childId',
-                ExpressionAttributeValues={':childId': child_id}
-            )
-            
-            documents_deleted = 0
-            
-            # Delete each document record that belongs to this user
-            for doc in response['Items']:
-                if 'userId' not in doc or doc['userId'] == user_id:
-                    iep_documents_table.delete_item(
-                        Key={
-                            'iepId': doc['iepId'],
-                            'childId': doc['childId']
-                        }
-                    )
-                    print(f"Deleted IEP document record with iepId: {doc['iepId']} for childId: {child_id}")
-                    documents_deleted += 1
-            
-            print(f"Deleted {documents_deleted} IEP document records for childId: {child_id}")
-            
-        except Exception as ddb_error:
-            print(f"Error deleting document records: {str(ddb_error)}")
-        
-        # 3. Update the user profile to remove any IEP document references for this child
-        try:
-            # First get the current user profile
-            user_profile_response = user_profiles_table.get_item(
-                Key={'userId': user_id}
-            )
-            
-            if 'Item' in user_profile_response:
-                user_profile = user_profile_response['Item']
-                updated_profile = False
+            # 1. First delete files from S3
+            try:
+                # Create the S3 key prefix for this child (all objects under userId/childId/)
+                prefix = f"{user_id}/{child_id}/"
                 
-                # Check if there are children in the profile
-                if 'children' in user_profile and isinstance(user_profile['children'], list):
-                    children = user_profile['children']
-                    
-                    # Find the child and remove any IEP document references
-                    for i, child in enumerate(children):
-                        if child.get('childId') == child_id:
-                            # Remove any IEP document data if present
-                            if 'iepDocument' in child:
-                                del children[i]['iepDocument']
-                                updated_profile = True
-                                print(f"Removed IEP document reference from child {child_id} in user profile")
-                    
-                    # Update the profile if changes were made
-                    if updated_profile:
-                        times = get_timestamps()
-                        user_profiles_table.update_item(
-                            Key={'userId': user_id},
-                            UpdateExpression='SET #children = :children, updatedAt = :updatedAt, updatedAtISO = :updatedAtISO',
-                            ExpressionAttributeNames={'#children': 'children'},
-                            ExpressionAttributeValues={
-                                ':children': children,
-                                ':updatedAt': times['timestamp'],
-                                ':updatedAtISO': times['datetime']
+                print(f"Listing S3 objects with prefix: {prefix} in bucket: {bucket_name}")
+                
+                # List all objects with this prefix
+                paginator = s3.get_paginator('list_objects_v2')
+                objects_deleted = 0
+                
+                for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
+                    if 'Contents' in page:
+                        for obj in page['Contents']:
+                            s3.delete_object(Bucket=bucket_name, Key=obj['Key'])
+                            print(f"Deleted S3 object: {obj['Key']}")
+                            objects_deleted += 1
+                
+                print(f"Deleted {objects_deleted} S3 objects for childId: {child_id}")
+                
+            except Exception as s3_error:
+                print(f"Error deleting S3 objects: {str(s3_error)}")
+                # Continue with other deletions even if S3 deletion fails
+            
+            # 2. Delete records from IEP documents table
+            try:
+                # Query documents by childId
+                response = iep_documents_table.query(
+                    IndexName='byChildId',
+                    KeyConditionExpression='childId = :childId',
+                    ExpressionAttributeValues={':childId': child_id}
+                )
+                
+                documents_deleted = 0
+                
+                # Delete each document record that belongs to this user
+                for doc in response['Items']:
+                    if 'userId' not in doc or doc['userId'] == user_id:
+                        iep_documents_table.delete_item(
+                            Key={
+                                'iepId': doc['iepId'],
+                                'childId': doc['childId']
                             }
                         )
-                        print(f"Updated user profile to remove IEP document references")
+                        print(f"Deleted IEP document record with iepId: {doc['iepId']} for childId: {child_id}")
+                        documents_deleted += 1
+                
+                print(f"Deleted {documents_deleted} IEP document records for childId: {child_id}")
+                
+            except Exception as ddb_error:
+                print(f"Error deleting document records: {str(ddb_error)}")
             
-        except Exception as profile_error:
-            print(f"Error updating user profile: {str(profile_error)}")
-            # Continue even if profile update fails
+            # 3. Update the user profile to remove any IEP document references for this child
+            try:
+                # First get the current user profile
+                user_profile_response = user_profiles_table.get_item(
+                    Key={'userId': user_id}
+                )
+                
+                if 'Item' in user_profile_response:
+                    user_profile = user_profile_response['Item']
+                    updated_profile = False
+                    
+                    # Check if there are children in the profile
+                    if 'children' in user_profile and isinstance(user_profile['children'], list):
+                        children = user_profile['children']
+                        
+                        # Find the child and remove any IEP document references
+                        for i, child in enumerate(children):
+                            if child.get('childId') == child_id:
+                                # Remove any IEP document data if present
+                                if 'iepDocument' in child:
+                                    del children[i]['iepDocument']
+                                    updated_profile = True
+                                    print(f"Removed IEP document reference from child {child_id} in user profile")
+                        
+                        # Update the profile if changes were made
+                        if updated_profile:
+                            times = get_timestamps()
+                            user_profiles_table.update_item(
+                                Key={'userId': user_id},
+                                UpdateExpression='SET #children = :children, updatedAt = :updatedAt, updatedAtISO = :updatedAtISO',
+                                ExpressionAttributeNames={'#children': 'children'},
+                                ExpressionAttributeValues={
+                                    ':children': children,
+                                    ':updatedAt': times['timestamp'],
+                                    ':updatedAtISO': times['datetime']
+                                }
+                            )
+                            print(f"Updated user profile to remove IEP document references")
+                
+            except Exception as profile_error:
+                print(f"Error updating user profile: {str(profile_error)}")
+                # Continue even if profile update fails
+        except Exception as e:
+            print(f"Error during deletion process: {str(e)}")
             
         # Return success response
         return create_response(event, 200, {
