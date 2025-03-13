@@ -413,7 +413,8 @@ export class LambdaFunctionStack extends cdk.Stack {
           resources: [
             props.knowledgeBucket.bucketArn,
             props.knowledgeBucket.bucketArn + "/*",
-            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
+            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0',
+            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-7-sonnet-20250219-v1:0',
             props.knowledgeBase.attrKnowledgeBaseArn,
             // Add the ARN of the secret in AWS Secrets Manager
             'arn:aws:secretsmanager:us-east-1:530075910224:secret:GoogleDocumentAICredentials*',
