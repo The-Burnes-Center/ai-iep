@@ -17,6 +17,11 @@ def format_data_for_dynamodb(section_data):
         Dictionary with properly formatted DynamoDB attribute values
     """
     if isinstance(section_data, dict):
+        # Special handling for section_data that already has DynamoDB format
+        if len(section_data) == 1 and any(k in section_data for k in ["S", "N", "BOOL", "M", "L"]):
+            # Already in DynamoDB format, return as is
+            return section_data
+            
         # Convert dictionary to DynamoDB map format
         result = {"M": {}}
         for key, value in section_data.items():

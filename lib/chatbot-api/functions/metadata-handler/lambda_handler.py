@@ -251,6 +251,69 @@ def handle_s3_upload_event(event):
                                 formatted_sections["M"][lang_code] = {"M": {}}
                             formatted_sections["M"][lang_code]["M"][section_title] = {"S": translated_text}
         
+        # Check for the modern structure where sections is a dictionary keyed by section name
+        if isinstance(sections, dict) and not isinstance(sections, list):
+            print("Processing dictionary-based sections structure")
+            # Reset the formatted sections to avoid mixing structures
+            formatted_sections = {"M": {}}
+            # Always ensure there's an 'en' entry for sections
+            formatted_sections["M"]["en"] = {"M": {}}
+            
+            # Add all IEP section data to the structure
+            for section_name, section_data in sections.items():
+                # Skip any non-dictionary section data
+                if not isinstance(section_data, dict):
+                    continue
+                
+                # Create a section entry with all the rich data
+                section_entry = {}
+                
+                # Add all important attributes from the section
+                if 'summary' in section_data:
+                    section_entry['summary'] = section_data['summary']
+                
+                if 'key_points' in section_data:
+                    section_entry['key_points'] = section_data['key_points']
+                    
+                if 'important_dates' in section_data:
+                    section_entry['important_dates'] = section_data['important_dates']
+                    
+                if 'parent_actions' in section_data:
+                    section_entry['parent_actions'] = section_data['parent_actions']
+                    
+                if 'location' in section_data:
+                    section_entry['location'] = section_data['location']
+                
+                # Add any other attributes that might be present
+                for key, value in section_data.items():
+                    if key not in section_entry and key not in ['title', 'content']:
+                        section_entry[key] = value
+                
+                # Only add non-empty sections
+                if section_entry:
+                    formatted_sections["M"]["en"]["M"][section_name] = {"M": {}}
+                    # Add each section attribute with proper DynamoDB formatting
+                    for key, value in section_entry.items():
+                        if isinstance(value, str):
+                            formatted_sections["M"]["en"]["M"][section_name]["M"][key] = {"S": value}
+                        elif isinstance(value, list):
+                            formatted_sections["M"]["en"]["M"][section_name]["M"][key] = {"L": [{"S": item} for item in value]}
+                        elif isinstance(value, dict):
+                            formatted_points = {"M": {}}
+                            for point_key, point_value in value.items():
+                                formatted_points["M"][point_key] = {"S": point_value}
+                            formatted_sections["M"]["en"]["M"][section_name]["M"][key] = formatted_points
+                        elif isinstance(value, bool):
+                            formatted_sections["M"]["en"]["M"][section_name]["M"][key] = {"BOOL": value}
+            
+            # Initialize language sections if needed
+            for lang in all_languages:
+                if lang != 'en' and lang not in formatted_sections["M"]:
+                    formatted_sections["M"][lang] = {"M": {}}
+                    
+            # Now translate the section data if needed (this part is already handled by your existing translation code)
+            # The translations would be added to the respective language sections
+        
         # Print the section structure for debugging
         print(f"Formatted sections structure: {json.dumps(formatted_sections, default=str)[:500]}...")
         print(f"Section languages: {list(formatted_sections['M'].keys())}")

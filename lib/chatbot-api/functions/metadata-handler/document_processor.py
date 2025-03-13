@@ -7,7 +7,7 @@ from translation import translate_content
 from PyPDF2 import PdfReader
 import io
 from google_auth import get_documentai_client
-from config import get_full_prompt, CHUNK_ANALYSIS_SYSTEM_MSG, SUMMARY_SYSTEM_MSG, get_chunk_system_message, get_unified_summary_prompt, JSON_FORMATTING_INSTRUCTIONS
+from config import get_full_prompt, CHUNK_ANALYSIS_SYSTEM_MSG, SUMMARY_SYSTEM_MSG, get_chunk_system_message, get_unified_summary_prompt, JSON_FORMATTING_INSTRUCTIONS, IEP_SECTIONS
 
 def summarize_and_categorize(content_text):
     """
@@ -206,19 +206,25 @@ def combine_chunk_results(chunk_results):
         if chunk_summary:
             all_summaries.append(chunk_summary)
         
+        # Handle the sections data from each chunk
         chunk_sections = result.get('sections', {})
         
-        # Handle both dictionary and list sections
+        # Process the sections based on their structure
         if isinstance(chunk_sections, dict):
-            # Process dictionary sections as before
+            # Process modern dictionary-based sections with named keys
             for section_name, section_data in chunk_sections.items():
+                # Convert any string section_data to a dictionary with a content field
+                if isinstance(section_data, str):
+                    section_data = {'summary': section_data}
+                
                 if section_name not in combined_sections:
+                    # First time seeing this section
                     combined_sections[section_name] = section_data
                 else:
-                    # Merge section data
+                    # Update existing section by merging data
                     current_section = combined_sections[section_name]
                     
-                    # Update section summary by combining
+                    # Merge section summary if present
                     if 'summary' in section_data:
                         if 'summary' in current_section:
                             current_section['summary'] += "\n\n" + section_data['summary']
@@ -258,11 +264,43 @@ def combine_chunk_results(chunk_results):
                         for action in section_data['parent_actions']:
                             if action not in current_section['parent_actions']:
                                 current_section['parent_actions'].append(action)
+                    
+                    # Merge other fields
+                    for key, value in section_data.items():
+                        if key not in ['summary', 'key_points', 'important_dates', 'parent_actions']:
+                            # For other fields, use the newer value
+                            current_section[key] = value
         elif isinstance(chunk_sections, list):
-            # For list sections, just collect the text content
+            # Handle simple list sections (legacy format)
             for section_item in chunk_sections:
                 if isinstance(section_item, str):
                     text_sections.append(section_item)
+                elif isinstance(section_item, dict) and 'title' in section_item and 'content' in section_item:
+                    # Extract titled sections
+                    title = section_item['title']
+                    if title not in combined_sections:
+                        combined_sections[title] = {
+                            'summary': section_item['content'],
+                            'present': True
+                        }
+                    else:
+                        # Append content
+                        combined_sections[title]['summary'] += "\n\n" + section_item['content']
+        elif chunk_sections == {}:
+            # Skip empty sections
+            pass
+        else:
+            # Fallback for unexpected section format
+            print(f"WARNING: Unexpected section format: {type(chunk_sections)}")
+            print(f"Section content preview: {str(chunk_sections)[:200]}")
+    
+    # Ensure we have sections for all defined IEP sections, even if empty
+    for section_name in IEP_SECTIONS.keys():
+        if section_name not in combined_sections:
+            combined_sections[section_name] = {
+                'present': False,
+                'summary': f"This section was not found in the document."
+            }
     
     # If we have text sections but no structured sections, 
     # create a simple section structure
@@ -272,11 +310,10 @@ def combine_chunk_results(chunk_results):
             # If combined text is too long, shorten it
             combined_text = combined_text[:5000] + "..."
         
-        combined_sections = {
-            "Document Content": {
-                "summary": "Extracted document content",
-                "content": combined_text
-            }
+        combined_sections["Document Content"] = {
+            "summary": "Extracted document content",
+            "content": combined_text,
+            "present": True
         }
     
     return {
@@ -378,28 +415,42 @@ def process_single_chunk(text, context=None):
                    "- All parent action items or decisions needed",
                    "Use this structure and return ONLY as JSON (no markdown):\n"]
     
-    # Format the expected JSON structure
+    # Format the expected JSON structure to match our section definitions
     json_format = {
         "summary": "Comprehensive summary in parent-friendly language",
-        "services": {
-            "academic": "Academic services description",
-            "speech": "Speech services description",
-            "occupational_therapy": "Occupational therapy description",
-            # Other services as needed
-        },
-        "accommodations": {
-            "classroom": "Classroom accommodations",
-            "testing": "Testing accommodations",
-            # Other accommodations as needed
-        },
-        "important_dates": [
-            "List of important dates"
-        ],
-        "parent_actions": [
-            "List of parent action items"
-        ],
-        "location": "beginning/middle/end"
+        "sections": {
+            "present_levels": {
+                "present": True,
+                "summary": "Student's current academic and functional performance",
+                "key_points": {
+                    "academic": "Description of academic skills",
+                    "behavioral": "Description of behavioral skills"
+                },
+                "important_dates": ["List of important dates"],
+                "parent_actions": ["List of parent action items"],
+                "location": "beginning/middle/end"
+            },
+            # Include other sections
+            "eligibility": {
+                "present": True,
+                "summary": "Student's eligibility determination",
+                "key_points": {
+                    "disability": "Primary disability category",
+                    "criteria": "How eligibility was determined"
+                },
+                "important_dates": ["List of important dates"],
+                "parent_actions": ["List of parent action items"],
+                "location": "beginning/middle/end"
+            }
+            # Continue with all IEP sections
+        }
     }
+    
+    # Add more detail about each section
+    sections_info = "The IEP sections to identify include:\n"
+    for section_name, description in IEP_SECTIONS.items():
+        sections_info += f"- {section_name}: {description}\n"
+    prompt_parts.append(sections_info)
     
     prompt_parts.append(f"Expected format: {json.dumps(json_format, indent=2)}")
     
@@ -636,9 +687,26 @@ def process_single_chunk(text, context=None):
             
             # Create a basic structure with the raw text
             excerpt_length = min(1000, len(raw_output))
+            
+            # Create a basic section structure
+            sections = {}
+            for section_name in IEP_SECTIONS.keys():
+                sections[section_name] = {
+                    "present": False,
+                    "summary": "This section could not be extracted from the document.",
+                    "location": "unknown"
+                }
+                
+            # Add a Document Content section with the raw text
+            sections["Document Content"] = {
+                "present": True,
+                "summary": raw_output[:excerpt_length],
+                "location": "unknown"
+            }
+            
             result = {
                 "summary": summary,
-                "content": raw_output[:excerpt_length],
+                "sections": sections,
                 "extraction_failed": True
             }
             logger.info(f"Creating fallback structure with extracted text (length: {excerpt_length})")
@@ -656,9 +724,60 @@ def process_single_chunk(text, context=None):
             logger.warning(f"Summary is not a string: {type(result['summary'])}")
             result["summary"] = str(result["summary"])
         
-        # Log result summary details
-        logger.info(f"Final result summary length: {len(result.get('summary', ''))}")
-        logger.info(f"Final result sections type: {type(result.get('sections', {}))}")
+        # Ensure the result has a proper sections structure if it doesn't already
+        if "sections" not in result or not isinstance(result["sections"], dict):
+            # If sections is missing or not a dictionary, create a basic structure
+            sections = {}
+            for section_name in IEP_SECTIONS.keys():
+                sections[section_name] = {
+                    "present": False,
+                    "summary": "This section was not identified in the document.",
+                    "location": "unknown"
+                }
+                
+            # If we have a "services" field, convert it to a section
+            if "services" in result and isinstance(result["services"], dict):
+                services_text = []
+                for service_type, description in result["services"].items():
+                    services_text.append(f"{service_type}: {description}")
+                
+                sections["services"] = {
+                    "present": True,
+                    "summary": "\n".join(services_text),
+                    "location": result.get("location", "unknown")
+                }
+                
+            # If we have an "accommodations" field, convert it to a section
+            if "accommodations" in result and isinstance(result["accommodations"], dict):
+                accommodations_text = []
+                for accom_type, description in result["accommodations"].items():
+                    accommodations_text.append(f"{accom_type}: {description}")
+                
+                sections["accommodations"] = {
+                    "present": True,
+                    "summary": "\n".join(accommodations_text),
+                    "location": result.get("location", "unknown")
+                }
+                
+            # Convert important_dates and parent_actions if present
+            if "important_dates" in result and isinstance(result["important_dates"], list):
+                # Find relevant sections to add these dates to
+                for section_name in sections:
+                    if "important_dates" not in sections[section_name]:
+                        sections[section_name]["important_dates"] = []
+                    if sections[section_name]["present"]:
+                        sections[section_name]["important_dates"] = result["important_dates"]
+                
+            if "parent_actions" in result and isinstance(result["parent_actions"], list):
+                # Find relevant sections to add these actions to
+                for section_name in sections:
+                    if "parent_actions" not in sections[section_name]:
+                        sections[section_name]["parent_actions"] = []
+                    if sections[section_name]["present"]:
+                        sections[section_name]["parent_actions"] = result["parent_actions"]
+            
+            # Update the result with the new sections structure
+            result["sections"] = sections
         
         return result
     except Exception as e:
