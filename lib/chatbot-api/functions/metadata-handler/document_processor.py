@@ -108,10 +108,46 @@ def summarize_and_analyze_document(document_content, user_profile=None):
         
         # Define target languages for translation based on user profile
         target_languages = []
-        if user_profile and 'languages' in user_profile:
-            target_languages = user_profile.get('languages', [])
-            if 'en' in target_languages:  # Remove English from target languages as it's the source
-                target_languages.remove('en')
+        if user_profile:
+            if 'languages' in user_profile:
+                # Use the existing languages array from user profile
+                all_languages = user_profile.get('languages', [])
+                logger.info(f"Using languages from user profile: {all_languages}")
+                
+                # Only include non-English languages for translation
+                target_languages = [lang for lang in all_languages if lang != 'en']
+                if target_languages:
+                    logger.info(f"Target languages for translation: {target_languages}")
+                else:
+                    logger.info("No non-English languages found for translation")
+            else:
+                # Create languages array from primary/secondary languages if not exists
+                languages = []
+                
+                # Always include 'en' (English) as a base language
+                if 'en' not in languages:
+                    languages.append('en')
+                
+                # Check for primary language
+                primary_lang = user_profile.get('primaryLanguage')
+                if primary_lang and primary_lang not in languages:
+                    languages.append(primary_lang)
+                    logger.info(f"Added primary language: {primary_lang}")
+                
+                # Check for secondary language
+                secondary_lang = user_profile.get('secondaryLanguage')
+                if secondary_lang and secondary_lang not in languages:
+                    languages.append(secondary_lang)
+                    logger.info(f"Added secondary language: {secondary_lang}")
+                
+                # Set target languages (excluding English)
+                target_languages = [lang for lang in languages if lang != 'en']
+                if target_languages:
+                    logger.info(f"Target languages for translation: {target_languages}")
+                else:
+                    logger.info("No non-English languages found for translation")
+        else:
+            logger.info("No user profile provided, skipping translations")
         
         # Always process document in chunks regardless of size
         logger.info("Using chunked document processing approach")
@@ -125,7 +161,7 @@ def summarize_and_analyze_document(document_content, user_profile=None):
         combined_text_analysis = combine_chunk_results(chunk_results)
         
         # Generate the final structured JSON analysis
-        result = generate_final_json_analysis(combined_text_analysis)
+        result = generate_final_json_analysis(combined_text_analysis, target_languages)
         
         # Check if we need to translate
         if target_languages:
@@ -440,12 +476,13 @@ def combine_chunk_results(chunk_results):
     
     return combined_text
 
-def generate_final_json_analysis(combined_text_analysis):
+def generate_final_json_analysis(combined_text_analysis, target_languages=None):
     """
     Convert the combined text analysis into structured JSON format.
     
     Args:
         combined_text_analysis (str): Combined text analysis from all chunks
+        target_languages (list, optional): List of language codes to include in the output
         
     Returns:
         dict: Structured document analysis
@@ -486,7 +523,7 @@ def generate_final_json_analysis(combined_text_analysis):
         
         # Transform the result to the simplified format if it's not already
         if result and 'sections' in result and not is_simplified_format(result):
-            result = transform_to_simplified_format(result)
+            result = transform_to_simplified_format(result, target_languages)
         
         logger.info(f"Successfully generated structured JSON from combined analysis")
         return result
@@ -512,8 +549,13 @@ def is_simplified_format(result):
     
     return False
 
-def transform_to_simplified_format(result):
-    """Transform the detailed format to the simplified format"""
+def transform_to_simplified_format(result, target_languages=None):
+    """Transform the detailed format to the simplified format
+    
+    Args:
+        result: The result to transform
+        target_languages: List of language codes to include (defaults to ['en'] if None)
+    """
     try:
         if 'sections' not in result:
             return result
@@ -525,8 +567,15 @@ def transform_to_simplified_format(result):
             }
         }
         
+        # Set default languages if none provided
+        languages = target_languages if target_languages else ['en']
+        
+        # Always include English if not already in the languages list
+        if 'en' not in languages:
+            languages = ['en'] + languages
+        
         # Process each language
-        for lang in ['en', 'es']:
+        for lang in languages:
             if lang not in result.get('sections', {}):
                 continue
                 
