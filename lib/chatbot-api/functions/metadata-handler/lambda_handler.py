@@ -178,25 +178,25 @@ def handle_s3_upload_event(event):
         # Format summaries for DynamoDB storage - handle both original and translated content
         formatted_summaries = {"M": {}}
         
-        # Format the English summary (always present)
-        if isinstance(result.get('summary'), str):
+        # Get the summary data which might be either a string or a dict with translations
+        summary_data = result.get('summary', '')
+        
+        if isinstance(summary_data, str):
             # Original summary is a simple string (no translations yet)
-            formatted_summaries["M"]["en"] = {"S": result.get('summary', '')}
-        elif isinstance(result.get('summary'), dict):
+            formatted_summaries["M"]["en"] = {"S": summary_data}
+        elif isinstance(summary_data, dict):
             # Summary includes translations
-            if 'original' in result['summary']:
+            if 'original' in summary_data:
                 # Store English as the original
-                formatted_summaries["M"]["en"] = {"S": result['summary']['original']}
+                formatted_summaries["M"]["en"] = {"S": summary_data['original']}
                 
                 # Add all translated versions
-                for lang_code, translated_text in result['summary'].items():
-                    if lang_code != 'original':
+                for lang_code, translated_text in summary_data.items():
+                    if lang_code != 'original' and isinstance(translated_text, str):
                         formatted_summaries["M"][lang_code] = {"S": translated_text}
         
         # Format sections for DynamoDB storage
-        # Make sure we initialize both 'en' and any translated language entries
         formatted_sections = {"M": {}}
-        sections = result.get('sections', [])
         
         # Always ensure there's an 'en' entry for sections
         formatted_sections["M"]["en"] = {"M": {}}
@@ -214,105 +214,80 @@ def handle_s3_upload_event(event):
         
         print(f"Preparing section data for languages: {all_languages}")
         
-        # Process each section
-        for section in sections:
-            # Check if section is a dictionary, if not, skip or create a simple entry
-            if not isinstance(section, dict):
-                # If section is a string, use it as content with a generic title
-                if isinstance(section, str):
-                    if 'en' not in formatted_sections["M"]:
-                        formatted_sections["M"]["en"] = {"M": {}}
-                    
-                    generic_title = "Document Content"
-                    formatted_sections["M"]["en"]["M"][generic_title] = {"S": section}
-                continue
-            
-            section_title = section.get('title', 'Untitled Section')
-            section_content = section.get('content', '')
-            
-            # Handle case where content might be a dict with translations
-            if isinstance(section_content, str):
-                # Simple string content - English only
-                if 'en' not in formatted_sections["M"]:
-                    formatted_sections["M"]["en"] = {"M": {}}
-                formatted_sections["M"]["en"]["M"][section_title] = {"S": section_content}
-            elif isinstance(section_content, dict):
-                # Content with translations
-                if 'original' in section_content:
-                    # Store English version
-                    if 'en' not in formatted_sections["M"]:
-                        formatted_sections["M"]["en"] = {"M": {}}
-                    formatted_sections["M"]["en"]["M"][section_title] = {"S": section_content['original']}
-                    
-                    # Add translated versions
-                    for lang_code, translated_text in section_content.items():
-                        if lang_code != 'original':
-                            if lang_code not in formatted_sections["M"]:
-                                formatted_sections["M"][lang_code] = {"M": {}}
-                            formatted_sections["M"][lang_code]["M"][section_title] = {"S": translated_text}
+        # Process each section in the structured modern format
+        sections = result.get('sections', {})
         
-        # Check for the modern structure where sections is a dictionary keyed by section name
-        if isinstance(sections, dict) and not isinstance(sections, list):
+        # The new approach should always return sections as a dictionary
+        if isinstance(sections, dict):
             print("Processing dictionary-based sections structure")
-            # Reset the formatted sections to avoid mixing structures
-            formatted_sections = {"M": {}}
-            # Always ensure there's an 'en' entry for sections
-            formatted_sections["M"]["en"] = {"M": {}}
             
-            # Add all IEP section data to the structure
+            # For each IEP section in the result
             for section_name, section_data in sections.items():
                 # Skip any non-dictionary section data
                 if not isinstance(section_data, dict):
                     continue
                 
-                # Create a section entry with all the rich data
-                section_entry = {}
-                
-                # Add all important attributes from the section
-                if 'summary' in section_data:
-                    section_entry['summary'] = section_data['summary']
-                
-                if 'key_points' in section_data:
-                    section_entry['key_points'] = section_data['key_points']
-                    
-                if 'important_dates' in section_data:
-                    section_entry['important_dates'] = section_data['important_dates']
-                    
-                if 'parent_actions' in section_data:
-                    section_entry['parent_actions'] = section_data['parent_actions']
-                    
-                if 'location' in section_data:
-                    section_entry['location'] = section_data['location']
-                
-                # Add any other attributes that might be present
-                for key, value in section_data.items():
-                    if key not in section_entry and key not in ['title', 'content']:
-                        section_entry[key] = value
-                
-                # Only add non-empty sections
-                if section_entry:
+                # Initialize the English section entry
+                if section_name not in formatted_sections["M"]["en"]["M"]:
                     formatted_sections["M"]["en"]["M"][section_name] = {"M": {}}
-                    # Add each section attribute with proper DynamoDB formatting
-                    for key, value in section_entry.items():
-                        if isinstance(value, str):
-                            formatted_sections["M"]["en"]["M"][section_name]["M"][key] = {"S": value}
-                        elif isinstance(value, list):
-                            formatted_sections["M"]["en"]["M"][section_name]["M"][key] = {"L": [{"S": item} for item in value]}
-                        elif isinstance(value, dict):
-                            formatted_points = {"M": {}}
-                            for point_key, point_value in value.items():
-                                formatted_points["M"][point_key] = {"S": point_value}
-                            formatted_sections["M"]["en"]["M"][section_name]["M"][key] = formatted_points
-                        elif isinstance(value, bool):
-                            formatted_sections["M"]["en"]["M"][section_name]["M"][key] = {"BOOL": value}
-            
-            # Initialize language sections if needed
-            for lang in all_languages:
-                if lang != 'en' and lang not in formatted_sections["M"]:
-                    formatted_sections["M"][lang] = {"M": {}}
-                    
-            # Now translate the section data if needed (this part is already handled by your existing translation code)
-            # The translations would be added to the respective language sections
+                
+                # Process each field within the section
+                for field_name, field_value in section_data.items():
+                    # Handle field based on its type
+                    if isinstance(field_value, str):
+                        # Simple string field
+                        formatted_sections["M"]["en"]["M"][section_name]["M"][field_name] = {"S": field_value}
+                    elif isinstance(field_value, bool):
+                        # Boolean field
+                        formatted_sections["M"]["en"]["M"][section_name]["M"][field_name] = {"BOOL": field_value}
+                    elif isinstance(field_value, list):
+                        # List field (like important_dates or parent_actions)
+                        formatted_list = {"L": []}
+                        for item in field_value:
+                            if isinstance(item, str):
+                                formatted_list["L"].append({"S": item})
+                        formatted_sections["M"]["en"]["M"][section_name]["M"][field_name] = formatted_list
+                    elif isinstance(field_value, dict):
+                        # Dictionary field (like key_points)
+                        if field_name in ["summary"] and "original" in field_value:
+                            # This is a translated field with language versions
+                            # Add the English version
+                            formatted_sections["M"]["en"]["M"][section_name]["M"][field_name] = {"S": field_value.get("original", "")}
+                            
+                            # Add translated versions to other language sections
+                            for lang_code, translated_text in field_value.items():
+                                if lang_code != "original" and isinstance(translated_text, str):
+                                    # Initialize this language section if needed
+                                    if lang_code not in formatted_sections["M"]:
+                                        formatted_sections["M"][lang_code] = {"M": {}}
+                                    
+                                    # Initialize this section in the language if needed
+                                    if section_name not in formatted_sections["M"][lang_code]["M"]:
+                                        formatted_sections["M"][lang_code]["M"][section_name] = {"M": {}}
+                                    
+                                    # Add the translated field
+                                    formatted_sections["M"][lang_code]["M"][section_name]["M"][field_name] = {"S": translated_text}
+                        else:
+                            # This is a regular dictionary field (like key_points)
+                            formatted_dict = {"M": {}}
+                            for key, value in field_value.items():
+                                if isinstance(value, str):
+                                    formatted_dict["M"][key] = {"S": value}
+                            formatted_sections["M"]["en"]["M"][section_name]["M"][field_name] = formatted_dict
+        else:
+            # Legacy format or unexpected structure - handle safely
+            print(f"Warning: Unexpected sections format: {type(sections)}")
+            # Create a simple Document Content section with whatever we have
+            if not formatted_sections["M"]["en"]["M"]:
+                formatted_sections["M"]["en"]["M"]["Document Content"] = {"M": {
+                    "summary": {"S": "Document content could not be structured properly."},
+                    "present": {"BOOL": True}
+                }}
+        
+        # Initialize empty sections for all non-English languages if they don't have content yet
+        for lang in all_languages:
+            if lang != 'en' and lang not in formatted_sections["M"]:
+                formatted_sections["M"][lang] = {"M": {}}
         
         # Print the section structure for debugging
         print(f"Formatted sections structure: {json.dumps(formatted_sections, default=str)[:500]}...")

@@ -5,6 +5,7 @@ import { UserPool, UserPoolIdentityProviderOidc,UserPoolClient, UserPoolClientId
 import * as cognito from "aws-cdk-lib/aws-cognito";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
+import { getTagProps, tagResource } from '../tags';
 
 export class AuthorizationStack extends Construct {
   public readonly lambdaAuthorizer : lambda.Function;
@@ -34,6 +35,12 @@ export class AuthorizationStack extends Construct {
       }
     });
     this.userPool = userPool;
+
+    // Apply standard tags to the User Pool
+    tagResource(userPool, {
+      'Resource': 'UserPool',
+      'Module': 'Authentication'
+    });
 
     // Create a provider attribute for mapping Azure claims
     // const providerAttribute = new ProviderAttribute({

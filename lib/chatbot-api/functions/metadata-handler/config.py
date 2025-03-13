@@ -95,6 +95,72 @@ IMPORTANT JSON FORMATTING REQUIREMENTS:
 8. Keep string values simple with only ASCII printable characters when possible
 """
 
+def get_document_analysis_prompt(text_content):
+    """
+    Create a prompt for analyzing a document.
+    
+    Args:
+        text_content: The document text to analyze
+    
+    Returns:
+        A formatted prompt string for the LLM
+    """
+    prompt = f"""
+Human: I need you to analyze the following document which is an Individualized Education Program (IEP) for a student. An IEP is a legal document that outlines the special education services a student will receive, based on their needs. Please:
+
+1. Provide a comprehensive summary of the document (1-3 paragraphs).
+2. Identify and extract the key sections of the IEP.
+3. For each section, provide:
+   - A summary of what the section contains
+   - The key points from that section
+   - Any important dates mentioned
+   - Any actions parents need to take
+   - Location information for where this section appears in the document
+
+The sections should include (if present in the document):
+- Present Levels of Academic Achievement and Functional Performance
+- Eligibility for Services
+- Placement Decision
+- Goals and Objectives
+- Special Education and Related Services
+- Accommodations and Modifications
+- Information about Informed Consent
+- Any other important sections you identify
+
+Your analysis should be structured as valid JSON with the following format:
+```json
+{{
+  "summary": "Overall comprehensive summary of the document",
+  "sections": {{
+    "present_levels": {{
+      "present": true,
+      "summary": "Summary of present levels section",
+      "key_points": {{"point1": "description", "point2": "description"}},
+      "important_dates": ["date1", "date2"],
+      "parent_actions": ["action1", "action2"],
+      "location": "Section appears on pages X-Y"
+    }},
+    "eligibility": {{
+      "present": true,
+      "summary": "Summary of eligibility section",
+      "key_points": {{"point1": "description", "point2": "description"}},
+      "important_dates": ["date1", "date2"],
+      "parent_actions": ["action1", "action2"],
+      "location": "Section appears on pages X-Y"
+    }},
+    ... (other sections) ...
+  }}
+}}
+```
+
+Make sure to only include sections that actually appear in the document, and set "present" to false if a standard section is not found.
+
+Here is the document text:
+
+{text_content}
+"""
+    return prompt
+
 def get_translation_prompt(content, target_language):
     """Generate a prompt for translating content to the target language in a parent-friendly manner."""
     # Context guidelines for specific languages
@@ -122,6 +188,119 @@ Content to translate:
 
 IMPORTANT: Only provide the direct translation with no additional text, formatting, or explanation.
 """.strip()
+
+def get_translation_prompt_simple(text, target_language):
+    """
+    Create a simple translation prompt.
+    
+    Args:
+        text: Text to translate
+        target_language: Language name to translate into
+    
+    Returns:
+        A formatted prompt string for translation
+    """
+    return f"""
+Human: Please translate the following text into {target_language}.
+Maintain the original meaning, tone, and format as closely as possible.
+Only return the translation, with no explanations, introductions, or other text.
+
+Text to translate:
+
+{text}
+"""
+
+def get_final_json_analysis_prompt(combined_text_analysis):
+    """
+    Create a prompt for generating the final structured JSON from combined text analysis.
+    
+    Args:
+        combined_text_analysis: Combined text analysis from all document chunks
+    
+    Returns:
+        A formatted prompt string for the LLM
+    """
+    return f"""
+Human: You are an expert at analyzing IEP (Individualized Education Program) documents. You previously analyzed a document in chunks, and I need you to generate a comprehensive structured summary from those analyses.
+
+Here is the combined analysis:
+
+{combined_text_analysis}
+
+Please extract all important information and format it as a JSON object with the following structure:
+{{
+  "summary": "Overall comprehensive summary of the entire document in 2-3 paragraphs",
+  "sections": {{
+    "present_levels": {{
+      "present": true/false,
+      "summary": "Summary of the present levels section",
+      "key_points": {{
+        "point1": "description",
+        "point2": "description"
+      }},
+      "important_dates": ["date1", "date2"],
+      "parent_actions": ["action1", "action2"],
+      "location": "Where this section appears in the document"
+    }},
+    "eligibility": {{
+      "present": true/false,
+      "summary": "Summary of the eligibility section",
+      "key_points": {{...}},
+      "important_dates": [...],
+      "parent_actions": [...],
+      "location": "..."
+    }},
+    "placement": {{...}},
+    "goals": {{...}},
+    "services": {{...}},
+    "accommodations": {{...}},
+    "informed_consent": {{...}}
+  }}
+}}
+
+Important notes:
+1. Only include sections that are actually present in the document
+2. For each section, set "present" to true if the section exists, false otherwise
+3. Include any other important sections that were found in the document but aren't listed above
+4. Make sure to include all important dates, actions for parents, and any significant numbers (hours of services, etc.)
+5. Return valid JSON without any additional text, explanations, or markdown formatting
+"""
+
+def get_simplified_json_analysis_prompt(combined_text_analysis):
+    """
+    Create a simplified fallback prompt for generating JSON from combined text analysis.
+    Used when the more detailed prompt fails.
+    
+    Args:
+        combined_text_analysis: Combined text analysis from all document chunks
+    
+    Returns:
+        A formatted prompt string for the LLM
+    """
+    return f"""
+Human: You need to extract a structured summary from this document analysis:
+
+{combined_text_analysis}
+
+Format your response as a simple JSON with:
+1. An overall summary 
+2. Sections found in the document
+
+Example format:
+{{
+  "summary": "Comprehensive summary goes here",
+  "sections": {{
+    "section1_name": {{
+      "present": true,
+      "summary": "Section summary",
+      "important_dates": ["date1", "date2"],
+      "parent_actions": ["action1", "action2"]
+    }}
+  }}
+}}
+
+Return ONLY the JSON without explanation or commentary.
+"""
 
 def get_all_tags():
     """Compile all sections into a single list for reference."""
@@ -227,3 +406,49 @@ Here are the extracted sections and their details:
 
 Based on all this information, provide a comprehensive yet concise parent-friendly summary of the entire IEP document.
 """
+
+def get_chunk_analysis_prompt(chunk_text, chunk_index, total_chunks, context=None):
+    """
+    Generate a prompt for analyzing a single chunk of text from an IEP document.
+    
+    Args:
+        chunk_text: The chunk of text to analyze
+        chunk_index: Current chunk number
+        total_chunks: Total number of chunks
+        context: Optional context from previous chunks
+    
+    Returns:
+        A formatted prompt string for the LLM
+    """
+    # Add context information if available
+    context_text = ""
+    if context:
+        context_text = f"""
+This chunk follows after chunk {context.get('chunk_number', 'unknown')}.
+Here is the end of the previous chunk to provide continuity:
+{context.get('content_preview', 'No preview available')}
+
+"""
+
+    # Create the prompt with context
+    prompt = f"""
+Human: Please analyze this section (chunk {chunk_index}/{total_chunks}) of an IEP document.
+
+{context_text}
+For this chunk, please:
+
+1. Identify any IEP sections present in this text
+2. For each identified section:
+   - Provide a clear summary
+   - Note any key points
+   - List any important dates mentioned
+   - List any actions parents need to take
+   - Describe where in the document this section appears
+
+Do not try to generate structured JSON for this chunk. Instead, provide a clear text analysis that describes what you found in this chunk. This will be combined with analyses of other chunks later.
+
+Chunk {chunk_index}/{total_chunks} content:
+
+{chunk_text}
+"""
+    return prompt

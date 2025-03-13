@@ -4,4 +4,6 @@ requests==2.31.0
 urllib3==2.0.7
 certifi==2024.2.2
 # PDF parsing fallback
-PyPDF2==3.0.1 
+PyPDF2==3.0.1
+# Token counting for LLM interactions
+tiktoken==0.5.2 

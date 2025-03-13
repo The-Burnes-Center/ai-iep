@@ -11,6 +11,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as bedrock from "aws-cdk-lib/aws-bedrock";
 import { StepFunctionsStack } from './step-functions/step-functions';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import { getTagProps, tagResource } from '../../tags';
 
 
 interface LambdaFunctionStackProps {  
@@ -51,6 +52,22 @@ export class LambdaFunctionStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
 
+    // Create a helper function to add standard tags and handle Lambda function creation
+    const createTaggedLambda = (id: string, config: lambda.FunctionProps): lambda.Function => {
+      const func = new lambda.Function(scope, id, {
+        ...config
+      });
+      
+      // Apply standard tags plus Lambda-specific tags
+      tagResource(func, {
+        'Resource': 'Lambda',
+        'Function': id,
+        'Runtime': config.runtime?.name || 'unknown'
+      });
+      
+      return func;
+    };
+    
     const sessionAPIHandlerFunction = new lambda.Function(scope, 'SessionHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
       code: lambda.Code.fromAsset(path.join(__dirname, 'session-handler')), // Points to the lambda directory
@@ -290,7 +307,7 @@ export class LambdaFunctionStack extends cdk.Stack {
     }));
     this.syncKBFunction = kbSyncAPIHandlerFunction;
 
-    const uploadS3KnowledgeAPIHandlerFunction = new lambda.Function(scope, 'UploadS3KnowledgeFilesHandlerFunction', {
+    const uploadS3KnowledgeAPIHandlerFunction = createTaggedLambda('UploadS3KnowledgeFilesHandlerFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/upload-s3')),
       handler: 'index.handler',
@@ -359,42 +376,20 @@ export class LambdaFunctionStack extends cdk.Stack {
     this.uploadS3TestCasesFunction = uploadS3TestCasesFunction;
 
         // Define the Lambda function for metadata
-        const metadataHandlerFunction = new lambda.Function(scope, 'MetadataHandlerFunction', {
+        const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
           runtime: lambda.Runtime.PYTHON_3_12,
-          code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
-            bundling: {
-              image: lambda.Runtime.PYTHON_3_12.bundlingImage,
-              command: [
-                'bash', '-c', [
-                  'pip install -r requirements.txt -t /asset-output',
-                  'cp -r * /asset-output',
-                  'echo "Done installing dependencies"'
-                ].join(' && '),
-              ],
-              user: 'root',
-            },
-          }),
-          handler: 'lambda_function.lambda_handler',
-          timeout: cdk.Duration.seconds(900),
+          code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler')),
+          handler: 'lambda_handler.lambda_handler',
           environment: {
             "BUCKET": props.knowledgeBucket.bucketName,
-            "KB_ID": props.knowledgeBase.attrKnowledgeBaseId,
             "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-            "KB_SOURCE_ID": props.knowledgeBaseSource.attrDataSourceId,
             "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
-            // Google Cloud Document AI environment variables
-            "DOCUMENT_AI_PROJECT_ID": "documentai-449419",
-            "DOCUMENT_AI_LOCATION": "us-central1",
-            "DOCUMENT_AI_PROCESSOR_ID": "fd58e4a3475a1ef0",
-            // Use AWS Secrets Manager for Google Cloud service account
-            "GOOGLE_SERVICE_ACCOUNT_SECRET": "GoogleDocumentAICredentials",
-            // API key for Google AI services
-            "GOOGLE_API_KEY": "AIzaSyBevemdE86CQq3VBUoACrjcC9SLo74Z_Ko",
-            "GOOGLE_CLOUD_PROJECT": "documentai-449419",
-            "GOOGLE_LOCATION": "us-central1",
-            // Use Claude 3.5 Sonnet
-            "CLAUDE_MODEL_ID": "anthropic.claude-3-5-sonnet-20240620-v1:0"
+            "KNOWLEDGE_BASE_ID": props.knowledgeBase.ref,
+            "ANTHROPIC_MODEL": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+            "ANTHROPIC_MODEL_3_7": "anthropic.claude-3-7-sonnet-20250219-v1:0"
           },
+          timeout: cdk.Duration.seconds(600),
+          memorySize: 1024
         });
         
         metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({

@@ -7,46 +7,43 @@ import traceback
 
 def format_data_for_dynamodb(section_data):
     """
-    Format section data for DynamoDB by converting Python dictionaries to proper DynamoDB attribute formats.
-    DynamoDB requires specific attribute type designations (M for maps, S for strings, etc.)
+    Format section data for DynamoDB.
     
     Args:
-        section_data: Dictionary containing section data
-        
+        section_data: The data to format (can be dict, list, string, boolean, number, or null)
+    
     Returns:
-        Dictionary with properly formatted DynamoDB attribute values
+        Formatted data in DynamoDB format
     """
-    if isinstance(section_data, dict):
-        # Special handling for section_data that already has DynamoDB format
-        if len(section_data) == 1 and any(k in section_data for k in ["S", "N", "BOOL", "M", "L"]):
-            # Already in DynamoDB format, return as is
+    # Check if this is already in DynamoDB format with types like 'S', 'N', 'L', etc.
+    if isinstance(section_data, dict) and any(key in ['S', 'N', 'BOOL', 'L', 'M', 'NULL'] for key in section_data.keys()):
+        if len(section_data) == 1:
+            # If it's already in the correct format, return it as is
             return section_data
-            
-        # Convert dictionary to DynamoDB map format
-        result = {"M": {}}
-        for key, value in section_data.items():
-            result["M"][key] = format_data_for_dynamodb(value)
-        return result
-    elif isinstance(section_data, list):
-        # Convert list to DynamoDB list format
-        result = {"L": []}
-        for item in section_data:
-            result["L"].append(format_data_for_dynamodb(item))
-        return result
+    
+    # Format based on data type
+    if section_data is None:
+        return {"NULL": True}
     elif isinstance(section_data, str):
-        # String type
         return {"S": section_data}
     elif isinstance(section_data, bool):
-        # Boolean type
         return {"BOOL": section_data}
-    elif isinstance(section_data, (int, float)):
-        # Number type
+    elif isinstance(section_data, int) or isinstance(section_data, float):
         return {"N": str(section_data)}
-    elif section_data is None:
-        # Null type
-        return {"NULL": True}
+    elif isinstance(section_data, list):
+        # Format each item in the list
+        items = []
+        for item in section_data:
+            items.append(format_data_for_dynamodb(item))
+        return {"L": items}
+    elif isinstance(section_data, dict):
+        # Format each value in the dictionary
+        formatted_dict = {}
+        for key, value in section_data.items():
+            formatted_dict[key] = format_data_for_dynamodb(value)
+        return {"M": formatted_dict}
     else:
-        # Convert anything else to string as fallback
+        # For unsupported types, convert to string
         return {"S": str(section_data)}
 
 def update_iep_document_status(iep_id, status, error_message=None, child_id=None, summaries=None, user_id=None, object_key=None):

@@ -3,227 +3,201 @@ import json
 import boto3
 import traceback
 import re
-from config import TRANSLATION_SYSTEM_MSG, get_translation_prompt, LANGUAGE_CODES
+import logging
+from config import get_translation_prompt_simple
+from llm_service import invoke_claude_3_5, CLAUDE_MODELS
+
+# Configure logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize Boto3 client for Bedrock
+bedrock_runtime = boto3.client('bedrock-runtime')
+
+# No need to configure a separate translation model as we'll use Claude 3.5 Sonnet
 
 def translate_content(content, target_languages):
     """
-    Translate content to the specified target languages using Claude with custom prompts
+    Translate content into specified target languages.
     
     Args:
-        content (str or dict): The content to translate. Either a string or a dict with text fields
-        target_languages (list): List of language codes to translate to
-        
+        content: The content to translate (string or dict)
+        target_languages: List of ISO language codes to translate into
+    
     Returns:
-        dict: Dictionary with original content and translations
+        If content is string: dict with original and translations
+        If content is dict: same dict with translated fields
     """
+    # If no translation needed or content is empty, return as is
     if not target_languages or not content:
-        print("No target languages specified or empty content, skipping translation")
-        return {"original": content}
+        return content
     
-    print(f"Starting translation of content to languages: {target_languages}")
+    # Log the translation request
+    logger.info(f"Translating content to {target_languages}")
     
-    # Debug: Log content type and length to better understand what we're translating
-    content_type = type(content).__name__
-    content_length = len(content) if isinstance(content, str) else "N/A (not a string)"
-    print(f"Content type: {content_type}, length: {content_length}")
-    
-    # Debug: Print LANGUAGE_CODES to check available languages
-    print(f"Available language codes: {json.dumps(LANGUAGE_CODES, indent=2)}")
-    
-    # Initialize bedrock runtime client for Claude
-    bedrock_runtime = boto3.client('bedrock-runtime')
-    result = {"original": content}
-    
-    # Use Claude 3.5 Sonnet for better translation quality
-    model_id = os.environ.get('CLAUDE_MODEL_ID', 'anthropic.claude-3-5-sonnet-20240620-v1:0')
-    print(f"Using Claude model: {model_id} for translation")
-    
-    for lang_code in target_languages:
-        try:
-            print(f"Translating content to {lang_code}...")
+    try:
+        # Handle different content types appropriately
+        if isinstance(content, str):
+            # For simple string content, translate directly
+            result = {"original": content}
             
-            # Find the language name from language code for the prompt
-            language_name = next((name for name, code in LANGUAGE_CODES.items() 
-                               if code == lang_code), lang_code)
+            # Translate to each language
+            for lang in target_languages:
+                translated_text = translate_text(content, lang)
+                result[lang] = translated_text
+                
+            return result
+        
+        elif isinstance(content, dict):
+            # If this is already a translated content dict with 'original' key
+            if "original" in content:
+                # Add any missing languages
+                missing_langs = [lang for lang in target_languages if lang not in content]
+                
+                # Only translate missing languages
+                if missing_langs:
+                    original_text = content["original"]
+                    for lang in missing_langs:
+                        content[lang] = translate_text(original_text, lang)
+                        
+                return content
             
-            print(f"Found language name: {language_name} for code: {lang_code}")
-            
-            if isinstance(content, str):
-                # Get the translation prompt for the specific language
-                prompt = get_translation_prompt(content, language_name)
-                print(f"Generated translation prompt for string content (length: {len(prompt)})")
-                
-                # Debug: Log the first 100 chars of the prompt
-                print(f"Prompt start: {prompt[:100]}...")
-                
-                # Call Claude to translate
-                print(f"Calling Claude to translate to {language_name}...")
-                response = bedrock_runtime.invoke_model(
-                    modelId=model_id,
-                    body=json.dumps({
-                        'anthropic_version': 'bedrock-2023-05-31',
-                        'max_tokens': 8000,
-                        'temperature': 0,
-                        'system': TRANSLATION_SYSTEM_MSG,
-                        'messages': [
-                            {'role': 'user', 'content': prompt}
-                        ]
-                    })
-                )
-                
-                # Parse the response
-                response_body = json.loads(response['body'].read().decode('utf-8'))
-                print(f"Received response from Claude for {language_name} translation")
-                
-                # Log the response structure
-                print(f"Response structure keys: {list(response_body.keys())}")
-                
-                # Extract translated text
-                translated_text = ""
-                if 'content' in response_body:
-                    if isinstance(response_body['content'], list):
-                        for block in response_body['content']:
-                            if 'text' in block:
-                                translated_text += block['text']
-                    else:
-                        translated_text = response_body['content']
-                elif 'completion' in response_body:
-                    translated_text = response_body['completion']
-                
-                # Log raw translation output
-                print(f"[TRANSLATION-{lang_code}] Raw translation length: {len(translated_text)}")
-                print(f"[TRANSLATION-{lang_code}] Raw translation preview: {translated_text[:300]}...")
-                if len(translated_text) > 300:
-                    print(f"[TRANSLATION-{lang_code}] Raw translation end: ...{translated_text[-100:]}")
-                
-                # Clean up the translation to remove any JSON structure or explanatory text
-                translated_text = clean_translation(translated_text)
-                print(f"[TRANSLATION-{lang_code}] After cleaning - length: {len(translated_text)}")
-                print(f"[TRANSLATION-{lang_code}] After cleaning - preview: {translated_text[:300]}...")
-                
-                # Log the length of translated text
-                print(f"Translated text length: {len(translated_text) if translated_text else 0}")
-                
-                result[lang_code] = translated_text.strip()
-                print(f"Successfully added {lang_code} translation to result (length: {len(translated_text.strip())})")
-                
-            elif isinstance(content, dict):
-                # Translate each field in the dictionary
-                translated_dict = {}
-                print(f"Content is a dictionary with {len(content)} fields, translating each field...")
-                for key, value in content.items():
-                    if isinstance(value, str) and value.strip():
-                        prompt = get_translation_prompt(value, language_name)
-                        print(f"Translating field '{key}' to {language_name}...")
-                        
-                        # Call Claude to translate
-                        response = bedrock_runtime.invoke_model(
-                            modelId=model_id,
-                            body=json.dumps({
-                                'anthropic_version': 'bedrock-2023-05-31',
-                                'max_tokens': 8000,
-                                'temperature': 0,
-                                'system': TRANSLATION_SYSTEM_MSG,
-                                'messages': [
-                                    {'role': 'user', 'content': prompt}
-                                ]
-                            })
-                        )
-                        
-                        # Parse the response
-                        response_body = json.loads(response['body'].read().decode('utf-8'))
-                        
-                        # Extract translated text
-                        translated_text = ""
-                        if 'content' in response_body:
-                            if isinstance(response_body['content'], list):
-                                for block in response_body['content']:
-                                    if 'text' in block:
-                                        translated_text += block['text']
-                            else:
-                                translated_text = response_body['content']
-                        elif 'completion' in response_body:
-                            translated_text = response_body['completion']
-                        
-                        # Clean the translation
-                        translated_text = clean_translation(translated_text)
-                        
-                        translated_dict[key] = translated_text.strip()
-                        print(f"Translated field '{key}' to {language_name} (length: {len(translated_text.strip())})")
-                    else:
-                        # Keep non-string values or empty strings as is
-                        translated_dict[key] = value
-                        print(f"Skipped translation for field '{key}' (not a string or empty)")
-                        
-                result[lang_code] = translated_dict
-                print(f"Successfully added dictionary translation for {lang_code} with {len(translated_dict)} fields")
-                
-            print(f"Successfully translated content to {lang_code}")
-            
-        except Exception as e:
-            print(f"Error translating to {lang_code}: {str(e)}")
-            traceback.print_exc()
-            # Skip this language if translation fails
-            continue
+            # For other dictionaries, recursively translate each value
+            result = {}
+            for key, value in content.items():
+                if isinstance(value, str) and value.strip():
+                    # Translate string values
+                    translated_dict = translate_content(value, target_languages)
+                    result[key] = translated_dict
+                elif isinstance(value, dict):
+                    # Recursively translate nested dictionaries
+                    result[key] = translate_content(value, target_languages)
+                elif isinstance(value, list):
+                    # Translate list items if they're strings
+                    translated_list = []
+                    for item in value:
+                        if isinstance(item, str) and item.strip():
+                            translated_item = translate_content(item, target_languages)
+                            translated_list.append(translated_item)
+                        else:
+                            translated_list.append(item)
+                    result[key] = translated_list
+                else:
+                    # Keep non-string values as they are
+                    result[key] = value
+                    
+            return result
+        
+        else:
+            # For other types (lists, etc.), return as is
+            return content
     
-    # Log the final result structure
-    result_languages = list(result.keys())
-    print(f"Translation complete. Result contains languages: {result_languages}")
-    
-    return result
+    except Exception as e:
+        logger.error(f"Error in translate_content: {str(e)}")
+        traceback.print_exc()
+        
+        # Return original content in case of error
+        return content
 
-def clean_translation(translated_text):
+def translate_text(text, target_language):
     """
-    Clean translation output by removing any JSON formatting or explanatory text
-    that might still be present in Claude's response.
+    Translate a specific text to a target language using Claude.
     
     Args:
-        translated_text (str): Raw translated text from Claude
-        
+        text: Text to translate
+        target_language: ISO language code to translate into
+    
     Returns:
-        str: Cleaned translation text
+        str: Translated text
     """
-    if not translated_text:
+    if not text or not text.strip():
         return ""
     
-    print(f"[CLEAN] Starting cleaning process on text of length {len(translated_text)}")
+    try:
+        # Map language code to language name
+        language_map = {
+            'es': 'Spanish',
+            'fr': 'French',
+            'zh': 'Chinese',
+            'de': 'German',
+            'it': 'Italian',
+            'ja': 'Japanese',
+            'ko': 'Korean',
+            'pt': 'Portuguese',
+            'ru': 'Russian',
+            'ar': 'Arabic',
+            'hi': 'Hindi',
+            'vi': 'Vietnamese',
+            'tl': 'Tagalog',
+            'ht': 'Haitian Creole'
+            # Add more languages as needed
+        }
         
-    # Remove JSON-like formatting 
-    json_pattern = r'```(?:json)?\s*\{[\s\S]*?\}\s*```'
-    cleaned_text = re.sub(json_pattern, '', translated_text)
-    if len(cleaned_text) != len(translated_text):
-        print(f"[CLEAN] Removed JSON code blocks, new length: {len(cleaned_text)}")
+        # Get full language name from code
+        language_name = language_map.get(target_language, target_language)
+        
+        # Create translation prompt using the imported function
+        prompt = get_translation_prompt_simple(text, language_name)
+        
+        # Call Claude 3.5 Sonnet for translation
+        content = invoke_claude_3_5(
+            prompt=prompt,
+            temperature=0,
+            max_tokens=8000
+        )
+            
+        # Clean the translation output
+        cleaned_translation = clean_translation_output(content)
+        
+        return cleaned_translation
     
-    # Remove introductory sentences
-    intro_patterns = [
-        r'^here\'s the translation.*?:\s*', 
-        r'^here\'s the content in.*?:\s*',
-        r'^translation:\s*',
-        r'^here is the.*?translation:?\s*',
-        r'^the translation is:?\s*'
+    except Exception as e:
+        logger.error(f"Error translating to {target_language}: {str(e)}")
+        traceback.print_exc()
+        
+        # Return a placeholder in case of error
+        return f"[Translation to {target_language} failed]"
+
+def clean_translation_output(text):
+    """
+    Clean the translation output by removing any introductory text or explanations.
+    
+    Args:
+        text: Raw translation output
+    
+    Returns:
+        str: Cleaned translation
+    """
+    # Remove common introductory phrases
+    cleaned = text
+    
+    # Remove any "here's the translation" type text
+    intros = [
+        r"^(Here'?s the translation:?)\s*",
+        r"^(The translation is:?)\s*",
+        r"^(Translated to \w+:?)\s*",
+        r"^(In \w+:?)\s*",
+        r"^(Translation:?)\s*"
     ]
     
-    original_length = len(cleaned_text)
-    for pattern in intro_patterns:
-        cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
+    for pattern in intros:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
     
-    if len(cleaned_text) != original_length:
-        print(f"[CLEAN] Removed introductory sentences, new length: {len(cleaned_text)}")
+    # Remove any "I hope this helps" type conclusions
+    outros = [
+        r"\s*(I hope this helps\.?)\s*$",
+        r"\s*(Let me know if you need anything else\.?)\s*$",
+        r"\s*(This is the \w+ translation\.?)\s*$"
+    ]
     
-    # Remove any remaining JSON structure
-    original_length = len(cleaned_text)
-    cleaned_text = re.sub(r'^\s*\{\s*"[^"]+"\s*:\s*"([\s\S]*?)"\s*\}\s*$', r'\1', cleaned_text)
-    cleaned_text = re.sub(r'^\s*\{\s*"[^"]+"\s*:\s*\{\s*"[^"]+"\s*:\s*"([\s\S]*?)"\s*\}\s*\}\s*$', r'\1', cleaned_text)
+    for pattern in outros:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
     
-    if len(cleaned_text) != original_length:
-        print(f"[CLEAN] Removed JSON structure, new length: {len(cleaned_text)}")
+    # Remove triple backticks if present (from code blocks)
+    cleaned = re.sub(r"```\w*", "", cleaned)
+    cleaned = re.sub(r"```", "", cleaned)
     
-    # Unescape any escaped quotes that might be inside the JSON strings
-    original_length = len(cleaned_text)
-    cleaned_text = cleaned_text.replace('\\"', '"')
+    # Trim whitespace
+    cleaned = cleaned.strip()
     
-    if len(cleaned_text) != original_length:
-        print(f"[CLEAN] Unescaped quotes, new length: {len(cleaned_text)}")
-    
-    print(f"[CLEAN] Finished cleaning, final length: {len(cleaned_text.strip())}")
-    return cleaned_text.strip() 
+    return cleaned 

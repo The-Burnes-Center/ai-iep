@@ -7,991 +7,543 @@ from translation import translate_content
 from PyPDF2 import PdfReader
 import io
 from google_auth import get_documentai_client
-from config import get_full_prompt, CHUNK_ANALYSIS_SYSTEM_MSG, SUMMARY_SYSTEM_MSG, get_chunk_system_message, get_unified_summary_prompt, JSON_FORMATTING_INSTRUCTIONS, IEP_SECTIONS
+from config import (
+    get_document_analysis_prompt,
+    get_chunk_analysis_prompt,
+    get_final_json_analysis_prompt,
+    get_simplified_json_analysis_prompt,
+    IEP_SECTIONS
+)
+from llm_service import invoke_claude, invoke_claude_3_5, invoke_claude_3_7, CLAUDE_MODELS
+import time
+import uuid
+from datetime import datetime
+import tiktoken
+from botocore.exceptions import ClientError
+import logging
+from itertools import groupby
 
-def summarize_and_categorize(content_text):
+# Configure logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize Boto3 clients
+bedrock_runtime = boto3.client('bedrock-runtime')
+
+# Configure models
+ANTHROPIC_MODEL = os.environ.get('ANTHROPIC_MODEL', 'anthropic.claude-3-5-sonnet-20241022-v2:0')
+ANTHROPIC_MODEL_3_7 = os.environ.get('ANTHROPIC_MODEL_3_7', 'anthropic.claude-3-7-sonnet-20250219-v1:0')
+
+# Constants for chunk processing
+MAX_TOKENS_PER_CHUNK = 80000  # Maximum tokens for Claude model (using smaller chunk model)
+
+# Encoding for token estimation
+CL100K_ENCODING = tiktoken.get_encoding("cl100k_base")
+
+def get_token_count(text):
+    """Estimate token count for a text string using tiktoken."""
+    if not text:
+        return 0
+    return len(CL100K_ENCODING.encode(text))
+
+def summarize_and_analyze_document(document_content, user_profile=None):
     """
-    Extract summary and sections from document content using Claude.
-    Processes long documents in chunks to capture all content.
+    Process a document by summarizing and categorizing it into sections.
     
     Args:
-        content_text (str): The text content from the document
-        
-    Returns:
-        dict: Contains summary and sections
-    """
-    # Update to Claude 3.5 Sonnet for better performance
-    model_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0'
+        document_content: The binary content of the document file
+        user_profile: Optional user profile containing language preferences
     
-    # Ensure content is valid
-    if not content_text or not content_text.strip():
-        print("Empty document content, cannot summarize")
+    Returns:
+        A dictionary with processing results
+    """
+    start_time = time.time()
+    
+    try:
+        # Convert binary content to text if needed
+        if isinstance(document_content, bytes):
+            text_content = document_content.decode('utf-8', errors='replace')
+        else:
+            text_content = document_content
+        
+        logger.info(f"Document word count: {len(text_content.split())} words")
+        logger.info(f"Document token count: {get_token_count(text_content)}")
+        
+        # Check if the document is too large to process in one chunk
+        token_count = get_token_count(text_content)
+        
+        # Define target languages for translation based on user profile
+        target_languages = []
+        if user_profile and 'languages' in user_profile:
+            target_languages = user_profile.get('languages', [])
+            if 'en' in target_languages:  # Remove English from target languages as it's the source
+                target_languages.remove('en')
+        
+        # If we have more tokens than can fit in a single chunk, process in chunks
+        if token_count > MAX_TOKENS_PER_CHUNK:
+            logger.info(f"Document is too large for single processing, using chunked approach.")
+            # Process document in chunks
+            chunk_results = process_document_in_chunks(text_content)
+            
+            # Log diagnostic info about the chunked processing
+            logger.info(f"Processed document in {len(chunk_results)} chunks.")
+            
+            # Combine the results from all chunks
+            combined_text_analysis = combine_chunk_results(chunk_results)
+            
+            # Generate the final structured JSON analysis
+            result = generate_final_json_analysis(combined_text_analysis)
+        else:
+            # For smaller documents, process in a single call
+            logger.info("Document is small enough for single processing.")
+            # Process the entire document
+            result = process_full_document(text_content)
+        
+        # Check if we need to translate
+        if target_languages:
+            logger.info(f"Translating into languages: {target_languages}")
+            
+            # Translate the summary
+            if 'summary' in result and result['summary']:
+                # Translate the document summary
+                try:
+                    translated_summary = translate_content(
+                        content=result['summary'],
+                        target_languages=target_languages
+                    )
+                    
+                    # Update the summary with translated versions
+                    if isinstance(translated_summary, dict):
+                        result['summary'] = translated_summary
+                except Exception as e:
+                    logger.error(f"Error translating summary: {str(e)}")
+            
+            # Translate the structured sections data
+            if 'sections' in result and result['sections']:
+                try:
+                    # Process each section
+                    for section_name, section_data in result['sections'].items():
+                        # Check if the section has a summary to translate
+                        if 'summary' in section_data and section_data['summary']:
+                            # Translate the section summary
+                            translated_summary = translate_content(
+                                content=section_data['summary'],
+                                target_languages=target_languages
+                            )
+                            
+                            # Update the section summary with translated versions
+                            if isinstance(translated_summary, dict):
+                                result['sections'][section_name]['summary'] = translated_summary
+                except Exception as e:
+                    logger.error(f"Error translating sections: {str(e)}")
+                    traceback.print_exc()
+        
+        end_time = time.time()
+        logger.info(f"Document processing completed in {end_time - start_time:.2f} seconds")
+        
         return {
-            'summary': '',
-            'sections': []
+            'success': True,
+            'result': result
         }
     
-    # Set chunk size and overlap for context preservation
-    chunk_size = 60000  # Slightly smaller to account for prompt and instructions
-    overlap = 2000  # Overlap between chunks to maintain context
-    
-    # For very short documents, just process directly
-    if len(content_text) <= chunk_size:
-        return process_single_chunk(content_text, model_id)
-    
-    # For longer documents, break into chunks with overlap
-    print(f"Document is {len(content_text)} characters, processing in chunks")
-    
-    # Split the document into overlapping chunks
-    chunks = []
-    position = 0
-    while position < len(content_text):
-        end = min(position + chunk_size, len(content_text))
-        # If this isn't the first chunk, include overlap
-        if position > 0:
-            position = position - overlap
-        chunks.append(content_text[position:end])
-        position = end
-    
-    print(f"Split document into {len(chunks)} chunks for processing")
-    
-    # Process each chunk to extract sections and content
-    chunk_results = []
-    for i, chunk in enumerate(chunks):
-        print(f"Processing chunk {i+1}/{len(chunks)}")
-        # Include context information in the prompt
-        chunk_context = f"CHUNK {i+1}/{len(chunks)}"
-        result = process_chunk_with_context(chunk, chunk_context, model_id, i, len(chunks))
-        chunk_results.append(result)
-    
-    # Combine results from all chunks
-    combined_result = combine_chunk_results(chunk_results)
-    
-    # Generate a final unified summary
-    unified_summary = generate_unified_summary(combined_result, model_id)
-    combined_result['summary'] = unified_summary
-    
-    return combined_result
-
-def process_chunk_with_context(chunk_text, chunk_context, model_id, chunk_index, total_chunks):
-    """Process a single chunk of the document with context information."""
-    try:
-        # Create contextual key for the prompt
-        key = f"IEP Document {chunk_context}"
-        
-        # Get the system message based on chunk position
-        system_message = get_chunk_system_message(chunk_index, total_chunks)
-        
-        # Enhance system message with JSON formatting instructions
-        system_message += " You must output valid JSON without control characters or line breaks in string values."
-        
-        # Add chunk-specific instructions
-        if chunk_index == 0:
-            chunk_instruction = f"IMPORTANT: This is part {chunk_index+1} of {total_chunks} of a longer document. Focus on the beginning sections."
-        elif chunk_index == total_chunks - 1:
-            chunk_instruction = f"IMPORTANT: This is part {chunk_index+1} of {total_chunks} of a longer document. Focus on the ending sections."
-        else:
-            chunk_instruction = f"IMPORTANT: This is part {chunk_index+1} of {total_chunks} of a longer document. Focus on the middle sections."
-        
-        # Prepend the chunk instruction to the document content
-        prefixed_chunk = f"{chunk_instruction}\n\n{chunk_text}"
-        
-        # Get the prompt from config.py
-        prompt = get_full_prompt(key, prefixed_chunk)
-        
-        # Call Claude for this chunk
-        bedrock_runtime = boto3.client('bedrock-runtime')
-        response = bedrock_runtime.invoke_model(
-            modelId=model_id,
-            body=json.dumps({
-                'anthropic_version': 'bedrock-2023-05-31',
-                'max_tokens': 8000,
-                'temperature': 0,
-                'system': system_message,
-                'messages': [
-                    {'role': 'user', 'content': prompt}
-                ]
-            })
-        )
-        
-        # Parse the response
-        response_body = json.loads(response['body'].read().decode('utf-8'))
-        
-        # Extract the content
-        content = ''
-        if 'content' in response_body:
-            if isinstance(response_body['content'], list):
-                for block in response_body['content']:
-                    if 'text' in block:
-                        content += block['text']
-            else:
-                content = response_body['content']
-        elif 'completion' in response_body:
-            content = response_body['completion']
-        
-        # Log complete raw content for debugging
-        print(f"[CHUNK {chunk_index+1}/{total_chunks}] Raw LLM output length: {len(content)}")
-        print(f"[CHUNK {chunk_index+1}/{total_chunks}] Raw LLM output preview: {content[:500]}...")
-        if len(content) > 500:
-            print(f"[CHUNK {chunk_index+1}/{total_chunks}] Raw LLM output end: ...{content[-200:]}")
-            
-        # Extract JSON from the content
-        json_pattern = r'```(?:json)?\s*([\s\S]*?)\s*```'
-        json_match = re.search(json_pattern, content)
-        
-        print(f"[CHUNK {chunk_index+1}/{total_chunks}] Looking for JSON in code blocks")
-        if json_match:
-            json_content = json_match.group(1)
-            print(f"[CHUNK {chunk_index+1}/{total_chunks}] Found JSON in code block. Length: {len(json_content)}")
-            print(f"[CHUNK {chunk_index+1}/{total_chunks}] JSON preview: {json_content[:200]}...")
-            try:
-                chunk_result = json.loads(json_match.group(1))
-                print(f"[CHUNK {chunk_index+1}/{total_chunks}] Successfully parsed JSON from code block")
-                return chunk_result
-            except json.JSONDecodeError as e:
-                print(f"[CHUNK {chunk_index+1}/{total_chunks}] Failed to parse JSON from chunk: {str(e)}")
-        else:
-            print(f"[CHUNK {chunk_index+1}/{total_chunks}] No JSON code block found")
-        
-        # If no valid JSON match is found, try parsing the entire content as JSON
-        print(f"[CHUNK {chunk_index+1}/{total_chunks}] Attempting to parse entire content as JSON")
-        try:
-            parsed_json = json.loads(content)
-            print(f"[CHUNK {chunk_index+1}/{total_chunks}] Successfully parsed entire content as JSON")
-            return parsed_json
-        except json.JSONDecodeError as e:
-            print(f"[CHUNK {chunk_index+1}/{total_chunks}] Failed to parse entire content as JSON: {str(e)}")
-            
-            # Final fallback - look for any JSON object in the content
-            json_pattern = r'\{[\s\S]*\}'
-            json_match = re.search(json_pattern, content)
-            print(f"[CHUNK {chunk_index+1}/{total_chunks}] Looking for JSON object pattern in content")
-            if json_match:
-                json_content = json_match.group(0)
-                print(f"[CHUNK {chunk_index+1}/{total_chunks}] Found potential JSON object. Length: {len(json_content)}")
-                print(f"[CHUNK {chunk_index+1}/{total_chunks}] JSON object preview: {json_content[:200]}...")
-                try:
-                    parsed_json = json.loads(json_match.group(0))
-                    print(f"[CHUNK {chunk_index+1}/{total_chunks}] Successfully parsed JSON object")
-                    return parsed_json
-                except json.JSONDecodeError as e:
-                    print(f"[CHUNK {chunk_index+1}/{total_chunks}] Failed to parse JSON object: {str(e)}")
-            else:
-                print(f"[CHUNK {chunk_index+1}/{total_chunks}] No JSON object pattern found")
-            
-            # If all parsing attempts fail, extract text content and create a simple structure
-            # Extract at least some useful content from the text
-            extracted_text = content[:1000] if len(content) > 1000 else content
-            print(f"[CHUNK {chunk_index+1}/{total_chunks}] Creating fallback structure with extracted text (length: {len(extracted_text)})")
-            
-            # Return a minimal valid structure with the text content
-            return {
-                "summary": "Document content extracted without structure",
-                "sections": [extracted_text]
-            }
     except Exception as e:
-        print(f"Error processing chunk {chunk_index+1}: {str(e)}")
+        error_message = f"Error processing document: {str(e)}"
+        logger.error(error_message)
         traceback.print_exc()
-        return {"summary": "", "sections": {}}
-
-def combine_chunk_results(chunk_results):
-    """Combine results from multiple chunks into a single coherent structure."""
-    combined_sections = {}
-    all_summaries = []
-    text_sections = []
-    
-    # Extract summaries and sections from each chunk
-    for result in chunk_results:
-        chunk_summary = result.get('summary', '')
-        if chunk_summary:
-            all_summaries.append(chunk_summary)
         
-        # Handle the sections data from each chunk
-        chunk_sections = result.get('sections', {})
-        
-        # Process the sections based on their structure
-        if isinstance(chunk_sections, dict):
-            # Process modern dictionary-based sections with named keys
-            for section_name, section_data in chunk_sections.items():
-                # Convert any string section_data to a dictionary with a content field
-                if isinstance(section_data, str):
-                    section_data = {'summary': section_data}
-                
-                if section_name not in combined_sections:
-                    # First time seeing this section
-                    combined_sections[section_name] = section_data
-                else:
-                    # Update existing section by merging data
-                    current_section = combined_sections[section_name]
-                    
-                    # Merge section summary if present
-                    if 'summary' in section_data:
-                        if 'summary' in current_section:
-                            current_section['summary'] += "\n\n" + section_data['summary']
-                        else:
-                            current_section['summary'] = section_data['summary']
-                    
-                    # Merge key_points if present
-                    if 'key_points' in section_data:
-                        if 'key_points' not in current_section:
-                            current_section['key_points'] = {}
-                        
-                        # Merge individual key points
-                        for point_category, point_content in section_data['key_points'].items():
-                            if point_category in current_section['key_points']:
-                                # Combine point contents if not identical
-                                if point_content != current_section['key_points'][point_category]:
-                                    current_section['key_points'][point_category] += "\n" + point_content
-                            else:
-                                current_section['key_points'][point_category] = point_content
-                    
-                    # Merge important_dates
-                    if 'important_dates' in section_data:
-                        if 'important_dates' not in current_section:
-                            current_section['important_dates'] = []
-                        
-                        # Add non-duplicate dates
-                        for date in section_data['important_dates']:
-                            if date not in current_section['important_dates']:
-                                current_section['important_dates'].append(date)
-                    
-                    # Merge parent_actions
-                    if 'parent_actions' in section_data:
-                        if 'parent_actions' not in current_section:
-                            current_section['parent_actions'] = []
-                        
-                        # Add non-duplicate actions
-                        for action in section_data['parent_actions']:
-                            if action not in current_section['parent_actions']:
-                                current_section['parent_actions'].append(action)
-                    
-                    # Merge other fields
-                    for key, value in section_data.items():
-                        if key not in ['summary', 'key_points', 'important_dates', 'parent_actions']:
-                            # For other fields, use the newer value
-                            current_section[key] = value
-        elif isinstance(chunk_sections, list):
-            # Handle simple list sections (legacy format)
-            for section_item in chunk_sections:
-                if isinstance(section_item, str):
-                    text_sections.append(section_item)
-                elif isinstance(section_item, dict) and 'title' in section_item and 'content' in section_item:
-                    # Extract titled sections
-                    title = section_item['title']
-                    if title not in combined_sections:
-                        combined_sections[title] = {
-                            'summary': section_item['content'],
-                            'present': True
-                        }
-                    else:
-                        # Append content
-                        combined_sections[title]['summary'] += "\n\n" + section_item['content']
-        elif chunk_sections == {}:
-            # Skip empty sections
-            pass
-        else:
-            # Fallback for unexpected section format
-            print(f"WARNING: Unexpected section format: {type(chunk_sections)}")
-            print(f"Section content preview: {str(chunk_sections)[:200]}")
-    
-    # Ensure we have sections for all defined IEP sections, even if empty
-    for section_name in IEP_SECTIONS.keys():
-        if section_name not in combined_sections:
-            combined_sections[section_name] = {
-                'present': False,
-                'summary': f"This section was not found in the document."
-            }
-    
-    # If we have text sections but no structured sections, 
-    # create a simple section structure
-    if text_sections and not combined_sections:
-        combined_text = "\n\n".join(text_sections)
-        if len(combined_text) > 5000:
-            # If combined text is too long, shorten it
-            combined_text = combined_text[:5000] + "..."
-        
-        combined_sections["Document Content"] = {
-            "summary": "Extracted document content",
-            "content": combined_text,
-            "present": True
+        return {
+            'success': False,
+            'error': error_message
         }
-    
-    return {
-        'temporary_summaries': all_summaries,  # Store all chunk summaries temporarily
-        'sections': combined_sections
-    }
 
-def generate_unified_summary(combined_result, model_id):
-    """Generate a unified summary from the combined sections."""
-    try:
-        # Get all the section summaries and temporary chunk summaries
-        temp_summaries = combined_result.get('temporary_summaries', [])
-        sections = combined_result.get('sections', {})
-        
-        # Create a structured representation of all sections
-        sections_text = ""
-        for section_name, section_data in sections.items():
-            sections_text += f"## {section_name}\n"
-            if 'summary' in section_data:
-                sections_text += f"{section_data['summary']}\n\n"
-            
-            if 'key_points' in section_data:
-                sections_text += "Key points:\n"
-                for category, content in section_data['key_points'].items():
-                    sections_text += f"- {category}: {content}\n"
-                sections_text += "\n"
-            
-            if 'important_dates' in section_data and section_data['important_dates']:
-                sections_text += "Important dates: " + ", ".join(section_data['important_dates']) + "\n\n"
-            
-            if 'parent_actions' in section_data and section_data['parent_actions']:
-                sections_text += "Parent actions: " + ", ".join(section_data['parent_actions']) + "\n\n"
-        
-        # Add previous chunk summaries if available
-        previous_summaries = ""
-        if temp_summaries:
-            previous_summaries = "Previous chunk summaries:\n" + "\n".join([f"- {summary}" for summary in temp_summaries])
-        
-        # Get the prompt from config.py
-        prompt = get_unified_summary_prompt(sections_text, previous_summaries)
-        
-        bedrock_runtime = boto3.client('bedrock-runtime')
-        response = bedrock_runtime.invoke_model(
-            modelId=model_id,
-            body=json.dumps({
-                'anthropic_version': 'bedrock-2023-05-31',
-                'max_tokens': 8000,
-                'temperature': 0,
-                'system': SUMMARY_SYSTEM_MSG,
-                'messages': [
-                    {'role': 'user', 'content': prompt}
-                ]
-            })
-        )
-        
-        response_body = json.loads(response['body'].read().decode('utf-8'))
-        
-        # Extract the summary
-        summary = ""
-        if 'content' in response_body:
-            if isinstance(response_body['content'], list):
-                for block in response_body['content']:
-                    if 'text' in block:
-                        summary += block['text']
-            else:
-                summary = response_body['content']
-        elif 'completion' in response_body:
-            summary = response_body['completion']
-            
-        return summary.strip()
-    except Exception as e:
-        print(f"Error generating unified summary: {str(e)}")
-        traceback.print_exc()
-        return "Error generating summary"
-
-def process_single_chunk(text, context=None):
+def process_document_in_chunks(text_content):
     """
-    Process a single chunk of text with Claude.
+    Process a document in chunks by splitting the content and processing each chunk.
     
     Args:
-        text (str): The text to process.
-        context (dict, optional): Context information to include with the processing.
+        text_content: The full text content to be processed
     
     Returns:
-        dict: The processed content.
+        A list of results from each chunk, each containing plain text analysis
     """
-    import re
-    import json
-    from utils import get_logger
+    # Calculate approximate token count
+    token_count = get_token_count(text_content)
+    logger.info(f"Processing document with {token_count} tokens in chunks")
     
-    logger = get_logger()
+    # Determine optimal chunk size based on token count
+    estimated_chunks = max(2, (token_count // (MAX_TOKENS_PER_CHUNK // 2)))
     
-    # Prepare the prompt with the text and context
-    prompt_parts = ["I'll give you a portion of an educational document, likely an Individualized Education Program (IEP) for a student with special needs.",
-                   "Extract ALL important information in this document including: ",
-                   "- Summarize the content in parent-friendly language that maintains all important details",
-                   "- All services and accommodations",
-                   "- All dates mentioned in the document, including due dates",
-                   "- All parent action items or decisions needed",
-                   "Use this structure and return ONLY as JSON (no markdown):\n"]
+    # Start with a minimum chunk size (in characters)
+    avg_chars_per_token = len(text_content) / max(1, token_count)
+    chars_per_chunk = int((MAX_TOKENS_PER_CHUNK // 2) * avg_chars_per_token)
     
-    # Format the expected JSON structure to match our section definitions
-    json_format = {
-        "summary": "Comprehensive summary in parent-friendly language",
-        "sections": {
-            "present_levels": {
-                "present": True,
-                "summary": "Student's current academic and functional performance",
-                "key_points": {
-                    "academic": "Description of academic skills",
-                    "behavioral": "Description of behavioral skills"
-                },
-                "important_dates": ["List of important dates"],
-                "parent_actions": ["List of parent action items"],
-                "location": "beginning/middle/end"
-            },
-            # Include other sections
-            "eligibility": {
-                "present": True,
-                "summary": "Student's eligibility determination",
-                "key_points": {
-                    "disability": "Primary disability category",
-                    "criteria": "How eligibility was determined"
-                },
-                "important_dates": ["List of important dates"],
-                "parent_actions": ["List of parent action items"],
-                "location": "beginning/middle/end"
-            }
-            # Continue with all IEP sections
-        }
-    }
+    # Create chunk boundaries
+    chunks = []
     
-    # Add more detail about each section
-    sections_info = "The IEP sections to identify include:\n"
-    for section_name, description in IEP_SECTIONS.items():
-        sections_info += f"- {section_name}: {description}\n"
-    prompt_parts.append(sections_info)
+    # Split by section or natural breaks if possible
+    section_boundaries = find_section_boundaries(text_content)
     
-    prompt_parts.append(f"Expected format: {json.dumps(json_format, indent=2)}")
-    
-    # Add JSON formatting instructions from config
-    prompt_parts.append(JSON_FORMATTING_INSTRUCTIONS)
-    
-    if context:
-        prompt_parts.append(f"\nThis is the {context.get('position', 'middle')} part of the document.")
-        if context.get('is_first', False):
-            prompt_parts.append("Focus on capturing the introduction and initial information.")
-        if context.get('is_last', False):
-            prompt_parts.append("Focus on capturing the conclusion and final information.")
-    
-    prompt_parts.append("\nHere's the text to analyze:")
-    prompt_parts.append(text)
-    prompt = "\n".join(prompt_parts)
-    
-    # Helper function to clean JSON strings more thoroughly
-    def sanitize_json_string(json_str):
-        """Thoroughly clean a JSON string to make it parseable."""
-        # First pass: Use regex to remove common control characters
-        cleaned = re.sub(r'[\x00-\x1F\x7F-\x9F]', '', json_str)
+    if section_boundaries and len(section_boundaries) > 1:
+        logger.info(f"Splitting document into {len(section_boundaries)} natural sections")
         
-        # Second pass: Character-by-character approach for more precise control
-        result = []
-        i = 0
-        in_string = False
-        escape_next = False
+        # Use the section boundaries to create chunks, merging small sections together
+        current_chunk = ""
+        current_chunk_tokens = 0
         
-        while i < len(cleaned):
-            char = cleaned[i]
+        for i in range(len(section_boundaries)):
+            start_idx = section_boundaries[i]
+            end_idx = section_boundaries[i+1] if i+1 < len(section_boundaries) else len(text_content)
             
-            # Handle string boundaries
-            if char == '"' and not escape_next:
-                in_string = not in_string
-                result.append(char)
-            # Handle escape sequences
-            elif char == '\\' and not escape_next:
-                escape_next = True
-                result.append(char)
-            # Handle escaped characters
-            elif escape_next:
-                # Only allow valid escape sequences in JSON
-                if char in 'bfnrt"\\/':
-                    result.append(char)
-                elif char == 'u':
-                    # Handle unicode escape sequences \uXXXX
-                    if i + 4 < len(cleaned) and all(c in '0123456789abcdefABCDEF' for c in cleaned[i+1:i+5]):
-                        result.append(char)
-                        result.extend(cleaned[i+1:i+5])
-                        i += 4
-                    else:
-                        # Invalid unicode escape
-                        pass
-                else:
-                    # Invalid escape sequence, skip
-                    pass
-                escape_next = False
-            # Handle normal characters
+            section_text = text_content[start_idx:end_idx]
+            section_tokens = get_token_count(section_text)
+            
+            # If adding this section would exceed our chunk size, finish current chunk
+            if current_chunk_tokens + section_tokens > MAX_TOKENS_PER_CHUNK:
+                # If current chunk is not empty, add it to chunks
+                if current_chunk:
+                    chunks.append(current_chunk)
+                
+                # Start a new chunk with this section
+                current_chunk = section_text
+                current_chunk_tokens = section_tokens
             else:
-                # Inside a string, we need to be careful about control characters
-                if in_string:
-                    if ord(char) >= 32 and ord(char) <= 126:  # Printable ASCII only
-                        result.append(char)
-                    # Skip all other characters in strings
-                else:
-                    # Outside strings, keep only valid JSON structure characters
-                    if char in '{}[]:,0123456789.-+eE ' or char.isspace():
-                        # Fix common issues with numbers
-                        if char == '+' and i > 0 and cleaned[i-1] not in 'eE':
-                            # Skip invalid + not after exponent
-                            pass
-                        else:
-                            result.append(char)
+                # Add this section to the current chunk
+                current_chunk += section_text
+                current_chunk_tokens += section_tokens
+        
+        # Add the last chunk if not empty
+        if current_chunk:
+            chunks.append(current_chunk)
+    else:
+        # No clear section boundaries, use character-based splitting
+        logger.info(f"No clear sections found, splitting document by character length")
+        
+        # Create chunks with overlap
+        for i in range(0, len(text_content), chars_per_chunk):
+            # If this is not the first chunk, add some overlap with previous chunk
+            start_idx = max(0, i - 1000) if i > 0 else 0
             
-            i += 1
-        
-        # Final cleanup: fix common syntax errors
-        result_str = ''.join(result)
-        # Remove trailing commas in objects and arrays
-        result_str = re.sub(r',\s*}', '}', result_str)
-        result_str = re.sub(r',\s*]', ']', result_str)
-        
-        return result_str
+            # If this is not the last chunk, continue to a reasonable break point
+            end_idx = min(i + chars_per_chunk, len(text_content))
+            if end_idx < len(text_content):
+                # Find the next paragraph break if possible
+                next_break = text_content.find('\n\n', end_idx)
+                if next_break != -1 and next_break < end_idx + 2000:  # Within reasonable distance
+                    end_idx = next_break
+            
+            chunk = text_content[start_idx:end_idx]
+            chunks.append(chunk)
     
-    # Call Claude
+    logger.info(f"Split document into {len(chunks)} chunks for processing")
+    
+    # Process each chunk
+    results = []
+    previous_context = None
+    
+    for i, chunk in enumerate(chunks):
+        logger.info(f"Processing chunk {i+1}/{len(chunks)} with {get_token_count(chunk)} tokens")
+        
+        # Determine if we need to add context from previous chunk
+        context = previous_context if i > 0 else None
+        
+        # Process this chunk
+        try:
+            result_text = process_chunk_with_context(chunk, i+1, len(chunks), context)
+            
+            # Update context for next chunk
+            previous_context = {
+                'chunk_number': i+1,
+                'content_preview': chunk[-1000:] if len(chunk) > 1000 else chunk
+            }
+            
+            # Add result to the list
+            results.append(result_text)
+            
+            logger.info(f"Chunk {i+1} processed successfully")
+        except Exception as e:
+            logger.error(f"Error processing chunk {i+1}: {str(e)}")
+            traceback.print_exc()
+            # Add empty result for this chunk
+            results.append("")
+    
+    return results
+
+def find_section_boundaries(text_content):
+    """
+    Find natural section boundaries in a document using common section header patterns.
+    
+    Args:
+        text_content: The document text content
+    
+    Returns:
+        List of character indices where sections begin
+    """
+    # Always include the beginning of the document
+    boundaries = [0]
+    
+    # Look for section header patterns
+    # 1. Roman numerals followed by a title
+    roman_pattern = r'\n(?:(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII|XIII|XIV|XV|XVI|XVII|XVIII|XIX|XX)\.?\s+[A-Z][\w\s]+:?(?:\n|\r\n))'
+    
+    # 2. Numbered sections
+    numbered_pattern = r'\n(?:\d+\.(?:\d+\.)*\s+[A-Z][\w\s]+:?(?:\n|\r\n))'
+    
+    # 3. All caps headers that look like sections
+    caps_pattern = r'\n(?:[A-Z]{3,}(?:[\s\-][A-Z]+)*(?::|\n|\r\n))'
+    
+    # 4. Form field patterns like "Student Name:"
+    form_field_pattern = r'\n(?:[A-Z][\w\s]+:(?:\s+|$))'
+    
+    # Find all matches
+    for pattern in [roman_pattern, numbered_pattern, caps_pattern, form_field_pattern]:
+        for match in re.finditer(pattern, text_content):
+            boundaries.append(match.start())
+    
+    # Remove near-duplicate boundaries (within 100 chars of each other)
+    boundaries.sort()
+    filtered_boundaries = [boundaries[0]]
+    
+    for boundary in boundaries[1:]:
+        if boundary - filtered_boundaries[-1] > 100:
+            filtered_boundaries.append(boundary)
+    
+    return filtered_boundaries
+
+def process_full_document(text_content):
+    """
+    Process a document in a single LLM call for smaller documents.
+    
+    Args:
+        text_content: The document text content
+    
+    Returns:
+        Structured document analysis with summary and sections
+    """
+    logger.info("Processing entire document in a single call")
+    
     try:
-        response = call_claude(prompt, max_tokens=8000, temperature=0)
+        # Create the prompt for the full document using the imported function
+        prompt = get_document_analysis_prompt(text_content)
         
-        # Log raw output keys
-        logger.info(f"Raw LLM output keys: {list(response.keys() if isinstance(response, dict) else ['not a dict'])}")
+        # Call the Claude model for analysis using Claude 3.5 Sonnet
+        response = invoke_claude_3_5(
+            prompt=prompt,
+            temperature=0,
+            max_tokens=8000
+        )
         
-        # Extract the text content from the response
-        if isinstance(response, dict) and 'content' in response:
-            if isinstance(response['content'], list) and len(response['content']) > 0:
-                content_items = [item for item in response['content'] if isinstance(item, dict) and 'text' in item]
-                if content_items:
-                    raw_output = content_items[0]['text']
-                else:
-                    logger.warning("No text content found in response content list")
-                    raw_output = str(response['content'])
-            else:
-                raw_output = str(response['content'])
-        else:
-            logger.warning(f"Unexpected response structure: {type(response)}")
-            raw_output = str(response)
+        # Parse the response to get structured information
+        result = parse_document_analysis(response)
         
-        # Log the raw output length and preview
-        logger.info(f"Raw LLM output length: {len(raw_output)}")
-        logger.info(f"Raw LLM output preview: {raw_output[:300]}...")
-        logger.info(f"Raw LLM output end: {raw_output[-300:] if len(raw_output) > 300 else raw_output}")
-        
-        # Try to extract JSON from the response using various methods
-        result = None
-        
-        # Method 1: Look for JSON in code blocks
-        logger.info("Looking for JSON in code blocks")
-        json_code_block_pattern = r"```(?:json)?\s*([\s\S]*?)```"
-        json_matches = re.findall(json_code_block_pattern, raw_output)
-        
-        if json_matches:
-            logger.info(f"Found {len(json_matches)} JSON code blocks")
-            for i, json_match in enumerate(json_matches):
-                logger.info(f"Attempting to parse JSON code block {i+1}")
-                try:
-                    # Apply thorough sanitization
-                    clean_json = sanitize_json_string(json_match)
-                    logger.info(f"Sanitized JSON length: {len(clean_json)}")
-                    logger.info(f"Sanitized JSON sample: {clean_json[:150]}...")
-                    
-                    result = json.loads(clean_json)
-                    logger.info(f"Successfully parsed JSON from code block {i+1}")
-                    break
-                except json.JSONDecodeError as e:
-                    logger.warning(f"Failed to parse JSON code block {i+1}: {str(e)}")
-        else:
-            logger.info("No JSON code block found")
-        
-        # Method 2: Try to parse the entire content as JSON
+        # Ensure we have a valid result structure
         if not result:
-            logger.info("Attempting to parse entire content as JSON")
-            try:
-                # Apply thorough sanitization
-                clean_json = sanitize_json_string(raw_output)
-                result = json.loads(clean_json)
-                logger.info("Successfully parsed entire content as JSON")
-            except json.JSONDecodeError as e:
-                logger.info(f"Failed to parse entire content as JSON: {str(e)}")
-        
-        # Method 3: Look for a JSON object pattern in the content
-        if not result:
-            logger.info("Looking for JSON object pattern in content")
-            json_object_pattern = r"({[\s\S]*})"
-            json_matches = re.findall(json_object_pattern, raw_output)
-            
-            if json_matches:
-                # Find the longest match which is likely the complete JSON
-                json_match = max(json_matches, key=len)
-                logger.info(f"Found potential JSON object. Length: {len(json_match)}")
-                logger.info(f"JSON object preview: {json_match[:150]}...")
-                
-                try:
-                    # Apply thorough sanitization
-                    clean_json = sanitize_json_string(json_match)
-                    logger.info(f"Sanitized JSON length: {len(clean_json)}")
-                    logger.info(f"Sanitized JSON sample: {clean_json[:150]}...")
-                    
-                    result = json.loads(clean_json)
-                    logger.info("Successfully parsed JSON object")
-                except json.JSONDecodeError as e:
-                    logger.info(f"Failed to parse JSON object: {str(e)}")
-                    
-                    # Try treating the content as string and manually extract key parts
-                    try:
-                        logger.info("Attempting manual JSON extraction...")
-                        # Extract summary using regex
-                        summary_match = re.search(r'"summary"\s*:\s*"([^"]*(?:"[^"]*"[^"]*)*)"', json_match)
-                        summary = summary_match.group(1) if summary_match else "Unable to extract summary"
-                        
-                        # Extract services if present
-                        services = {}
-                        services_match = re.search(r'"services"\s*:\s*{([^}]*)}', json_match)
-                        if services_match:
-                            services_text = services_match.group(1)
-                            service_items = re.findall(r'"(\w+)"\s*:\s*"([^"]*)"', services_text)
-                            for k, v in service_items:
-                                services[k] = v
-                        
-                        # Extract accommodations if present
-                        accommodations = {}
-                        accommodations_match = re.search(r'"accommodations"\s*:\s*{([^}]*)}', json_match)
-                        if accommodations_match:
-                            accommodations_text = accommodations_match.group(1)
-                            accommodation_items = re.findall(r'"(\w+)"\s*:\s*"([^"]*)"', accommodations_text)
-                            for k, v in accommodation_items:
-                                accommodations[k] = v
-                        
-                        # Extract dates and actions
-                        important_dates = []
-                        dates_match = re.search(r'"important_dates"\s*:\s*\[(.*?)\]', json_match, re.DOTALL)
-                        if dates_match:
-                            dates_text = dates_match.group(1)
-                            date_items = re.findall(r'"([^"]*)"', dates_text)
-                            important_dates = date_items
-                        
-                        parent_actions = []
-                        actions_match = re.search(r'"parent_actions"\s*:\s*\[(.*?)\]', json_match, re.DOTALL)
-                        if actions_match:
-                            actions_text = actions_match.group(1)
-                            action_items = re.findall(r'"([^"]*)"', actions_text)
-                            parent_actions = action_items
-                        
-                        # Build result manually
-                        result = {
-                            "summary": summary,
-                            "services": services,
-                            "accommodations": accommodations,
-                            "important_dates": important_dates,
-                            "parent_actions": parent_actions,
-                            "location": "extracted manually",
-                            "manual_extraction": True
-                        }
-                        logger.info("Successfully created result through manual extraction")
-                    except Exception as rex:
-                        logger.warning(f"Manual extraction failed: {str(rex)}")
-                        # Continue to fallback structure
-        
-        # If no valid JSON was found, create a fallback structure
-        if not result:
-            logger.warning("Failed to extract valid JSON, creating fallback structure")
-            # Extract a summary from the text if possible
-            summary_match = re.search(r'"summary"\s*:\s*"([^"]+)"', raw_output)
-            summary = summary_match.group(1) if summary_match else "Summary extraction failed"
-            
-            # Create a basic structure with the raw text
-            excerpt_length = min(1000, len(raw_output))
-            
-            # Create a basic section structure
-            sections = {}
-            for section_name in IEP_SECTIONS.keys():
-                sections[section_name] = {
-                    "present": False,
-                    "summary": "This section could not be extracted from the document.",
-                    "location": "unknown"
-                }
-                
-            # Add a Document Content section with the raw text
-            sections["Document Content"] = {
-                "present": True,
-                "summary": raw_output[:excerpt_length],
-                "location": "unknown"
-            }
-            
             result = {
-                "summary": summary,
-                "sections": sections,
-                "extraction_failed": True
+                'summary': "The document could not be analyzed properly.",
+                'sections': {}
             }
-            logger.info(f"Creating fallback structure with extracted text (length: {excerpt_length})")
-        
-        # Validate the result structure
-        if not isinstance(result, dict):
-            logger.warning(f"Result is not a dictionary: {type(result)}")
-            result = {"error": "Invalid result structure", "raw": str(result)[:1000]}
-        
-        # Ensure the summary field exists and is a string
-        if "summary" not in result:
-            logger.warning("Summary field missing from result, adding placeholder")
-            result["summary"] = "Summary not available in extracted content"
-        elif not isinstance(result["summary"], str):
-            logger.warning(f"Summary is not a string: {type(result['summary'])}")
-            result["summary"] = str(result["summary"])
-        
-        # Ensure the result has a proper sections structure if it doesn't already
-        if "sections" not in result or not isinstance(result["sections"], dict):
-            # If sections is missing or not a dictionary, create a basic structure
-            sections = {}
-            for section_name in IEP_SECTIONS.keys():
-                sections[section_name] = {
-                    "present": False,
-                    "summary": "This section was not identified in the document.",
-                    "location": "unknown"
-                }
-                
-            # If we have a "services" field, convert it to a section
-            if "services" in result and isinstance(result["services"], dict):
-                services_text = []
-                for service_type, description in result["services"].items():
-                    services_text.append(f"{service_type}: {description}")
-                
-                sections["services"] = {
-                    "present": True,
-                    "summary": "\n".join(services_text),
-                    "location": result.get("location", "unknown")
-                }
-                
-            # If we have an "accommodations" field, convert it to a section
-            if "accommodations" in result and isinstance(result["accommodations"], dict):
-                accommodations_text = []
-                for accom_type, description in result["accommodations"].items():
-                    accommodations_text.append(f"{accom_type}: {description}")
-                
-                sections["accommodations"] = {
-                    "present": True,
-                    "summary": "\n".join(accommodations_text),
-                    "location": result.get("location", "unknown")
-                }
-                
-            # Convert important_dates and parent_actions if present
-            if "important_dates" in result and isinstance(result["important_dates"], list):
-                # Find relevant sections to add these dates to
-                for section_name in sections:
-                    if "important_dates" not in sections[section_name]:
-                        sections[section_name]["important_dates"] = []
-                    if sections[section_name]["present"]:
-                        sections[section_name]["important_dates"] = result["important_dates"]
-                
-            if "parent_actions" in result and isinstance(result["parent_actions"], list):
-                # Find relevant sections to add these actions to
-                for section_name in sections:
-                    if "parent_actions" not in sections[section_name]:
-                        sections[section_name]["parent_actions"] = []
-                    if sections[section_name]["present"]:
-                        sections[section_name]["parent_actions"] = result["parent_actions"]
-            
-            # Update the result with the new sections structure
-            result["sections"] = sections
         
         return result
     except Exception as e:
-        logger.error(f"Error in process_single_chunk: {str(e)}")
-        import traceback
-        logger.error(traceback.format_exc())
-        return {"error": str(e), "summary": "Error processing document chunk"}
+        logger.error(f"Error in full document processing: {str(e)}")
+        traceback.print_exc()
+        
+        # Return a minimal result structure
+        return {
+            'summary': "An error occurred while analyzing the document.",
+            'sections': {}
+        }
 
-def extract_text_from_pdf(file_content):
+def process_chunk_with_context(chunk_text, chunk_index, total_chunks, context=None):
     """
-    Extract text from a PDF file using PyPDF2 as a fallback.
+    Process a single chunk of the document with context information, returning plain text analysis.
     
     Args:
-        file_content (bytes): The PDF file content as bytes
+        chunk_text (str): The chunk of text to process
+        chunk_index (int): Index of the current chunk
+        total_chunks (int): Total number of chunks
+        context (dict, optional): Context information for the chunk
         
     Returns:
-        str: The extracted text
+        str: Text analysis of the chunk
     """
     try:
-        print(f"Using PyPDF2 fallback to extract text from PDF")
-        pdf_reader = PdfReader(io.BytesIO(file_content))
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text() + "\n"
-        return text
+        # Create the prompt using the imported function
+        prompt = get_chunk_analysis_prompt(chunk_text, chunk_index, total_chunks, context)
+        
+        # Call Claude 3.5 Sonnet for this chunk
+        response = invoke_claude_3_5(
+            prompt=prompt,
+            temperature=0,
+            max_tokens=8000
+        )
+        
+        # Log the raw output for debugging
+        print(f"[CHUNK {chunk_index}/{total_chunks}] Raw text analysis length: {len(response)}")
+        print(f"[CHUNK {chunk_index}/{total_chunks}] Raw text analysis preview: {response[:500]}...")
+        if len(response) > 500:
+            print(f"[CHUNK {chunk_index}/{total_chunks}] Raw text analysis end: ...{response[-200:]}")
+        
+        return response
+        
     except Exception as e:
-        print(f"Error extracting text from PDF with PyPDF2: {e}")
+        logger.error(f"Error processing chunk: {str(e)}")
+        traceback.print_exc()
+        return f"Error in chunk {chunk_index}/{total_chunks}: {str(e)}"
+
+def combine_chunk_results(chunk_results):
+    """
+    Combine text analyses from multiple chunks into a single text.
+    
+    Args:
+        chunk_results (list): List of text analyses from each chunk
+        
+    Returns:
+        str: Combined text analysis
+    """
+    print(f"Combining {len(chunk_results)} text analyses")
+    
+    # Add a separator and chunk identifier before each chunk analysis
+    formatted_chunks = []
+    for i, analysis in enumerate(chunk_results):
+        formatted_chunks.append(f"\n\n--- CHUNK {i+1}/{len(chunk_results)} ANALYSIS ---\n\n{analysis}")
+    
+    # Join all analyses with separation
+    combined_text = "\n".join(formatted_chunks)
+    
+    print(f"Combined text analysis length: {len(combined_text)}")
+    print(f"Combined text analysis preview: {combined_text[:500]}...")
+    
+    return combined_text
+
+def generate_final_json_analysis(combined_text_analysis):
+    """
+    Convert the combined text analysis into structured JSON format.
+    
+    Args:
+        combined_text_analysis (str): Combined text analysis from all chunks
+        
+    Returns:
+        dict: Structured document analysis
+    """
+    try:
+        # Create the prompt for generating the final structured JSON using the imported function
+        prompt = get_final_json_analysis_prompt(combined_text_analysis)
+        
+        # Call Claude 3.5 Sonnet to generate the structured JSON
+        response = invoke_claude_3_5(
+            prompt=prompt,
+            temperature=0,
+            max_tokens=8000
+        )
+        
+        # Parse the response
+        result = parse_document_analysis(response)
+        
+        if not result:
+            logger.warning("Failed to parse JSON from final analysis")
+            
+            # Retry with a simplified prompt from config.py
+            logger.info("Retrying with simplified prompt")
+            
+            # Use the simplified prompt from config.py
+            prompt = get_simplified_json_analysis_prompt(combined_text_analysis)
+            
+            # Try Claude 3.7 Sonnet for better handling of complex JSON 
+            response = invoke_claude_3_7(
+                prompt=prompt,
+                temperature=0,
+                max_tokens=8000
+            )
+            
+            # Log the output for debugging
+            logger.info(f"Raw text analysis output length: {len(response)}")
+            logger.info(f"Raw text analysis preview: {response[:500]}...")
+            
+            return response
+        
+        logger.info(f"Successfully generated structured JSON from combined analysis")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error generating final JSON analysis: {str(e)}")
+        traceback.print_exc()
         return None
 
-def summarize_and_analyze_document(file_content, user_profile=None):
-    """Analyze a document to extract text and generate a summary."""
-    print("Analyzing document...")
-    
+def extract_text_from_pdf(file_content):
+    """Fallback method to extract text from PDF using PyPDF2."""
     try:
-        # Extract text from the document using Google Document AI with PyPDF2 fallback
-        from google_auth import process_document, get_documentai_client
+        # Create a file-like object from the content
+        pdf_file = io.BytesIO(file_content)
         
-        # Get Document AI client and process the document
-        documentai_client = get_documentai_client()
-        project_id = os.environ.get('DOCUMENT_AI_PROJECT_ID')
-        location = os.environ.get('DOCUMENT_AI_LOCATION', 'us-central1')
-        processor_id = os.environ.get('DOCUMENT_AI_PROCESSOR_ID')
+        # Initialize PdfReader
+        pdf_reader = PdfReader(pdf_file)
         
-        print(f"Processing document with Google Document AI (project: {project_id}, location: {location}, processor: {processor_id})")
+        # Extract text from each page
+        full_text = ""
+        for page_num in range(len(pdf_reader.pages)):
+            page = pdf_reader.pages[page_num]
+            full_text += page.extract_text() + "\n\n"
         
-        # Create request to process document
-        name = documentai_client.processor_path(project_id, location, processor_id)
-        
-        # Process document with Document AI
-        document_result = documentai_client.process_document(
-                                request={
-                'name': name,
-                'raw_document': {
-                    'content': file_content,
-                    'mime_type': 'application/pdf'
-                }
-            }
-        )
-        
-        # Check if text extraction was successful
-        extracted_text = None
-        
-        if hasattr(document_result, 'document') and hasattr(document_result.document, 'text'):
-            extracted_text = document_result.document.text
-            
-            # Check if the result came from the fallback method
-            if hasattr(document_result, 'from_fallback') and document_result.from_fallback:
-                print("Text successfully extracted using PyPDF2 fallback")
-            else:
-                print("Text successfully extracted using Google Document AI")
-        
-        # If Document AI failed, try the direct PDF extraction fallback
-        if not extracted_text:
-            print("Document AI text extraction failed, trying direct PDF fallback")
-            extracted_text = extract_text_from_pdf(file_content)
-            
-            if extracted_text:
-                print("Text successfully extracted using direct PDF fallback")
-        
-        # Only proceed if we successfully extracted text
-        if not extracted_text:
-            return {
-                "success": False,
-                "error": "Failed to extract text from the document"
-            }
-
-        # Summarize and categorize the document
-        result = summarize_and_categorize(extracted_text)
-        
-        # Handle language preferences from user profile
-        target_languages = []
-        
-        if user_profile:
-            if 'languages' in user_profile:
-                # Use the existing languages array from user profile
-                all_languages = user_profile.get('languages', [])
-                print(f"Using languages from user profile: {all_languages}")
-                
-                # Only include non-English languages for translation
-                target_languages = [lang for lang in all_languages if lang != 'en']
-                if target_languages:
-                    print(f"Target languages for translation: {target_languages}")
-                else:
-                    print("No non-English languages found for translation")
-            else:
-                print("No 'languages' field found in user profile")
-        else:
-            print("No user profile provided, skipping translations")
-        
-        # Translate summary if target languages are specified
-        if target_languages:
-            print(f"Translating content to: {', '.join(target_languages)}")
-            if 'summary' in result:
-                result['summary'] = translate_content(result['summary'], target_languages)
-            
-            # Translate each section
-            if 'sections' in result:
-                # Check if sections is a dictionary (previous code assumed it's always a list)
-                if isinstance(result['sections'], dict):
-                    translated_sections = {}
-                    for section_name, section_content in result['sections'].items():
-                        if isinstance(section_content, dict):
-                            translated_section = section_content.copy()
-                            # Translate the content of the section
-                            if 'content' in translated_section:
-                                translated_section['content'] = translate_content(translated_section['content'], target_languages)
-                            # Also translate summary if present
-                            if 'summary' in translated_section:
-                                translated_section['summary'] = translate_content(translated_section['summary'], target_languages)
-                            translated_sections[section_name] = translated_section
-                        else:
-                            # If section content is not a dictionary, just keep it as is
-                            translated_sections[section_name] = section_content
-                    result['sections'] = translated_sections
-                else:
-                    # Original implementation for when sections is a list
-                    translated_sections = []
-                    for section in result['sections']:
-                        if isinstance(section, dict):
-                            translated_section = section.copy()
-                            # Translate the content of the section
-                            if 'content' in section:
-                                translated_section['content'] = translate_content(section['content'], target_languages)
-                            translated_sections.append(translated_section)
-                        else:
-                            # If section is not a dictionary, just append it as is
-                            translated_sections.append(section)
-                    result['sections'] = translated_sections
-        
-        return {
-            "success": True,
-            "result": result
-        }
+        return full_text
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        print(f"Error extracting text from PDF: {str(e)}")
+        traceback.print_exc()
+        return None
 
-def call_claude(prompt, max_tokens=8000, temperature=0):
+def parse_document_analysis(response):
     """
-    Call Claude model through AWS Bedrock to process text.
+    Parse the JSON response from Claude to extract structured information.
     
     Args:
-        prompt (str): The prompt to send to Claude
-        max_tokens (int): Maximum number of tokens in the response
-        temperature (float): Temperature setting for response randomness
+        response: Text response from Claude containing JSON
     
     Returns:
-        dict: The response from Claude
+        dict: Structured document analysis
     """
-    import boto3
-    import json
-    from utils import get_logger
-    import os
-    
-    logger = get_logger()
-    
-    # Initialize Bedrock client
-    bedrock_runtime = boto3.client('bedrock-runtime')
-    
-    # Get model ID from environment variables or use default
-    model_id = os.environ.get('CLAUDE_MODEL_ID', 'anthropic.claude-3-5-sonnet-20240620-v1:0')
-    logger.info(f"Using Claude model: {model_id}")
-    
-    # Call Claude
     try:
-        # Create request body with JSON response format when appropriate
-        request_body = {
-            'anthropic_version': 'bedrock-2023-05-31',
-            'max_tokens': max_tokens,
-            'temperature': temperature,
-            'messages': [
-                {'role': 'user', 'content': prompt}
-            ]
-        }
+        # Find JSON block in the response
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response)
         
-        # Add response format parameter to request JSON output
-        # This helps Claude produce cleaner, more consistent JSON
-        if "JSON" in prompt or "json" in prompt:
-            request_body['response_format'] = {'type': 'json_object'}
-            logger.info("Requesting JSON response format")
-        
-        response = bedrock_runtime.invoke_model(
-            modelId=model_id,
-            body=json.dumps(request_body)
-        )
-        
-        # Parse response
-        response_body = json.loads(response['body'].read().decode('utf-8'))
-        return response_body
-        
+        if json_match:
+            # Extract JSON string
+            json_str = json_match.group(1)
+            # Parse the JSON
+            result = json.loads(json_str)
+            logger.info("Successfully parsed JSON from response")
+            return result
+        else:
+            # Try to find any JSON-like structure
+            potential_json = re.search(r'({[\s\S]*})', response)
+            if potential_json:
+                try:
+                    # Try to parse what looks like JSON
+                    result = json.loads(potential_json.group(1))
+                    logger.info("Found and parsed JSON-like structure from response")
+                    return result
+                except json.JSONDecodeError:
+                    logger.warning("Found potential JSON structure but failed to parse it")
+                    pass
+                
+            logger.warning("No valid JSON found in response")
+            
+            # Create a basic structure with just the raw text
+            return {
+                'summary': "Failed to extract structured information from the document.",
+                'sections': {
+                    'document_content': {
+                        'present': True,
+                        'summary': "The document analysis could not be structured properly.",
+                        'key_points': {},
+                        'important_dates': [],
+                        'parent_actions': [],
+                        'location': "Throughout the document"
+                    }
+                }
+            }
+    
     except Exception as e:
-        logger.error(f"Error calling Claude: {str(e)}")
-        import traceback
-        logger.error(traceback.format_exc())
-        return {"error": str(e)} 
+        logger.error(f"Error parsing document analysis: {str(e)}")
+        traceback.print_exc()
+        
+        # Return a minimal result structure
+        return None 

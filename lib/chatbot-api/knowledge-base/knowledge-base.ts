@@ -12,6 +12,7 @@ import { aws_bedrock as bedrock } from 'aws-cdk-lib';
 import { Construct } from "constructs";
 import { stackName } from "../../constants"
 import { OpenSearchStack } from "../opensearch/opensearch"
+import { STANDARD_TAGS } from '../../tags';
 
 export interface KnowledgeBaseStackProps {
   readonly openSearch: OpenSearchStack,
@@ -60,88 +61,69 @@ export class KnowledgeBaseStack extends cdk.Stack {
 
 
     const knowledgeBase = new bedrock.CfnKnowledgeBase(scope, 'KnowledgeBase', {
-      knowledgeBaseConfiguration: {
-        type: 'VECTOR',
-        vectorKnowledgeBaseConfiguration: {
-          embeddingModelArn: `arn:aws:bedrock:${cdk.Stack.of(this).region}::foundation-model/amazon.titan-embed-text-v2:0`,
-        },
-      },
-      name: `${stackName}-kb`,
+      name: "ai-iep-knowledge-base",
+      description: "IEP docs knowledge base",
       roleArn: props.openSearch.knowledgeBaseRole.roleArn,
-      storageConfiguration: {
-        type: 'OPENSEARCH_SERVERLESS',
-
-        // the properties below are optional
-        opensearchServerlessConfiguration: {
-          collectionArn: props.openSearch.openSearchCollection.attrArn,
-          fieldMapping: {
-            metadataField: 'metadata_field',
-            textField: 'text_field',
-            vectorField: 'vector_field',
-          },
-          vectorIndexName: 'knowledge-base-index',
-        },
+      knowledgeBaseConfiguration: {
+        type: "VECTOR",
+        vectorKnowledgeBaseConfiguration: {
+          embeddingModelArn: `arn:aws:bedrock:${cdk.Stack.of(this).region}::foundation-model/amazon.titan-embed-text-v2:0`
+        }
       },
-
-      // the properties below are optional
-      description: `Bedrock Knowledge Base for ${stackName}`,
+      storageConfiguration: {
+        type: "OPENSEARCH_SERVERLESS",
+        opensearchServerlessConfiguration: {
+          collectionArn: `arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${props.openSearch.openSearchCollection.attrId}`,
+          vectorIndexName: "knowledge-base-index",
+          fieldMapping: {
+            vectorField: "embedding",
+            textField: "text",
+            metadataField: "metadata"
+          }
+        }
+      }
     });
-
-    knowledgeBase.addDependency(props.openSearch.openSearchCollection);
-    knowledgeBase.node.addDependency(props.openSearch.lambdaCustomResource)
+    
+    // Add tags to knowledge base using cdk.Tags.of()
+    cdk.Tags.of(knowledgeBase).add('Resource', 'BedrockKnowledgeBase');
+    cdk.Tags.of(knowledgeBase).add('Purpose', 'IEPDocuments');
+    cdk.Tags.of(knowledgeBase).add('Service', 'Bedrock');
+    
+    // Add standard tags
+    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+      cdk.Tags.of(knowledgeBase).add(key, value);
+    });
 
     const dataSource = new bedrock.CfnDataSource(scope, 'S3DataSource', {
-      dataSourceConfiguration: {
-        type: 'S3',
-        s3Configuration: {
-          bucketArn: props.s3bucket.bucketArn,
-        },
-
-      },
+      name: "ai-iep-s3-data-source",
+      description: "S3 data source for IEP documents",
       knowledgeBaseId: knowledgeBase.attrKnowledgeBaseId,
-      name: `${stackName}-kb-datasource`,
-
-      // the properties below are optional      
-      description: 'S3 data source',
+      dataSourceConfiguration: {
+        type: "S3",
+        s3Configuration: {
+          bucketArn: props.s3bucket.bucketArn
+        }
+      },
       vectorIngestionConfiguration: {
         chunkingConfiguration: {
-          chunkingStrategy: 'FIXED_SIZE',
-
-          // the properties below are optional
+          chunkingStrategy: "FIXED_SIZE",
           fixedSizeChunkingConfiguration: {
-            maxTokens: 300,
-            overlapPercentage: 10,
-          },
-
-          // hierarchicalChunkingConfiguration: {
-          //   levelConfigurations: [{
-          //     maxTokens: 123,
-          //   }],
-          //   overlapTokens: 123,
-          // },
-          // semanticChunkingConfiguration: {
-          //   breakpointPercentileThreshold: 123,
-          //   bufferSize: 123,
-          //   maxTokens: 123,
-          // },
-        },
-        // parsingConfiguration: {
-        //   parsingStrategy: 'parsingStrategy',
-
-        //   // the properties below are optional
-        //   bedrockFoundationModelConfiguration: {
-        //     modelArn: 'modelArn',
-
-        //     // the properties below are optional
-        //     parsingPrompt: {
-        //       parsingPromptText: 'parsingPromptText',
-        //     },
-        //   },
-        // },
-      },
+            maxTokens: 1024,
+            overlapPercentage: 20
+          }
+        }
+      }
     });
-
-    dataSource.addDependency(knowledgeBase);    
+    
+    // Add tags to data source using cdk.Tags.of()
+    cdk.Tags.of(dataSource).add('Resource', 'BedrockDataSource');
+    cdk.Tags.of(dataSource).add('Purpose', 'S3Documents');
+    cdk.Tags.of(dataSource).add('Service', 'Bedrock');
+    
+    // Add standard tags
+    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+      cdk.Tags.of(dataSource).add(key, value);
+    });
 
     this.knowledgeBase = knowledgeBase;
     this.dataSource = dataSource;

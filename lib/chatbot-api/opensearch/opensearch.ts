@@ -7,6 +7,7 @@ import * as cr from 'aws-cdk-lib/custom-resources'
 import { Construct } from "constructs";
 import { aws_opensearchserverless as opensearchserverless } from 'aws-cdk-lib';
 import { stackName } from "../../constants"
+import { getTagProps, tagResource } from '../../tags';
 
 export interface OpenSearchStackProps {
   
@@ -29,6 +30,12 @@ export class OpenSearchStack extends cdk.Stack {
       description: `OpenSearch Serverless Collection for ${stackName}`,
       standbyReplicas: 'DISABLED',      
       type: 'VECTORSEARCH',
+      tags: [
+        { key: 'Project', value: 'AI-IEP' },
+        { key: 'ManagedBy', value: 'CDK' },
+        { key: 'Resource', value: 'OpenSearchCollection' },
+        { key: 'Owner', value: 'BurnesCenter' }
+      ]
     });
 
     // create encryption policy first
@@ -51,10 +58,20 @@ export class OpenSearchStack extends cdk.Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")
       ]
     });    
+    
+    tagResource(indexFunctionRole, {
+      'Resource': 'IAMRole',
+      'Purpose': 'OpenSearch Index Creation'
+    });
 
     const knowledgeBaseRole = new iam.Role(scope, "KnowledgeBaseRole", {
       assumedBy: new iam.ServicePrincipal('bedrock.amazonaws.com'),      
-    })
+    });
+    
+    tagResource(knowledgeBaseRole, {
+      'Resource': 'IAMRole',
+      'Purpose': 'Knowledge Base Access'
+    });
 
     this.knowledgeBaseRole = knowledgeBaseRole;
 

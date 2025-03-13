@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import { Attribute, AttributeType, Table, ProjectionType } from 'aws-cdk-lib/aws-dynamodb';
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import { getTagProps, tagResource } from '../../tags';
 
 export class TableStack extends Stack {
   public readonly historyTable : Table;
@@ -16,11 +17,23 @@ export class TableStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    // Helper function to tag tables with standard tags plus table-specific tags
+    const tagTable = (table: dynamodb.Table, tableName: string) => {
+      tagResource(table, {
+        'Resource': 'DynamoDB',
+        'TableName': tableName,
+        'Purpose': 'ApplicationData'
+      });
+    };
+
     // Define the table
     const chatHistoryTable = new Table(scope, 'ChatHistoryTable', {
       partitionKey: { name: 'user_id', type: AttributeType.STRING },
       sortKey: { name: 'session_id', type: AttributeType.STRING },
     });
+    
+    // Tag the chat history table
+    tagTable(chatHistoryTable, 'ChatHistoryTable');
 
     // Add a global secondary index to sort ChatHistoryTable by time_stamp
     chatHistoryTable.addGlobalSecondaryIndex({
@@ -37,6 +50,9 @@ export class TableStack extends Stack {
       partitionKey: { name: 'Topic', type: AttributeType.STRING },
       sortKey: { name: 'CreatedAt', type: AttributeType.STRING },
     });
+    
+    // Tag the user feedback table
+    tagTable(userFeedbackTable, 'UserFeedbackTable');
 
     // Add a global secondary index to UserFeedbackTable with partition key CreatedAt
     userFeedbackTable.addGlobalSecondaryIndex({
@@ -57,12 +73,15 @@ export class TableStack extends Stack {
       partitionKey: { name: 'PartitionKey', type: AttributeType.STRING },
       sortKey: { name: 'Timestamp', type: AttributeType.STRING },
     });
+    tagTable(evalSummariesTable, 'EvaluationSummariesTable');
     this.evalSummaryTable = evalSummariesTable;
 
     const evalResultsTable = new Table(scope, 'EvaluationResultsTable', {
       partitionKey: { name: 'EvaluationId', type: AttributeType.STRING },
       sortKey: { name: 'QuestionId', type: AttributeType.STRING },
     });
+    tagTable(evalResultsTable, 'EvaluationResultsTable');
+    
     // add secondary index to sort EvaluationResultsTable by Question ID
     evalResultsTable.addGlobalSecondaryIndex({
       indexName: 'QuestionIndex',
@@ -76,12 +95,14 @@ export class TableStack extends Stack {
       partitionKey: { name: 'PartitionKey', type: AttributeType.STRING },
       sortKey: { name: 'Timestamp', type: AttributeType.STRING }, 
     });
+    tagTable(activeSystemPromptsTable, 'ActiveSystemPromptsTable');
     this.activeSystemPromptsTable = activeSystemPromptsTable;
 
     const stagedSystemPromptsTable = new Table(scope, 'StagedSystemPromptsTable', {
       partitionKey: { name: 'PartitionKey', type: AttributeType.STRING },
       sortKey: { name: 'Timestamp', type: AttributeType.STRING }, 
     });
+    tagTable(stagedSystemPromptsTable, 'StagedSystemPromptsTable');
     this.stagedSystemPromptsTable = stagedSystemPromptsTable;
 
     // Create User Profiles Table
@@ -91,6 +112,7 @@ export class TableStack extends Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       timeToLiveAttribute: 'ttl',
     });
+    tagTable(this.userProfilesTable, 'UserProfilesTable');
 
     // Create IEP Documents Table
     this.iepDocumentsTable = new dynamodb.Table(scope, 'IepDocumentsTable', {
@@ -100,6 +122,7 @@ export class TableStack extends Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       timeToLiveAttribute: 'ttl',
     });
+    tagTable(this.iepDocumentsTable, 'IepDocumentsTable');
 
     // Add GSI for querying documents by userId
     this.iepDocumentsTable.addGlobalSecondaryIndex({

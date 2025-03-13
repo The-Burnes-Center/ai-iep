@@ -5,6 +5,7 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { Construct } from "constructs";
 import { ChatBotApi } from "../chatbot-api";
 import { NagSuppressions } from "cdk-nag";
+import { getTagProps, tagResource } from '../tags';
 
 
 export interface WebsiteProps {  
@@ -27,6 +28,11 @@ export class Website extends Construct {
     const originAccessIdentity = new cf.OriginAccessIdentity(this, "S3OAI");
     props.websiteBucket.grantRead(originAccessIdentity);    
 
+    // Apply tags to the website bucket
+    tagResource(props.websiteBucket, {
+      'Resource': 'S3Bucket',
+      'Purpose': 'WebHosting'
+    });
 
     const distributionLogsBucket = new s3.Bucket(
       this,
@@ -39,6 +45,12 @@ export class Website extends Construct {
         enforceSSL: true,
       }
     );
+    
+    // Apply tags to the logs bucket
+    tagResource(distributionLogsBucket, {
+      'Resource': 'S3Bucket',
+      'Purpose': 'CloudFrontLogs'
+    });
 
     const distribution = new cf.CloudFrontWebDistribution(
       this,
@@ -123,6 +135,12 @@ export class Website extends Construct {
         ],
       }
     );
+    
+    // Apply tags to the CloudFront distribution
+    tagResource(distribution, {
+      'Resource': 'CloudFront',
+      'Purpose': 'WebsiteDelivery'
+    });
 
     this.distribution = distribution;
 
