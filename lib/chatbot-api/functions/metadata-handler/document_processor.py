@@ -14,6 +14,7 @@ from config import (
     PDF_EXTRACTION_GUIDANCE
 )
 from llm_service import invoke_claude, invoke_claude_3_5, CLAUDE_MODELS
+from database import format_data_for_dynamodb
 import time
 import uuid
 from datetime import datetime
@@ -21,6 +22,7 @@ import tiktoken
 from botocore.exceptions import ClientError
 import logging
 from itertools import groupby
+import base64
 
 # Configure logger
 logging.basicConfig(level=logging.INFO)
@@ -33,8 +35,7 @@ bedrock_runtime = boto3.client('bedrock-runtime')
 ANTHROPIC_MODEL = os.environ.get('ANTHROPIC_MODEL', 'anthropic.claude-3-5-sonnet-20240620-v1:0')
 
 # Constants for chunk processing
-# Increase max tokens per chunk to reduce the number of chunks and provide more context
-MAX_TOKENS_PER_CHUNK = 120000  # Increased from 80000 to reduce number of chunks
+MAX_TOKENS_PER_CHUNK = 50000  # Updated to 50,000 tokens as requested
 
 # Minimum meaningful chunk size in characters to avoid tiny chunks
 MIN_CHUNK_SIZE = 2000
@@ -100,11 +101,30 @@ def summarize_and_analyze_document(document_content, user_profile=None):
             # If it's already text, just use it
             text_content = document_content
         
-        # Attempt to further clean the text to remove binary content
-        text_content = improve_text_quality(text_content)
-        
         logger.info(f"Document word count: {len(text_content.split())} words")
         logger.info(f"Document token count: {get_token_count(text_content)}")
+        
+        # Process document in chunks
+        raw_chunks = process_document_in_chunks(text_content)
+        
+        # MAP phase: Process each chunk individually
+        logger.info(f"Starting MAP phase - processing {len(raw_chunks)} chunks individually")
+        processed_chunks = []
+        for i, chunk in enumerate(raw_chunks):
+            logger.info(f"Processing chunk {i+1}/{len(raw_chunks)} with LLM")
+            processed_chunk = process_single_chunk(chunk, i+1, len(raw_chunks))
+            processed_chunks.append(processed_chunk)
+            logger.info(f"Completed processing chunk {i+1}/{len(raw_chunks)}")
+        
+        # Combine results from all chunks
+        combined_result = combine_chunk_results(processed_chunks)
+        
+        # REDUCE phase: Generate final JSON analysis from combined processed chunks
+        logger.info("Starting REDUCE phase - generating final analysis from combined chunk results")
+        result = generate_final_json_analysis(combined_result)
+        
+        # Transform to simplified format for DynamoDB
+        result = transform_to_simplified_format(result)
         
         # Define target languages for translation based on user profile
         target_languages = []
@@ -146,61 +166,65 @@ def summarize_and_analyze_document(document_content, user_profile=None):
                     logger.info(f"Target languages for translation: {target_languages}")
                 else:
                     logger.info("No non-English languages found for translation")
-        else:
-            logger.info("No user profile provided, skipping translations")
         
-        # Always process document in chunks regardless of size
-        logger.info("Using chunked document processing approach")
-        # Process document in chunks
-        chunk_results = process_document_in_chunks(text_content)
-        
-        # Log diagnostic info about the chunked processing
-        logger.info(f"Processed document in {len(chunk_results)} chunks.")
-        
-        # Combine the results from all chunks
-        combined_text_analysis = combine_chunk_results(chunk_results)
-        
-        # Generate the final structured JSON analysis
-        result = generate_final_json_analysis(combined_text_analysis, target_languages)
-        
-        # Check if we need to translate
+        # Translate content if needed
         if target_languages:
-            logger.info(f"Translating into languages: {target_languages}")
-            
-            # Translate the summary
-            if 'summary' in result and result['summary']:
-                # Translate the document summary
-                try:
-                    translated_summary = translate_content(
-                        content=result['summary'],
-                        target_languages=target_languages
-                    )
-                    
-                    # Update the summary with translated versions
-                    if isinstance(translated_summary, dict):
-                        result['summary'] = translated_summary
-                except Exception as e:
-                    logger.error(f"Error translating summary: {str(e)}")
-            
-            # Translate the structured sections data
-            if 'sections' in result and result['sections']:
-                try:
-                    # Process each section
-                    for section_name, section_data in result['sections'].items():
-                        # Check if the section has a summary to translate
-                        if 'summary' in section_data and section_data['summary']:
-                            # Translate the section summary
-                            translated_summary = translate_content(
-                                content=section_data['summary'],
-                                target_languages=target_languages
-                            )
+            logger.info("Starting translation process")
+            try:
+                # Translate the summary if it exists
+                if 'summary' in result:
+                    summary = result.get('summary', '')
+                    if isinstance(summary, str):
+                        # Single string summary (English only)
+                        translated_summary = translate_content(
+                            content=summary,
+                            target_languages=target_languages
+                        )
+                        if isinstance(translated_summary, dict):
+                            # Store translated summaries directly in DynamoDB format
+                            for lang, trans_text in translated_summary.items():
+                                if lang != 'original':  # Skip the original English text
+                                    result['summaries']['M'][lang] = {'S': trans_text}
+                
+                # Translate the structured sections data
+                if 'sections' in result and 'M' in result['sections']:
+                    try:
+                        # Get English sections
+                        en_sections = result['sections']['M'].get('en', {}).get('M', {})
+                        
+                        # Process each language
+                        for target_lang in target_languages:
+                            # Initialize target language structure if not exists
+                            if target_lang not in result['sections']['M']:
+                                result['sections']['M'][target_lang] = {'M': {}}
                             
-                            # Update the section summary with translated versions
-                            if isinstance(translated_summary, dict):
-                                result['sections'][section_name]['summary'] = translated_summary
-                except Exception as e:
-                    logger.error(f"Error translating sections: {str(e)}")
-                    traceback.print_exc()
+                            # Process each section
+                            for section_name, section_data in en_sections.items():
+                                # Get English content
+                                en_content = section_data.get('M', {}).get('S', {}).get('S', '')
+                                
+                                if en_content:
+                                    # Translate the section content
+                                    translated_content = translate_content(
+                                        content=en_content,
+                                        target_languages=[target_lang]
+                                    )
+                                    
+                                    # Add translated content to result
+                                    if isinstance(translated_content, dict) and target_lang in translated_content:
+                                        result['sections']['M'][target_lang]['M'][section_name] = {
+                                            'M': {
+                                                'S': {
+                                                    'S': translated_content[target_lang]
+                                                }
+                                            }
+                                        }
+                    except Exception as e:
+                        logger.error(f"Error translating sections: {str(e)}")
+                        traceback.print_exc()
+            except Exception as e:
+                logger.error(f"Error during translation: {str(e)}")
+                traceback.print_exc()
         
         end_time = time.time()
         logger.info(f"Document processing completed in {end_time - start_time:.2f} seconds")
@@ -222,273 +246,132 @@ def summarize_and_analyze_document(document_content, user_profile=None):
 
 def process_document_in_chunks(text_content):
     """
-    Process a document in chunks by splitting the content and processing each chunk.
+    Split a document into manageable chunks based on token size.
+    This function now ONLY divides text into chunks without processing them.
     
     Args:
         text_content: The full text content to be processed
     
     Returns:
-        A list of results from each chunk, each containing plain text analysis
+        A list of raw text chunks
     """
     # Calculate approximate token count
     token_count = get_token_count(text_content)
     logger.info(f"Processing document with {token_count} tokens in chunks")
     
-    # Determine optimal chunk size based on token count
-    # Aim for fewer chunks with more context in each
-    target_chunk_count = max(1, min(5, (token_count // (MAX_TOKENS_PER_CHUNK // 2))))
-    logger.info(f"Target chunk count: {target_chunk_count}")
+    # If document is smaller than max chunk size, just use it as a single chunk
+    if token_count <= MAX_TOKENS_PER_CHUNK:
+        logger.info(f"Document fits in a single chunk")
+        return [text_content]
     
-    # Start with a minimum chunk size (in characters)
-    avg_chars_per_token = len(text_content) / max(1, token_count)
-    chars_per_chunk = int((MAX_TOKENS_PER_CHUNK // 2) * avg_chars_per_token)
-    
-    # Create chunk boundaries
+    # For larger documents, split by paragraphs to create better chunk boundaries
+    paragraphs = text_content.split('\n\n')
     chunks = []
+    current_chunk = ""
+    current_tokens = 0
     
-    # First attempt to extract just the readable text parts and filter out binary/encoding data
-    cleaned_text = clean_pdf_text(text_content)
-    if cleaned_text and len(cleaned_text) > MIN_CHUNK_SIZE:
-        logger.info(f"Using cleaned text version ({len(cleaned_text)} chars)")
-        text_to_process = cleaned_text
-    else:
-        logger.info("Using original text (cleaning didn't produce sufficient content)")
-        text_to_process = text_content
+    logger.info(f"Splitting document into chunks with approximately {MAX_TOKENS_PER_CHUNK} tokens each")
     
-    # Split by section or natural breaks if possible
-    section_boundaries = find_section_boundaries(text_to_process)
-    
-    if section_boundaries and len(section_boundaries) > 1:
-        logger.info(f"Splitting document into {len(section_boundaries)} natural sections")
-        
-        # Use the section boundaries to create chunks, merging small sections together
-        current_chunk = ""
-        current_chunk_tokens = 0
-        
-        for i in range(len(section_boundaries)):
-            start_idx = section_boundaries[i]
-            end_idx = section_boundaries[i+1] if i+1 < len(section_boundaries) else len(text_to_process)
+    for para in paragraphs:
+        # Skip empty paragraphs
+        if not para.strip():
+            continue
             
-            section_text = text_to_process[start_idx:end_idx]
-            section_tokens = get_token_count(section_text)
-            
-            # If adding this section would exceed our chunk size, finish current chunk
-            if current_chunk_tokens > 0 and current_chunk_tokens + section_tokens > MAX_TOKENS_PER_CHUNK:
-                chunks.append(current_chunk)
-                current_chunk = section_text
-                current_chunk_tokens = section_tokens
-            else:
-                # Otherwise, add to current chunk
-                if current_chunk:
-                    current_chunk += "\n\n"
-                current_chunk += section_text
-                current_chunk_tokens += section_tokens
+        para_tokens = get_token_count(para)
         
-        # Add the last chunk if it exists
-        if current_chunk:
+        # If adding this paragraph would exceed the chunk size, finish current chunk
+        if current_tokens > 0 and current_tokens + para_tokens > MAX_TOKENS_PER_CHUNK:
             chunks.append(current_chunk)
-    else:
-        # No natural section breaks found, use simple character-based splitting
-        logger.info("No natural sections found, splitting by character count")
-        
-        # Calculate a more accurate chunk size based on token estimate
-        chunk_size = min(chars_per_chunk, 100000)  # Cap at 100K chars to be safe
-        
-        # Split into chunks using simpler approach
-        for i in range(0, len(text_to_process), chunk_size):
-            chunk = text_to_process[i:i + chunk_size]
-            if len(chunk) > MIN_CHUNK_SIZE:  # Only add chunks with meaningful content
-                chunks.append(chunk)
+            current_chunk = para
+            current_tokens = para_tokens
+        else:
+            # Otherwise, add to current chunk
+            if current_chunk:
+                current_chunk += "\n\n"
+            current_chunk += para
+            current_tokens += para_tokens
+    
+    # Add the last chunk
+    if current_chunk:
+        chunks.append(current_chunk)
     
     # Ensure we have at least one chunk
     if not chunks:
         logger.warning("No valid chunks created, using full text as a single chunk")
-        chunks.append(text_to_process)
+        chunks.append(text_content)
     
     logger.info(f"Created {len(chunks)} chunks for processing")
-    
-    # Process each chunk in parallel (can be enhanced with async if needed)
-    chunk_results = []
-    
-    for i, chunk in enumerate(chunks):
-        # If not the first chunk, provide some context from the previous chunk
-        context = None
-        if i > 0:
-            # Provide last few paragraphs from the previous chunk
-            prev_chunk_preview = "\n".join(chunks[i-1].split("\n")[-10:])
-            context = {
-                "chunk_number": i-1,
-                "content_preview": prev_chunk_preview
-            }
-        
-        # Process the chunk
-        result = process_chunk_with_context(chunk, i+1, len(chunks), context)
-        chunk_results.append(result)
-    
-    return chunk_results
+    return chunks
 
-def clean_pdf_text(text_content):
+def process_single_chunk(chunk_text, chunk_index, total_chunks):
     """
-    Attempt to clean PDF text by removing binary data and encoding information.
+    Process a single chunk of text using the LLM to extract important information.
+    This is the MAP phase of the map-reduce pattern.
     
     Args:
-        text_content: The raw text content from the PDF
-    
+        chunk_text: The raw text chunk to process
+        chunk_index: The index of the current chunk
+        total_chunks: The total number of chunks
+        
     Returns:
-        Cleaned text with binary/encoding data removed or original if cleaning fails
+        str: Processed text analysis from the LLM
     """
     try:
-        # Remove common PDF binary patterns
-        cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\xFF]', '', text_content)
+        # Generate the prompt for chunk analysis using the function from config.py
+        prompt = get_chunk_analysis_prompt(chunk_text, chunk_index, total_chunks)
         
-        # Remove PDF object references and stream data
-        cleaned = re.sub(r'\d+ \d+ obj[\s\S]*?endobj', ' ', cleaned)
-        cleaned = re.sub(r'stream[\s\S]*?endstream', ' ', cleaned)
-        
-        # Remove font definitions and other technical PDF content
-        cleaned = re.sub(r'/Type\s*/[\w]+', ' ', cleaned)
-        cleaned = re.sub(r'/Font\s*<<[\s\S]*?>>', ' ', cleaned)
-        
-        # Remove PDF operators and syntax
-        cleaned = re.sub(r'^\s*[/\[\]()<>{}][\w/\s]*$', '', cleaned, flags=re.MULTILINE)
-        
-        # Normalize whitespace
-        cleaned = re.sub(r'\s+', ' ', cleaned)
-        
-        # If we've removed too much content, return the original
-        if len(cleaned) < len(text_content) * 0.1:
-            logger.warning("Cleaning removed too much content, using original")
-            return text_content
-        
-        return cleaned
-    except Exception as e:
-        logger.error(f"Error cleaning PDF text: {str(e)}")
-        return text_content
-
-def find_section_boundaries(text_content):
-    """
-    Find natural section boundaries in a document using common section header patterns.
-    
-    Args:
-        text_content: The document text content
-    
-    Returns:
-        List of character indices where sections begin
-    """
-    # Always include the beginning of the document
-    boundaries = [0]
-    
-    # Look for section header patterns
-    patterns = [
-        # 1. Roman numerals followed by a title
-        r'\n(?:(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII|XIII|XIV|XV|XVI|XVII|XVIII|XIX|XX)\.?\s+[A-Z][\w\s]+:?(?:\n|\r\n))',
-        
-        # 2. Numbered sections
-        r'\n(?:\d+\.(?:\d+\.)*\s+[A-Z][\w\s]+:?(?:\n|\r\n))',
-        
-        # 3. All caps headers that look like sections
-        r'\n(?:[A-Z]{3,}(?:[\s\-][A-Z]+)*(?::|\n|\r\n))',
-        
-        # 4. Form field patterns like "Student Name:"
-        r'\n(?:[A-Z][\w\s]+:(?:\s+|$))',
-        
-        # 5. Common IEP section headers
-        r'\n(?:(?:PRESENT\s+LEVELS|GOALS|OBJECTIVES|ACCOMMODATIONS|SERVICES|PLACEMENT|ELIGIBILITY|ASSESSMENT)[\s\w]*(?::|\n|\r\n))',
-        
-        # 6. Headers with underlines
-        r'\n([A-Z][\w\s]+)\n[-=_]{3,}'
-    ]
-    
-    # Find all matches
-    for pattern in patterns:
-        for match in re.finditer(pattern, text_content, re.IGNORECASE):
-            boundaries.append(match.start())
-    
-    # Remove near-duplicate boundaries (within 150 chars of each other)
-    boundaries.sort()
-    filtered_boundaries = [boundaries[0]]
-    
-    for boundary in boundaries[1:]:
-        if boundary - filtered_boundaries[-1] > 150:
-            filtered_boundaries.append(boundary)
-    
-    return filtered_boundaries
-
-def process_chunk_with_context(chunk_text, chunk_index, total_chunks, context=None):
-    """
-    Process a single chunk of the document with context information, returning plain text analysis.
-    
-    Args:
-        chunk_text (str): The chunk of text to process
-        chunk_index (int): Index of the current chunk
-        total_chunks (int): Total number of chunks
-        context (dict, optional): Context information for the chunk
-        
-    Returns:
-        str: Text analysis of the chunk
-    """
-    try:
-        # Create the prompt using the imported function
-        prompt = get_chunk_analysis_prompt(chunk_text, chunk_index, total_chunks, context)
-        
-        # Call Claude 3.5 Sonnet for this chunk
+        # Call Claude 3.5 Sonnet to process the chunk
         response = invoke_claude_3_5(
             prompt=prompt,
             temperature=0,
-            max_tokens=8000
+            max_tokens=4000
         )
         
-        # Log the raw output for debugging
-        print(f"[CHUNK {chunk_index}/{total_chunks}] Raw text analysis length: {len(response)}")
-        print(f"[CHUNK {chunk_index}/{total_chunks}] Raw text analysis preview: {response[:500]}...")
-        if len(response) > 500:
-            print(f"[CHUNK {chunk_index}/{total_chunks}] Raw text analysis end: ...{response[-200:]}")
-        
+        logger.info(f"Chunk {chunk_index}/{total_chunks} processed successfully")
         return response
-        
     except Exception as e:
-        logger.error(f"Error processing chunk: {str(e)}")
+        logger.error(f"Error processing chunk {chunk_index}/{total_chunks}: {str(e)}")
         traceback.print_exc()
-        return f"Error in chunk {chunk_index}/{total_chunks}: {str(e)}"
+        # Return a simple error message as the chunk result to avoid breaking the pipeline
+        return f"Error processing chunk {chunk_index}/{total_chunks}: {str(e)}\n\nOriginal chunk content (partial):\n{chunk_text[:1000]}..."
 
-def combine_chunk_results(chunk_results):
+def combine_chunk_results(processed_chunks):
     """
-    Combine text analyses from multiple chunks into a single text.
+    Combine processed text analyses from multiple chunks into a single text.
     
     Args:
-        chunk_results (list): List of text analyses from each chunk
+        processed_chunks (list): List of processed text analyses from each chunk
         
     Returns:
         str: Combined text analysis
     """
-    print(f"Combining {len(chunk_results)} text analyses")
+    logger.info(f"Combining {len(processed_chunks)} processed chunk analyses")
     
-    # Add a separator and chunk identifier before each chunk analysis
-    formatted_chunks = []
-    for i, analysis in enumerate(chunk_results):
-        formatted_chunks.append(f"\n\n--- CHUNK {i+1}/{len(chunk_results)} ANALYSIS ---\n\n{analysis}")
+    # Add separators between chunk analyses for clarity
+    combined_text = ""
     
-    # Join all analyses with separation
-    combined_text = "\n".join(formatted_chunks)
+    for i, chunk in enumerate(processed_chunks):
+        combined_text += f"\n\n--- CHUNK {i+1} ANALYSIS ---\n\n"
+        combined_text += chunk
     
-    print(f"Combined text analysis length: {len(combined_text)}")
-    print(f"Combined text analysis preview: {combined_text[:500]}...")
+    logger.info(f"Combined processed text analysis length: {len(combined_text)}")
+    logger.info(f"Combined text analysis preview: {combined_text[:500]}...")
     
     return combined_text
 
-def generate_final_json_analysis(combined_text_analysis, target_languages=None):
+def generate_final_json_analysis(combined_text_analysis):
     """
     Convert the combined text analysis into structured JSON format.
+    This is the REDUCE phase of our map-reduce pattern.
     
     Args:
-        combined_text_analysis (str): Combined text analysis from all chunks
-        target_languages (list, optional): List of language codes to include in the output
+        combined_text_analysis (str): Combined processed text analysis from all chunks
         
     Returns:
-        dict: Structured document analysis
+        dict: Structured document analysis in a simplified format
     """
     try:
-        # Create the prompt for generating the structured JSON using the combined function
+        # Create the prompt for generating the structured JSON using the config function
         prompt = get_json_analysis_prompt(combined_text_analysis)
         
         # Call Claude 3.5 Sonnet to generate the structured JSON
@@ -498,16 +381,15 @@ def generate_final_json_analysis(combined_text_analysis, target_languages=None):
             max_tokens=8000
         )
         
-        # Parse the response
+        # Parse the response to get JSON
         result = parse_document_analysis(response)
         
         if not result:
             logger.warning("Failed to parse JSON from final analysis")
             
-            # Retry with the same prompt but give a better warning
+            # Retry with the same prompt
             logger.info("Retrying with the same prompt")
             
-            # Try Claude 3.5 Sonnet for better handling of complex JSON 
             response = invoke_claude_3_5(
                 prompt=prompt,
                 temperature=0,
@@ -521,52 +403,49 @@ def generate_final_json_analysis(combined_text_analysis, target_languages=None):
             # Try to parse the JSON again
             result = parse_document_analysis(response)
         
-        # Transform the result to the simplified format if it's not already
-        if result and 'sections' in result and not is_simplified_format(result):
-            result = transform_to_simplified_format(result, target_languages)
-        
         logger.info(f"Successfully generated structured JSON from combined analysis")
+        
+        # Basic validation to ensure the response has the expected format
+        if not result.get('summary') or not result.get('sections'):
+            logger.warning("Generated JSON is missing required fields, adding defaults")
+            if not result.get('summary'):
+                result['summary'] = "No summary was generated from the document analysis."
+            
+            if not result.get('sections'):
+                result['sections'] = {
+                    "Student Information": "Not specified",
+                    "Present Levels of Performance": "Not specified",
+                    "Services": "Not specified",
+                    "Goals": "Not specified",
+                    "Accommodations": "Not specified"
+                }
+        
         return result
         
     except Exception as e:
         logger.error(f"Error generating final JSON analysis: {str(e)}")
         traceback.print_exc()
-        return None
-
-def is_simplified_format(result):
-    """Check if the result is already in the simplified format"""
-    if not result or 'sections' not in result:
-        return False
         
-    sections = result.get('sections', {})
-    if isinstance(sections, dict) and 'M' in sections and 'en' in sections.get('M', {}):
-        # Check format of first section in English
-        en_sections = sections.get('M', {}).get('en', {}).get('M', {})
-        if en_sections:
-            first_section = next(iter(en_sections.values()), {})
-            # If it has the simplified 'S' format, it's already simplified
-            return 'S' in first_section.get('M', {})
-    
-    return False
+        # Return a basic structure if everything fails
+        return {
+            "summary": "Error generating document analysis. Please try again.",
+            "sections": {
+                "Student Information": "Error processing document",
+                "Present Levels of Performance": "Error processing document",
+                "Services": "Error processing document",
+                "Goals": "Error processing document",
+                "Accommodations": "Error processing document"
+            }
+        }
 
 def transform_to_simplified_format(result, target_languages=None):
-    """Transform the detailed format to the simplified format
+    """Transform the simplified format to the DynamoDB format structure
     
     Args:
-        result: The result to transform
+        result: The result to transform from the LLM output
         target_languages: List of language codes to include (defaults to ['en'] if None)
     """
     try:
-        if 'sections' not in result:
-            return result
-            
-        simplified_result = {
-            'summaries': result.get('summaries', {}),
-            'sections': {
-                'M': {}
-            }
-        }
-        
         # Set default languages if none provided
         languages = target_languages if target_languages else ['en']
         
@@ -574,177 +453,69 @@ def transform_to_simplified_format(result, target_languages=None):
         if 'en' not in languages:
             languages = ['en'] + languages
         
-        # Process each language
+        # Create the base DynamoDB structure
+        dynamodb_result = {
+            'summaries': {
+                'M': {}
+            },
+            'sections': {
+                'M': {}
+            }
+        }
+        
+        # Process summary first
+        if 'summary' in result:
+            summary = result.get('summary', '')
+            
+            # Handle English summary
+            if isinstance(summary, str):
+                # Single string summary (English only)
+                dynamodb_result['summaries']['M']['en'] = {'S': summary}
+            elif isinstance(summary, dict):
+                # Summary with translations
+                for lang, content in summary.items():
+                    if lang == 'original':
+                        dynamodb_result['summaries']['M']['en'] = {'S': content}
+                    else:
+                        dynamodb_result['summaries']['M'][lang] = {'S': content}
+        
+        # Process each language for sections
         for lang in languages:
-            if lang not in result.get('sections', {}):
-                continue
-                
-            simplified_result['sections']['M'][lang] = {'M': {}}
+            # Initialize section structure for this language
+            if lang not in dynamodb_result['sections']['M']:
+                dynamodb_result['sections']['M'][lang] = {'M': {}}
             
-            # Process each section in the original format
-            for section_name, section_data in result['sections'].get(lang, {}).items():
-                # Skip sections that are not present
-                if not section_data.get('present', True):
-                    continue
-                    
-                # Create a simplified section entry
-                section_content = create_simplified_section_content(section_name, section_data)
-                
-                # Add the section to the simplified result with proper DynamoDB format
-                simplified_result['sections']['M'][lang]['M'][section_name] = {
-                    'M': {
-                        'content': {
-                            'S': section_content
+            # Get sections from the result - the LLM will now return a simplified structure
+            if 'sections' in result and isinstance(result['sections'], dict):
+                # Get English sections
+                for section_name, section_content in result['sections'].items():
+                    # Only add English content for now, translations will be handled separately
+                    if lang == 'en' and isinstance(section_content, str):
+                        dynamodb_result['sections']['M']['en']['M'][section_name] = {
+                            'M': {
+                                'S': {
+                                    'S': section_content
+                                }
+                            }
                         }
-                    }
-                }
         
-        return simplified_result
+        # Log the structure before applying translations
+        logger.info("Created DynamoDB format with sections for English")
+        
+        # Return the formatted result - this will be used directly without format_data_for_dynamodb
+        # since we're already creating the proper nested structure
+        return dynamodb_result
+        
     except Exception as e:
-        logger.error(f"Error transforming to simplified format: {str(e)}")
-        return result
-
-def create_simplified_section_content(section_name, section_data):
-    """Create simplified content for a section based on the section name and data"""
-    try:
-        content_parts = []
+        logger.error(f"Error transforming to DynamoDB format: {str(e)}")
+        traceback.print_exc()
         
-        # Add section name as a header
-        content_parts.append(f"Section: {section_name}")
-        
-        # Add summary if available
-        if 'summary' in section_data and section_data['summary']:
-            content_parts.append(section_data['summary'])
-            
-        # Add key points if available
-        if 'key_points' in section_data and section_data['key_points']:
-            key_points_str = ", ".join([f"{k}: {v}" for k, v in section_data['key_points'].items()])
-            if key_points_str:
-                content_parts.append(f"Key points: {key_points_str}")
-                
-        # Add important dates if available
-        if 'important_dates' in section_data and section_data['important_dates']:
-            dates_str = ", ".join(section_data['important_dates'])
-            if dates_str:
-                content_parts.append(f"Important dates: {dates_str}")
-                
-        # Add parent actions if available
-        if 'parent_actions' in section_data and section_data['parent_actions']:
-            actions_str = ", ".join(section_data['parent_actions'])
-            if actions_str:
-                content_parts.append(f"Parent actions: {actions_str}")
-                
-        # Join all parts with double newlines
-        return "\n\n".join(content_parts)
-    except Exception as e:
-        logger.error(f"Error creating simplified section content: {str(e)}")
-        return f"Error processing section content for {section_name}"
-
-def improve_text_quality(text_content):
-    """
-    Apply multiple text cleaning techniques to improve the quality of extracted text.
-    Specialized for IEP documents.
-    
-    Args:
-        text_content: The raw text content to clean
-    
-    Returns:
-        Cleaned text with improved quality
-    """
-    try:
-        # Step 1: Remove non-printable characters
-        printable_text = re.sub(r'[^\x20-\x7E\n\r\t]', ' ', text_content)
-        
-        # Step 2: Remove PDF specific markers and commands
-        pdf_cleaned = re.sub(r'(\d+ \d+ obj)|endobj|stream|endstream|xref|trailer|startxref|\%EOF', ' ', printable_text)
-        
-        # Step 3: Remove font definitions and other technical PDF content
-        font_cleaned = re.sub(r'/Type\s*/[\w]+|/Font\s*<<.*?>>|/F\d+\s+\d+\s+\d+|/Length\s+\d+', ' ', pdf_cleaned)
-        
-        # Step 4: Remove PDF operators such as Tf, Tm, TD, etc.
-        operators_cleaned = re.sub(r'\b[0-9.]+ [0-9.]+ [0-9.]+ [0-9.]+ [0-9.]+ [0-9.]+ Tm\b|\b[0-9.]+ [0-9.]+ TD\b|\b[0-9.]+ [0-9.]+ Td\b|\b/F\d+ [0-9.]+ Tf\b', ' ', font_cleaned)
-        
-        # Step 5: Normalize whitespace (collapse multiple spaces, line breaks)
-        whitespace_normalized = re.sub(r'\s+', ' ', operators_cleaned).strip()
-        
-        # Step 6: Try to identify and extract sections that look like IEP content
-        # Look for common IEP section headers
-        iep_sections = []
-        section_patterns = [
-            r'((?:PRESENT|CURRENT)\s+LEVELS?\s+(?:OF|IN)?\s+(?:ACADEMIC\s+)?(?:ACHIEVEMENT|PERFORMANCE|FUNCTIONING).*?)(?=GOAL|OBJECTIVE|SERVICES|ACCOMMODATIONS|PLACEMENT|\Z)',
-            r'(SPECIAL\s+EDUCATION\s+(?:AND\s+RELATED\s+)?SERVICES.*?)(?=GOAL|OBJECTIVE|ACCOMMODATIONS|PLACEMENT|\Z)',
-            r'(MEASURABLE\s+(?:ANNUAL\s+)?GOALS?.*?)(?=SERVICES|ACCOMMODATIONS|PLACEMENT|\Z)',
-            r'(ACCOMMODATIONS\s+(?:AND|OR)\s+MODIFICATIONS.*?)(?=SERVICES|GOAL|OBJECTIVE|PLACEMENT|\Z)',
-            r'(EDUCATIONAL\s+PLACEMENT.*?)(?=SERVICES|GOAL|OBJECTIVE|ACCOMMODATIONS|\Z)',
-            r'(ELIGIBILITY\s+(?:DETERMINATION|STATEMENT).*?)(?=PRESENT|CURRENT|SERVICES|GOAL|OBJECTIVE|ACCOMMODATIONS|PLACEMENT|\Z)',
-            r'(PARENT(?:/GUARDIAN)?\s+(?:INVOLVEMENT|PARTICIPATION|CONSENT).*?)(?=PRESENT|CURRENT|SERVICES|GOAL|OBJECTIVE|ACCOMMODATIONS|PLACEMENT|\Z)'
-        ]
-        
-        for pattern in section_patterns:
-            matches = re.finditer(pattern, whitespace_normalized, re.IGNORECASE | re.DOTALL)
-            for match in matches:
-                if match.group(1) and len(match.group(1)) > 50:  # Only include substantial matches
-                    iep_sections.append(match.group(1))
-        
-        # Step 7: Extract text blocks that look meaningful (more than 3 words together)
-        text_blocks = re.findall(r'([A-Za-z,\.\(\)\-\'\"]+(?: [A-Za-z,\.\(\)\-\'\"]+){5,})', whitespace_normalized)
-        
-        # If we have IEP sections, prioritize those
-        if iep_sections and len(iep_sections) >= 2:  # At least 2 sections to be meaningful
-            logger.info(f"Found {len(iep_sections)} IEP sections")
-            meaningful_text = '\n\n'.join(iep_sections)
-            return meaningful_text
-        
-        # If we found meaningful text blocks, join them with line breaks
-        if text_blocks and len(text_blocks) > 10:  # Only if we have a meaningful number of blocks
-            # Filter blocks to focus on educational/IEP-related content
-            iep_keywords = [
-                'student', 'education', 'learning', 'goal', 'objective', 'service', 'accommodation', 
-                'placement', 'assessment', 'evaluation', 'instruction', 'teacher', 'classroom', 
-                'behavior', 'skill', 'level', 'performance', 'achievement', 'parent', 'meeting', 
-                'eligibility', 'disability', 'program', 'support', 'curriculum', 'iep', 'school'
-            ]
-            
-            # Prioritize blocks with IEP keywords
-            scored_blocks = []
-            for block in text_blocks:
-                score = 0
-                block_lower = block.lower()
-                for keyword in iep_keywords:
-                    if keyword in block_lower:
-                        score += 1
-                scored_blocks.append((block, score))
-            
-            # Sort by score (higher first) and keep only blocks with score > 0
-            relevant_blocks = [block for block, score in sorted(scored_blocks, key=lambda x: x[1], reverse=True) if score > 0]
-            
-            # If we have relevant blocks, use those, otherwise use all blocks
-            if relevant_blocks:
-                logger.info(f"Found {len(relevant_blocks)} relevant text blocks out of {len(text_blocks)} total")
-                meaningful_text = '\n\n'.join(relevant_blocks)
-            else:
-                logger.info(f"Using all {len(text_blocks)} text blocks (no IEP-specific content found)")
-                meaningful_text = '\n\n'.join(text_blocks)
-                
-            # Check if we have enough content
-            if len(meaningful_text) > 500:  # Arbitrary threshold for meaningful content
-                return meaningful_text
-        
-        # If the above approaches don't yield good results, try a simpler cleaner
-        # that focuses on removing obviously binary content
-        simple_cleaned = clean_pdf_text(text_content)
-        
-        # Compare the results and return the better one
-        if simple_cleaned and len(simple_cleaned) > len(whitespace_normalized) * 0.8:
-            logger.info("Using simple cleaned text version")
-            return simple_cleaned
-        
-        logger.info("Using enhanced cleaned text version")
-        return whitespace_normalized
-    except Exception as e:
-        logger.error(f"Error in improve_text_quality: {str(e)}")
-        # If all else fails, return the original
-        return text_content
+        # Attempt a basic transformation as a fallback
+        try:
+            return format_data_for_dynamodb(result)
+        except Exception as fallback_error:
+            logger.error(f"Fallback formatting also failed: {str(fallback_error)}")
+            return result
 
 def extract_text_from_pdf(file_content):
     """Enhanced method to extract text from PDF using PyPDF2."""
@@ -885,24 +656,28 @@ def extract_text_with_documentai(file_content):
         # Process the document with Document AI
         logger.info("Processing document with Document AI")
         
-        # Create a request to process the PDF
-        request = {
-            "raw_document": {
-                "content": file_content,
-                "mime_type": "application/pdf"
-            }
-        }
-        
-        # Call DocumentAI to process the document
+        # Get project and processor information from environment
         project_id = os.environ.get('DOCUMENT_AI_PROJECT_ID', '')
-        location = os.environ.get('DOCUMENT_AI_LOCATION', 'us')
+        location = os.environ.get('DOCUMENT_AI_LOCATION', 'us-central1')  # Default to us-central1
         processor_id = os.environ.get('DOCUMENT_AI_PROCESSOR_ID', '')
         
         if not project_id or not processor_id:
             logger.warning("DocumentAI configuration missing, skipping Document AI processing")
             return None
-            
-        # Process the document without the name parameter
+        
+        # Format the processor name correctly
+        name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
+        
+        # Create a request to process the PDF - correct structure according to latest API
+        request = {
+            "name": name,
+            "raw_document": {
+                "content": base64.b64encode(file_content).decode('utf-8'),  # Base64 encode the content
+                "mime_type": "application/pdf"
+            }
+        }
+        
+        # Call DocumentAI with correct parameters - only pass request parameter
         response = documentai_client.process_document(request=request)
         
         # Extract the text from the response

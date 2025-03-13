@@ -202,112 +202,53 @@ def get_json_analysis_prompt(combined_text_analysis):
     # Combine all section guides
     extraction_guide = "EXTRACTION GUIDE - Extract this information from the document analysis:" + "".join(section_guides)
     
-    # Create JSON structure template
-    json_structure = {
-        "summary": "Overall comprehensive summary of the IEP document in 2-3 paragraphs",
-        "sections": {
-            "M": {
-                "LANGUAGE_CODE": {
-                    "M": {
-                        "Student Information": {
-                            "M": {
-                                "S": {
-                                    "S": "Name, age, grade level, primary disability, secondary disability"
-                                }
-                            }
-                        },
-                        "Present Levels of Performance": {
-                            "M": {
-                                "S": {
-                                    "S": "Detailed description of the student's current abilities and challenges"
-                                }
-                            }
-                        },
-                        "Services": {
-                            "M": {
-                                "S": {
-                                    "S": "All specialized services with exact hours/week (e.g., 'Specialized Instruction: 5 hours weekly')"
-                                }
-                            }
-                        },
-                        "Goals": {
-                            "M": {
-                                "S": {
-                                    "S": "Summary of academic, behavioral, and developmental goals"
-                                }
-                            }
-                        },
-                        "Accommodations": {
-                            "M": {
-                                "S": {
-                                    "S": "List of classroom, testing, and other accommodations"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    # Convert the structure to a formatted string
-    json_template = json.dumps(json_structure, indent=2)
-    
-    # Example format for clarity
+    # Example of the expected output format (simplified DynamoDB format)
     example_format = """
 EXAMPLE OUTPUT FORMAT:
 {
   "summary": "This IEP is for John Smith, a 10-year-old 4th grader with Autism and Speech/Language Impairment...",
   "sections": {
-    "M": {
-      "en": {
-        "M": {
-          "Student Information": {
-            "M": {
-              "S": {
-                "S": "Name: John Smith, Age: 10, Grade: 4th, Primary disability: Autism, Secondary disability: Speech/Language Impairment"
-              }
-            }
-          },
-          "Present Levels of Performance": {
-            "M": {
-              "S": {
-                "S": "Reading: Can decode at grade level but struggles with comprehension. Math: Knows addition but struggles with subtraction and regrouping. Writing: Can form letters but has difficulty with coherent paragraphs. Communication: Speech is 60% intelligible to unfamiliar listeners."
-              }
-            }
-          }
-        }
-      }
-    }
+    "Student Information": "Name: John Smith, Age: 10, Grade: 4th, Primary disability: Autism, Secondary disability: Speech/Language Impairment",
+    "Present Levels of Performance": "Reading: Can decode at grade level but struggles with comprehension. Math: Knows addition but struggles with subtraction and regrouping. Writing: Can form letters but has difficulty with coherent paragraphs. Communication: Speech is 60% intelligible to unfamiliar listeners.",
+    "Services": "Specialized Academic Instruction: 5 hours weekly, Speech Therapy: 1.7 hours weekly, Occupational Therapy: 0.5 hours weekly",
+    "Goals": "Reading: Will improve comprehension from 50% to 80% accuracy. Math: Will learn regrouping for double-digit addition/subtraction with 85% accuracy. Speech: Will increase intelligibility to 80% with unfamiliar listeners.",
+    "Accommodations": "Visual supports, peer buddy, extra time for assignments, separate setting for assessments, alternate response methods, scaffolded writing supports"
   }
 }
 """
     
     return f"""
-Human: You are an expert at analyzing IEP (Individualized Education Program) documents. You've received analysis from multiple document chunks, and now need to create a structured summary in DynamoDB-compatible format.
+Human: You are an expert at analyzing IEP (Individualized Education Program) documents. You've received pre-processed analysis from multiple document chunks, and now need to create a structured summary.
 
 {PDF_EXTRACTION_GUIDANCE}
 
 {extraction_guide}
 
-Here is the combined analysis from all document chunks:
+Here is the combined analysis from all document chunks that have already been processed:
 
 {combined_text_analysis}
 
-Based on this analysis, extract the most important information and format it as a JSON object with EXACTLY this structure for DynamoDB compatibility:
+TASK:
+Using the pre-processed chunk analyses, create a final structured summary. Each chunk has already been analyzed for IEP sections, so you'll need to:
 
-{json_template}
+1. Combine information across chunks to form a complete picture
+2. Resolve any conflicts or repetitions in the analysis
+3. Create a unified summary that captures the most important elements
+4. Structure the final output in a clean JSON format
+
+Based on this analysis, extract the most important information and format it as a JSON object:
+
+{example_format}
 
 IMPORTANT REQUIREMENTS:
-1. You MUST use EXACTLY this JSON structure with "M" and "S" keys - this is required for DynamoDB.
-2. Replace "LANGUAGE_CODE" with "en" - we're analyzing in English.
-3. For each section, include ALL relevant information from the extraction guide as a single string.
-4. Be EXTREMELY precise about service times and ALWAYS use hours/week (e.g., "5 hours weekly").
-5. Format with clear separators (e.g., "Name: John Smith, Age: 10").
-6. If information is missing for a field, write "Not specified" rather than leaving it blank.
-7. Focus on OBJECTIVE facts from the document - do not add interpretations.
-8. Ensure the summary captures the most important elements of the IEP.
-9. If service times are in minutes, CONVERT to hours (divide by 60) and round to nearest 0.5 hour.
+1. Create a concise but comprehensive summary of the entire IEP (2-3 paragraphs)
+2. For each section, include ALL relevant information as a single string
+3. Be EXTREMELY precise about service times and ALWAYS use hours/week (e.g., "5 hours weekly")
+4. Format with clear separators (e.g., "Name: John Smith, Age: 10")
+5. If information is missing for a field, write "Not specified" rather than leaving it blank
+6. Focus on OBJECTIVE facts from the document - do not add interpretations
+7. Use section titles exactly as shown in the example format
+8. Always CONVERT service times from minutes to hours (divide by 60) and format as "X hours weekly"
 
 {JSON_FORMATTING_INSTRUCTIONS}
 
@@ -323,6 +264,7 @@ def get_all_tags():
 def get_chunk_analysis_prompt(chunk_text, chunk_index, total_chunks, context=None):
     """
     Generate a prompt for analyzing a single chunk of text from an IEP document.
+    Optimized for map-reduce pattern to extract key information.
     
     Args:
         chunk_text: The chunk of text to analyze
@@ -346,36 +288,51 @@ Here is the end of the previous chunk to provide continuity:
     # Generate section list for prompt
     section_names = ", ".join([f"'{name}' ({desc})" for name, desc in IEP_SECTIONS.items()])
     
+    # Create a section-specific guide for extraction
+    section_extraction_guide = ""
+    for section_name, key_points in SECTION_KEY_POINTS.items():
+        section_extraction_guide += f"\n{section_name.upper()}:\n"
+        for point in key_points:
+            section_extraction_guide += f"- {point}\n"
+    
     # Create the prompt with context and PDF guidance
     prompt = f"""
-Human: Please analyze this section (chunk {chunk_index}/{total_chunks}) of an IEP document.
+Human: You are an educational document analyst specializing in IEPs. Please analyze chunk {chunk_index}/{total_chunks} of an IEP document.
 
 {PDF_EXTRACTION_GUIDANCE}
 
 {context_text}
+TASK:
+Your task is to extract and organize key information from this chunk of an IEP document. You're part of a map-reduce system:
+- You're processing one chunk of the document (the MAP phase)
+- Your analysis will later be combined with other chunks (the REDUCE phase)
+
 For this chunk, please:
 
 1. Identify any IEP sections present in this text from among: {section_names}
-2. For each identified section:
-   - Provide a clear summary
-   - Note key information such as:
-     * Student information (name, age, grade, disabilities)
-     * Academic performance details
-     * Service types and hours/frequency (ALWAYS convert minutes to hours, e.g. 300 minutes = 5 hours weekly)
-     * Goal descriptions
-     * Accommodation descriptions
-   - List any important dates mentioned
-   - List any actions parents need to take
-   - Describe where in the document this section appears
 
-If this chunk contains PDF binary data, encoding information, or other non-readable content, please try to:
-1. Identify and extract any readable text that might be present
-2. Mention that the chunk contains technical PDF data
-3. Focus your analysis on any meaningful content you can find
+2. For each identified section, extract information in a clear, organized format:
+   a) Write the section name (e.g., "PRESENT LEVELS OF PERFORMANCE:")
+   b) Extract all key information for that section
+   c) Be especially careful to note:
+      - Student details (name, age, grade, disabilities)
+      - Academic performance in different subjects
+      - Service types with EXACT hours/frequency (ALWAYS convert minutes to hours, e.g., 300 minutes = 5 hours weekly)
+      - Specific goals in different areas
+      - Specific accommodations and modifications
+      - Important dates
+      - Parent actions required
 
-IMPORTANT: Even if the text appears fragmented or partially encoded, please extract whatever meaningful information you can find.
+KEY INFORMATION TO EXTRACT FROM EACH SECTION:
+{section_extraction_guide}
 
-Do not try to generate structured JSON for this chunk. Instead, provide a clear text analysis that describes what you found in this chunk. This will be combined with analyses of other chunks later.
+SPECIAL INSTRUCTIONS:
+- If this chunk contains PDF binary data or non-readable content, extract any meaningful text you can find
+- Always convert service time from minutes to hours (300 minutes = 5 hours) and format as "X hours weekly"
+- Be precise about quantities, dates, and names
+- Include direct quotes when they provide important details
+- Organize information by section for easy reference in the reduce phase
+- DO NOT try to generate JSON - just provide clear text analysis
 
 Chunk {chunk_index}/{total_chunks} content:
 
