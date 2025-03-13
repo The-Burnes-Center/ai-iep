@@ -62,7 +62,8 @@
     "sections.accommodations": "Accommodations",
     "sections.goals": "Goals",
     "sections.services": "Services",
-    "sections.presentLevels": "Present Levels of Performance",
+    "sections.placement": "Placement",
+    "sections.presentLevels": "Present Levels of Performance",    
 
     "upload.title": "Upload IEP Document",
     "upload.maxSize": "Maximum file size: 100MB.",

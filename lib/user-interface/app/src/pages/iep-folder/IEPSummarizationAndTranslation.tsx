@@ -49,7 +49,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     { apiName: "Accommodations", displayName: t('sections.accommodations') },
     { apiName: "Goals", displayName: t('sections.goals') },
     { apiName: "Services", displayName: t('sections.services') },
-    { apiName: "Present Levels of Performance", displayName: t('sections.presentLevels') }
+    { apiName: "Placement", displayName: t('sections.placement') },
+    { apiName: "Present Levels", displayName: t('sections.presentLevels') }
   ];
 
   // Function to get display name for a section
@@ -156,6 +157,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     // Extract content by traversing M -> S -> S with type safety
                     const sectionContentObj = sectionContent as any;
                     const content = sectionContentObj?.M?.S?.S || '';
+
+                    console.log("These are extracted sections",extractedSections);
                     
                     extractedSections.push({ 
                       name: sectionName,
