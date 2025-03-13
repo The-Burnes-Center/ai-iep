@@ -133,7 +133,7 @@ export class StepFunctionsStack extends Construct {
               }),
             environment: {
                 "GENERATE_RESPONSE_LAMBDA_NAME" : generateResponseFunction.functionName,
-                "BEDROCK_MODEL_ID" : "anthropic.claude-3-haiku-20240307-v1:0",
+                "BEDROCK_MODEL_ID" : "anthropic.claude-3-5-sonnet-20241022-v2:0",
                 "TEST_CASES_BUCKET" : props.evalTestCasesBucket.bucketName
             },
             timeout: cdk.Duration.minutes(15),

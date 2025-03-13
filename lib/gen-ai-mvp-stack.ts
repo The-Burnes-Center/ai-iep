@@ -6,6 +6,7 @@ import { AuthorizationStack } from "./authorization"
 import { UserInterface } from "./user-interface"
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
+import { applyTags } from './tags';
 
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
@@ -34,5 +35,9 @@ export class GenAiMvpStack extends cdk.Stack {
       api : chatbotAPI
     })
     
+    // Apply tags to all resources in the stack
+    applyTags(this, {
+      'Stack': id,
+    });
   }
 }

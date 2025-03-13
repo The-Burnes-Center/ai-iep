@@ -7,6 +7,7 @@ import * as cr from 'aws-cdk-lib/custom-resources'
 import { Construct } from "constructs";
 import { aws_opensearchserverless as opensearchserverless } from 'aws-cdk-lib';
 import { stackName } from "../../constants"
+import { STANDARD_TAGS } from '../../tags';
 
 export interface OpenSearchStackProps {
   
@@ -14,24 +15,22 @@ export interface OpenSearchStackProps {
 
 export class OpenSearchStack extends cdk.Stack {
 
-  public readonly openSearchCollection : opensearchserverless.CfnCollection;  
-  public readonly collectionName : string;
-  public readonly knowledgeBaseRole : iam.Role;  
-  public readonly lambdaCustomResource : cdk.CustomResource;
+  public readonly openSearchCollectionId: string;  
+  public readonly collectionName: string;
+  public readonly knowledgeBaseRole: iam.Role;  
+  public readonly lambdaCustomResource: cdk.CustomResource;
   // public readonly indexTrigger : triggers.Trigger;
   
   constructor(scope: Construct, id: string, props: OpenSearchStackProps) {
     super(scope, id);
 
-    this.collectionName = `${stackName.toLowerCase()}-oss-collection`
-    const openSearchCollection = new opensearchserverless.CfnCollection(scope, 'OpenSearchCollection', {
-      name: this.collectionName,      
-      description: `OpenSearch Serverless Collection for ${stackName}`,
-      standbyReplicas: 'DISABLED',      
-      type: 'VECTORSEARCH',
-    });
-
-    // create encryption policy first
+    this.collectionName = `${stackName.toLowerCase()}-oss-collection`;
+    
+    // Use the existing OpenSearch collection ID directly
+    // This prevents CloudFormation from trying to replace the resource
+    this.openSearchCollectionId = 'xd95i6w6setz2ov8o2je';
+    
+    // Create policies but don't link them to the collection
     const encPolicy = new opensearchserverless.CfnSecurityPolicy(scope, 'OSSEncryptionPolicy', {
       name: `${stackName.toLowerCase().slice(0,10)}-oss-enc-policy`,
       policy: `{"Rules":[{"ResourceType":"collection","Resource":["collection/${this.collectionName}"]}],"AWSOwnedKey":true}`,
@@ -51,10 +50,28 @@ export class OpenSearchStack extends cdk.Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole")
       ]
     });    
+    
+    // Apply tags directly using CDK Tags
+    cdk.Tags.of(indexFunctionRole).add('Resource', 'IAMRole');
+    cdk.Tags.of(indexFunctionRole).add('Purpose', 'OpenSearch Index Creation');
+    
+    // Add standard tags
+    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+      cdk.Tags.of(indexFunctionRole).add(key, value);
+    });
 
     const knowledgeBaseRole = new iam.Role(scope, "KnowledgeBaseRole", {
       assumedBy: new iam.ServicePrincipal('bedrock.amazonaws.com'),      
-    })
+    });
+    
+    // Apply tags directly using CDK Tags
+    cdk.Tags.of(knowledgeBaseRole).add('Resource', 'IAMRole');
+    cdk.Tags.of(knowledgeBaseRole).add('Purpose', 'Knowledge Base Access');
+    
+    // Add standard tags
+    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+      cdk.Tags.of(knowledgeBaseRole).add(key, value);
+    });
 
     this.knowledgeBaseRole = knowledgeBaseRole;
 
@@ -94,11 +111,17 @@ export class OpenSearchStack extends cdk.Stack {
     ])
     })
 
-    openSearchCollection.addDependency(encPolicy);
-    openSearchCollection.addDependency(networkPolicy);
-    openSearchCollection.addDependency(accessPolicy);
-
-    this.openSearchCollection = openSearchCollection;
+    // There's no openSearchCollection to apply tags to, so remove this code
+    // Apply tags to the collection via CDK, which should update tags without replacement
+    // This approach uses AWS::TagResource operations instead of inline tags
+    // which should allow updating tags without replacing the collection
+    // Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+    //   cdk.Tags.of(openSearchCollection).add(key, value);
+    // });
+    // cdk.Tags.of(openSearchCollection).add('Resource', 'OpenSearchCollection');
+    
+    // For resources that are sensitive to replacement, we'll skip tagging
+    // to avoid risking replacement of the OpenSearch Collection
 
     const openSearchCreateIndexFunction = new lambda.Function(scope, 'OpenSearchCreateIndexFunction', {
       runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
@@ -115,20 +138,27 @@ export class OpenSearchStack extends cdk.Stack {
       handler: 'lambda_function.lambda_handler', 
       role: indexFunctionRole,
       environment: {
-        COLLECTION_ENDPOINT : `${openSearchCollection.attrId}.${cdk.Stack.of(this).region}.aoss.amazonaws.com`,
+        COLLECTION_ENDPOINT : `${this.openSearchCollectionId}.${cdk.Stack.of(this).region}.aoss.amazonaws.com`,
         INDEX_NAME : `knowledge-base-index`,
         EMBEDDING_DIM : "1024",
         REGION : cdk.Stack.of(this).region
       },
       timeout: cdk.Duration.seconds(120)
     });
+    
+    // Apply tags to Lambda function
+    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+      cdk.Tags.of(openSearchCreateIndexFunction).add(key, value);
+    });
+    cdk.Tags.of(openSearchCreateIndexFunction).add('Resource', 'Lambda');
+    cdk.Tags.of(openSearchCreateIndexFunction).add('Purpose', 'OpenSearch Index Creation');
 
     indexFunctionRole.addToPolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
         'aoss:*'
       ],
-      resources: [`arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${openSearchCollection.attrId}`]
+      resources: [`arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${this.openSearchCollectionId}`]
     }));
 
     
