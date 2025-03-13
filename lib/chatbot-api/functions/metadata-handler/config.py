@@ -82,6 +82,16 @@ DOCUMENT_ANALYSIS_SYSTEM_MSG = 'You are an expert in analyzing educational docum
 SUMMARY_SYSTEM_MSG = 'You are an expert in summarizing IEP documents in a parent-friendly manner that captures the essential information.'
 CHUNK_ANALYSIS_SYSTEM_MSG = 'You are an expert in analyzing and summarizing educational documents, especially Individualized Education Programs (IEPs).'
 
+# Enhanced prompt instructions to handle partial/encoded PDF content
+PDF_EXTRACTION_GUIDANCE = """
+IMPORTANT PDF PROCESSING INSTRUCTIONS:
+1. If you encounter text that appears to be PDF encoding or binary data, ignore it and focus only on the readable content.
+2. If a chunk appears to be mostly technical PDF structure information, report this and focus on any readable content.
+3. Attempt to make connections between fragmented text by inferring context from headings and formatting.
+4. For partially readable content, extract whatever meaningful information is available rather than refusing to analyze.
+5. Recognize common IEP formatting patterns even when fragments of text are present.
+"""
+
 # JSON formatting instructions to ensure valid parseable output
 JSON_FORMATTING_INSTRUCTIONS = """
 IMPORTANT JSON FORMATTING REQUIREMENTS:
@@ -106,7 +116,11 @@ def get_document_analysis_prompt(text_content):
         A formatted prompt string for the LLM
     """
     prompt = f"""
-Human: I need you to analyze the following document which is an Individualized Education Program (IEP) for a student. An IEP is a legal document that outlines the special education services a student will receive, based on their needs. Please:
+Human: I need you to analyze the following document which is an Individualized Education Program (IEP) for a student. An IEP is a legal document that outlines the special education services a student will receive, based on their needs. 
+
+{PDF_EXTRACTION_GUIDANCE}
+
+Please:
 
 1. Provide a comprehensive summary of the document (1-3 paragraphs).
 2. Identify and extract the key sections of the IEP.
@@ -127,8 +141,9 @@ The sections should include (if present in the document):
 - Information about Informed Consent
 - Any other important sections you identify
 
+Even if some sections are partially readable or fragmented, please extract whatever meaningful information you can find. If a section appears to be missing completely, indicate that it's not present.
+
 Your analysis should be structured as valid JSON with the following format:
-```json
 {{
   "summary": "Overall comprehensive summary of the document",
   "sections": {{
@@ -151,7 +166,6 @@ Your analysis should be structured as valid JSON with the following format:
     ... (other sections) ...
   }}
 }}
-```
 
 Make sure to only include sections that actually appear in the document, and set "present" to false if a standard section is not found.
 
@@ -223,11 +237,15 @@ def get_final_json_analysis_prompt(combined_text_analysis):
     return f"""
 Human: You are an expert at analyzing IEP (Individualized Education Program) documents. You previously analyzed a document in chunks, and I need you to generate a comprehensive structured summary from those analyses.
 
+{PDF_EXTRACTION_GUIDANCE}
+
+Please note that some chunks may contain PDF binary data or encoding information that isn't useful. Focus on extracting information from the readable parts of the analysis.
+
 Here is the combined analysis:
 
 {combined_text_analysis}
 
-Please extract all important information and format it as a JSON object with the following structure:
+Based on the readable portions of the document, please extract all important information and format it as a JSON object with the following structure:
 {{
   "summary": "Overall comprehensive summary of the entire document in 2-3 paragraphs",
   "sections": {{
@@ -258,12 +276,14 @@ Please extract all important information and format it as a JSON object with the
   }}
 }}
 
-Important notes:
-1. Only include sections that are actually present in the document
-2. For each section, set "present" to true if the section exists, false otherwise
-3. Include any other important sections that were found in the document but aren't listed above
-4. Make sure to include all important dates, actions for parents, and any significant numbers (hours of services, etc.)
-5. Return valid JSON without any additional text, explanations, or markdown formatting
+IMPORTANT:
+1. Even if some sections are partially readable or fragmented, please extract whatever meaningful information you can find.
+2. If a section appears to be missing completely, set "present" to false but include a minimal structure.
+3. The document may have encoding issues, so focus on any readable text you can find in the analysis.
+4. Be sure to include all standard IEP sections even if you have minimal information for some of them.
+5. Make reasonable inferences about section content based on limited text if necessary.
+
+Return valid JSON without any additional text, explanations, or markdown formatting.
 """
 
 def get_simplified_json_analysis_prompt(combined_text_analysis):
@@ -282,6 +302,8 @@ Human: You need to extract a structured summary from this document analysis:
 
 {combined_text_analysis}
 
+{PDF_EXTRACTION_GUIDANCE}
+
 Format your response as a simple JSON with:
 1. An overall summary 
 2. Sections found in the document
@@ -298,6 +320,8 @@ Example format:
     }}
   }}
 }}
+
+Please extract information from any readable content, even if parts of the document appear to be binary data or encoding information. Focus on the meaningful text portions.
 
 Return ONLY the JSON without explanation or commentary.
 """
@@ -430,9 +454,11 @@ Here is the end of the previous chunk to provide continuity:
 
 """
 
-    # Create the prompt with context
+    # Create the prompt with context and PDF guidance
     prompt = f"""
 Human: Please analyze this section (chunk {chunk_index}/{total_chunks}) of an IEP document.
+
+{PDF_EXTRACTION_GUIDANCE}
 
 {context_text}
 For this chunk, please:
@@ -444,6 +470,13 @@ For this chunk, please:
    - List any important dates mentioned
    - List any actions parents need to take
    - Describe where in the document this section appears
+
+If this chunk contains PDF binary data, encoding information, or other non-readable content, please try to:
+1. Identify and extract any readable text that might be present
+2. Mention that the chunk contains technical PDF data
+3. Focus your analysis on any meaningful content you can find
+
+IMPORTANT: Even if the text appears fragmented or partially encoded, please extract whatever meaningful information you can find.
 
 Do not try to generate structured JSON for this chunk. Instead, provide a clear text analysis that describes what you found in this chunk. This will be combined with analyses of other chunks later.
 

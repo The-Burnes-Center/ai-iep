@@ -12,7 +12,8 @@ from config import (
     get_chunk_analysis_prompt,
     get_final_json_analysis_prompt,
     get_simplified_json_analysis_prompt,
-    IEP_SECTIONS
+    IEP_SECTIONS,
+    PDF_EXTRACTION_GUIDANCE
 )
 from llm_service import invoke_claude, invoke_claude_3_5, CLAUDE_MODELS
 import time
@@ -34,7 +35,11 @@ bedrock_runtime = boto3.client('bedrock-runtime')
 ANTHROPIC_MODEL = os.environ.get('ANTHROPIC_MODEL', 'anthropic.claude-3-5-sonnet-20240620-v1:0')
 
 # Constants for chunk processing
-MAX_TOKENS_PER_CHUNK = 80000  # Maximum tokens for Claude model (using smaller chunk model)
+# Increase max tokens per chunk to reduce the number of chunks and provide more context
+MAX_TOKENS_PER_CHUNK = 120000  # Increased from 80000 to reduce number of chunks
+
+# Minimum meaningful chunk size in characters to avoid tiny chunks
+MIN_CHUNK_SIZE = 2000
 
 # Encoding for token estimation
 CL100K_ENCODING = tiktoken.get_encoding("cl100k_base")
@@ -170,7 +175,9 @@ def process_document_in_chunks(text_content):
     logger.info(f"Processing document with {token_count} tokens in chunks")
     
     # Determine optimal chunk size based on token count
-    estimated_chunks = max(2, (token_count // (MAX_TOKENS_PER_CHUNK // 2)))
+    # Aim for fewer chunks with more context in each
+    target_chunk_count = max(1, min(5, (token_count // (MAX_TOKENS_PER_CHUNK // 2))))
+    logger.info(f"Target chunk count: {target_chunk_count}")
     
     # Start with a minimum chunk size (in characters)
     avg_chars_per_token = len(text_content) / max(1, token_count)
@@ -179,8 +186,17 @@ def process_document_in_chunks(text_content):
     # Create chunk boundaries
     chunks = []
     
+    # First attempt to extract just the readable text parts and filter out binary/encoding data
+    cleaned_text = clean_pdf_text(text_content)
+    if cleaned_text and len(cleaned_text) > MIN_CHUNK_SIZE:
+        logger.info(f"Using cleaned text version ({len(cleaned_text)} chars)")
+        text_to_process = cleaned_text
+    else:
+        logger.info("Using original text (cleaning didn't produce sufficient content)")
+        text_to_process = text_content
+    
     # Split by section or natural breaks if possible
-    section_boundaries = find_section_boundaries(text_content)
+    section_boundaries = find_section_boundaries(text_to_process)
     
     if section_boundaries and len(section_boundaries) > 1:
         logger.info(f"Splitting document into {len(section_boundaries)} natural sections")
@@ -191,15 +207,15 @@ def process_document_in_chunks(text_content):
         
         for i in range(len(section_boundaries)):
             start_idx = section_boundaries[i]
-            end_idx = section_boundaries[i+1] if i+1 < len(section_boundaries) else len(text_content)
+            end_idx = section_boundaries[i+1] if i+1 < len(section_boundaries) else len(text_to_process)
             
-            section_text = text_content[start_idx:end_idx]
+            section_text = text_to_process[start_idx:end_idx]
             section_tokens = get_token_count(section_text)
             
             # If adding this section would exceed our chunk size, finish current chunk
             if current_chunk_tokens + section_tokens > MAX_TOKENS_PER_CHUNK:
                 # If current chunk is not empty, add it to chunks
-                if current_chunk:
+                if current_chunk and len(current_chunk) > MIN_CHUNK_SIZE:
                     chunks.append(current_chunk)
                 
                 # Start a new chunk with this section
@@ -211,27 +227,54 @@ def process_document_in_chunks(text_content):
                 current_chunk_tokens += section_tokens
         
         # Add the last chunk if not empty
-        if current_chunk:
+        if current_chunk and len(current_chunk) > MIN_CHUNK_SIZE:
             chunks.append(current_chunk)
     else:
         # No clear section boundaries, use character-based splitting
         logger.info(f"No clear sections found, splitting document by character length")
         
+        # Create fewer chunks with more content in each
+        chars_per_chunk = max(chars_per_chunk, len(text_to_process) // target_chunk_count)
+        
         # Create chunks with overlap
-        for i in range(0, len(text_content), chars_per_chunk):
+        for i in range(0, len(text_to_process), chars_per_chunk):
             # If this is not the first chunk, add some overlap with previous chunk
-            start_idx = max(0, i - 1000) if i > 0 else 0
+            start_idx = max(0, i - 2000) if i > 0 else 0  # Increase overlap to 2000 chars
             
             # If this is not the last chunk, continue to a reasonable break point
-            end_idx = min(i + chars_per_chunk, len(text_content))
-            if end_idx < len(text_content):
+            end_idx = min(i + chars_per_chunk, len(text_to_process))
+            if end_idx < len(text_to_process):
                 # Find the next paragraph break if possible
-                next_break = text_content.find('\n\n', end_idx)
-                if next_break != -1 and next_break < end_idx + 2000:  # Within reasonable distance
+                next_break = text_to_process.find('\n\n', end_idx)
+                if next_break != -1 and next_break < end_idx + 3000:  # Look further for break points
                     end_idx = next_break
             
-            chunk = text_content[start_idx:end_idx]
-            chunks.append(chunk)
+            chunk = text_to_process[start_idx:end_idx]
+            if len(chunk) > MIN_CHUNK_SIZE:  # Only add chunks with sufficient content
+                chunks.append(chunk)
+    
+    # Ensure we don't have too many chunks - combine small chunks if needed
+    if len(chunks) > target_chunk_count * 2:
+        logger.info(f"Too many chunks ({len(chunks)}), consolidating...")
+        consolidated_chunks = []
+        current_chunk = ""
+        current_chunk_tokens = 0
+        
+        for chunk in chunks:
+            chunk_tokens = get_token_count(chunk)
+            if current_chunk_tokens + chunk_tokens > MAX_TOKENS_PER_CHUNK:
+                if current_chunk:
+                    consolidated_chunks.append(current_chunk)
+                current_chunk = chunk
+                current_chunk_tokens = chunk_tokens
+            else:
+                current_chunk += "\n\n" + chunk
+                current_chunk_tokens += chunk_tokens
+        
+        if current_chunk:
+            consolidated_chunks.append(current_chunk)
+        
+        chunks = consolidated_chunks
     
     logger.info(f"Split document into {len(chunks)} chunks for processing")
     
@@ -252,7 +295,7 @@ def process_document_in_chunks(text_content):
             # Update context for next chunk
             previous_context = {
                 'chunk_number': i+1,
-                'content_preview': chunk[-1000:] if len(chunk) > 1000 else chunk
+                'content_preview': chunk[-1500:] if len(chunk) > 1500 else chunk  # Increased preview size
             }
             
             # Add result to the list
@@ -266,6 +309,44 @@ def process_document_in_chunks(text_content):
             results.append("")
     
     return results
+
+def clean_pdf_text(text_content):
+    """
+    Attempt to clean PDF text by removing binary data and encoding information.
+    
+    Args:
+        text_content: The raw text content from the PDF
+    
+    Returns:
+        Cleaned text with binary/encoding data removed or original if cleaning fails
+    """
+    try:
+        # Remove common PDF binary patterns
+        cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\xFF]', '', text_content)
+        
+        # Remove PDF object references and stream data
+        cleaned = re.sub(r'\d+ \d+ obj[\s\S]*?endobj', ' ', cleaned)
+        cleaned = re.sub(r'stream[\s\S]*?endstream', ' ', cleaned)
+        
+        # Remove font definitions and other technical PDF content
+        cleaned = re.sub(r'/Type\s*/[\w]+', ' ', cleaned)
+        cleaned = re.sub(r'/Font\s*<<[\s\S]*?>>', ' ', cleaned)
+        
+        # Remove PDF operators and syntax
+        cleaned = re.sub(r'^\s*[/\[\]()<>{}][\w/\s]*$', '', cleaned, flags=re.MULTILINE)
+        
+        # Normalize whitespace
+        cleaned = re.sub(r'\s+', ' ', cleaned)
+        
+        # If we've removed too much content, return the original
+        if len(cleaned) < len(text_content) * 0.1:
+            logger.warning("Cleaning removed too much content, using original")
+            return text_content
+        
+        return cleaned
+    except Exception as e:
+        logger.error(f"Error cleaning PDF text: {str(e)}")
+        return text_content
 
 def find_section_boundaries(text_content):
     """
@@ -281,29 +362,37 @@ def find_section_boundaries(text_content):
     boundaries = [0]
     
     # Look for section header patterns
-    # 1. Roman numerals followed by a title
-    roman_pattern = r'\n(?:(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII|XIII|XIV|XV|XVI|XVII|XVIII|XIX|XX)\.?\s+[A-Z][\w\s]+:?(?:\n|\r\n))'
-    
-    # 2. Numbered sections
-    numbered_pattern = r'\n(?:\d+\.(?:\d+\.)*\s+[A-Z][\w\s]+:?(?:\n|\r\n))'
-    
-    # 3. All caps headers that look like sections
-    caps_pattern = r'\n(?:[A-Z]{3,}(?:[\s\-][A-Z]+)*(?::|\n|\r\n))'
-    
-    # 4. Form field patterns like "Student Name:"
-    form_field_pattern = r'\n(?:[A-Z][\w\s]+:(?:\s+|$))'
+    patterns = [
+        # 1. Roman numerals followed by a title
+        r'\n(?:(?:I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII|XIII|XIV|XV|XVI|XVII|XVIII|XIX|XX)\.?\s+[A-Z][\w\s]+:?(?:\n|\r\n))',
+        
+        # 2. Numbered sections
+        r'\n(?:\d+\.(?:\d+\.)*\s+[A-Z][\w\s]+:?(?:\n|\r\n))',
+        
+        # 3. All caps headers that look like sections
+        r'\n(?:[A-Z]{3,}(?:[\s\-][A-Z]+)*(?::|\n|\r\n))',
+        
+        # 4. Form field patterns like "Student Name:"
+        r'\n(?:[A-Z][\w\s]+:(?:\s+|$))',
+        
+        # 5. Common IEP section headers
+        r'\n(?:(?:PRESENT\s+LEVELS|GOALS|OBJECTIVES|ACCOMMODATIONS|SERVICES|PLACEMENT|ELIGIBILITY|ASSESSMENT)[\s\w]*(?::|\n|\r\n))',
+        
+        # 6. Headers with underlines
+        r'\n([A-Z][\w\s]+)\n[-=_]{3,}'
+    ]
     
     # Find all matches
-    for pattern in [roman_pattern, numbered_pattern, caps_pattern, form_field_pattern]:
-        for match in re.finditer(pattern, text_content):
+    for pattern in patterns:
+        for match in re.finditer(pattern, text_content, re.IGNORECASE):
             boundaries.append(match.start())
     
-    # Remove near-duplicate boundaries (within 100 chars of each other)
+    # Remove near-duplicate boundaries (within 150 chars of each other)
     boundaries.sort()
     filtered_boundaries = [boundaries[0]]
     
     for boundary in boundaries[1:]:
-        if boundary - filtered_boundaries[-1] > 100:
+        if boundary - filtered_boundaries[-1] > 150:
             filtered_boundaries.append(boundary)
     
     return filtered_boundaries
