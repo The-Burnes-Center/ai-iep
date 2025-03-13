@@ -378,7 +378,15 @@ export class LambdaFunctionStack extends cdk.Stack {
         // Define the Lambda function for metadata
         const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
           runtime: lambda.Runtime.PYTHON_3_12,
-          code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler')),
+          code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
+            bundling: {
+              image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+              command: [
+                'bash', '-c',
+                'pip install -r requirements.txt -t /asset-output && cp -au . /asset-output'
+              ],
+            },
+          }),
           handler: 'lambda_handler.lambda_handler',
           environment: {
             "BUCKET": props.knowledgeBucket.bucketName,
