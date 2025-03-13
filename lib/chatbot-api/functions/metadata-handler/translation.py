@@ -62,7 +62,7 @@ def translate_content(content, target_languages):
                     modelId=model_id,
                     body=json.dumps({
                         'anthropic_version': 'bedrock-2023-05-31',
-                        'max_tokens': 4000,
+                        'max_tokens': 8000,
                         'temperature': 0,
                         'system': TRANSLATION_SYSTEM_MSG,
                         'messages': [
@@ -90,8 +90,16 @@ def translate_content(content, target_languages):
                 elif 'completion' in response_body:
                     translated_text = response_body['completion']
                 
+                # Log raw translation output
+                print(f"[TRANSLATION-{lang_code}] Raw translation length: {len(translated_text)}")
+                print(f"[TRANSLATION-{lang_code}] Raw translation preview: {translated_text[:300]}...")
+                if len(translated_text) > 300:
+                    print(f"[TRANSLATION-{lang_code}] Raw translation end: ...{translated_text[-100:]}")
+                
                 # Clean up the translation to remove any JSON structure or explanatory text
                 translated_text = clean_translation(translated_text)
+                print(f"[TRANSLATION-{lang_code}] After cleaning - length: {len(translated_text)}")
+                print(f"[TRANSLATION-{lang_code}] After cleaning - preview: {translated_text[:300]}...")
                 
                 # Log the length of translated text
                 print(f"Translated text length: {len(translated_text) if translated_text else 0}")
@@ -113,8 +121,8 @@ def translate_content(content, target_languages):
                             modelId=model_id,
                             body=json.dumps({
                                 'anthropic_version': 'bedrock-2023-05-31',
-                                'max_tokens': 2000,
-                                'temperature': 0.1,
+                                'max_tokens': 8000,
+                                'temperature': 0,
                                 'system': TRANSLATION_SYSTEM_MSG,
                                 'messages': [
                                     {'role': 'user', 'content': prompt}
@@ -177,10 +185,14 @@ def clean_translation(translated_text):
     """
     if not translated_text:
         return ""
+    
+    print(f"[CLEAN] Starting cleaning process on text of length {len(translated_text)}")
         
     # Remove JSON-like formatting 
     json_pattern = r'```(?:json)?\s*\{[\s\S]*?\}\s*```'
     cleaned_text = re.sub(json_pattern, '', translated_text)
+    if len(cleaned_text) != len(translated_text):
+        print(f"[CLEAN] Removed JSON code blocks, new length: {len(cleaned_text)}")
     
     # Remove introductory sentences
     intro_patterns = [
@@ -191,14 +203,27 @@ def clean_translation(translated_text):
         r'^the translation is:?\s*'
     ]
     
+    original_length = len(cleaned_text)
     for pattern in intro_patterns:
         cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
     
+    if len(cleaned_text) != original_length:
+        print(f"[CLEAN] Removed introductory sentences, new length: {len(cleaned_text)}")
+    
     # Remove any remaining JSON structure
+    original_length = len(cleaned_text)
     cleaned_text = re.sub(r'^\s*\{\s*"[^"]+"\s*:\s*"([\s\S]*?)"\s*\}\s*$', r'\1', cleaned_text)
     cleaned_text = re.sub(r'^\s*\{\s*"[^"]+"\s*:\s*\{\s*"[^"]+"\s*:\s*"([\s\S]*?)"\s*\}\s*\}\s*$', r'\1', cleaned_text)
     
+    if len(cleaned_text) != original_length:
+        print(f"[CLEAN] Removed JSON structure, new length: {len(cleaned_text)}")
+    
     # Unescape any escaped quotes that might be inside the JSON strings
+    original_length = len(cleaned_text)
     cleaned_text = cleaned_text.replace('\\"', '"')
     
+    if len(cleaned_text) != original_length:
+        print(f"[CLEAN] Unescaped quotes, new length: {len(cleaned_text)}")
+    
+    print(f"[CLEAN] Finished cleaning, final length: {len(cleaned_text.strip())}")
     return cleaned_text.strip() 

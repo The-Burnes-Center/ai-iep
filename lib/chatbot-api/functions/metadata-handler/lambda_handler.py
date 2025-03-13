@@ -216,6 +216,17 @@ def handle_s3_upload_event(event):
         
         # Process each section
         for section in sections:
+            # Check if section is a dictionary, if not, skip or create a simple entry
+            if not isinstance(section, dict):
+                # If section is a string, use it as content with a generic title
+                if isinstance(section, str):
+                    if 'en' not in formatted_sections["M"]:
+                        formatted_sections["M"]["en"] = {"M": {}}
+                    
+                    generic_title = "Document Content"
+                    formatted_sections["M"]["en"]["M"][generic_title] = {"S": section}
+                continue
+            
             section_title = section.get('title', 'Untitled Section')
             section_content = section.get('content', '')
             
