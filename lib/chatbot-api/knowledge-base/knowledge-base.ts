@@ -76,9 +76,9 @@ export class KnowledgeBaseStack extends cdk.Stack {
           collectionArn: `arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${props.openSearch.openSearchCollectionId}`,
           vectorIndexName: "knowledge-base-index",
           fieldMapping: {
-            vectorField: "embedding",
-            textField: "text",
-            metadataField: "metadata"
+            vectorField: "vector_field",
+            textField: "text_field",
+            metadataField: "metadata_field"
           }
         }
       }
