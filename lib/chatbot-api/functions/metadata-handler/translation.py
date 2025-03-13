@@ -47,11 +47,15 @@ def translate_content(content, target_languages):
             for lang in target_languages:
                 logger.info(f"Translating string content to {lang}")
                 translated_text = translate_text(content, lang)
-                result[lang] = translated_text
-                logger.info(f"Added translation for {lang}, length: {len(translated_text)}")
+                if translated_text and len(translated_text.strip()) > 0:
+                    result[lang] = translated_text
+                    logger.info(f"Successfully added translation for {lang}, length: {len(translated_text)}")
+                else:
+                    logger.warning(f"Got empty translation result for {lang}")
                 
             # Log the final result structure    
             logger.info(f"Completed string translation with result keys: {list(result.keys())}")
+            logger.info(f"Result contains translations for: {[k for k in result.keys() if k != 'original']}")
             return result
         
         elif isinstance(content, dict):

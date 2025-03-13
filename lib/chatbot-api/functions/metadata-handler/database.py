@@ -146,9 +146,21 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     
                     formatted_sections = {"M": {}}
                     if 'sections' in summaries and 'M' in summaries['sections']:
-                        # This is the correct DynamoDB format structure - use as is
-                        formatted_sections = summaries['sections']
-                        print(f"Using pre-formatted sections structure with languages: {list(summaries['sections']['M'].keys() if 'M' in summaries['sections'] else [])}")
+                        # Check for the correct languages structure
+                        if any(lang in summaries['sections']['M'] for lang in ['en', 'es', 'zh', 'vi']):
+                            # This is the correct DynamoDB format structure - use as is
+                            formatted_sections = summaries['sections']
+                            print(f"Using pre-formatted sections structure with languages: {list(summaries['sections']['M'].keys() if 'M' in summaries['sections'] else [])}")
+                        else:
+                            # Handle potential legacy format by restructuring
+                            print("Sections structure may need restructuring")
+                            for section_name, section_content in summaries['sections']['M'].items():
+                                # Create English section if it doesn't exist
+                                if 'en' not in formatted_sections["M"]:
+                                    formatted_sections["M"]["en"] = {"M": {}}
+                                # Add section to English
+                                formatted_sections["M"]["en"]["M"][section_name] = section_content
+                                print(f"Added section {section_name} to English sections")
                     
                     update_expr += ", summaries = :summaries, sections = :sections"
                     expr_attr_values[':summaries'] = formatted_summaries
