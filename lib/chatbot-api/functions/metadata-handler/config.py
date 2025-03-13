@@ -133,27 +133,6 @@ Content to translate:
 IMPORTANT: Only provide the direct translation with no additional text, formatting, or explanation.
 """.strip()
 
-def get_translation_prompt_simple(text, target_language):
-    """
-    Create a simple translation prompt.
-    
-    Args:
-        text: Text to translate
-        target_language: Language name to translate into
-    
-    Returns:
-        A formatted prompt string for translation
-    """
-    return f"""
-Human: Please translate the following text into {target_language}.
-Maintain the original meaning, tone, and format as closely as possible.
-Only return the translation, with no explanations, introductions, or other text.
-
-Text to translate:
-
-{text}
-"""
-
 def get_json_analysis_prompt(combined_text_analysis):
     """
     Create a combined prompt for generating structured JSON from document analysis.
@@ -165,10 +144,11 @@ def get_json_analysis_prompt(combined_text_analysis):
     Returns:
         A formatted prompt string for the LLM
     """
-    # Create a comprehensive extraction guide for the target sections
-    extraction_guide = """
-EXTRACTION GUIDE - Extract this information from the document analysis:
-
+    # Create extraction guide based on the IEP_SECTIONS and SECTION_KEY_POINTS
+    section_guides = []
+    
+    # Student Information - Special case since it's not directly in IEP_SECTIONS
+    section_guides.append("""
 1. Student Information:
    - Student name, spelled exactly as it appears in the document
    - Age/birthdate in format MM/DD/YYYY if available
@@ -176,17 +156,21 @@ EXTRACTION GUIDE - Extract this information from the document analysis:
    - Primary disability category (e.g., Autism, Specific Learning Disability)
    - Secondary disability if any (e.g., Speech/Language Impairment)
    - Look in 'eligibility' and beginning sections for this information
-
-2. Present Levels of Performance:
-   - Current reading abilities and challenges 
-   - Current math abilities and challenges
-   - Current writing abilities and challenges
-   - Communication/speech skills and challenges
-   - Behavioral/social functioning
-   - Physical abilities and any health concerns
+""")
+    
+    # Present Levels of Performance
+    if 'present_levels' in IEP_SECTIONS and 'present_levels' in SECTION_KEY_POINTS:
+        present_levels_points = "\n   - ".join(SECTION_KEY_POINTS['present_levels'])
+        section_guides.append(f"""
+2. {IEP_SECTIONS['present_levels']}:
+   - {present_levels_points}
    - Look in 'present_levels' sections for this information
-
-3. Services:
+""")
+    
+    # Services
+    if 'services' in IEP_SECTIONS and 'services' in SECTION_KEY_POINTS:
+        section_guides.append(f"""
+3. {IEP_SECTIONS['services']}:
    - Special education instruction with EXACT hours/week (e.g., "5 hours weekly")
    - Speech therapy services with hours/week
    - Occupational therapy services with hours/week
@@ -195,25 +179,79 @@ EXTRACTION GUIDE - Extract this information from the document analysis:
    - Start and end dates for services
    - Look in 'services' sections for this information
    - IMPORTANT: ALWAYS convert minutes to hours (e.g., 300 minutes = 5 hours)
-
-4. Goals:
-   - Academic goals (reading, writing, math)
-   - Communication/speech goals
-   - Behavioral/social goals
-   - Motor skills/physical goals
-   - How progress will be measured for each
-   - Timeline for achievement
+""")
+    
+    # Goals
+    if 'goals' in IEP_SECTIONS and 'goals' in SECTION_KEY_POINTS:
+        goals_points = "\n   - ".join(SECTION_KEY_POINTS['goals'])
+        section_guides.append(f"""
+4. {IEP_SECTIONS['goals']}:
+   - {goals_points}
    - Look in 'goals' sections for this information
-
-5. Accommodations:
-   - Classroom accommodations (seating, time, instructions)
-   - Testing accommodations (extra time, separate setting)
-   - Instructional accommodations (modified assignments)
-   - Behavioral supports
-   - Assistive technology
-   - Environmental modifications
+""")
+    
+    # Accommodations
+    if 'accommodations' in IEP_SECTIONS and 'accommodations' in SECTION_KEY_POINTS:
+        accommodations_points = "\n   - ".join(SECTION_KEY_POINTS['accommodations'])
+        section_guides.append(f"""
+5. {IEP_SECTIONS['accommodations']}:
+   - {accommodations_points}
    - Look in 'accommodations' sections for this information
-"""
+""")
+    
+    # Combine all section guides
+    extraction_guide = "EXTRACTION GUIDE - Extract this information from the document analysis:" + "".join(section_guides)
+    
+    # Create JSON structure template
+    json_structure = {
+        "summary": "Overall comprehensive summary of the IEP document in 2-3 paragraphs",
+        "sections": {
+            "M": {
+                "LANGUAGE_CODE": {
+                    "M": {
+                        "Student Information": {
+                            "M": {
+                                "S": {
+                                    "S": "Name, age, grade level, primary disability, secondary disability"
+                                }
+                            }
+                        },
+                        "Present Levels of Performance": {
+                            "M": {
+                                "S": {
+                                    "S": "Detailed description of the student's current abilities and challenges"
+                                }
+                            }
+                        },
+                        "Services": {
+                            "M": {
+                                "S": {
+                                    "S": "All specialized services with exact hours/week (e.g., 'Specialized Instruction: 5 hours weekly')"
+                                }
+                            }
+                        },
+                        "Goals": {
+                            "M": {
+                                "S": {
+                                    "S": "Summary of academic, behavioral, and developmental goals"
+                                }
+                            }
+                        },
+                        "Accommodations": {
+                            "M": {
+                                "S": {
+                                    "S": "List of classroom, testing, and other accommodations"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    # Convert the structure to a formatted string
+    json_template = json.dumps(json_structure, indent=2)
     
     # Example format for clarity
     example_format = """
@@ -258,52 +296,7 @@ Here is the combined analysis from all document chunks:
 
 Based on this analysis, extract the most important information and format it as a JSON object with EXACTLY this structure for DynamoDB compatibility:
 
-{{
-  "summary": "Overall comprehensive summary of the IEP document in 2-3 paragraphs",
-  "sections": {{
-    "M": {{
-      "LANGUAGE_CODE": {{
-        "M": {{
-          "Student Information": {{
-            "M": {{
-              "S": {{
-                "S": "Name, age, grade level, primary disability, secondary disability"
-              }}
-            }}
-          }},
-          "Present Levels of Performance": {{
-            "M": {{
-              "S": {{
-                "S": "Detailed description of the student's current abilities and challenges"
-              }}
-            }}
-          }},
-          "Services": {{
-            "M": {{
-              "S": {{
-                "S": "All specialized services with exact hours/week (e.g., 'Specialized Instruction: 5 hours weekly')"
-              }}
-            }}
-          }},
-          "Goals": {{
-            "M": {{
-              "S": {{
-                "S": "Summary of academic, behavioral, and developmental goals"
-              }}
-            }}
-          }},
-          "Accommodations": {{
-            "M": {{
-              "S": {{
-                "S": "List of classroom, testing, and other accommodations"
-              }}
-            }}
-          }}
-        }}
-      }}
-    }}
-  }}
-}}
+{json_template}
 
 IMPORTANT REQUIREMENTS:
 1. You MUST use EXACTLY this JSON structure with "M" and "S" keys - this is required for DynamoDB.
@@ -350,6 +343,9 @@ Here is the end of the previous chunk to provide continuity:
 
 """
 
+    # Generate section list for prompt
+    section_names = ", ".join([f"'{name}' ({desc})" for name, desc in IEP_SECTIONS.items()])
+    
     # Create the prompt with context and PDF guidance
     prompt = f"""
 Human: Please analyze this section (chunk {chunk_index}/{total_chunks}) of an IEP document.
@@ -359,7 +355,7 @@ Human: Please analyze this section (chunk {chunk_index}/{total_chunks}) of an IE
 {context_text}
 For this chunk, please:
 
-1. Identify any IEP sections present in this text (such as Present Levels, Goals, Services, Accommodations)
+1. Identify any IEP sections present in this text from among: {section_names}
 2. For each identified section:
    - Provide a clear summary
    - Note key information such as:

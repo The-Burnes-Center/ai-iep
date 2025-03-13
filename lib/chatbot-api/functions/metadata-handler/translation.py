@@ -4,7 +4,7 @@ import boto3
 import traceback
 import re
 import logging
-from config import get_translation_prompt_simple
+from config import get_translation_prompt
 from llm_service import invoke_claude_3_5, CLAUDE_MODELS
 
 # Configure logger
@@ -136,8 +136,8 @@ def translate_text(text, target_language):
         # Get full language name from code
         language_name = language_map.get(target_language, target_language)
         
-        # Create translation prompt using the imported function
-        prompt = get_translation_prompt_simple(text, language_name)
+        # Create translation prompt using the main get_translation_prompt function
+        prompt = get_translation_prompt(text, language_name)
         
         # Call Claude 3.5 Sonnet for translation
         content = invoke_claude_3_5(
