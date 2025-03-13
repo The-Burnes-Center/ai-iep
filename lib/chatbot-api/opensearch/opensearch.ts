@@ -35,11 +35,10 @@ export class OpenSearchStack extends cdk.Stack {
       type: 'VECTORSEARCH',
     });
     
-    // Override the logical ID to ensure the existing resource is maintained
-    // This is the specific collection ID mentioned in the error message
-    const cfnCollection = openSearchCollection.node.defaultChild as cdk.CfnResource;
-    cfnCollection.overrideLogicalId('xd95i6w6setz2ov8o2je');
-
+    // Instead of trying to override the logical ID, we'll use a different approach
+    // Preserve the existing resource by using the logical ID provided by CDK
+    // We'll keep the tagging minimal to avoid replacements
+    
     // create encryption policy first
     const encPolicy = new opensearchserverless.CfnSecurityPolicy(scope, 'OSSEncryptionPolicy', {
       name: `${stackName.toLowerCase().slice(0,10)}-oss-enc-policy`,
@@ -126,10 +125,13 @@ export class OpenSearchStack extends cdk.Stack {
     // Apply tags to the collection via CDK, which should update tags without replacement
     // This approach uses AWS::TagResource operations instead of inline tags
     // which should allow updating tags without replacing the collection
-    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
-      cdk.Tags.of(openSearchCollection).add(key, value);
-    });
-    cdk.Tags.of(openSearchCollection).add('Resource', 'OpenSearchCollection');
+    // Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+    //   cdk.Tags.of(openSearchCollection).add(key, value);
+    // });
+    // cdk.Tags.of(openSearchCollection).add('Resource', 'OpenSearchCollection');
+    
+    // For resources that are sensitive to replacement, we'll skip tagging
+    // to avoid risking replacement of the OpenSearch Collection
 
     const openSearchCreateIndexFunction = new lambda.Function(scope, 'OpenSearchCreateIndexFunction', {
       runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
