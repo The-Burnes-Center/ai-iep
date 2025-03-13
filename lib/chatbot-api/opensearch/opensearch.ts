@@ -26,19 +26,19 @@ export class OpenSearchStack extends cdk.Stack {
 
     this.collectionName = `${stackName.toLowerCase()}-oss-collection`
     
-    // Create tags array from standard tags for CloudFormation resources
-    const cfnTags = Object.entries({
-      ...STANDARD_TAGS,
-      'Resource': 'OpenSearchCollection',
-    }).map(([key, value]) => ({ key, value }));
-    
+    // Instead of creating tags array, we'll use the existing collection ID directly
+    // and skip properties that might trigger a replacement
     const openSearchCollection = new opensearchserverless.CfnCollection(scope, 'OpenSearchCollection', {
       name: this.collectionName,      
       description: `OpenSearch Serverless Collection for ${stackName}`,
       standbyReplicas: 'DISABLED',      
       type: 'VECTORSEARCH',
-      tags: cfnTags
     });
+    
+    // Override the logical ID to ensure the existing resource is maintained
+    // This is the specific collection ID mentioned in the error message
+    const cfnCollection = openSearchCollection.node.defaultChild as cdk.CfnResource;
+    cfnCollection.overrideLogicalId('xd95i6w6setz2ov8o2je');
 
     // create encryption policy first
     const encPolicy = new opensearchserverless.CfnSecurityPolicy(scope, 'OSSEncryptionPolicy', {
@@ -121,11 +121,15 @@ export class OpenSearchStack extends cdk.Stack {
     ])
     })
 
-    openSearchCollection.addDependency(encPolicy);
-    openSearchCollection.addDependency(networkPolicy);
-    openSearchCollection.addDependency(accessPolicy);
-
     this.openSearchCollection = openSearchCollection;
+
+    // Apply tags to the collection via CDK, which should update tags without replacement
+    // This approach uses AWS::TagResource operations instead of inline tags
+    // which should allow updating tags without replacing the collection
+    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+      cdk.Tags.of(openSearchCollection).add(key, value);
+    });
+    cdk.Tags.of(openSearchCollection).add('Resource', 'OpenSearchCollection');
 
     const openSearchCreateIndexFunction = new lambda.Function(scope, 'OpenSearchCreateIndexFunction', {
       runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime

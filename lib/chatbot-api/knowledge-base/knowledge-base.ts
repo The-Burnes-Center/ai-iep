@@ -84,7 +84,7 @@ export class KnowledgeBaseStack extends cdk.Stack {
       }
     });
     
-    // Add tags directly to knowledge base
+    // Add tags using CDK Tags API
     cdk.Tags.of(knowledgeBase).add('Resource', 'BedrockKnowledgeBase');
     cdk.Tags.of(knowledgeBase).add('Purpose', 'IEPDocuments');
     cdk.Tags.of(knowledgeBase).add('Service', 'Bedrock');
@@ -116,7 +116,7 @@ export class KnowledgeBaseStack extends cdk.Stack {
       }
     });
     
-    // Add tags directly to data source
+    // Add tags using CDK Tags API
     cdk.Tags.of(dataSource).add('Resource', 'BedrockDataSource');
     cdk.Tags.of(dataSource).add('Purpose', 'S3Documents');
     cdk.Tags.of(dataSource).add('Service', 'Bedrock');
