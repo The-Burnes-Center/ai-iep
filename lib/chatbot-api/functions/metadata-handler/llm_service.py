@@ -130,7 +130,25 @@ def invoke_claude(prompt, temperature=0, max_tokens=8000, model=None):
 
 def invoke_claude_3_5(prompt, temperature=0, max_tokens=8000):
     """Invoke Claude 3.5 Sonnet model (default)"""
-    return invoke_claude(prompt, temperature, max_tokens, CLAUDE_MODELS["default"])
+    try:
+        logger.info(f"Invoking Claude 3.5 with prompt length: {len(prompt)} chars, max_tokens: {max_tokens}")
+        
+        response = invoke_claude(prompt, temperature, max_tokens, CLAUDE_MODELS["default"])
+        
+        if response:
+            logger.info(f"Claude 3.5 returned response of length: {len(response)} chars")
+            logger.info(f"Claude 3.5 response preview: {response[:100]}...")
+        else:
+            logger.error("Claude 3.5 returned empty response")
+            
+        return response
+    except Exception as e:
+        logger.error(f"Error in invoke_claude_3_5: {str(e)}")
+        logger.error(f"Model being used: {CLAUDE_MODELS['default']}")
+        traceback.print_exc()
+        
+        # Re-raise the exception so it can be caught by the calling function
+        raise
 
 # Future function for OpenAI integration
 # def invoke_openai(prompt, temperature=0, max_tokens=8000, model="gpt-4"):

@@ -188,25 +188,12 @@ def summarize_and_analyze_document(document_content, user_profile=None):
         if target_languages:
             logger.info("Starting translation process")
             try:
-                # First, ensure we have a valid summary to translate
+                # First, ensure we have a valid summary and sections to translate
                 if not result.get('summary') or not isinstance(result.get('summary'), str) or len(result.get('summary', '').strip()) < 10:
                     logger.warning("Summary missing or too short - creating default summary for translation")
                     result['summary'] = "This document appears to be an Individualized Education Program (IEP). It contains information about the student's educational needs, goals, and services, but detailed content could not be extracted."
                 
-                # Track if we have any content to translate
-                has_english_content = False
-                
-                # Ensure summaries structure exists
-                if 'summaries' not in result:
-                    result['summaries'] = {}
-                    
-                # Make sure English summary is stored in summaries
-                if isinstance(result.get('summary'), str) and result.get('summary').strip():
-                    result['summaries']['en'] = result['summary']
-                    has_english_content = True
-                    logger.info(f"Added English summary to summaries structure, length: {len(result['summary'])}")
-                
-                # Make sure sections has some content
+                # Ensure we have sections
                 if 'sections' not in result or not result['sections'] or not isinstance(result['sections'], dict):
                     logger.warning("Sections missing or invalid - creating default sections structure")
                     result['sections'] = {
@@ -217,106 +204,180 @@ def summarize_and_analyze_document(document_content, user_profile=None):
                         "Accommodations": "Information not extracted from document"
                     }
                 
-                # Initialize language structure for sections if needed
+                # Make sure summaries structure exists
+                if 'summaries' not in result:
+                    result['summaries'] = {}
+                    
+                # Make sure English summary is stored in summaries
+                if isinstance(result.get('summary'), str) and result.get('summary').strip():
+                    result['summaries']['en'] = result['summary']
+                    logger.info(f"Added English summary to summaries structure, length: {len(result['summary'])}")
+                
+                # Track if we have any content to translate
+                has_english_content = False
+                
+                # Check if we have valid English content
+                if result['summaries'].get('en') and len(result['summaries']['en'].strip()) > 10:
+                    has_english_content = True
+                    logger.info(f"Found valid English summary for translation, length: {len(result['summaries']['en'])}")
+                else:
+                    # If no valid English summary found, create a default one
+                    logger.warning("No valid English summary found, creating default")
+                    result['summaries']['en'] = "This document appears to be an Individualized Education Program (IEP). It contains information about the student's educational needs, goals, and services, but detailed content could not be extracted."
+                    has_english_content = True
+                
+                # Always translate the summary, even if it's default content
+                logger.info("Translating summary")
+                try:
+                    # Log the beginning of summary translation with full debug info
+                    logger.info(f"Starting summary translation with content length: {len(result['summaries']['en'])} for languages: {target_languages}")
+                    logger.info(f"Summary content preview: {result['summaries']['en'][:100]}...")
+                    
+                    translated_summary = translate_content(
+                        content=result['summaries']['en'],
+                        target_languages=target_languages
+                    )
+                    
+                    # Log detailed translation results
+                    if isinstance(translated_summary, dict):
+                        logger.info(f"Received translation result with keys: {list(translated_summary.keys())}")
+                        
+                        # Log each translation result separately
+                        for lang, trans_text in translated_summary.items():
+                            if lang == 'original':
+                                logger.info(f"Original text length: {len(trans_text) if isinstance(trans_text, str) else 'N/A'}")
+                            elif trans_text and trans_text.strip():
+                                result['summaries'][lang] = trans_text
+                                logger.info(f"Added {lang} summary translation, length: {len(trans_text)}")
+                                logger.info(f"{lang} translation preview: {trans_text[:100]}...")
+                            else:
+                                logger.warning(f"Translation for {lang} is empty or invalid: {type(trans_text)}")
+                        
+                        # Log what languages we have after translation
+                        logger.info(f"Summaries after translation: {list(result['summaries'].keys())}")
+                    else:
+                        logger.warning(f"Unexpected translation result type: {type(translated_summary)}")
+                        logger.warning(f"Translation result: {translated_summary}")
+                        
+                        # Try to use the result directly if it's a string
+                        if isinstance(translated_summary, str) and translated_summary.strip():
+                            # Assume this is the Spanish translation (first language in target_languages)
+                            if target_languages and len(target_languages) > 0:
+                                first_lang = target_languages[0]
+                                result['summaries'][first_lang] = translated_summary
+                                logger.info(f"Added direct string translation for {first_lang}, length: {len(translated_summary)}")
+                except Exception as e:
+                    logger.error(f"Error translating summary: {str(e)}")
+                    traceback.print_exc()
+                    
+                    # Try direct translations for each language one by one
+                    for target_lang in target_languages:
+                        try:
+                            logger.info(f"Attempting direct translation for language: {target_lang}")
+                            from translation import translate_text
+                            
+                            translated_text = translate_text(result['summaries']['en'], target_lang)
+                            if translated_text and translated_text.strip():
+                                result['summaries'][target_lang] = translated_text
+                                logger.info(f"Added {target_lang} summary via direct translation, length: {len(translated_text)}")
+                                logger.info(f"Direct {target_lang} translation preview: {translated_text[:100]}...")
+                            else:
+                                logger.warning(f"Direct translation for {target_lang} returned empty result")
+                        except Exception as direct_e:
+                            logger.error(f"Direct translation to {target_lang} also failed: {str(direct_e)}")
+                
+                # Prepare sections for translations
+                # Make sure there's an English sections structure
                 if not isinstance(result['sections'].get('en'), dict):
-                    logger.info("Adding English sections structure")
-                    # Copy sections directly to English section
+                    logger.info("Creating English sections structure")
                     result['sections']['en'] = {}
+                    
+                    # Copy all direct sections to English
                     for section_name, section_content in result['sections'].items():
                         if section_name not in ['en', 'es', 'zh', 'vi'] and isinstance(section_content, str):
                             result['sections']['en'][section_name] = section_content
-                            has_english_content = True
+                            logger.info(f"Added section {section_name} to English sections")
                 
-                if not has_english_content:
-                    logger.warning("No valid English content found for translation")
-                    return {
-                        'success': True,
-                        'result': result
+                # If we don't have any sections in the English structure, add default ones
+                if not result['sections'].get('en') or len(result['sections']['en']) == 0:
+                    logger.warning("No sections found in English, adding defaults")
+                    result['sections']['en'] = {
+                        "Student Information": "Information not extracted from document",
+                        "Present Levels of Performance": "Information not extracted from document",
+                        "Services": "Information not extracted from document", 
+                        "Goals": "Information not extracted from document",
+                        "Accommodations": "Information not extracted from document"
                     }
-                
-                # Now translate summary if we have one
-                logger.info("Translating summary")
-                if result['summaries'].get('en'):
-                    try:
-                        # Log the beginning of summary translation with full debug info
-                        logger.info(f"Starting summary translation with content length: {len(result['summaries']['en'])} for languages: {target_languages}")
-                        logger.info(f"Summary content preview: {result['summaries']['en'][:100]}...")
-                        
-                        translated_summary = translate_content(
-                            content=result['summaries']['en'],
-                            target_languages=target_languages
-                        )
-                        
-                        # Log detailed translation results
-                        if isinstance(translated_summary, dict):
-                            logger.info(f"Received translation result with keys: {list(translated_summary.keys())}")
-                            
-                            # Log each translation result separately
-                            for lang, trans_text in translated_summary.items():
-                                if lang == 'original':
-                                    logger.info(f"Original text length: {len(trans_text) if isinstance(trans_text, str) else 'N/A'}")
-                                elif trans_text and trans_text.strip():
-                                    result['summaries'][lang] = trans_text
-                                    logger.info(f"Added {lang} summary translation, length: {len(trans_text)}")
-                                    logger.info(f"{lang} translation preview: {trans_text[:100]}...")
-                                else:
-                                    logger.warning(f"Translation for {lang} is empty or invalid: {type(trans_text)}")
-                            
-                            # Log what languages we have after translation
-                            logger.info(f"Summaries after translation: {list(result['summaries'].keys())}")
-                        else:
-                            logger.warning(f"Unexpected translation result type: {type(translated_summary)}")
-                            logger.warning(f"Translation result: {translated_summary}")
-                    except Exception as e:
-                        logger.error(f"Error translating summary: {str(e)}")
-                        traceback.print_exc()
-                        
-                        # Try direct translations for each language if the bulk translation failed
-                        for target_lang in target_languages:
-                            try:
-                                logger.info(f"Attempting direct translation for language: {target_lang}")
-                                from translation import translate_text
-                                
-                                translated_text = translate_text(result['summaries']['en'], target_lang)
-                                if translated_text and translated_text.strip():
-                                    result['summaries'][target_lang] = translated_text
-                                    logger.info(f"Added {target_lang} summary via direct translation, length: {len(translated_text)}")
-                                    logger.info(f"Direct {target_lang} translation preview: {translated_text[:100]}...")
-                                else:
-                                    logger.warning(f"Direct translation for {target_lang} returned empty result")
-                            except Exception as direct_e:
-                                logger.error(f"Direct translation to {target_lang} also failed: {str(direct_e)}")
-                else:
-                    logger.warning("No English summary found to translate")
+                    logger.info(f"Added default sections to English: {list(result['sections']['en'].keys())}")
                 
                 # Translate sections
                 logger.info("Translating sections")
                 if result['sections'].get('en'):
                     try:
-                        # Ensure each target language has a sections structure
+                        # Create sections structure for each target language
                         for target_lang in target_languages:
                             if target_lang not in result['sections']:
                                 result['sections'][target_lang] = {}
+                        
+                        # Translate each English section to each target language
+                        for section_name, section_content in result['sections']['en'].items():
+                            if not isinstance(section_content, str) or not section_content.strip():
+                                logger.warning(f"Skipping translation for non-string section: {section_name}")
+                                continue
                             
-                            # Process each English section
-                            for section_name, section_content in result['sections']['en'].items():
-                                if not isinstance(section_content, str) or not section_content.strip():
-                                    continue  # Skip non-string or empty content
+                            logger.info(f"Translating section: {section_name} (length: {len(section_content)})")
+                            
+                            try:
+                                section_translations = translate_content(
+                                    content=section_content,
+                                    target_languages=target_languages
+                                )
                                 
-                                try:
-                                    translated_section = translate_content(
-                                        content=section_content,
-                                        target_languages=[target_lang]
-                                    )
-                                    
-                                    if isinstance(translated_section, dict) and translated_section.get(target_lang):
-                                        result['sections'][target_lang][section_name] = translated_section[target_lang]
-                                        logger.info(f"Translated {section_name} to {target_lang}, length: {len(translated_section[target_lang])}")
-                                except Exception as section_e:
-                                    logger.error(f"Error translating section {section_name} to {target_lang}: {str(section_e)}")
-                    except Exception as e:
-                        logger.error(f"Error in sections translation: {str(e)}")
+                                logger.info(f"Received section translation result: {type(section_translations)}")
+                                
+                                # Process the translations based on return type
+                                if isinstance(section_translations, dict):
+                                    # Add each language translation to the appropriate section
+                                    for lang, translated_text in section_translations.items():
+                                        if lang != 'original' and translated_text and translated_text.strip():
+                                            if lang not in result['sections']:
+                                                result['sections'][lang] = {}
+                                            
+                                            result['sections'][lang][section_name] = translated_text
+                                            logger.info(f"Added {lang} translation for section {section_name}, length: {len(translated_text)}")
+                                elif isinstance(section_translations, str) and section_translations.strip():
+                                    # Assume this is for the first target language
+                                    if target_languages and len(target_languages) > 0:
+                                        first_lang = target_languages[0]
+                                        
+                                        if first_lang not in result['sections']:
+                                            result['sections'][first_lang] = {}
+                                        
+                                        result['sections'][first_lang][section_name] = section_translations
+                                        logger.info(f"Added {first_lang} translation for section {section_name} from string result")
+                            except Exception as section_error:
+                                logger.error(f"Error translating section {section_name}: {str(section_error)}")
+                                
+                                # Try a direct translation for each language
+                                for target_lang in target_languages:
+                                    try:
+                                        from translation import translate_text
+                                        translated_text = translate_text(section_content, target_lang)
+                                        
+                                        if translated_text and translated_text.strip():
+                                            if target_lang not in result['sections']:
+                                                result['sections'][target_lang] = {}
+                                            
+                                            result['sections'][target_lang][section_name] = translated_text
+                                            logger.info(f"Added {target_lang} translation for section {section_name} via direct translate_text")
+                                    except Exception as direct_section_error:
+                                        logger.error(f"Direct translation of section {section_name} to {target_lang} failed: {str(direct_section_error)}")
+                    except Exception as sections_error:
+                        logger.error(f"Error in sections translation process: {str(sections_error)}")
                         traceback.print_exc()
+                else:
+                    logger.warning("No English sections found to translate")
+                
             except Exception as e:
                 logger.error(f"Error during translation process: {str(e)}")
                 traceback.print_exc()

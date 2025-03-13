@@ -164,25 +164,63 @@ def translate_text(text, target_language):
         # Call Claude 3.5 Sonnet for translation
         start_time = time.time()
         logger.info(f"Sending translation request to Claude 3.5 Sonnet for {target_language}")
-        content = invoke_claude_3_5(
-            prompt=prompt,
-            temperature=0,
-            max_tokens=8000
-        )
-        end_time = time.time()
         
-        logger.info(f"Received translation response in {end_time - start_time:.2f} seconds, length: {len(content) if content else 0}")
-        if content:
-            logger.info(f"Raw translation response preview: {content[:100]}...")
-        else:
-            logger.warning(f"Received empty response from translation model")
+        try:
+            content = invoke_claude_3_5(
+                prompt=prompt,
+                temperature=0,
+                max_tokens=8000
+            )
             
-        # Clean the translation output
-        cleaned_translation = clean_translation_output(content)
-        logger.info(f"Cleaned translation length: {len(cleaned_translation)}")
-        logger.info(f"Cleaned translation preview: {cleaned_translation[:100]}...")
+            end_time = time.time()
+            translation_time = end_time - start_time
+            
+            logger.info(f"Received translation response in {translation_time:.2f} seconds, length: {len(content) if content else 0}")
+            
+            if not content or len(content.strip()) < 5:
+                logger.error(f"❌ Translation service returned empty or very short response for {target_language}")
+                logger.error(f"Raw response: '{content}'")
+                return f"[Translation to {language_name} failed: empty response]"
+                
+            if content:
+                logger.info(f"Raw translation response preview: {content[:100]}...")
+                
+                # Check if the response contains any signs of Claude refusing to translate
+                refusal_phrases = [
+                    "I cannot provide a translation",
+                    "I'm unable to translate",
+                    "I apologize, but I cannot",
+                    "I'm not able to translate"
+                ]
+                
+                for phrase in refusal_phrases:
+                    if phrase.lower() in content.lower():
+                        logger.error(f"❌ Claude refused to translate with message: {content[:200]}")
+                        return f"[Translation failed: {content[:100]}...]"
+            else:
+                logger.warning(f"Received empty response from translation model")
+                return f"[Translation to {language_name} failed: no response]"
+                
+            # Clean the translation output
+            cleaned_translation = clean_translation_output(content)
+            logger.info(f"Cleaned translation length: {len(cleaned_translation)}")
+            logger.info(f"Cleaned translation preview: {cleaned_translation[:100]}...")
+            
+            # Sanity check - make sure we didn't just get back the original text
+            if cleaned_translation.strip().lower() == text.strip().lower():
+                logger.error(f"❌ Translation result appears to be identical to input for {target_language}")
+                return f"[Translation to {language_name} failed: result identical to input]"
+            
+            # Check for minimum reasonable translation length relative to input
+            if len(cleaned_translation) < len(text) * 0.3 and len(text) > 100:
+                logger.warning(f"⚠️ Translation seems unusually short ({len(cleaned_translation)} chars) compared to input ({len(text)} chars)")
+            
+            return cleaned_translation
         
-        return cleaned_translation
+        except Exception as invoke_error:
+            logger.error(f"❌ Error invoking Claude for translation: {str(invoke_error)}")
+            traceback.print_exc()
+            return f"[Translation to {language_name} failed: {str(invoke_error)}]"
     
     except Exception as e:
         logger.error(f"Error translating to {target_language}: {str(e)}")
