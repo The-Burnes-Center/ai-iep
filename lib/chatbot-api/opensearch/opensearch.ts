@@ -7,7 +7,7 @@ import * as cr from 'aws-cdk-lib/custom-resources'
 import { Construct } from "constructs";
 import { aws_opensearchserverless as opensearchserverless } from 'aws-cdk-lib';
 import { stackName } from "../../constants"
-import { getTagProps, tagResource } from '../../tags';
+import { STANDARD_TAGS } from '../../tags';
 
 export interface OpenSearchStackProps {
   
@@ -25,17 +25,19 @@ export class OpenSearchStack extends cdk.Stack {
     super(scope, id);
 
     this.collectionName = `${stackName.toLowerCase()}-oss-collection`
+    
+    // Create tags array from standard tags for CloudFormation resources
+    const cfnTags = Object.entries({
+      ...STANDARD_TAGS,
+      'Resource': 'OpenSearchCollection',
+    }).map(([key, value]) => ({ key, value }));
+    
     const openSearchCollection = new opensearchserverless.CfnCollection(scope, 'OpenSearchCollection', {
       name: this.collectionName,      
       description: `OpenSearch Serverless Collection for ${stackName}`,
       standbyReplicas: 'DISABLED',      
       type: 'VECTORSEARCH',
-      tags: [
-        { key: 'Project', value: 'AI-IEP' },
-        { key: 'ManagedBy', value: 'CDK' },
-        { key: 'Resource', value: 'OpenSearchCollection' },
-        { key: 'Owner', value: 'BurnesCenter' }
-      ]
+      tags: cfnTags
     });
 
     // create encryption policy first
@@ -59,18 +61,26 @@ export class OpenSearchStack extends cdk.Stack {
       ]
     });    
     
-    tagResource(indexFunctionRole, {
-      'Resource': 'IAMRole',
-      'Purpose': 'OpenSearch Index Creation'
+    // Apply tags directly using CDK Tags
+    cdk.Tags.of(indexFunctionRole).add('Resource', 'IAMRole');
+    cdk.Tags.of(indexFunctionRole).add('Purpose', 'OpenSearch Index Creation');
+    
+    // Add standard tags
+    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+      cdk.Tags.of(indexFunctionRole).add(key, value);
     });
 
     const knowledgeBaseRole = new iam.Role(scope, "KnowledgeBaseRole", {
       assumedBy: new iam.ServicePrincipal('bedrock.amazonaws.com'),      
     });
     
-    tagResource(knowledgeBaseRole, {
-      'Resource': 'IAMRole',
-      'Purpose': 'Knowledge Base Access'
+    // Apply tags directly using CDK Tags
+    cdk.Tags.of(knowledgeBaseRole).add('Resource', 'IAMRole');
+    cdk.Tags.of(knowledgeBaseRole).add('Purpose', 'Knowledge Base Access');
+    
+    // Add standard tags
+    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+      cdk.Tags.of(knowledgeBaseRole).add(key, value);
     });
 
     this.knowledgeBaseRole = knowledgeBaseRole;
@@ -139,6 +149,13 @@ export class OpenSearchStack extends cdk.Stack {
       },
       timeout: cdk.Duration.seconds(120)
     });
+    
+    // Apply tags to Lambda function
+    Object.entries(STANDARD_TAGS).forEach(([key, value]) => {
+      cdk.Tags.of(openSearchCreateIndexFunction).add(key, value);
+    });
+    cdk.Tags.of(openSearchCreateIndexFunction).add('Resource', 'Lambda');
+    cdk.Tags.of(openSearchCreateIndexFunction).add('Purpose', 'OpenSearch Index Creation');
 
     indexFunctionRole.addToPolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,

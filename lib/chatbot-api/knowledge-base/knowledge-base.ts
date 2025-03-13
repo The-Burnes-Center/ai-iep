@@ -59,7 +59,7 @@ export class KnowledgeBaseStack extends cdk.Stack {
     )
     )
 
-
+    // Create the Bedrock knowledge base with OpenSearch as the vector store
     const knowledgeBase = new bedrock.CfnKnowledgeBase(scope, 'KnowledgeBase', {
       name: "ai-iep-knowledge-base",
       description: "IEP docs knowledge base",
@@ -84,7 +84,7 @@ export class KnowledgeBaseStack extends cdk.Stack {
       }
     });
     
-    // Add tags to knowledge base using cdk.Tags.of()
+    // Add tags directly to knowledge base
     cdk.Tags.of(knowledgeBase).add('Resource', 'BedrockKnowledgeBase');
     cdk.Tags.of(knowledgeBase).add('Purpose', 'IEPDocuments');
     cdk.Tags.of(knowledgeBase).add('Service', 'Bedrock');
@@ -94,6 +94,7 @@ export class KnowledgeBaseStack extends cdk.Stack {
       cdk.Tags.of(knowledgeBase).add(key, value);
     });
 
+    // Create S3 data source for the knowledge base
     const dataSource = new bedrock.CfnDataSource(scope, 'S3DataSource', {
       name: "ai-iep-s3-data-source",
       description: "S3 data source for IEP documents",
@@ -115,7 +116,7 @@ export class KnowledgeBaseStack extends cdk.Stack {
       }
     });
     
-    // Add tags to data source using cdk.Tags.of()
+    // Add tags directly to data source
     cdk.Tags.of(dataSource).add('Resource', 'BedrockDataSource');
     cdk.Tags.of(dataSource).add('Purpose', 'S3Documents');
     cdk.Tags.of(dataSource).add('Service', 'Bedrock');
