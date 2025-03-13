@@ -82,6 +82,19 @@ DOCUMENT_ANALYSIS_SYSTEM_MSG = 'You are an expert in analyzing educational docum
 SUMMARY_SYSTEM_MSG = 'You are an expert in summarizing IEP documents in a parent-friendly manner that captures the essential information.'
 CHUNK_ANALYSIS_SYSTEM_MSG = 'You are an expert in analyzing and summarizing educational documents, especially Individualized Education Programs (IEPs).'
 
+# JSON formatting instructions to ensure valid parseable output
+JSON_FORMATTING_INSTRUCTIONS = """
+IMPORTANT JSON FORMATTING REQUIREMENTS:
+1. Do NOT include any markdown backticks (```) around the JSON
+2. Ensure all strings are properly escaped with double quotes
+3. Avoid control characters, newlines, or tabs within JSON string values
+4. For multiline text in summaries, use space characters instead of newlines
+5. For bullet points in summaries, use simple dashes or asterisks without line breaks
+6. Your entire response must be valid, parseable JSON with no additional text
+7. Do not include any explanations or text outside the JSON structure
+8. Keep string values simple with only ASCII printable characters when possible
+"""
+
 def get_translation_prompt(content, target_language):
     """Generate a prompt for translating content to the target language in a parent-friendly manner."""
     # Context guidelines for specific languages
@@ -165,6 +178,8 @@ Please format your response as JSON with the following structure:
         ...
     }}
 }}
+
+{JSON_FORMATTING_INSTRUCTIONS}
 
 Critical Requirements:
 - Do not omit any important details or measurements.
