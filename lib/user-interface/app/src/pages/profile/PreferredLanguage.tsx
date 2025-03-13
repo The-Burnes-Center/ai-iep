@@ -72,7 +72,8 @@ export default function PreferredLanguage() {
       // Create updated profile with the selected language
       const updatedProfile = {
         ...profile,
-        secondaryLanguage: languageValue
+        secondaryLanguage: languageValue,
+        primaryLanguage: 'en'
       };
       
       setProfile(updatedProfile);
