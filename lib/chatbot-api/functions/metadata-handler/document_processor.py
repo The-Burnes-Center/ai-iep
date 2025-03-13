@@ -590,10 +590,10 @@ def transform_to_simplified_format(result, target_languages=None):
                 # Create a simplified section entry
                 section_content = create_simplified_section_content(section_name, section_data)
                 
-                # Add the section to the simplified result
+                # Add the section to the simplified result with proper DynamoDB format
                 simplified_result['sections']['M'][lang]['M'][section_name] = {
                     'M': {
-                        'S': {
+                        'content': {
                             'S': section_content
                         }
                     }
@@ -607,49 +607,38 @@ def transform_to_simplified_format(result, target_languages=None):
 def create_simplified_section_content(section_name, section_data):
     """Create simplified content for a section based on the section name and data"""
     try:
-        # Default to the summary if available
-        if 'summary' in section_data:
-            content = section_data['summary']
-        else:
-            content = ""
+        content_parts = []
+        
+        # Add section name as a header
+        content_parts.append(f"Section: {section_name}")
+        
+        # Add summary if available
+        if 'summary' in section_data and section_data['summary']:
+            content_parts.append(section_data['summary'])
             
         # Add key points if available
         if 'key_points' in section_data and section_data['key_points']:
-            # If content already exists, add a separator
-            if content:
-                content += ". "
-                
-            # Add each key point
             key_points_str = ", ".join([f"{k}: {v}" for k, v in section_data['key_points'].items()])
             if key_points_str:
-                content += key_points_str
+                content_parts.append(f"Key points: {key_points_str}")
                 
         # Add important dates if available
         if 'important_dates' in section_data and section_data['important_dates']:
-            # If content already exists, add a separator
-            if content:
-                content += ". "
-                
-            # Add the dates
             dates_str = ", ".join(section_data['important_dates'])
             if dates_str:
-                content += f"Important dates: {dates_str}"
+                content_parts.append(f"Important dates: {dates_str}")
                 
         # Add parent actions if available
         if 'parent_actions' in section_data and section_data['parent_actions']:
-            # If content already exists, add a separator
-            if content:
-                content += ". "
-                
-            # Add the parent actions
             actions_str = ", ".join(section_data['parent_actions'])
             if actions_str:
-                content += f"Parent actions: {actions_str}"
+                content_parts.append(f"Parent actions: {actions_str}")
                 
-        return content
+        # Join all parts with double newlines
+        return "\n\n".join(content_parts)
     except Exception as e:
         logger.error(f"Error creating simplified section content: {str(e)}")
-        return "Error processing section content"
+        return f"Error processing section content for {section_name}"
 
 def improve_text_quality(text_content):
     """
@@ -913,8 +902,8 @@ def extract_text_with_documentai(file_content):
             logger.warning("DocumentAI configuration missing, skipping Document AI processing")
             return None
             
-        name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
-        response = documentai_client.process_document(request=request, name=name)
+        # Process the document without the name parameter
+        response = documentai_client.process_document(request=request)
         
         # Extract the text from the response
         document = response.document
