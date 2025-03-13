@@ -7,7 +7,8 @@ import App from "../app";
 import { Amplify, Auth } from "aws-amplify";
 import { AppConfig } from "../common/types";
 import { AppContext } from "../common/app-context";
-import { AuthContext } from "../common/auth-context"; // Import AuthContext
+import { LanguageProvider } from "../common/language-context";
+import { AuthContext } from "../common/auth-context"; 
 import { Alert, StatusIndicator } from "@cloudscape-design/components";
 import { StorageHelper } from "../common/helpers/storage-helper";
 import { Mode } from "@cloudscape-design/global-styles";
@@ -155,15 +156,17 @@ useEffect(() => {
   return (
   <AuthContext.Provider value={{ authenticated, setAuthenticated }}>
     <AppContext.Provider value={config}>
-      <ThemeProvider
-        theme={{
-          name: "default-theme",
-          overrides: [defaultDarkModeOverride],
-        }}
-        colorMode={theme === Mode.Dark ? "dark" : "light"}
-      >
-        <App />
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider
+          theme={{
+                name: "default-theme",
+                overrides: [defaultDarkModeOverride],
+                }}
+          colorMode={theme === Mode.Dark ? "dark" : "light"}
+        >
+          <App />
+        </ThemeProvider>
+      </LanguageProvider>
     </AppContext.Provider>
     </AuthContext.Provider>
   );

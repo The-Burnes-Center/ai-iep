@@ -16,6 +16,7 @@ import { FileUploader } from '../../common/file-uploader';
 import { Utils } from '../../common/utils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faTimesCircle, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { useLanguage } from '../../common/language-context';
 import './UploadIEPDocument.css';
 
 // Define allowed file types and MIME types
@@ -61,6 +62,8 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [currentFileName, setCurrentFileName] = useState<string>("");
 
+  const { t } = useLanguage();
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
@@ -68,10 +71,10 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
     const fileExtension = selectedFile.name.slice(selectedFile.name.lastIndexOf('.')).toLowerCase();
     
     if (!fileExtensions.has(fileExtension)) {
-      setFileError("File format not supported");
+      setFileError(t('upload.fileError.format'));
       setFile(null);
     } else if (selectedFile.size > 100 * 1024 * 1024) { // 100MB
-      setFileError("File size exceeds 100MB limit");
+      setFileError(t('upload.fileError.size'));
       setFile(null);
     } else {
       setFile(selectedFile);
@@ -110,7 +113,7 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
       );
     } catch (error) {
       console.error('Upload error:', error);
-      setGlobalError(typeof error === 'string' ? error : 'An error occurred during upload');
+      setGlobalError(typeof error === 'string' ? error : t('upload.error.general'));
       hasError = true;
       setUploadStatus('error');
     }
@@ -141,9 +144,9 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
     <Container className="p-0">
       <Card className="upload-container">
         <Card.Body>
-          <h4 className="mb-3">Upload IEP Document</h4>
+          <h4 className="mb-3">{t('upload.title')}</h4>
           <p>
-            Maximum file size: 100MB.
+          {t('upload.maxSize')}
           </p>
           
           {globalError && (
@@ -163,7 +166,7 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
                 </Form.Text>
               )}
               <Form.Text className="text-muted">
-                Supported formats: {Array.from(fileExtensions).join(', ')}
+              {t('upload.supportedFormats')} {Array.from(fileExtensions).join(', ')}
               </Form.Text>
             </Form.Group>
             
@@ -199,13 +202,13 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
             
             {uploadStatus === 'success' && (
               <Alert variant="success" className="mt-3">
-                File has been uploaded successfully!
+                {t('upload.success')}
               </Alert>
             )}
             
             {uploadStatus === 'error' && (
               <Alert variant="danger" className="mt-3">
-                Error uploading file. Please try again.
+                {t('upload.error')}
               </Alert>
             )}
             
@@ -216,7 +219,7 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
                 disabled={!file || uploadStatus === 'uploading'}
               >
                 <FontAwesomeIcon icon={faUpload} className="me-2" />
-                Upload Document
+                {t('upload.button')}
               </Button>
             </div>
           </Form>

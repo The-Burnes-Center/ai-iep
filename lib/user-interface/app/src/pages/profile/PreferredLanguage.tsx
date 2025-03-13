@@ -5,6 +5,7 @@ import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
+import { useLanguage, SupportedLanguage } from '../../common/language-context'; // Updated import
 import './ProfileForms.css';
 
 const LANGUAGE_OPTIONS = [
@@ -14,14 +15,14 @@ const LANGUAGE_OPTIONS = [
     translatedPreference: 'I prefer English'
   },
   { 
-    value: 'zh', 
-    label: 'Chinese',
-    translatedPreference: '我喜欢中文' // "I prefer Chinese" in Chinese
-  },
-  { 
     value: 'es', 
     label: 'Spanish',
     translatedPreference: 'Prefiero Español' // "I prefer Spanish" in Spanish
+  },
+  { 
+    value: 'zh', 
+    label: 'Chinese',
+    translatedPreference: '我喜欢中文' // "I prefer Chinese" in Chinese
   },
   { 
     value: 'vi', 
@@ -35,6 +36,7 @@ export default function PreferredLanguage() {
   const apiClient = new ApiClient(appContext);
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
+  const { setLanguage } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +65,9 @@ export default function PreferredLanguage() {
 
     try {
       setSaving(true);
+      
+      // Set the language in the context
+      setLanguage(languageValue as SupportedLanguage);
       
       // Create updated profile with the selected language
       const updatedProfile = {
@@ -113,8 +118,6 @@ export default function PreferredLanguage() {
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
           <div className="profile-form">
-            {/* <h2 className="text-center profile-title mb-4">Select your preferred language</h2> */}
-            
             <Row className="g-3">
               {LANGUAGE_OPTIONS.map(option => (
                 <Col xs={12} key={option.value}>

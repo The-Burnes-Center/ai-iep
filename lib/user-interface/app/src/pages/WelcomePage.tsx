@@ -3,12 +3,14 @@ import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Auth } from 'aws-amplify';
 import { AuthContext } from '../common/auth-context';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../common/language-context'; // Updated import
 import './WelcomePage.css';
 
 export default function WelcomePage() {
   const { setAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>('');
+  const { t } = useLanguage();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -68,8 +70,8 @@ export default function WelcomePage() {
                   <i className="bi bi-upload text-primary" style={{ fontSize: '2rem' }}></i>
                 </div>
                 <div className="ms-4 text-start">
-                  <h3 className="mb-1">Upload IEP</h3>
-                  <p className="text-muted mb-0">Upload and manage your IEP documents</p>
+                  <h3 className="mb-1">{t('welcome.upload.title')}</h3>
+                  <p className="text-muted mb-0">{t('welcome.upload.description')}</p>
                 </div>
               </div>
             </Card.Body>
@@ -86,8 +88,8 @@ export default function WelcomePage() {
                   <i className="bi bi-translate text-success" style={{ fontSize: '2rem' }}></i>
                 </div>
                 <div className="ms-4 text-start">
-                  <h3 className="mb-1">Summary and Translation</h3>
-                  <p className="text-muted mb-0">View summaries and translations of your IEP documents</p>
+                  <h3 className="mb-1">{t('welcome.summary.title')}</h3>
+                  <p className="text-muted mb-0">{t('welcome.summary.description')}</p>
                 </div>
               </div>
             </Card.Body>
@@ -103,8 +105,8 @@ export default function WelcomePage() {
                   <i className="bi bi-info-circle text-info" style={{ fontSize: '2rem' }}></i>
                 </div>
                 <div className="ms-4 text-start">
-                  <h3 className="mb-1">Your Rights</h3>
-                  <p className="text-muted mb-0">Learn about your rights and the IEP process</p>
+                  <h3 className="mb-1">{t('welcome.rights.title')}</h3>
+                  <p className="text-muted mb-0">{t('welcome.rights.description')}</p>
                 </div>
               </div>
             </Card.Body>

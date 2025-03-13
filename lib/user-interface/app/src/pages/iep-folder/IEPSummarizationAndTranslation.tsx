@@ -18,6 +18,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
+import { useLanguage } from '../../common/language-context';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
@@ -40,13 +41,15 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isFirstRender = useRef<boolean>(true);
 
+  const { t } = useLanguage();
+
   // Define the desired section order and display names
   const sectionConfig = [
-    { apiName: "Student Information", displayName: "About Student" },
-    { apiName: "Accommodations", displayName: "Accommodations" },
-    { apiName: "Goals", displayName: "Goals" },
-    { apiName: "Services", displayName: "Services" },
-    { apiName: "Present Levels of Performance", displayName: "Present Levels of Performance" }
+    { apiName: "Student Information", displayName: t('sections.studentInfo') },
+    { apiName: "Accommodations", displayName: t('sections.accommodations') },
+    { apiName: "Goals", displayName: t('sections.goals') },
+    { apiName: "Services", displayName: t('sections.services') },
+    { apiName: "Present Levels of Performance", displayName: t('sections.presentLevels') }
   ];
 
   // Function to get display name for a section
@@ -292,7 +295,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     <Container className="summary-container mt-4 mb-5">
       <div className="mt-3 text-start">
         <Button variant="outline-secondary" onClick={handleBackClick}>
-          ← Back
+          {t('summary.back')}
         </Button>
       </div>
       <Row>
@@ -305,13 +308,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           {initialLoading ? (
             <div className="text-center my-5">
               <Spinner animation="border" role="status">
-                <span className="visually-hidden">Loading IEP summary...</span>
+                <span className="visually-hidden">{t('summary.loading')}</span>
               </Spinner>
-              <p className="mt-3">Loading IEP summary...</p>
+              <p className="mt-3">{t('summary.loading')}</p>
             </div>
           ) : !recentDocument ? (
             <Alert variant="info">
-              No documents found. Please upload an IEP document first.
+              {t('summary.noDocuments')}
             </Alert>
           ) : (
             <Card className="summary-card">
@@ -324,25 +327,25 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           <span className="visually-hidden">Processing document...</span>
                         </Spinner>
                         <Alert variant="warning" className="mt-3">
-                          <h5>Document is being processed</h5>
-                          <p>This may take a few minutes. Meanwhile, please take a look at your rights as a parent:</p>
+                          <h5>{t('summary.processing.title')}</h5>
+                          <p>{t('summary.processing.message')}</p>
                           <div className="text-start">
-                            <p>Hi! We're here to help you understand your child's Individualized Education Program (IEP) better. Navigating this process can feel overwhelming, but you have important rights as a parent. Here are some things you should know:</p>
+                            <p>{t('rights.description')}</p>
                             <ul className="mt-3 text-start">
-                              <li className="mb-2">You can request a translator for IEP meetings to ensure clear communication.</li>
-                              <li className="mb-2">You have the right to take your time before signing an IEP - you don't need to sign until you're ready.</li>
-                              <li className="mb-2">You can consent to all, some, or none of the proposed services - your child won't receive new services without your approval.</li>
-                              <li className="mb-2">You have the right to request an IEP meeting at any time, not just at the annual review, and the school must schedule it within 30 days.</li>
-                              <li className="mb-2">If an administrator isn't present at the meeting, you have the right to reschedule for a time when they can attend.</li>
-                              <li className="mb-2">By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting.</li>
+                              <li className="mb-2">{t('rights.bulletPoints.1')}</li>
+                              <li className="mb-2">{t('rights.bulletPoints.2')}</li>
+                              <li className="mb-2">{t('rights.bulletPoints.3')}</li>
+                              <li className="mb-2">{t('rights.bulletPoints.4')}</li>
+                              <li className="mb-2">{t('rights.bulletPoints.5')}</li>
+                              <li className="mb-2">{t('rights.bulletPoints.6')}</li>
                             </ul>
                           </div>
                         </Alert>
                       </div>
                     ) : recentDocument.status === "FAILED" ? (
                       <Alert variant="danger">
-                        <h5>Processing Failed</h5>
-                        <p>There was an error processing your document. Please try uploading it again.</p>
+                        <h5>{t('summary.failed.title')}</h5>
+                        <p>{t('summary.failed.message')}</p>
                       </Alert>
                     ) : (
                       <>
@@ -358,13 +361,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                               title={
                                 <span>
                                   <FontAwesomeIcon icon={faLanguage} className="me-1" />
-                                  Preferred Language
+                                  {t('summary.preferredLanguage')}
                                 </span>
                               }
                             >
                               {translatedSummary ? (
                                 <>
-                                  <h4 className="mt-4">IEP Summary</h4>
+                                  <h4 className="mt-4">{t('summary.iepSummary')}</h4>
                                   <Card className="summary-content mb-4">
                                     <Card.Body>
                                       <p className="mb-0">{translatedSummary}</p>
@@ -373,14 +376,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                                 </>
                               ) : (
                                 <Alert variant="info">
-                                  <h5>No Translated Summary Available</h5>
-                                  <p>No summary in your preferred language was found for this document.</p>
+                                  <h5>{t('summary.noTranslatedSummary.title')}</h5>
+                                  <p>{t('summary.noTranslatedSummary.message')}</p>
                                 </Alert>
                               )}
                               
                               {translatedSections.length > 0 ? (
                                 <>
-                                  <h4 className="mt-4">Key Insights</h4>
+                                  <h4 className="mt-4">{t('summary.keyInsights')}</h4>
                                   <Accordion className="mb-3 summary-accordion">
                                     {translatedSections.map((section, index) => (
                                       <Accordion.Item key={index} eventKey={index.toString()}>
@@ -388,7 +391,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                                           {section.displayName}
                                         </Accordion.Header>
                                         <Accordion.Body>
-                                          {section.content || 'No content available for this section.'}
+                                          {section.content || t('summary.noContent')}
                                         </Accordion.Body>
                                       </Accordion.Item>
                                     ))}
@@ -396,17 +399,17 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                                 </>
                               ) : (
                                 <Alert variant="info">
-                                  <h5>No Translated Sections Available</h5>
-                                  <p>No sections in your preferred language were found for this document.</p>
+                                  <h5>{t('summary.noTranslatedSections.title')}</h5>
+                                  <p>{t('summary.noTranslatedSections.message')}</p>
                                 </Alert>
                               )}
                             </Tab>
                           )}
                           
-                          <Tab eventKey="english" title="English">
+                          <Tab eventKey="english" title={t('summary.english')}>
                             {summary ? (
                               <>
-                                <h4 className="mt-4">IEP Summary</h4>
+                                <h4 className="mt-4">{t('summary.iepSummary')}</h4>
                                 <Card className="summary-content mb-4">
                                   <Card.Body>
                                     <p className="mb-0">{summary}</p>
@@ -415,14 +418,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                               </>
                             ) : (
                               <Alert variant="info">
-                                <h5>No Summary Available</h5>
-                                <p>No English summary was found for this document.</p>
+                                <h5>{t('summary.noSummary.title')}</h5>
+                                <p>{t('summary.noSummary.message')}</p>
                               </Alert>
                             )}
                             
                             {sections.length > 0 ? (
                               <>
-                                <h4 className="mt-4">Key Insights</h4>
+                                <h4 className="mt-4">{t('summary.keyInsights')}</h4>
                                 <Accordion className="mb-3 summary-accordion">
                                   {sections.map((section, index) => (
                                     <Accordion.Item key={index} eventKey={index.toString()}>
@@ -430,7 +433,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                                         {section.displayName}
                                       </Accordion.Header>
                                       <Accordion.Body>
-                                        {section.content || 'No content available for this section.'}
+                                        {section.content || t('summary.noContent')}
                                       </Accordion.Body>
                                     </Accordion.Item>
                                   ))}
@@ -438,8 +441,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                               </>
                             ) : (
                               <Alert variant="info">
-                                <h5>No Sections Available</h5>
-                                <p>No English sections were found for this document.</p>
+                                <h5>{t('summary.noSections.title')}No Sections Available</h5>
+                                <p>{t('summary.noSections.message')}No English sections were found for this document.</p>
                               </Alert>
                             )}
                           </Tab>
@@ -447,8 +450,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         
                         {!summary && !translatedSummary && sections.length === 0 && translatedSections.length === 0 && (
                           <Alert variant="info">
-                            <h5>No Content Available</h5>
-                            <p>The document has been processed, but no summary or sections were found in any language.</p>
+                            <h5>{t('summary.noContentAvailable.title')}No Content Available</h5>
+                            <p>{t('summary.noContentAvailable.message')}The document has been processed, but no summary or sections were found in any language.</p>
                           </Alert>
                         )}
                       </>
