@@ -4,6 +4,7 @@ import boto3
 import traceback
 import re
 import logging
+import time
 from config import get_translation_prompt
 from llm_service import invoke_claude_3_5, CLAUDE_MODELS
 
@@ -30,10 +31,11 @@ def translate_content(content, target_languages):
     """
     # If no translation needed or content is empty, return as is
     if not target_languages or not content:
+        logger.info(f"No translation needed: target_languages={target_languages}, content_length={len(content) if content and isinstance(content, str) else 'N/A'}")
         return content
     
     # Log the translation request
-    logger.info(f"Translating content to {target_languages}")
+    logger.info(f"Translating content to {target_languages}, content type: {type(content)}, length: {len(content) if isinstance(content, str) else 'N/A'}")
     
     try:
         # Handle different content types appropriately
@@ -43,9 +45,13 @@ def translate_content(content, target_languages):
             
             # Translate to each language
             for lang in target_languages:
+                logger.info(f"Translating string content to {lang}")
                 translated_text = translate_text(content, lang)
                 result[lang] = translated_text
+                logger.info(f"Added translation for {lang}, length: {len(translated_text)}")
                 
+            # Log the final result structure    
+            logger.info(f"Completed string translation with result keys: {list(result.keys())}")
             return result
         
         elif isinstance(content, dict):
@@ -111,6 +117,7 @@ def translate_text(text, target_language):
         str: Translated text
     """
     if not text or not text.strip():
+        logger.warning(f"Empty text provided for translation to {target_language}")
         return ""
     
     try:
@@ -135,19 +142,26 @@ def translate_text(text, target_language):
         
         # Get full language name from code
         language_name = language_map.get(target_language, target_language)
+        logger.info(f"Translating to {target_language} ({language_name}), text length: {len(text)}")
         
         # Create translation prompt using the main get_translation_prompt function
         prompt = get_translation_prompt(text, language_name)
+        logger.info(f"Created translation prompt of length: {len(prompt)}")
         
         # Call Claude 3.5 Sonnet for translation
+        start_time = time.time()
         content = invoke_claude_3_5(
             prompt=prompt,
             temperature=0,
             max_tokens=8000
         )
+        end_time = time.time()
+        
+        logger.info(f"Received translation response in {end_time - start_time:.2f} seconds, length: {len(content)}")
             
         # Clean the translation output
         cleaned_translation = clean_translation_output(content)
+        logger.info(f"Cleaned translation length: {len(cleaned_translation)}")
         
         return cleaned_translation
     

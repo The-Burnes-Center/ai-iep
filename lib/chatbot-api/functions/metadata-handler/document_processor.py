@@ -238,12 +238,18 @@ def summarize_and_analyze_document(document_content, user_profile=None):
                 logger.info("Translating summary")
                 if result['summaries'].get('en'):
                     try:
+                        # Log the beginning of summary translation
+                        logger.info(f"Starting summary translation for languages: {target_languages}")
+                        
                         translated_summary = translate_content(
                             content=result['summaries']['en'],
                             target_languages=target_languages
                         )
                         
+                        # Log translation results
                         if isinstance(translated_summary, dict):
+                            logger.info(f"Received translation result with keys: {list(translated_summary.keys())}")
+                            
                             for lang, trans_text in translated_summary.items():
                                 if lang != 'original' and trans_text and trans_text.strip():  # Skip original and empty translations
                                     result['summaries'][lang] = trans_text
@@ -572,21 +578,41 @@ def transform_to_simplified_format(result, target_languages=None):
             'sections': {}
         }
         
-        # Process summary first
-        if 'summary' in result:
+        # Log current result keys for debugging
+        logger.info(f"Transform input result keys: {list(result.keys() if isinstance(result, dict) else [])}")
+        if 'summaries' in result:
+            logger.info(f"Transform input summaries keys: {list(result['summaries'].keys() if isinstance(result['summaries'], dict) else [])}")
+        
+        # Process summary and summaries
+        # First check if we have translated summaries in the summaries structure
+        if 'summaries' in result and isinstance(result['summaries'], dict):
+            logger.info(f"Processing summaries structure with languages: {list(result['summaries'].keys())}")
+            
+            # Copy all language summaries to simplified structure
+            for lang, summary_text in result['summaries'].items():
+                if isinstance(summary_text, str) and summary_text.strip():
+                    simplified_result['summaries'][lang] = summary_text
+                    logger.info(f"Added {lang} summary from summaries structure, length: {len(summary_text)}")
+        
+        # Also handle main summary if present (fallback)
+        if 'summary' in result and not simplified_result['summaries'].get('en'):
             summary = result.get('summary', '')
+            logger.info(f"Processing main summary field, type: {type(summary)}")
             
             # Handle English summary
-            if isinstance(summary, str):
+            if isinstance(summary, str) and summary.strip():
                 # Single string summary (English only)
                 simplified_result['summaries']['en'] = summary
+                logger.info(f"Added English summary from main summary field, length: {len(summary)}")
             elif isinstance(summary, dict):
                 # Summary with translations
                 for lang, content in summary.items():
-                    if lang == 'original':
+                    if lang == 'original' and content.strip():
                         simplified_result['summaries']['en'] = content
-                    else:
+                        logger.info(f"Added English summary from summary.original, length: {len(content)}")
+                    elif content.strip():
                         simplified_result['summaries'][lang] = content
+                        logger.info(f"Added {lang} summary from summary dict, length: {len(content)}")
         
         # Process each language for sections
         for lang in languages:
@@ -603,24 +629,38 @@ def transform_to_simplified_format(result, target_languages=None):
                         for section_name, section_content in result['sections'].items():
                             if isinstance(section_content, str):
                                 simplified_result['sections']['en'][section_name] = section_content
+                                logger.info(f"Added English section {section_name}, length: {len(section_content)}")
                             elif isinstance(section_content, dict) and 'S' in section_content:
                                 # Handle DynamoDB format if present
                                 simplified_result['sections']['en'][section_name] = section_content['S']
+                                logger.info(f"Added English section {section_name} from DynamoDB format")
                     elif lang in result['sections']:
                         # For other languages, copy their sections
                         lang_sections = result['sections'].get(lang, {})
                         for section_name, section_content in lang_sections.items():
                             if isinstance(section_content, str):
                                 simplified_result['sections'][lang][section_name] = section_content
+                                logger.info(f"Added {lang} section {section_name}, length: {len(section_content)}")
                             elif isinstance(section_content, dict) and 'S' in section_content:
                                 # Handle DynamoDB format if present
                                 simplified_result['sections'][lang][section_name] = section_content['S']
+                                logger.info(f"Added {lang} section {section_name} from DynamoDB format")
         
-        # Log the structure to help with debugging
-        logger.info(f"Created simplified structure: {json.dumps(simplified_result)[:200]}...")
+        # Log the simplified structure for debugging
+        logger.info(f"Created simplified structure with summaries languages: {list(simplified_result['summaries'].keys())}")
+        logger.info(f"Created simplified structure with sections languages: {list(simplified_result['sections'].keys())}")
         
         # Let format_data_for_dynamodb handle the DynamoDB formatting
-        return format_data_for_dynamodb(simplified_result)
+        formatted_result = format_data_for_dynamodb(simplified_result)
+        
+        # Log the formatted structure to help with debugging
+        if isinstance(formatted_result, dict) and 'M' in formatted_result:
+            if 'summaries' in formatted_result['M']:
+                logger.info(f"Final formatted structure has summaries: {list(formatted_result['M']['summaries'].get('M', {}).keys())}")
+            if 'sections' in formatted_result['M']:
+                logger.info(f"Final formatted structure has sections: {list(formatted_result['M']['sections'].get('M', {}).keys())}")
+        
+        return formatted_result
         
     except Exception as e:
         logger.error(f"Error transforming to simplified format: {str(e)}")

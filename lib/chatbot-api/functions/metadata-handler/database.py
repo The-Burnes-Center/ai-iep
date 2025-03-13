@@ -138,13 +138,17 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                 if status == 'PROCESSED' and summaries:
                     # Format summaries and sections for DynamoDB storage using the new helper function
                     formatted_summaries = {"M": {}}
-                    for lang, summary_content in summaries.get('summaries', {}).get('M', {}).items():
-                        formatted_summaries["M"][lang] = summary_content
+                    if 'summaries' in summaries and 'M' in summaries['summaries']:
+                        print(f"Found summaries structure with languages: {list(summaries['summaries']['M'].keys())}")
+                        for lang, summary_content in summaries['summaries']['M'].items():
+                            formatted_summaries["M"][lang] = summary_content
+                            print(f"Added {lang} summary to formatted_summaries")
                     
                     formatted_sections = {"M": {}}
                     if 'sections' in summaries and 'M' in summaries['sections']:
                         # This is the correct DynamoDB format structure - use as is
                         formatted_sections = summaries['sections']
+                        print(f"Using pre-formatted sections structure with languages: {list(summaries['sections']['M'].keys() if 'M' in summaries['sections'] else [])}")
                     
                     update_expr += ", summaries = :summaries, sections = :sections"
                     expr_attr_values[':summaries'] = formatted_summaries
