@@ -143,11 +143,8 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     
                     formatted_sections = {"M": {}}
                     if 'sections' in summaries and 'M' in summaries['sections']:
-                        for lang, sections_content in summaries['sections']['M'].items():
-                            formatted_sections["M"][lang] = {"M": {}}
-                            for section_name, section_data in sections_content.get('M', {}).items():
-                                # Use the helper function to format each section
-                                formatted_sections["M"][lang]["M"][section_name] = format_data_for_dynamodb(section_data)
+                        # This is the correct DynamoDB format structure - use as is
+                        formatted_sections = summaries['sections']
                     
                     update_expr += ", summaries = :summaries, sections = :sections"
                     expr_attr_values[':summaries'] = formatted_summaries

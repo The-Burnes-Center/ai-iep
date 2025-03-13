@@ -63,6 +63,14 @@ def summarize_and_analyze_document(document_content, user_profile=None):
     start_time = time.time()
     
     try:
+        # Handle null or empty content
+        if not document_content:
+            logger.error("Empty document content provided")
+            return {
+                'success': False,
+                'error': "Empty document content provided"
+            }
+
         # Check if content is binary (likely a PDF file)
         is_binary = isinstance(document_content, bytes)
         
@@ -181,8 +189,8 @@ def summarize_and_analyze_document(document_content, user_profile=None):
             logger.info("Starting translation process")
             try:
                 # Translate the summary if it exists
-                if 'summary' in result:
-                    summary = result.get('summary', '')
+                if 'summary' in result and 'summaries' in result:
+                    summary = result['summary']
                     if isinstance(summary, str):
                         # Single string summary (English only)
                         translated_summary = translate_content(
@@ -190,44 +198,37 @@ def summarize_and_analyze_document(document_content, user_profile=None):
                             target_languages=target_languages
                         )
                         if isinstance(translated_summary, dict):
-                            # Store translated summaries directly in DynamoDB format
+                            # Add translations to summaries
                             for lang, trans_text in translated_summary.items():
                                 if lang != 'original':  # Skip the original English text
-                                    result['summaries']['M'][lang] = {'S': trans_text}
+                                    if 'summaries' not in result:
+                                        result['summaries'] = {}
+                                    result['summaries'][lang] = trans_text
                 
                 # Translate the structured sections data
-                if 'sections' in result and 'M' in result['sections']:
+                if 'sections' in result:
                     try:
                         # Get English sections
-                        en_sections = result['sections']['M'].get('en', {}).get('M', {})
+                        en_sections = result['sections'].get('en', {})
                         
                         # Process each language
                         for target_lang in target_languages:
                             # Initialize target language structure if not exists
-                            if target_lang not in result['sections']['M']:
-                                result['sections']['M'][target_lang] = {'M': {}}
+                            if target_lang not in result['sections']:
+                                result['sections'][target_lang] = {}
                             
                             # Process each section
-                            for section_name, section_data in en_sections.items():
-                                # Get English content
-                                en_content = section_data.get('M', {}).get('S', {}).get('S', '')
-                                
-                                if en_content:
+                            for section_name, section_content in en_sections.items():
+                                if isinstance(section_content, str):
                                     # Translate the section content
                                     translated_content = translate_content(
-                                        content=en_content,
+                                        content=section_content,
                                         target_languages=[target_lang]
                                     )
                                     
                                     # Add translated content to result
                                     if isinstance(translated_content, dict) and target_lang in translated_content:
-                                        result['sections']['M'][target_lang]['M'][section_name] = {
-                                            'M': {
-                                                'S': {
-                                                    'S': translated_content[target_lang]
-                                                }
-                                            }
-                                        }
+                                        result['sections'][target_lang][section_name] = translated_content[target_lang]
                     except Exception as e:
                         logger.error(f"Error translating sections: {str(e)}")
                         traceback.print_exc()
@@ -312,7 +313,7 @@ def process_document_in_chunks(text_content):
     logger.info(f"Created {len(chunks)} chunks for processing")
     return chunks
 
-def process_single_chunk(chunk_text, chunk_index, total_chunks):
+def process_single_chunk(chunk, chunk_index, total_chunks):
     """
     Process a single chunk of text using the LLM to extract important information.
     This is the MAP phase of the map-reduce pattern.
@@ -327,7 +328,7 @@ def process_single_chunk(chunk_text, chunk_index, total_chunks):
     """
     try:
         # Generate the prompt for chunk analysis using the function from config.py
-        prompt = get_chunk_analysis_prompt(chunk_text, chunk_index, total_chunks)
+        prompt = get_chunk_analysis_prompt(chunk, chunk_index, total_chunks)
         
         # Call Claude 3.5 Sonnet to process the chunk
         response = invoke_claude_3_5(
@@ -342,7 +343,7 @@ def process_single_chunk(chunk_text, chunk_index, total_chunks):
         logger.error(f"Error processing chunk {chunk_index}/{total_chunks}: {str(e)}")
         traceback.print_exc()
         # Return a simple error message as the chunk result to avoid breaking the pipeline
-        return f"Error processing chunk {chunk_index}/{total_chunks}: {str(e)}\n\nOriginal chunk content (partial):\n{chunk_text[:1000]}..."
+        return f"Error processing chunk {chunk_index}/{total_chunks}: {str(e)}\n\nOriginal chunk content (partial):\n{chunk[:1000]}..."
 
 def combine_chunk_results(processed_chunks):
     """
@@ -448,7 +449,7 @@ def generate_final_json_analysis(combined_text_analysis):
         }
 
 def transform_to_simplified_format(result, target_languages=None):
-    """Transform the simplified format to the DynamoDB format structure
+    """Transform the LLM output into a simpler structure that can be properly formatted by database.py
     
     Args:
         result: The result to transform from the LLM output
@@ -462,14 +463,10 @@ def transform_to_simplified_format(result, target_languages=None):
         if 'en' not in languages:
             languages = ['en'] + languages
         
-        # Create the base DynamoDB structure
-        dynamodb_result = {
-            'summaries': {
-                'M': {}
-            },
-            'sections': {
-                'M': {}
-            }
+        # Create a simpler structure that will be properly formatted by format_data_for_dynamodb
+        simplified_result = {
+            'summaries': {},
+            'sections': {}
         }
         
         # Process summary first
@@ -479,48 +476,61 @@ def transform_to_simplified_format(result, target_languages=None):
             # Handle English summary
             if isinstance(summary, str):
                 # Single string summary (English only)
-                dynamodb_result['summaries']['M']['en'] = {'S': summary}
+                simplified_result['summaries']['en'] = summary
             elif isinstance(summary, dict):
                 # Summary with translations
                 for lang, content in summary.items():
                     if lang == 'original':
-                        dynamodb_result['summaries']['M']['en'] = {'S': content}
+                        simplified_result['summaries']['en'] = content
                     else:
-                        dynamodb_result['summaries']['M'][lang] = {'S': content}
+                        simplified_result['summaries'][lang] = content
         
         # Process each language for sections
         for lang in languages:
-            # Initialize section structure for this language - correct nesting here
-            if lang not in dynamodb_result['sections']['M']:
-                dynamodb_result['sections']['M'][lang] = {'M': {}}
+            # Initialize section structure for this language
+            if lang not in simplified_result['sections']:
+                simplified_result['sections'][lang] = {}
             
             # Get sections from the result (simplified structure from LLM)
-            if 'sections' in result and isinstance(result['sections'], dict):
-                # For English (primary language)
-                if lang == 'en':
-                    for section_name, section_content in result['sections'].items():
-                        if isinstance(section_content, str):
-                            # Add section with correct nesting (avoid duplicate 'M' keys)
-                            dynamodb_result['sections']['M']['en']['M'][section_name] = {
-                                'M': {
-                                    'S': {
-                                        'S': section_content
-                                    }
-                                }
-                            }
+            if 'sections' in result:
+                if isinstance(result['sections'], dict):
+                    # Process each language's sections
+                    if lang == 'en':
+                        # For English, use the main sections
+                        for section_name, section_content in result['sections'].items():
+                            if isinstance(section_content, str):
+                                simplified_result['sections']['en'][section_name] = section_content
+                            elif isinstance(section_content, dict) and 'S' in section_content:
+                                # Handle DynamoDB format if present
+                                simplified_result['sections']['en'][section_name] = section_content['S']
+                    elif lang in result['sections']:
+                        # For other languages, copy their sections
+                        lang_sections = result['sections'].get(lang, {})
+                        for section_name, section_content in lang_sections.items():
+                            if isinstance(section_content, str):
+                                simplified_result['sections'][lang][section_name] = section_content
+                            elif isinstance(section_content, dict) and 'S' in section_content:
+                                # Handle DynamoDB format if present
+                                simplified_result['sections'][lang][section_name] = section_content['S']
         
         # Log the structure to help with debugging
-        logger.info(f"Created DynamoDB format with sections for English: {json.dumps(dynamodb_result)[:200]}...")
+        logger.info(f"Created simplified structure: {json.dumps(simplified_result)[:200]}...")
         
-        return dynamodb_result
+        # Let format_data_for_dynamodb handle the DynamoDB formatting
+        return format_data_for_dynamodb(simplified_result)
         
     except Exception as e:
-        logger.error(f"Error transforming to DynamoDB format: {str(e)}")
+        logger.error(f"Error transforming to simplified format: {str(e)}")
         traceback.print_exc()
         
-        # Attempt a basic transformation as a fallback
+        # Create a minimal structure as fallback
+        minimal_result = {
+            'summaries': {'en': 'Error processing document'},
+            'sections': {'en': {'Error': 'Failed to process document'}}
+        }
+        
         try:
-            return format_data_for_dynamodb(result)
+            return format_data_for_dynamodb(minimal_result)
         except Exception as fallback_error:
             logger.error(f"Fallback formatting also failed: {str(fallback_error)}")
             return result

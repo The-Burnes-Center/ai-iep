@@ -214,8 +214,17 @@ def get_documentai_client():
                 
                 # Get the document content and mime type
                 raw_document = request.get('raw_document', {})
-                content = raw_document.get('content')
+                content_base64 = raw_document.get('content')
                 mime_type = raw_document.get('mime_type', 'application/pdf')
+                
+                # Decode base64 content to bytes
+                try:
+                    import base64
+                    content = base64.b64decode(content_base64)
+                    print(f"Successfully decoded base64 content, size: {len(content)} bytes")
+                except Exception as e:
+                    print(f"Error decoding base64 content: {e}")
+                    content = content_base64
                 
                 # Process the document using our simplified function
                 text = process_document(
@@ -229,10 +238,6 @@ def get_documentai_client():
                 if text is None:
                     # If both Document AI and fallback failed
                     raise ValueError("Document processing failed with all methods")
-                
-                # WARNING: At this point, text could be from DocAI or from PyPDF2 fallback
-                # This is causing confusion in the logs because lambda_function.py doesn't know
-                # which method actually succeeded
                 
                 # Create a response object that matches the expected structure
                 # and include a new attribute to indicate if text came from fallback
