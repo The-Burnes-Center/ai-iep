@@ -14,8 +14,7 @@ bedrock_runtime = boto3.client('bedrock-runtime')
 
 # Configure default models
 CLAUDE_MODELS = {
-    "default": os.environ.get('ANTHROPIC_MODEL', 'anthropic.claude-3-5-sonnet-20241022-v2:0'),
-    "sonnet_3_7": os.environ.get('ANTHROPIC_MODEL_3_7', 'anthropic.claude-3-7-sonnet-20250219-v1:0')
+    "default": os.environ.get('ANTHROPIC_MODEL', 'anthropic.claude-3-5-sonnet-20240620-v1:0')
 }
 
 class LLMProvider(Enum):
@@ -132,10 +131,6 @@ def invoke_claude(prompt, temperature=0, max_tokens=8000, model=None):
 def invoke_claude_3_5(prompt, temperature=0, max_tokens=8000):
     """Invoke Claude 3.5 Sonnet model (default)"""
     return invoke_claude(prompt, temperature, max_tokens, CLAUDE_MODELS["default"])
-
-def invoke_claude_3_7(prompt, temperature=0, max_tokens=8000):
-    """Invoke Claude 3.7 Sonnet model"""
-    return invoke_claude(prompt, temperature, max_tokens, CLAUDE_MODELS["sonnet_3_7"])
 
 # Future function for OpenAI integration
 # def invoke_openai(prompt, temperature=0, max_tokens=8000, model="gpt-4"):

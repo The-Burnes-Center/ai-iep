@@ -14,7 +14,7 @@ from config import (
     get_simplified_json_analysis_prompt,
     IEP_SECTIONS
 )
-from llm_service import invoke_claude, invoke_claude_3_5, invoke_claude_3_7, CLAUDE_MODELS
+from llm_service import invoke_claude, invoke_claude_3_5, CLAUDE_MODELS
 import time
 import uuid
 from datetime import datetime
@@ -31,8 +31,7 @@ logger = logging.getLogger(__name__)
 bedrock_runtime = boto3.client('bedrock-runtime')
 
 # Configure models
-ANTHROPIC_MODEL = os.environ.get('ANTHROPIC_MODEL', 'anthropic.claude-3-5-sonnet-20241022-v2:0')
-ANTHROPIC_MODEL_3_7 = os.environ.get('ANTHROPIC_MODEL_3_7', 'anthropic.claude-3-7-sonnet-20250219-v1:0')
+ANTHROPIC_MODEL = os.environ.get('ANTHROPIC_MODEL', 'anthropic.claude-3-5-sonnet-20240620-v1:0')
 
 # Constants for chunk processing
 MAX_TOKENS_PER_CHUNK = 80000  # Maximum tokens for Claude model (using smaller chunk model)
@@ -449,7 +448,7 @@ def generate_final_json_analysis(combined_text_analysis):
             prompt = get_simplified_json_analysis_prompt(combined_text_analysis)
             
             # Try Claude 3.7 Sonnet for better handling of complex JSON 
-            response = invoke_claude_3_7(
+            response = invoke_claude_3_5(
                 prompt=prompt,
                 temperature=0,
                 max_tokens=8000

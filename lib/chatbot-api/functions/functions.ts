@@ -393,8 +393,7 @@ export class LambdaFunctionStack extends cdk.Stack {
             "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
             "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
             "KNOWLEDGE_BASE_ID": props.knowledgeBase.ref,
-            "ANTHROPIC_MODEL": "anthropic.claude-3-5-sonnet-20241022-v2:0",
-            "ANTHROPIC_MODEL_3_7": "anthropic.claude-3-7-sonnet-20250219-v1:0"
+            "ANTHROPIC_MODEL": "anthropic.claude-3-5-sonnet-20240620-v1:0"
           },
           timeout: cdk.Duration.seconds(600),
           memorySize: 1024
@@ -413,8 +412,7 @@ export class LambdaFunctionStack extends cdk.Stack {
           resources: [
             props.knowledgeBucket.bucketArn,
             props.knowledgeBucket.bucketArn + "/*",
-            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0',
-            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-7-sonnet-20250219-v1:0',
+            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
             props.knowledgeBase.attrKnowledgeBaseArn,
             // Add the ARN of the secret in AWS Secrets Manager
             'arn:aws:secretsmanager:us-east-1:530075910224:secret:GoogleDocumentAICredentials*',
