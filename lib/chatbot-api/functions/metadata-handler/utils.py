@@ -1,6 +1,29 @@
 import os
 import boto3
 import json
+import logging
+
+def get_logger():
+    """
+    Get a configured logger instance.
+    
+    Returns:
+        logging.Logger: A configured logger instance
+    """
+    logger = logging.getLogger()
+    
+    # Only add handler if not already present
+    if not logger.handlers:
+        # Configure handler for Lambda environment
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s\n%(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    
+    # Set log level
+    logger.setLevel(logging.INFO)
+    
+    return logger
 
 def get_document_metadata(bucket, key):
     """Retrieve the metadata of a single S3 object."""
