@@ -512,14 +512,37 @@ def summarize_and_analyze_document(file_content, user_profile=None):
             
             # Translate each section
             if 'sections' in result:
-                translated_sections = []
-                for section in result['sections']:
-                    translated_section = section.copy()
-                    # Translate the content of the section
-                    if 'content' in section:
-                        translated_section['content'] = translate_content(section['content'], target_languages)
-                    translated_sections.append(translated_section)
-                result['sections'] = translated_sections
+                # Check if sections is a dictionary (previous code assumed it's always a list)
+                if isinstance(result['sections'], dict):
+                    translated_sections = {}
+                    for section_name, section_content in result['sections'].items():
+                        if isinstance(section_content, dict):
+                            translated_section = section_content.copy()
+                            # Translate the content of the section
+                            if 'content' in translated_section:
+                                translated_section['content'] = translate_content(translated_section['content'], target_languages)
+                            # Also translate summary if present
+                            if 'summary' in translated_section:
+                                translated_section['summary'] = translate_content(translated_section['summary'], target_languages)
+                            translated_sections[section_name] = translated_section
+                        else:
+                            # If section content is not a dictionary, just keep it as is
+                            translated_sections[section_name] = section_content
+                    result['sections'] = translated_sections
+                else:
+                    # Original implementation for when sections is a list
+                    translated_sections = []
+                    for section in result['sections']:
+                        if isinstance(section, dict):
+                            translated_section = section.copy()
+                            # Translate the content of the section
+                            if 'content' in section:
+                                translated_section['content'] = translate_content(section['content'], target_languages)
+                            translated_sections.append(translated_section)
+                        else:
+                            # If section is not a dictionary, just append it as is
+                            translated_sections.append(section)
+                    result['sections'] = translated_sections
         
         return {
             "success": True,

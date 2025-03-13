@@ -73,8 +73,14 @@ def handle_api_request(event):
 
 def handle_s3_upload_event(event):
     """Handle S3 event for document processing"""
-    # Extract information from the event
+    # Initialize variables that will be used in the exception handler
+    iep_id = None
+    child_id = None
+    user_id = None
+    key = None
+    
     try:
+        # Extract information from the event
         record = event['Records'][0]
         bucket = record['s3']['bucket']['name']
         key = record['s3']['object']['key']
@@ -138,11 +144,25 @@ def handle_s3_upload_event(event):
         analysis_result = summarize_and_analyze_document(file_content, user_profile)
         
         if not analysis_result.get('success', False):
-            print(f"Error processing document: {analysis_result.get('error', 'Unknown error')}")
+            error_message = analysis_result.get('error', 'Unknown error')
+            print(f"Error processing document: {error_message}")
+            
+            # Update the document status as FAILED
+            update_iep_document_status(
+                iep_id=iep_id,
+                status='FAILED',
+                error_message=error_message,
+                child_id=child_id,
+                user_id=user_id,
+                object_key=key
+            )
+            
+            print(f"Updated document status to FAILED in database for iepId: {iep_id}")
+            
             return {
                 'statusCode': 500,
                 'body': json.dumps({
-                    'message': f"Error processing document: {analysis_result.get('error', 'Unknown error')}"
+                    'message': f"Error processing document: {error_message}"
                 })
             }
         
@@ -248,15 +268,32 @@ def handle_s3_upload_event(event):
             'body': json.dumps({
                 'message': 'Document processed successfully',
                 'iepId': iep_id,
-                'saveResult': save_result
+                'childId': child_id
             })
         }
     except Exception as e:
-        print(f"Error processing S3 event: {str(e)}")
+        error_message = f"Unhandled exception during document processing: {str(e)}"
+        print(error_message)
         traceback.print_exc()
+        
+        # Update document status as FAILED if we have enough information
+        if iep_id:
+            try:
+                update_iep_document_status(
+                    iep_id=iep_id,
+                    status='FAILED',
+                    error_message=error_message,
+                    child_id=child_id,
+                    user_id=user_id,
+                    object_key=key
+                )
+                print(f"Updated document status to FAILED in database for iepId: {iep_id}")
+            except Exception as db_error:
+                print(f"Error updating document status in database: {str(db_error)}")
+        
         return {
-            'statusCode': 500, 
+            'statusCode': 500,
             'body': json.dumps({
-                'message': f"Error processing S3 event: {str(e)}"
+                'message': error_message
             })
         } 
