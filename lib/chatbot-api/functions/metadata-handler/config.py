@@ -76,6 +76,12 @@ LANGUAGE_CODES = {
     'vietnamese': 'vi'
 }
 
+# System messages for different AI tasks
+TRANSLATION_SYSTEM_MSG = 'You are an expert translator specializing in educational documents, particularly IEPs.'
+DOCUMENT_ANALYSIS_SYSTEM_MSG = 'You are an expert in analyzing educational documents, especially IEPs.'
+SUMMARY_SYSTEM_MSG = 'You are an expert in summarizing IEP documents in a parent-friendly manner that captures the essential information.'
+CHUNK_ANALYSIS_SYSTEM_MSG = 'You are an expert in analyzing and summarizing educational documents, especially Individualized Education Programs (IEPs).'
+
 def get_translation_prompt(content, target_language):
     """Generate a prompt for translating content to the target language in a parent-friendly manner."""
     # Context guidelines for specific languages
@@ -173,3 +179,36 @@ Critical Requirements:
 Document Name: {key}
 Document Content: {content}"""
     return prompt
+
+def get_chunk_system_message(chunk_index, total_chunks):
+    """Generate a system message for a specific chunk of a document."""
+    if chunk_index == 0:
+        return f"You are an expert in analyzing educational documents, especially IEPs. IMPORTANT: This is part {chunk_index+1} of {total_chunks} of a longer document. Focus on the beginning sections."
+    elif chunk_index == total_chunks - 1:
+        return f"You are an expert in analyzing educational documents, especially IEPs. IMPORTANT: This is part {chunk_index+1} of {total_chunks} of a longer document. Focus on the ending sections."
+    else:
+        return f"You are an expert in analyzing educational documents, especially IEPs. IMPORTANT: This is part {chunk_index+1} of {total_chunks} of a longer document. Focus on the middle sections."
+
+def get_unified_summary_prompt(sections_text, previous_summaries=""):
+    """Generate a prompt for creating a unified summary from chunked analysis results."""
+    return f"""
+You need to create a comprehensive parent-friendly summary of an IEP document. 
+I've already analyzed the document in chunks, and now I need you to create a unified, coherent summary.
+
+Your summary should:
+- Cover all major decisions and services in the IEP
+- Use simple language (8th-grade reading level)
+- Explain what the plan means for the child's daily school life
+- Highlight any important dates, changes, or actions needed
+- Incorporate any significant concerns or input from parents or teachers
+- Have a warm, supportive tone
+- Be 3-4 sentences long
+
+Here are the extracted sections and their details:
+
+{sections_text}
+
+{previous_summaries}
+
+Based on all this information, provide a comprehensive yet concise parent-friendly summary of the entire IEP document.
+"""
