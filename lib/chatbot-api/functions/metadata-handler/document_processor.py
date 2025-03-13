@@ -188,52 +188,102 @@ def summarize_and_analyze_document(document_content, user_profile=None):
         if target_languages:
             logger.info("Starting translation process")
             try:
-                # Translate the summary if it exists
-                if 'summary' in result and 'summaries' in result:
-                    summary = result['summary']
-                    if isinstance(summary, str):
-                        # Single string summary (English only)
+                # First, ensure we have a valid summary to translate
+                if not result.get('summary') or not isinstance(result.get('summary'), str) or len(result.get('summary', '').strip()) < 10:
+                    logger.warning("Summary missing or too short - creating default summary for translation")
+                    result['summary'] = "This document appears to be an Individualized Education Program (IEP). It contains information about the student's educational needs, goals, and services, but detailed content could not be extracted."
+                
+                # Track if we have any content to translate
+                has_english_content = False
+                
+                # Ensure summaries structure exists
+                if 'summaries' not in result:
+                    result['summaries'] = {}
+                    
+                # Make sure English summary is stored in summaries
+                if isinstance(result.get('summary'), str) and result.get('summary').strip():
+                    result['summaries']['en'] = result['summary']
+                    has_english_content = True
+                    logger.info(f"Added English summary to summaries structure, length: {len(result['summary'])}")
+                
+                # Make sure sections has some content
+                if 'sections' not in result or not result['sections'] or not isinstance(result['sections'], dict):
+                    logger.warning("Sections missing or invalid - creating default sections structure")
+                    result['sections'] = {
+                        "Student Information": "Information not extracted from document",
+                        "Present Levels of Performance": "Information not extracted from document",
+                        "Services": "Information not extracted from document", 
+                        "Goals": "Information not extracted from document",
+                        "Accommodations": "Information not extracted from document"
+                    }
+                
+                # Initialize language structure for sections if needed
+                if not isinstance(result['sections'].get('en'), dict):
+                    logger.info("Adding English sections structure")
+                    # Copy sections directly to English section
+                    result['sections']['en'] = {}
+                    for section_name, section_content in result['sections'].items():
+                        if section_name not in ['en', 'es', 'zh', 'vi'] and isinstance(section_content, str):
+                            result['sections']['en'][section_name] = section_content
+                            has_english_content = True
+                
+                if not has_english_content:
+                    logger.warning("No valid English content found for translation")
+                    return {
+                        'success': True,
+                        'result': result
+                    }
+                
+                # Now translate summary if we have one
+                logger.info("Translating summary")
+                if result['summaries'].get('en'):
+                    try:
                         translated_summary = translate_content(
-                            content=summary,
+                            content=result['summaries']['en'],
                             target_languages=target_languages
                         )
-                        if isinstance(translated_summary, dict):
-                            # Add translations to summaries
-                            for lang, trans_text in translated_summary.items():
-                                if lang != 'original':  # Skip the original English text
-                                    if 'summaries' not in result:
-                                        result['summaries'] = {}
-                                    result['summaries'][lang] = trans_text
-                
-                # Translate the structured sections data
-                if 'sections' in result:
-                    try:
-                        # Get English sections
-                        en_sections = result['sections'].get('en', {})
                         
-                        # Process each language
+                        if isinstance(translated_summary, dict):
+                            for lang, trans_text in translated_summary.items():
+                                if lang != 'original' and trans_text and trans_text.strip():  # Skip original and empty translations
+                                    result['summaries'][lang] = trans_text
+                                    logger.info(f"Added {lang} summary translation, length: {len(trans_text)}")
+                        else:
+                            logger.warning(f"Unexpected translation result type: {type(translated_summary)}")
+                    except Exception as e:
+                        logger.error(f"Error translating summary: {str(e)}")
+                        traceback.print_exc()
+                
+                # Translate sections
+                logger.info("Translating sections")
+                if result['sections'].get('en'):
+                    try:
+                        # Ensure each target language has a sections structure
                         for target_lang in target_languages:
-                            # Initialize target language structure if not exists
                             if target_lang not in result['sections']:
                                 result['sections'][target_lang] = {}
                             
-                            # Process each section
-                            for section_name, section_content in en_sections.items():
-                                if isinstance(section_content, str):
-                                    # Translate the section content
-                                    translated_content = translate_content(
+                            # Process each English section
+                            for section_name, section_content in result['sections']['en'].items():
+                                if not isinstance(section_content, str) or not section_content.strip():
+                                    continue  # Skip non-string or empty content
+                                
+                                try:
+                                    translated_section = translate_content(
                                         content=section_content,
                                         target_languages=[target_lang]
                                     )
                                     
-                                    # Add translated content to result
-                                    if isinstance(translated_content, dict) and target_lang in translated_content:
-                                        result['sections'][target_lang][section_name] = translated_content[target_lang]
+                                    if isinstance(translated_section, dict) and translated_section.get(target_lang):
+                                        result['sections'][target_lang][section_name] = translated_section[target_lang]
+                                        logger.info(f"Translated {section_name} to {target_lang}, length: {len(translated_section[target_lang])}")
+                                except Exception as section_e:
+                                    logger.error(f"Error translating section {section_name} to {target_lang}: {str(section_e)}")
                     except Exception as e:
-                        logger.error(f"Error translating sections: {str(e)}")
+                        logger.error(f"Error in sections translation: {str(e)}")
                         traceback.print_exc()
             except Exception as e:
-                logger.error(f"Error during translation: {str(e)}")
+                logger.error(f"Error during translation process: {str(e)}")
                 traceback.print_exc()
         
         end_time = time.time()
@@ -319,7 +369,7 @@ def process_single_chunk(chunk, chunk_index, total_chunks):
     This is the MAP phase of the map-reduce pattern.
     
     Args:
-        chunk_text: The raw text chunk to process
+        chunk: The raw text chunk to process
         chunk_index: The index of the current chunk
         total_chunks: The total number of chunks
         
@@ -327,8 +377,18 @@ def process_single_chunk(chunk, chunk_index, total_chunks):
         str: Processed text analysis from the LLM
     """
     try:
+        # Validate chunk size
+        if not chunk or len(chunk.strip()) < 200:  # Require reasonable amount of text
+            logger.warning(f"Chunk {chunk_index}/{total_chunks} too small to analyze: {len(chunk) if chunk else 0} chars")
+            return f"CHUNK {chunk_index} ANALYSIS:\nThis chunk contains insufficient text content to analyze (less than 200 characters)."
+        
+        logger.info(f"Processing chunk {chunk_index}/{total_chunks} of length {len(chunk)} characters")
+        
         # Generate the prompt for chunk analysis using the function from config.py
         prompt = get_chunk_analysis_prompt(chunk, chunk_index, total_chunks)
+        
+        # Log prompt size for debugging
+        logger.info(f"Generated analysis prompt of size: {len(prompt)} characters")
         
         # Call Claude 3.5 Sonnet to process the chunk
         response = invoke_claude_3_5(
@@ -337,13 +397,26 @@ def process_single_chunk(chunk, chunk_index, total_chunks):
             max_tokens=4000
         )
         
+        # Validate response 
+        if not response or len(response.strip()) < 50:
+            logger.warning(f"Empty or very short response from LLM for chunk {chunk_index}: {len(response) if response else 0} chars")
+            return f"CHUNK {chunk_index} ANALYSIS:\nThe analysis engine returned an empty or insufficient response for this chunk. Consider reprocessing the document."
+        
+        logger.info(f"Received response of length {len(response)} characters for chunk {chunk_index}/{total_chunks}")
+        logger.info(f"Chunk {chunk_index}/{total_chunks} response preview: {response[:200].replace(chr(10), ' ')}...")
+        
+        # Check for specific error patterns in response
+        if "I apologize" in response and ("cannot" in response or "unable to" in response):
+            logger.warning(f"LLM indicated inability to process chunk {chunk_index}")
+            return f"CHUNK {chunk_index} ANALYSIS:\nThe analysis engine reported difficulty processing this chunk. Original chunk preview: {chunk[:300]}...\n\nEngine response: {response[:500]}"
+        
         logger.info(f"Chunk {chunk_index}/{total_chunks} processed successfully")
         return response
     except Exception as e:
         logger.error(f"Error processing chunk {chunk_index}/{total_chunks}: {str(e)}")
         traceback.print_exc()
         # Return a simple error message as the chunk result to avoid breaking the pipeline
-        return f"Error processing chunk {chunk_index}/{total_chunks}: {str(e)}\n\nOriginal chunk content (partial):\n{chunk[:1000]}..."
+        return f"Error processing chunk {chunk_index}/{total_chunks}: {str(e)}\n\nOriginal chunk content (partial):\n{chunk[:1000] if chunk else 'No content'}..."
 
 def combine_chunk_results(processed_chunks):
     """
@@ -381,6 +454,24 @@ def generate_final_json_analysis(combined_text_analysis):
         dict: Structured document analysis in a simplified format
     """
     try:
+        # Validate combined text analysis has meaningful content
+        if not combined_text_analysis or len(combined_text_analysis.strip()) < 100:
+            logger.warning(f"Combined text analysis too short or empty: {len(combined_text_analysis) if combined_text_analysis else 0} chars")
+            # Return a basic structure if input is insufficient
+            return {
+                "summary": "The document analysis could not be completed due to insufficient text content.",
+                "sections": {
+                    "Student Information": "Insufficient document content for analysis",
+                    "Present Levels of Performance": "Insufficient document content for analysis",
+                    "Services": "Insufficient document content for analysis",
+                    "Goals": "Insufficient document content for analysis",
+                    "Accommodations": "Insufficient document content for analysis"
+                }
+            }
+
+        # Log analysis size to help with debugging
+        logger.info(f"Generating final JSON from combined text analysis: {len(combined_text_analysis)} characters")
+        
         # Create the prompt for generating the structured JSON using the config function
         prompt = get_json_analysis_prompt(combined_text_analysis)
         
@@ -390,6 +481,10 @@ def generate_final_json_analysis(combined_text_analysis):
             temperature=0,
             max_tokens=8000
         )
+        
+        # Log the raw response size for debugging
+        logger.info(f"Raw LLM response size: {len(response)} characters")
+        logger.info(f"Raw LLM response preview: {response[:500]}...")
         
         # Parse the response to get JSON
         result = parse_document_analysis(response)
@@ -407,17 +502,25 @@ def generate_final_json_analysis(combined_text_analysis):
             )
             
             # Log the output for debugging
-            logger.info(f"Raw text analysis output length: {len(response)}")
-            logger.info(f"Raw text analysis preview: {response[:500]}...")
+            logger.info(f"Retry: Raw LLM output length: {len(response)}")
+            logger.info(f"Retry: Raw LLM output preview: {response[:500]}...")
             
             # Try to parse the JSON again
             result = parse_document_analysis(response)
         
-        logger.info(f"Successfully generated structured JSON from combined analysis")
+        if result:
+            logger.info(f"Successfully generated structured JSON from combined analysis")
+            logger.info(f"Result structure keys: {list(result.keys())}")
+            if 'sections' in result:
+                logger.info(f"Sections keys: {list(result['sections'].keys())}")
+        else:
+            logger.warning("JSON parsing failed even after retry")
         
         # Basic validation to ensure the response has the expected format
-        if not result.get('summary') or not result.get('sections'):
+        if not result or not result.get('summary') or not result.get('sections'):
             logger.warning("Generated JSON is missing required fields, adding defaults")
+            if not result:
+                result = {}
             if not result.get('summary'):
                 result['summary'] = "No summary was generated from the document analysis."
             
@@ -620,45 +723,94 @@ def parse_document_analysis(response):
         dict: Structured document analysis
     """
     try:
-        # Find JSON block in the response
+        if not response or len(response.strip()) < 50:
+            logger.warning(f"Response too short to contain valid JSON: {len(response) if response else 0} chars")
+            return None
+        
+        # Log response characteristics for debugging
+        logger.info(f"Parsing JSON from response of length: {len(response)}")
+        response_preview = response[:100].replace('\n', ' ')
+        logger.info(f"Response starts with: {response_preview}...")
+        
+        # First try: Find code block with JSON
         json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response)
         
         if json_match:
-            # Extract JSON string
+            # Extract JSON string from code block
             json_str = json_match.group(1)
-            # Parse the JSON
-            result = json.loads(json_str)
-            logger.info("Successfully parsed JSON from response")
-            return result
-        else:
-            # Try to find any JSON-like structure
-            potential_json = re.search(r'({[\s\S]*})', response)
-            if potential_json:
-                try:
-                    # Try to parse what looks like JSON
-                    result = json.loads(potential_json.group(1))
-                    logger.info("Found and parsed JSON-like structure from response")
-                    return result
-                except json.JSONDecodeError:
-                    logger.warning("Found potential JSON structure but failed to parse it")
-                    pass
-                
-            logger.warning("No valid JSON found in response")
+            logger.info(f"Found JSON in code block, length: {len(json_str)}")
             
-            # Create a basic structure with just the raw text
-            return {
-                'summary': "Failed to extract structured information from the document.",
-                'sections': {
-                    'document_content': {
-                        'present': True,
-                        'summary': "The document analysis could not be structured properly.",
-                        'key_points': {},
-                        'important_dates': [],
-                        'parent_actions': [],
-                        'location': "Throughout the document"
-                    }
-                }
+            try:
+                # Parse the JSON
+                result = json.loads(json_str)
+                logger.info("Successfully parsed JSON from code block")
+                return result
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON parse error from code block: {str(e)}")
+                # Fall through to other methods
+        
+        # Second try: Find any JSON-like structure with braces
+        potential_json = re.search(r'({[\s\S]*})', response)
+        if potential_json:
+            json_str = potential_json.group(1)
+            logger.info(f"Found potential JSON structure, length: {len(json_str)}")
+            
+            try:
+                # Try to parse what looks like JSON
+                result = json.loads(json_str)
+                logger.info("Successfully parsed JSON-like structure from response")
+                return result
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON parse error from brace structure: {str(e)}")
+                # Continue to next method
+        
+        # Third try: Look for JSON structure with double quotes (more strict pattern)
+        strict_json = re.search(r'({(?:"[^"]*"\s*:\s*(?:"[^"]*"|{[^}]*}|\[[^\]]*\]|true|false|null|\d+)(?:\s*,\s*)?)+\s*})', response)
+        if strict_json:
+            json_str = strict_json.group(1)
+            logger.info(f"Found strict JSON pattern, length: {len(json_str)}")
+            
+            try:
+                # Try to parse with strict pattern
+                result = json.loads(json_str)
+                logger.info("Successfully parsed JSON with strict pattern")
+                return result
+            except json.JSONDecodeError as e:
+                logger.warning(f"JSON parse error with strict pattern: {str(e)}")
+                # Continue to fallback
+        
+        # Fourth try: Most aggressive - try cleaning up the response
+        try:
+            # Remove extra text, keep just what might be JSON
+            cleaned = re.sub(r'[^{}[\]"\'0-9:,.\-+eE\s]', '', response)
+            # Replace single quotes with double quotes for JSON compatibility
+            cleaned = cleaned.replace("'", '"')
+            # Fix common JSON issues
+            cleaned = re.sub(r'"\s*:\s*([^"][^,}]*?)([,}])', r'":"\1"\2', cleaned)
+            
+            # Find anything that looks like a JSON object
+            final_match = re.search(r'({.*})', cleaned)
+            if final_match:
+                final_json = final_match.group(1)
+                result = json.loads(final_json)
+                logger.info("Successfully parsed JSON after aggressive cleaning")
+                return result
+        except Exception as cleaning_error:
+            logger.warning(f"Failed aggressive JSON extraction: {str(cleaning_error)}")
+                
+        logger.warning("All JSON extraction methods failed")
+        
+        # Create a basic structure with just the raw text when all parsing fails
+        return {
+            'summary': "The document could not be analyzed properly. Please try again or upload a clearer document.",
+            'sections': {
+                'Student Information': "Unable to extract information from document",
+                'Present Levels of Performance': "Unable to extract information from document",
+                'Services': "Unable to extract information from document", 
+                'Goals': "Unable to extract information from document",
+                'Accommodations': "Unable to extract information from document"
             }
+        }
     
     except Exception as e:
         logger.error(f"Error parsing document analysis: {str(e)}")
