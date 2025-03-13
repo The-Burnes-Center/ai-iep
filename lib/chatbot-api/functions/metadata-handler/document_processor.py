@@ -8,10 +8,8 @@ from PyPDF2 import PdfReader
 import io
 from google_auth import get_documentai_client
 from config import (
-    get_document_analysis_prompt,
     get_chunk_analysis_prompt,
-    get_final_json_analysis_prompt,
-    get_simplified_json_analysis_prompt,
+    get_json_analysis_prompt,
     IEP_SECTIONS,
     PDF_EXTRACTION_GUIDANCE
 )
@@ -108,9 +106,6 @@ def summarize_and_analyze_document(document_content, user_profile=None):
         logger.info(f"Document word count: {len(text_content.split())} words")
         logger.info(f"Document token count: {get_token_count(text_content)}")
         
-        # Check if the document is too large to process in one chunk
-        token_count = get_token_count(text_content)
-        
         # Define target languages for translation based on user profile
         target_languages = []
         if user_profile and 'languages' in user_profile:
@@ -118,25 +113,19 @@ def summarize_and_analyze_document(document_content, user_profile=None):
             if 'en' in target_languages:  # Remove English from target languages as it's the source
                 target_languages.remove('en')
         
-        # If we have more tokens than can fit in a single chunk, process in chunks
-        if token_count > MAX_TOKENS_PER_CHUNK:
-            logger.info(f"Document is too large for single processing, using chunked approach.")
-            # Process document in chunks
-            chunk_results = process_document_in_chunks(text_content)
-            
-            # Log diagnostic info about the chunked processing
-            logger.info(f"Processed document in {len(chunk_results)} chunks.")
-            
-            # Combine the results from all chunks
-            combined_text_analysis = combine_chunk_results(chunk_results)
-            
-            # Generate the final structured JSON analysis
-            result = generate_final_json_analysis(combined_text_analysis)
-        else:
-            # For smaller documents, process in a single call
-            logger.info("Document is small enough for single processing.")
-            # Process the entire document
-            result = process_full_document(text_content)
+        # Always process document in chunks regardless of size
+        logger.info("Using chunked document processing approach")
+        # Process document in chunks
+        chunk_results = process_document_in_chunks(text_content)
+        
+        # Log diagnostic info about the chunked processing
+        logger.info(f"Processed document in {len(chunk_results)} chunks.")
+        
+        # Combine the results from all chunks
+        combined_text_analysis = combine_chunk_results(chunk_results)
+        
+        # Generate the final structured JSON analysis
+        result = generate_final_json_analysis(combined_text_analysis)
         
         # Check if we need to translate
         if target_languages:
@@ -248,102 +237,59 @@ def process_document_in_chunks(text_content):
             section_tokens = get_token_count(section_text)
             
             # If adding this section would exceed our chunk size, finish current chunk
-            if current_chunk_tokens + section_tokens > MAX_TOKENS_PER_CHUNK:
-                # If current chunk is not empty, add it to chunks
-                if current_chunk and len(current_chunk) > MIN_CHUNK_SIZE:
-                    chunks.append(current_chunk)
-                
-                # Start a new chunk with this section
+            if current_chunk_tokens > 0 and current_chunk_tokens + section_tokens > MAX_TOKENS_PER_CHUNK:
+                chunks.append(current_chunk)
                 current_chunk = section_text
                 current_chunk_tokens = section_tokens
             else:
-                # Add this section to the current chunk
+                # Otherwise, add to current chunk
+                if current_chunk:
+                    current_chunk += "\n\n"
                 current_chunk += section_text
                 current_chunk_tokens += section_tokens
         
-        # Add the last chunk if not empty
-        if current_chunk and len(current_chunk) > MIN_CHUNK_SIZE:
+        # Add the last chunk if it exists
+        if current_chunk:
             chunks.append(current_chunk)
     else:
-        # No clear section boundaries, use character-based splitting
-        logger.info(f"No clear sections found, splitting document by character length")
+        # No natural section breaks found, use simple character-based splitting
+        logger.info("No natural sections found, splitting by character count")
         
-        # Create fewer chunks with more content in each
-        chars_per_chunk = max(chars_per_chunk, len(text_to_process) // target_chunk_count)
+        # Calculate a more accurate chunk size based on token estimate
+        chunk_size = min(chars_per_chunk, 100000)  # Cap at 100K chars to be safe
         
-        # Create chunks with overlap
-        for i in range(0, len(text_to_process), chars_per_chunk):
-            # If this is not the first chunk, add some overlap with previous chunk
-            start_idx = max(0, i - 2000) if i > 0 else 0  # Increase overlap to 2000 chars
-            
-            # If this is not the last chunk, continue to a reasonable break point
-            end_idx = min(i + chars_per_chunk, len(text_to_process))
-            if end_idx < len(text_to_process):
-                # Find the next paragraph break if possible
-                next_break = text_to_process.find('\n\n', end_idx)
-                if next_break != -1 and next_break < end_idx + 3000:  # Look further for break points
-                    end_idx = next_break
-            
-            chunk = text_to_process[start_idx:end_idx]
-            if len(chunk) > MIN_CHUNK_SIZE:  # Only add chunks with sufficient content
+        # Split into chunks using simpler approach
+        for i in range(0, len(text_to_process), chunk_size):
+            chunk = text_to_process[i:i + chunk_size]
+            if len(chunk) > MIN_CHUNK_SIZE:  # Only add chunks with meaningful content
                 chunks.append(chunk)
     
-    # Ensure we don't have too many chunks - combine small chunks if needed
-    if len(chunks) > target_chunk_count * 2:
-        logger.info(f"Too many chunks ({len(chunks)}), consolidating...")
-        consolidated_chunks = []
-        current_chunk = ""
-        current_chunk_tokens = 0
-        
-        for chunk in chunks:
-            chunk_tokens = get_token_count(chunk)
-            if current_chunk_tokens + chunk_tokens > MAX_TOKENS_PER_CHUNK:
-                if current_chunk:
-                    consolidated_chunks.append(current_chunk)
-                current_chunk = chunk
-                current_chunk_tokens = chunk_tokens
-            else:
-                current_chunk += "\n\n" + chunk
-                current_chunk_tokens += chunk_tokens
-        
-        if current_chunk:
-            consolidated_chunks.append(current_chunk)
-        
-        chunks = consolidated_chunks
+    # Ensure we have at least one chunk
+    if not chunks:
+        logger.warning("No valid chunks created, using full text as a single chunk")
+        chunks.append(text_to_process)
     
-    logger.info(f"Split document into {len(chunks)} chunks for processing")
+    logger.info(f"Created {len(chunks)} chunks for processing")
     
-    # Process each chunk
-    results = []
-    previous_context = None
+    # Process each chunk in parallel (can be enhanced with async if needed)
+    chunk_results = []
     
     for i, chunk in enumerate(chunks):
-        logger.info(f"Processing chunk {i+1}/{len(chunks)} with {get_token_count(chunk)} tokens")
-        
-        # Determine if we need to add context from previous chunk
-        context = previous_context if i > 0 else None
-        
-        # Process this chunk
-        try:
-            result_text = process_chunk_with_context(chunk, i+1, len(chunks), context)
-            
-            # Update context for next chunk
-            previous_context = {
-                'chunk_number': i+1,
-                'content_preview': chunk[-1500:] if len(chunk) > 1500 else chunk  # Increased preview size
+        # If not the first chunk, provide some context from the previous chunk
+        context = None
+        if i > 0:
+            # Provide last few paragraphs from the previous chunk
+            prev_chunk_preview = "\n".join(chunks[i-1].split("\n")[-10:])
+            context = {
+                "chunk_number": i-1,
+                "content_preview": prev_chunk_preview
             }
-            
-            # Add result to the list
-            results.append(result_text)
-            
-            logger.info(f"Chunk {i+1} processed successfully")
-        except Exception as e:
-            logger.error(f"Error processing chunk {i+1}: {str(e)}")
-            traceback.print_exc()
-            # Add empty result for this chunk
-            results.append("")
+        
+        # Process the chunk
+        result = process_chunk_with_context(chunk, i+1, len(chunks), context)
+        chunk_results.append(result)
     
-    return results
+    return chunk_results
 
 def clean_pdf_text(text_content):
     """
@@ -432,50 +378,6 @@ def find_section_boundaries(text_content):
     
     return filtered_boundaries
 
-def process_full_document(text_content):
-    """
-    Process a document in a single LLM call for smaller documents.
-    
-    Args:
-        text_content: The document text content
-    
-    Returns:
-        Structured document analysis with summary and sections
-    """
-    logger.info("Processing entire document in a single call")
-    
-    try:
-        # Create the prompt for the full document using the imported function
-        prompt = get_document_analysis_prompt(text_content)
-        
-        # Call the Claude model for analysis using Claude 3.5 Sonnet
-        response = invoke_claude_3_5(
-            prompt=prompt,
-            temperature=0,
-            max_tokens=8000
-        )
-        
-        # Parse the response to get structured information
-        result = parse_document_analysis(response)
-        
-        # Ensure we have a valid result structure
-        if not result:
-            result = {
-                'summary': "The document could not be analyzed properly.",
-                'sections': {}
-            }
-        
-        return result
-    except Exception as e:
-        logger.error(f"Error in full document processing: {str(e)}")
-        traceback.print_exc()
-        
-        # Return a minimal result structure
-        return {
-            'summary': "An error occurred while analyzing the document.",
-            'sections': {}
-        }
-
 def process_chunk_with_context(chunk_text, chunk_index, total_chunks, context=None):
     """
     Process a single chunk of the document with context information, returning plain text analysis.
@@ -549,8 +451,8 @@ def generate_final_json_analysis(combined_text_analysis):
         dict: Structured document analysis
     """
     try:
-        # Create the prompt for generating the final structured JSON using the imported function
-        prompt = get_final_json_analysis_prompt(combined_text_analysis)
+        # Create the prompt for generating the structured JSON using the combined function
+        prompt = get_json_analysis_prompt(combined_text_analysis)
         
         # Call Claude 3.5 Sonnet to generate the structured JSON
         response = invoke_claude_3_5(
@@ -565,13 +467,10 @@ def generate_final_json_analysis(combined_text_analysis):
         if not result:
             logger.warning("Failed to parse JSON from final analysis")
             
-            # Retry with a simplified prompt from config.py
-            logger.info("Retrying with simplified prompt")
+            # Retry with the same prompt but give a better warning
+            logger.info("Retrying with the same prompt")
             
-            # Use the simplified prompt from config.py
-            prompt = get_simplified_json_analysis_prompt(combined_text_analysis)
-            
-            # Try Claude 3.7 Sonnet for better handling of complex JSON 
+            # Try Claude 3.5 Sonnet for better handling of complex JSON 
             response = invoke_claude_3_5(
                 prompt=prompt,
                 temperature=0,
@@ -582,7 +481,12 @@ def generate_final_json_analysis(combined_text_analysis):
             logger.info(f"Raw text analysis output length: {len(response)}")
             logger.info(f"Raw text analysis preview: {response[:500]}...")
             
-            return response
+            # Try to parse the JSON again
+            result = parse_document_analysis(response)
+        
+        # Transform the result to the simplified format if it's not already
+        if result and 'sections' in result and not is_simplified_format(result):
+            result = transform_to_simplified_format(result)
         
         logger.info(f"Successfully generated structured JSON from combined analysis")
         return result
@@ -591,6 +495,112 @@ def generate_final_json_analysis(combined_text_analysis):
         logger.error(f"Error generating final JSON analysis: {str(e)}")
         traceback.print_exc()
         return None
+
+def is_simplified_format(result):
+    """Check if the result is already in the simplified format"""
+    if not result or 'sections' not in result:
+        return False
+        
+    sections = result.get('sections', {})
+    if isinstance(sections, dict) and 'M' in sections and 'en' in sections.get('M', {}):
+        # Check format of first section in English
+        en_sections = sections.get('M', {}).get('en', {}).get('M', {})
+        if en_sections:
+            first_section = next(iter(en_sections.values()), {})
+            # If it has the simplified 'S' format, it's already simplified
+            return 'S' in first_section.get('M', {})
+    
+    return False
+
+def transform_to_simplified_format(result):
+    """Transform the detailed format to the simplified format"""
+    try:
+        if 'sections' not in result:
+            return result
+            
+        simplified_result = {
+            'summaries': result.get('summaries', {}),
+            'sections': {
+                'M': {}
+            }
+        }
+        
+        # Process each language
+        for lang in ['en', 'es']:
+            if lang not in result.get('sections', {}):
+                continue
+                
+            simplified_result['sections']['M'][lang] = {'M': {}}
+            
+            # Process each section in the original format
+            for section_name, section_data in result['sections'].get(lang, {}).items():
+                # Skip sections that are not present
+                if not section_data.get('present', True):
+                    continue
+                    
+                # Create a simplified section entry
+                section_content = create_simplified_section_content(section_name, section_data)
+                
+                # Add the section to the simplified result
+                simplified_result['sections']['M'][lang]['M'][section_name] = {
+                    'M': {
+                        'S': {
+                            'S': section_content
+                        }
+                    }
+                }
+        
+        return simplified_result
+    except Exception as e:
+        logger.error(f"Error transforming to simplified format: {str(e)}")
+        return result
+
+def create_simplified_section_content(section_name, section_data):
+    """Create simplified content for a section based on the section name and data"""
+    try:
+        # Default to the summary if available
+        if 'summary' in section_data:
+            content = section_data['summary']
+        else:
+            content = ""
+            
+        # Add key points if available
+        if 'key_points' in section_data and section_data['key_points']:
+            # If content already exists, add a separator
+            if content:
+                content += ". "
+                
+            # Add each key point
+            key_points_str = ", ".join([f"{k}: {v}" for k, v in section_data['key_points'].items()])
+            if key_points_str:
+                content += key_points_str
+                
+        # Add important dates if available
+        if 'important_dates' in section_data and section_data['important_dates']:
+            # If content already exists, add a separator
+            if content:
+                content += ". "
+                
+            # Add the dates
+            dates_str = ", ".join(section_data['important_dates'])
+            if dates_str:
+                content += f"Important dates: {dates_str}"
+                
+        # Add parent actions if available
+        if 'parent_actions' in section_data and section_data['parent_actions']:
+            # If content already exists, add a separator
+            if content:
+                content += ". "
+                
+            # Add the parent actions
+            actions_str = ", ".join(section_data['parent_actions'])
+            if actions_str:
+                content += f"Parent actions: {actions_str}"
+                
+        return content
+    except Exception as e:
+        logger.error(f"Error creating simplified section content: {str(e)}")
+        return "Error processing section content"
 
 def improve_text_quality(text_content):
     """
