@@ -64,11 +64,46 @@ def summarize_and_analyze_document(document_content, user_profile=None):
     start_time = time.time()
     
     try:
-        # Convert binary content to text if needed
-        if isinstance(document_content, bytes):
-            text_content = document_content.decode('utf-8', errors='replace')
+        # Check if content is binary (likely a PDF file)
+        is_binary = isinstance(document_content, bytes)
+        
+        if is_binary:
+            logger.info("Detected binary content, attempting document extraction")
+            
+            # First try using Google Document AI for high-quality extraction
+            try:
+                logger.info("Attempting extraction with Google Document AI")
+                doc_ai_text = extract_text_with_documentai(document_content)
+                
+                if doc_ai_text and len(doc_ai_text.strip()) > 500:
+                    logger.info(f"Successfully extracted text with Document AI: {len(doc_ai_text)} characters")
+                    text_content = doc_ai_text
+                else:
+                    logger.info("Document AI extraction yielded insufficient content, falling back to PyPDF2")
+                    extracted_text = extract_text_from_pdf(document_content)
+                    
+                    if extracted_text and len(extracted_text.strip()) > 500:
+                        logger.info(f"Successfully extracted text with PyPDF2: {len(extracted_text)} characters")
+                        text_content = extracted_text
+                    else:
+                        logger.info("PyPDF2 extraction also yielded insufficient content, falling back to decode")
+                        text_content = document_content.decode('utf-8', errors='replace')
+            except Exception as e:
+                logger.warning(f"Document AI extraction failed: {str(e)}, falling back to PyPDF2")
+                extracted_text = extract_text_from_pdf(document_content)
+                
+                if extracted_text and len(extracted_text.strip()) > 500:
+                    logger.info(f"Successfully extracted text with PyPDF2: {len(extracted_text)} characters")
+                    text_content = extracted_text
+                else:
+                    logger.info("PyPDF2 extraction yielded insufficient content, falling back to decode")
+                    text_content = document_content.decode('utf-8', errors='replace')
         else:
+            # If it's already text, just use it
             text_content = document_content
+        
+        # Attempt to further clean the text to remove binary content
+        text_content = improve_text_quality(text_content)
         
         logger.info(f"Document word count: {len(text_content.split())} words")
         logger.info(f"Document token count: {get_token_count(text_content)}")
@@ -557,8 +592,114 @@ def generate_final_json_analysis(combined_text_analysis):
         traceback.print_exc()
         return None
 
+def improve_text_quality(text_content):
+    """
+    Apply multiple text cleaning techniques to improve the quality of extracted text.
+    Specialized for IEP documents.
+    
+    Args:
+        text_content: The raw text content to clean
+    
+    Returns:
+        Cleaned text with improved quality
+    """
+    try:
+        # Step 1: Remove non-printable characters
+        printable_text = re.sub(r'[^\x20-\x7E\n\r\t]', ' ', text_content)
+        
+        # Step 2: Remove PDF specific markers and commands
+        pdf_cleaned = re.sub(r'(\d+ \d+ obj)|endobj|stream|endstream|xref|trailer|startxref|\%EOF', ' ', printable_text)
+        
+        # Step 3: Remove font definitions and other technical PDF content
+        font_cleaned = re.sub(r'/Type\s*/[\w]+|/Font\s*<<.*?>>|/F\d+\s+\d+\s+\d+|/Length\s+\d+', ' ', pdf_cleaned)
+        
+        # Step 4: Remove PDF operators such as Tf, Tm, TD, etc.
+        operators_cleaned = re.sub(r'\b[0-9.]+ [0-9.]+ [0-9.]+ [0-9.]+ [0-9.]+ [0-9.]+ Tm\b|\b[0-9.]+ [0-9.]+ TD\b|\b[0-9.]+ [0-9.]+ Td\b|\b/F\d+ [0-9.]+ Tf\b', ' ', font_cleaned)
+        
+        # Step 5: Normalize whitespace (collapse multiple spaces, line breaks)
+        whitespace_normalized = re.sub(r'\s+', ' ', operators_cleaned).strip()
+        
+        # Step 6: Try to identify and extract sections that look like IEP content
+        # Look for common IEP section headers
+        iep_sections = []
+        section_patterns = [
+            r'((?:PRESENT|CURRENT)\s+LEVELS?\s+(?:OF|IN)?\s+(?:ACADEMIC\s+)?(?:ACHIEVEMENT|PERFORMANCE|FUNCTIONING).*?)(?=GOAL|OBJECTIVE|SERVICES|ACCOMMODATIONS|PLACEMENT|\Z)',
+            r'(SPECIAL\s+EDUCATION\s+(?:AND\s+RELATED\s+)?SERVICES.*?)(?=GOAL|OBJECTIVE|ACCOMMODATIONS|PLACEMENT|\Z)',
+            r'(MEASURABLE\s+(?:ANNUAL\s+)?GOALS?.*?)(?=SERVICES|ACCOMMODATIONS|PLACEMENT|\Z)',
+            r'(ACCOMMODATIONS\s+(?:AND|OR)\s+MODIFICATIONS.*?)(?=SERVICES|GOAL|OBJECTIVE|PLACEMENT|\Z)',
+            r'(EDUCATIONAL\s+PLACEMENT.*?)(?=SERVICES|GOAL|OBJECTIVE|ACCOMMODATIONS|\Z)',
+            r'(ELIGIBILITY\s+(?:DETERMINATION|STATEMENT).*?)(?=PRESENT|CURRENT|SERVICES|GOAL|OBJECTIVE|ACCOMMODATIONS|PLACEMENT|\Z)',
+            r'(PARENT(?:/GUARDIAN)?\s+(?:INVOLVEMENT|PARTICIPATION|CONSENT).*?)(?=PRESENT|CURRENT|SERVICES|GOAL|OBJECTIVE|ACCOMMODATIONS|PLACEMENT|\Z)'
+        ]
+        
+        for pattern in section_patterns:
+            matches = re.finditer(pattern, whitespace_normalized, re.IGNORECASE | re.DOTALL)
+            for match in matches:
+                if match.group(1) and len(match.group(1)) > 50:  # Only include substantial matches
+                    iep_sections.append(match.group(1))
+        
+        # Step 7: Extract text blocks that look meaningful (more than 3 words together)
+        text_blocks = re.findall(r'([A-Za-z,\.\(\)\-\'\"]+(?: [A-Za-z,\.\(\)\-\'\"]+){5,})', whitespace_normalized)
+        
+        # If we have IEP sections, prioritize those
+        if iep_sections and len(iep_sections) >= 2:  # At least 2 sections to be meaningful
+            logger.info(f"Found {len(iep_sections)} IEP sections")
+            meaningful_text = '\n\n'.join(iep_sections)
+            return meaningful_text
+        
+        # If we found meaningful text blocks, join them with line breaks
+        if text_blocks and len(text_blocks) > 10:  # Only if we have a meaningful number of blocks
+            # Filter blocks to focus on educational/IEP-related content
+            iep_keywords = [
+                'student', 'education', 'learning', 'goal', 'objective', 'service', 'accommodation', 
+                'placement', 'assessment', 'evaluation', 'instruction', 'teacher', 'classroom', 
+                'behavior', 'skill', 'level', 'performance', 'achievement', 'parent', 'meeting', 
+                'eligibility', 'disability', 'program', 'support', 'curriculum', 'iep', 'school'
+            ]
+            
+            # Prioritize blocks with IEP keywords
+            scored_blocks = []
+            for block in text_blocks:
+                score = 0
+                block_lower = block.lower()
+                for keyword in iep_keywords:
+                    if keyword in block_lower:
+                        score += 1
+                scored_blocks.append((block, score))
+            
+            # Sort by score (higher first) and keep only blocks with score > 0
+            relevant_blocks = [block for block, score in sorted(scored_blocks, key=lambda x: x[1], reverse=True) if score > 0]
+            
+            # If we have relevant blocks, use those, otherwise use all blocks
+            if relevant_blocks:
+                logger.info(f"Found {len(relevant_blocks)} relevant text blocks out of {len(text_blocks)} total")
+                meaningful_text = '\n\n'.join(relevant_blocks)
+            else:
+                logger.info(f"Using all {len(text_blocks)} text blocks (no IEP-specific content found)")
+                meaningful_text = '\n\n'.join(text_blocks)
+                
+            # Check if we have enough content
+            if len(meaningful_text) > 500:  # Arbitrary threshold for meaningful content
+                return meaningful_text
+        
+        # If the above approaches don't yield good results, try a simpler cleaner
+        # that focuses on removing obviously binary content
+        simple_cleaned = clean_pdf_text(text_content)
+        
+        # Compare the results and return the better one
+        if simple_cleaned and len(simple_cleaned) > len(whitespace_normalized) * 0.8:
+            logger.info("Using simple cleaned text version")
+            return simple_cleaned
+        
+        logger.info("Using enhanced cleaned text version")
+        return whitespace_normalized
+    except Exception as e:
+        logger.error(f"Error in improve_text_quality: {str(e)}")
+        # If all else fails, return the original
+        return text_content
+
 def extract_text_from_pdf(file_content):
-    """Fallback method to extract text from PDF using PyPDF2."""
+    """Enhanced method to extract text from PDF using PyPDF2."""
     try:
         # Create a file-like object from the content
         pdf_file = io.BytesIO(file_content)
@@ -566,17 +707,58 @@ def extract_text_from_pdf(file_content):
         # Initialize PdfReader
         pdf_reader = PdfReader(pdf_file)
         
-        # Extract text from each page
+        # Extract text from each page using multiple approaches
         full_text = ""
+        
+        # Method 1: Standard extraction
         for page_num in range(len(pdf_reader.pages)):
             page = pdf_reader.pages[page_num]
-            full_text += page.extract_text() + "\n\n"
+            page_text = page.extract_text()
+            if page_text and len(page_text.strip()) > 0:
+                full_text += page_text + "\n\n"
+                
+        # If we got good text, return it
+        if full_text and len(full_text.strip()) > 500:
+            logger.info(f"Successfully extracted {len(full_text)} characters using standard extraction")
+            return full_text
+            
+        # Method 2: Try extracting text from raw content streams
+        # This can sometimes work better for PDFs with unusual formatting
+        alternative_text = ""
+        for page_num in range(len(pdf_reader.pages)):
+            page = pdf_reader.pages[page_num]
+            
+            # Access the page's content stream if possible
+            try:
+                if hasattr(page, '/Contents') and page['/Contents'] is not None:
+                    content_stream = page['/Contents'].get_data()
+                    # Extract text fragments using regex
+                    text_fragments = re.findall(r'\((.*?)\)', content_stream.decode('utf-8', errors='replace'))
+                    if text_fragments:
+                        alternative_text += ' '.join(text_fragments) + "\n\n"
+            except Exception as inner_e:
+                logger.warning(f"Error extracting from content stream for page {page_num}: {str(inner_e)}")
+                continue
         
-        return full_text
+        # If we got good alternative text, use it
+        if alternative_text and len(alternative_text.strip()) > 500:
+            logger.info(f"Successfully extracted {len(alternative_text)} characters using content stream extraction")
+            return alternative_text
+            
+        # If we didn't get enough text from either method, combine both
+        combined_text = full_text + "\n\n" + alternative_text
+        if combined_text and len(combined_text.strip()) > 500:
+            logger.info(f"Using combined extraction methods: {len(combined_text)} characters")
+            return combined_text
+            
+        # If we still don't have enough text, log a warning and return what we have
+        logger.warning("PDF extraction yielded limited text content")
+        return combined_text if combined_text else "PDF text extraction failed to yield readable content."
+        
     except Exception as e:
-        print(f"Error extracting text from PDF: {str(e)}")
+        logger.error(f"Error extracting text from PDF: {str(e)}")
         traceback.print_exc()
-        return None
+        return "Error extracting text from PDF."
 
 def parse_document_analysis(response):
     """
@@ -634,4 +816,54 @@ def parse_document_analysis(response):
         traceback.print_exc()
         
         # Return a minimal result structure
+        return None
+
+def extract_text_with_documentai(file_content):
+    """
+    Extract text from a document using Google Document AI.
+    
+    Args:
+        file_content: Binary content of the document
+        
+    Returns:
+        str: Extracted text from the document or None if extraction fails
+    """
+    try:
+        documentai_client = get_documentai_client()
+        if not documentai_client:
+            logger.warning("DocumentAI client not available")
+            return None
+            
+        # Process the document with Document AI
+        logger.info("Processing document with Document AI")
+        
+        # Create a request to process the PDF
+        request = {
+            "raw_document": {
+                "content": file_content,
+                "mime_type": "application/pdf"
+            }
+        }
+        
+        # Call DocumentAI to process the document
+        project_id = os.environ.get('DOCUMENT_AI_PROJECT_ID', '')
+        location = os.environ.get('DOCUMENT_AI_LOCATION', 'us')
+        processor_id = os.environ.get('DOCUMENT_AI_PROCESSOR_ID', '')
+        
+        if not project_id or not processor_id:
+            logger.warning("DocumentAI configuration missing, skipping Document AI processing")
+            return None
+            
+        name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
+        response = documentai_client.process_document(request=request, name=name)
+        
+        # Extract the text from the response
+        document = response.document
+        if document and hasattr(document, 'text'):
+            return document.text
+        
+        return None
+    except Exception as e:
+        logger.warning(f"Error extracting text with Document AI: {str(e)}")
+        traceback.print_exc()
         return None 
