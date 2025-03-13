@@ -15,31 +15,22 @@ export interface OpenSearchStackProps {
 
 export class OpenSearchStack extends cdk.Stack {
 
-  public readonly openSearchCollection : opensearchserverless.CfnCollection;  
-  public readonly collectionName : string;
-  public readonly knowledgeBaseRole : iam.Role;  
-  public readonly lambdaCustomResource : cdk.CustomResource;
+  public readonly openSearchCollectionId: string;  
+  public readonly collectionName: string;
+  public readonly knowledgeBaseRole: iam.Role;  
+  public readonly lambdaCustomResource: cdk.CustomResource;
   // public readonly indexTrigger : triggers.Trigger;
   
   constructor(scope: Construct, id: string, props: OpenSearchStackProps) {
     super(scope, id);
 
-    this.collectionName = `${stackName.toLowerCase()}-oss-collection`
+    this.collectionName = `${stackName.toLowerCase()}-oss-collection`;
     
-    // Instead of creating tags array, we'll use the existing collection ID directly
-    // and skip properties that might trigger a replacement
-    const openSearchCollection = new opensearchserverless.CfnCollection(scope, 'OpenSearchCollection', {
-      name: this.collectionName,      
-      description: `OpenSearch Serverless Collection for ${stackName}`,
-      standbyReplicas: 'DISABLED',      
-      type: 'VECTORSEARCH',
-    });
+    // Use the existing OpenSearch collection ID directly
+    // This prevents CloudFormation from trying to replace the resource
+    this.openSearchCollectionId = 'xd95i6w6setz2ov8o2je';
     
-    // Instead of trying to override the logical ID, we'll use a different approach
-    // Preserve the existing resource by using the logical ID provided by CDK
-    // We'll keep the tagging minimal to avoid replacements
-    
-    // create encryption policy first
+    // Create policies but don't link them to the collection
     const encPolicy = new opensearchserverless.CfnSecurityPolicy(scope, 'OSSEncryptionPolicy', {
       name: `${stackName.toLowerCase().slice(0,10)}-oss-enc-policy`,
       policy: `{"Rules":[{"ResourceType":"collection","Resource":["collection/${this.collectionName}"]}],"AWSOwnedKey":true}`,
@@ -120,8 +111,7 @@ export class OpenSearchStack extends cdk.Stack {
     ])
     })
 
-    this.openSearchCollection = openSearchCollection;
-
+    // There's no openSearchCollection to apply tags to, so remove this code
     // Apply tags to the collection via CDK, which should update tags without replacement
     // This approach uses AWS::TagResource operations instead of inline tags
     // which should allow updating tags without replacing the collection
@@ -148,7 +138,7 @@ export class OpenSearchStack extends cdk.Stack {
       handler: 'lambda_function.lambda_handler', 
       role: indexFunctionRole,
       environment: {
-        COLLECTION_ENDPOINT : `${openSearchCollection.attrId}.${cdk.Stack.of(this).region}.aoss.amazonaws.com`,
+        COLLECTION_ENDPOINT : `${this.openSearchCollectionId}.${cdk.Stack.of(this).region}.aoss.amazonaws.com`,
         INDEX_NAME : `knowledge-base-index`,
         EMBEDDING_DIM : "1024",
         REGION : cdk.Stack.of(this).region
@@ -168,7 +158,7 @@ export class OpenSearchStack extends cdk.Stack {
       actions: [
         'aoss:*'
       ],
-      resources: [`arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${openSearchCollection.attrId}`]
+      resources: [`arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${this.openSearchCollectionId}`]
     }));
 
     

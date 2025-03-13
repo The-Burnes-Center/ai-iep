@@ -33,7 +33,7 @@ export class KnowledgeBaseStack extends cdk.Stack {
         effect: iam.Effect.ALLOW,
         actions: ['aoss:APIAccessAll'],
         resources: [
-          `arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${props.openSearch.openSearchCollection.attrId}`
+          `arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${props.openSearch.openSearchCollectionId}`
         ]
       }
       )
@@ -73,7 +73,7 @@ export class KnowledgeBaseStack extends cdk.Stack {
       storageConfiguration: {
         type: "OPENSEARCH_SERVERLESS",
         opensearchServerlessConfiguration: {
-          collectionArn: `arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${props.openSearch.openSearchCollection.attrId}`,
+          collectionArn: `arn:aws:aoss:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:collection/${props.openSearch.openSearchCollectionId}`,
           vectorIndexName: "knowledge-base-index",
           fieldMapping: {
             vectorField: "embedding",
