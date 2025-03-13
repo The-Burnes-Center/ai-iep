@@ -147,10 +147,53 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     formatted_sections = {"M": {}}
                     if 'sections' in summaries and 'M' in summaries['sections']:
                         # Check for the correct languages structure
+                        print(f"Checking sections structure with keys: {list(summaries['sections']['M'].keys())}")
+                        
+                        # Log the structure in more detail
+                        for lang_key in summaries['sections']['M'].keys():
+                            print(f"Section language {lang_key} structure type: {type(summaries['sections']['M'][lang_key])}")
+                            if isinstance(summaries['sections']['M'][lang_key], dict) and 'M' in summaries['sections']['M'][lang_key]:
+                                inner_keys = list(summaries['sections']['M'][lang_key]['M'].keys())
+                                print(f"Section language {lang_key} inner keys: {inner_keys}")
+                                # Check for nested language issue
+                                if 'en' in inner_keys or lang_key in inner_keys:
+                                    print(f"WARNING: Detected nested language issue in {lang_key} sections!")
+                        
                         if any(lang in summaries['sections']['M'] for lang in ['en', 'es', 'zh', 'vi']):
                             # This is the correct DynamoDB format structure - use as is
                             formatted_sections = summaries['sections']
                             print(f"Using pre-formatted sections structure with languages: {list(summaries['sections']['M'].keys() if 'M' in summaries['sections'] else [])}")
+                            
+                            # Verify the sections structure is correct
+                            fixed_sections = {"M": {}}
+                            needs_fixing = False
+                            
+                            for lang, lang_data in summaries['sections']['M'].items():
+                                # Check if this language has the nested issue
+                                if 'M' in lang_data and ('en' in lang_data['M'] or lang in lang_data['M']):
+                                    print(f"Fixing nested language issue for {lang} sections")
+                                    needs_fixing = True
+                                    
+                                    # Initialize language section
+                                    fixed_sections["M"][lang] = {"M": {}}
+                                    
+                                    # Get the inner language key (usually 'en' or the same as outer lang)
+                                    inner_lang = lang if lang in lang_data['M'] else 'en'
+                                    inner_data = lang_data['M'][inner_lang]
+                                    
+                                    if 'M' in inner_data:
+                                        # Copy section data directly from inner structure
+                                        for section_name, section_data in inner_data['M'].items():
+                                            fixed_sections["M"][lang]["M"][section_name] = section_data
+                                            print(f"Fixed: Copied {lang}.{section_name} from nested structure")
+                                else:
+                                    # This language is already in the correct format
+                                    fixed_sections["M"][lang] = lang_data
+                                    print(f"Kept original structure for {lang} sections")
+                            
+                            if needs_fixing:
+                                print("Using fixed sections structure")
+                                formatted_sections = fixed_sections
                         else:
                             # Handle potential legacy format by restructuring
                             print("Sections structure may need restructuring")

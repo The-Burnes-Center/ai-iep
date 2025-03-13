@@ -238,24 +238,35 @@ def summarize_and_analyze_document(document_content, user_profile=None):
                 logger.info("Translating summary")
                 if result['summaries'].get('en'):
                     try:
-                        # Log the beginning of summary translation
-                        logger.info(f"Starting summary translation for languages: {target_languages}")
+                        # Log the beginning of summary translation with full debug info
+                        logger.info(f"Starting summary translation with content length: {len(result['summaries']['en'])} for languages: {target_languages}")
+                        logger.info(f"Summary content preview: {result['summaries']['en'][:100]}...")
                         
                         translated_summary = translate_content(
                             content=result['summaries']['en'],
                             target_languages=target_languages
                         )
                         
-                        # Log translation results
+                        # Log detailed translation results
                         if isinstance(translated_summary, dict):
                             logger.info(f"Received translation result with keys: {list(translated_summary.keys())}")
                             
+                            # Log each translation result separately
                             for lang, trans_text in translated_summary.items():
-                                if lang != 'original' and trans_text and trans_text.strip():  # Skip original and empty translations
+                                if lang == 'original':
+                                    logger.info(f"Original text length: {len(trans_text) if isinstance(trans_text, str) else 'N/A'}")
+                                elif trans_text and trans_text.strip():
                                     result['summaries'][lang] = trans_text
                                     logger.info(f"Added {lang} summary translation, length: {len(trans_text)}")
+                                    logger.info(f"{lang} translation preview: {trans_text[:100]}...")
+                                else:
+                                    logger.warning(f"Translation for {lang} is empty or invalid: {type(trans_text)}")
+                            
+                            # Log what languages we have after translation
+                            logger.info(f"Summaries after translation: {list(result['summaries'].keys())}")
                         else:
                             logger.warning(f"Unexpected translation result type: {type(translated_summary)}")
+                            logger.warning(f"Translation result: {translated_summary}")
                     except Exception as e:
                         logger.error(f"Error translating summary: {str(e)}")
                         traceback.print_exc()
@@ -270,6 +281,9 @@ def summarize_and_analyze_document(document_content, user_profile=None):
                                 if translated_text and translated_text.strip():
                                     result['summaries'][target_lang] = translated_text
                                     logger.info(f"Added {target_lang} summary via direct translation, length: {len(translated_text)}")
+                                    logger.info(f"Direct {target_lang} translation preview: {translated_text[:100]}...")
+                                else:
+                                    logger.warning(f"Direct translation for {target_lang} returned empty result")
                             except Exception as direct_e:
                                 logger.error(f"Direct translation to {target_lang} also failed: {str(direct_e)}")
                 else:
@@ -587,6 +601,9 @@ def transform_to_simplified_format(result, target_languages=None):
         if 'en' not in languages:
             languages = ['en'] + languages
         
+        logger.info(f"Transform_to_simplified_format called with languages: {languages}")
+        logger.info(f"Input result type: {type(result)}")
+        
         # Create a simpler structure that will be properly formatted by format_data_for_dynamodb
         simplified_result = {
             'summaries': {},
@@ -597,6 +614,8 @@ def transform_to_simplified_format(result, target_languages=None):
         logger.info(f"Transform input result keys: {list(result.keys() if isinstance(result, dict) else [])}")
         if 'summaries' in result:
             logger.info(f"Transform input summaries keys: {list(result['summaries'].keys() if isinstance(result['summaries'], dict) else [])}")
+            if isinstance(result['summaries'], dict) and 'M' in result['summaries']:
+                logger.info(f"Transform input summaries DynamoDB format keys: {list(result['summaries']['M'].keys())}")
         
         # Process summary and summaries
         # First check if we have translated summaries in the summaries structure
@@ -605,17 +624,26 @@ def transform_to_simplified_format(result, target_languages=None):
             
             # Check if we have DynamoDB formatted summaries structure
             if 'M' in result['summaries']:
+                logger.info(f"Found DynamoDB format summaries structure with keys: {list(result['summaries']['M'].keys())}")
                 # Copy all language summaries from DynamoDB format
                 for lang, summary_obj in result['summaries']['M'].items():
                     if isinstance(summary_obj, dict) and 'S' in summary_obj:
                         simplified_result['summaries'][lang] = summary_obj['S']
                         logger.info(f"Added {lang} summary from DynamoDB format, length: {len(summary_obj['S'])}")
+                    else:
+                        logger.warning(f"Unexpected format for {lang} summary: {type(summary_obj)}")
+                        if isinstance(summary_obj, dict):
+                            logger.warning(f"Keys in summary object: {list(summary_obj.keys())}")
             else:
                 # Copy all language summaries to simplified structure
                 for lang, summary_text in result['summaries'].items():
                     if isinstance(summary_text, str) and summary_text.strip():
                         simplified_result['summaries'][lang] = summary_text
                         logger.info(f"Added {lang} summary from summaries structure, length: {len(summary_text)}")
+                    else:
+                        logger.warning(f"Ignoring invalid {lang} summary of type: {type(summary_text)}")
+        else:
+            logger.warning(f"No valid summaries structure found, type: {type(result.get('summaries', None))}")
         
         # Also handle main summary if present (fallback)
         if 'summary' in result:
@@ -630,6 +658,7 @@ def transform_to_simplified_format(result, target_languages=None):
                     logger.info(f"Added English summary from main summary field, length: {len(summary)}")
             elif isinstance(summary, dict):
                 # Summary with translations
+                logger.info(f"Processing dictionary summary with keys: {list(summary.keys())}")
                 for lang, content in summary.items():
                     if lang == 'original' and content.strip() and not simplified_result['summaries'].get('en'):
                         simplified_result['summaries']['en'] = content
@@ -638,42 +667,72 @@ def transform_to_simplified_format(result, target_languages=None):
                         simplified_result['summaries'][lang] = content
                         logger.info(f"Added {lang} summary from summary dict, length: {len(content)}")
         
+        # Log sections structure
+        if 'sections' in result:
+            logger.info(f"Processing sections structure, type: {type(result['sections'])}")
+            if isinstance(result['sections'], dict):
+                if 'M' in result['sections']:
+                    logger.info(f"Sections has DynamoDB format with keys: {list(result['sections']['M'].keys())}")
+                    # Check inside each language key
+                    for lang_key in result['sections']['M'].keys():
+                        lang_data = result['sections']['M'][lang_key]
+                        if isinstance(lang_data, dict) and 'M' in lang_data:
+                            logger.info(f"Section language {lang_key} contains keys: {list(lang_data['M'].keys())}")
+                else:
+                    logger.info(f"Sections has direct keys: {list(result['sections'].keys())}")
+        
         # Process sections - correctly organize by language first, then section name
         # This fixes the nested language issue
+        logger.info("Processing sections by language...")
         for lang in languages:
+            logger.info(f"Processing sections for language: {lang}")
             simplified_result['sections'][lang] = {}
             
             # First check if sections already has language-specific data
             if 'sections' in result and isinstance(result['sections'], dict):
                 # Check for nested DynamoDB format
                 if 'M' in result['sections']:
+                    logger.info(f"Looking for {lang} in DynamoDB format sections")
                     # Look for language key in DynamoDB format
                     if lang in result['sections']['M']:
                         lang_sections = result['sections']['M'][lang]
+                        logger.info(f"Found {lang} sections with type: {type(lang_sections)}")
                         
                         # Get the sections for this language
                         if isinstance(lang_sections, dict) and 'M' in lang_sections:
+                            logger.info(f"Found {lang} in DynamoDB format with keys: {list(lang_sections['M'].keys())}")
                             # Check if the lang_sections has the nested language issue
                             if lang in lang_sections['M'] or 'en' in lang_sections['M']:
                                 # Fix the nested language issue - take sections from the inner structure
+                                logger.warning(f"Detected nested language issue in {lang} sections!")
                                 inner_lang = lang if lang in lang_sections['M'] else 'en'
+                                logger.info(f"Using inner language key: {inner_lang}")
                                 inner_sections = lang_sections['M'][inner_lang]
                                 
                                 if isinstance(inner_sections, dict) and 'M' in inner_sections:
+                                    logger.info(f"Inner sections contains keys: {list(inner_sections['M'].keys())}")
                                     for section_name, section_data in inner_sections['M'].items():
                                         if 'S' in section_data:
                                             simplified_result['sections'][lang][section_name] = section_data['S']
                                             logger.info(f"Fixed nested language issue: Added {lang}/{section_name} from {inner_lang} key")
+                                else:
+                                    logger.warning(f"Invalid inner sections format for {lang}/{inner_lang}: {type(inner_sections)}")
                             else:
                                 # Normal case - sections directly under language
+                                logger.info(f"Normal structure for {lang} sections")
                                 for section_name, section_data in lang_sections['M'].items():
                                     if 'S' in section_data:
                                         simplified_result['sections'][lang][section_name] = section_data['S']
                                         logger.info(f"Added {lang} section {section_name} from DynamoDB format")
+                        else:
+                            logger.warning(f"Invalid format for {lang} sections: {type(lang_sections)}")
+                
                 elif lang in result['sections']:
                     # Direct language key in sections
+                    logger.info(f"Found direct {lang} key in sections")
                     lang_sections = result['sections'][lang]
                     if isinstance(lang_sections, dict):
+                        logger.info(f"Direct {lang} sections contains keys: {list(lang_sections.keys())}")
                         for section_name, section_content in lang_sections.items():
                             if isinstance(section_content, str) and section_content.strip():
                                 simplified_result['sections'][lang][section_name] = section_content
@@ -681,10 +740,14 @@ def transform_to_simplified_format(result, target_languages=None):
                 
                 # Special case for English - also check direct sections
                 if lang == 'en' and len(simplified_result['sections']['en']) == 0:
+                    logger.info("Checking for direct sections for English")
+                    direct_section_count = 0
                     for section_name, section_content in result['sections'].items():
                         if section_name not in languages and isinstance(section_content, str) and section_content.strip():
                             simplified_result['sections']['en'][section_name] = section_content
                             logger.info(f"Added English section {section_name} from direct sections, length: {len(section_content)}")
+                            direct_section_count += 1
+                    logger.info(f"Added {direct_section_count} direct sections to English")
         
         # Log the simplified structure for debugging
         logger.info(f"Created simplified structure with summaries languages: {list(simplified_result['summaries'].keys())}")
@@ -697,6 +760,7 @@ def transform_to_simplified_format(result, target_languages=None):
                              for lang, sections in simplified_result['sections'].items()]))
         
         # Let format_data_for_dynamodb handle the DynamoDB formatting
+        logger.info("Formatting result for DynamoDB...")
         formatted_result = format_data_for_dynamodb(simplified_result)
         
         # Log the formatted structure to help with debugging
@@ -705,6 +769,8 @@ def transform_to_simplified_format(result, target_languages=None):
                 logger.info(f"Final formatted structure has summaries: {list(formatted_result['M']['summaries'].get('M', {}).keys())}")
             if 'sections' in formatted_result['M']:
                 logger.info(f"Final formatted structure has sections: {list(formatted_result['M']['sections'].get('M', {}).keys())}")
+                for lang in formatted_result['M']['sections'].get('M', {}).keys():
+                    logger.info(f"Final formatted section for {lang} has keys: {list(formatted_result['M']['sections']['M'][lang].get('M', {}).keys())}")
         
         return formatted_result
         

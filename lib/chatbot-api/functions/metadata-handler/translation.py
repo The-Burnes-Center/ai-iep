@@ -36,26 +36,34 @@ def translate_content(content, target_languages):
     
     # Log the translation request
     logger.info(f"Translating content to {target_languages}, content type: {type(content)}, length: {len(content) if isinstance(content, str) else 'N/A'}")
+    logger.info(f"Content preview: {content[:100] if isinstance(content, str) else 'Not a string'}")
     
     try:
         # Handle different content types appropriately
         if isinstance(content, str):
             # For simple string content, translate directly
             result = {"original": content}
+            logger.info(f"Created translation result with original content length: {len(content)}")
             
             # Translate to each language
             for lang in target_languages:
-                logger.info(f"Translating string content to {lang}")
+                logger.info(f"------ Translating string content to {lang} ------")
                 translated_text = translate_text(content, lang)
+                logger.info(f"Received translation result for {lang}, type: {type(translated_text)}")
+                
                 if translated_text and len(translated_text.strip()) > 0:
                     result[lang] = translated_text
                     logger.info(f"Successfully added translation for {lang}, length: {len(translated_text)}")
+                    logger.info(f"Preview of {lang} translation: {translated_text[:100]}")
                 else:
-                    logger.warning(f"Got empty translation result for {lang}")
+                    logger.warning(f"Got empty or invalid translation result for {lang}: {translated_text}")
                 
             # Log the final result structure    
             logger.info(f"Completed string translation with result keys: {list(result.keys())}")
             logger.info(f"Result contains translations for: {[k for k in result.keys() if k != 'original']}")
+            for lang in result.keys():
+                if lang != 'original':
+                    logger.info(f"Final translation for {lang} preview: {result[lang][:50]}...")
             return result
         
         elif isinstance(content, dict):
@@ -147,6 +155,7 @@ def translate_text(text, target_language):
         # Get full language name from code
         language_name = language_map.get(target_language, target_language)
         logger.info(f"Translating to {target_language} ({language_name}), text length: {len(text)}")
+        logger.info(f"First 100 chars of text to translate: {text[:100]}...")
         
         # Create translation prompt using the main get_translation_prompt function
         prompt = get_translation_prompt(text, language_name)
@@ -154,6 +163,7 @@ def translate_text(text, target_language):
         
         # Call Claude 3.5 Sonnet for translation
         start_time = time.time()
+        logger.info(f"Sending translation request to Claude 3.5 Sonnet for {target_language}")
         content = invoke_claude_3_5(
             prompt=prompt,
             temperature=0,
@@ -161,11 +171,16 @@ def translate_text(text, target_language):
         )
         end_time = time.time()
         
-        logger.info(f"Received translation response in {end_time - start_time:.2f} seconds, length: {len(content)}")
+        logger.info(f"Received translation response in {end_time - start_time:.2f} seconds, length: {len(content) if content else 0}")
+        if content:
+            logger.info(f"Raw translation response preview: {content[:100]}...")
+        else:
+            logger.warning(f"Received empty response from translation model")
             
         # Clean the translation output
         cleaned_translation = clean_translation_output(content)
         logger.info(f"Cleaned translation length: {len(cleaned_translation)}")
+        logger.info(f"Cleaned translation preview: {cleaned_translation[:100]}...")
         
         return cleaned_translation
     
