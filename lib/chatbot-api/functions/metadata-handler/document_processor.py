@@ -98,8 +98,17 @@ def summarize_and_analyze_document(document_content, user_profile=None):
                     logger.info("PyPDF2 extraction yielded insufficient content, falling back to decode")
                     text_content = document_content.decode('utf-8', errors='replace')
         else:
-            # If it's already text, just use it
-            text_content = document_content
+            # If content is a string, try to convert to bytes if it could be base64 encoded
+            logger.info("Content is not binary, checking if it could be base64 encoded")
+            try:
+                # Try to convert to bytes if it's a base64 string
+                decoded_content = base64.b64decode(document_content)
+                logger.info("Successfully decoded base64 content to bytes")
+                return summarize_and_analyze_document(decoded_content, user_profile)
+            except Exception as e:
+                logger.info(f"Not base64 encoded or conversion failed: {str(e)}")
+                # If it's already text, just use it
+                text_content = document_content
         
         logger.info(f"Document word count: {len(text_content.split())} words")
         logger.info(f"Document token count: {get_token_count(text_content)}")
@@ -481,29 +490,28 @@ def transform_to_simplified_format(result, target_languages=None):
         
         # Process each language for sections
         for lang in languages:
-            # Initialize section structure for this language
+            # Initialize section structure for this language - correct nesting here
             if lang not in dynamodb_result['sections']['M']:
                 dynamodb_result['sections']['M'][lang] = {'M': {}}
             
-            # Get sections from the result - the LLM will now return a simplified structure
+            # Get sections from the result (simplified structure from LLM)
             if 'sections' in result and isinstance(result['sections'], dict):
-                # Get English sections
-                for section_name, section_content in result['sections'].items():
-                    # Only add English content for now, translations will be handled separately
-                    if lang == 'en' and isinstance(section_content, str):
-                        dynamodb_result['sections']['M']['en']['M'][section_name] = {
-                            'M': {
-                                'S': {
-                                    'S': section_content
+                # For English (primary language)
+                if lang == 'en':
+                    for section_name, section_content in result['sections'].items():
+                        if isinstance(section_content, str):
+                            # Add section with correct nesting (avoid duplicate 'M' keys)
+                            dynamodb_result['sections']['M']['en']['M'][section_name] = {
+                                'M': {
+                                    'S': {
+                                        'S': section_content
+                                    }
                                 }
                             }
-                        }
         
-        # Log the structure before applying translations
-        logger.info("Created DynamoDB format with sections for English")
+        # Log the structure to help with debugging
+        logger.info(f"Created DynamoDB format with sections for English: {json.dumps(dynamodb_result)[:200]}...")
         
-        # Return the formatted result - this will be used directly without format_data_for_dynamodb
-        # since we're already creating the proper nested structure
         return dynamodb_result
         
     except Exception as e:
@@ -520,6 +528,18 @@ def transform_to_simplified_format(result, target_languages=None):
 def extract_text_from_pdf(file_content):
     """Enhanced method to extract text from PDF using PyPDF2."""
     try:
+        # Ensure file_content is bytes
+        if isinstance(file_content, str):
+            logger.info("Converting string content to bytes for PDF extraction")
+            try:
+                # Try to decode as base64 first
+                file_content = base64.b64decode(file_content)
+                logger.info("Successfully decoded base64 string to bytes")
+            except Exception as e:
+                logger.warning(f"Failed to decode as base64, treating as UTF-8: {str(e)}")
+                # If not base64, try to encode as UTF-8
+                file_content = file_content.encode('utf-8')
+        
         # Create a file-like object from the content
         pdf_file = io.BytesIO(file_content)
         
@@ -648,6 +668,18 @@ def extract_text_with_documentai(file_content):
         str: Extracted text from the document or None if extraction fails
     """
     try:
+        # Ensure file_content is bytes
+        if isinstance(file_content, str):
+            logger.info("Converting string content to bytes for Document AI")
+            try:
+                # Try to decode as base64 first
+                file_content = base64.b64decode(file_content)
+                logger.info("Successfully decoded base64 string to bytes for Document AI")
+            except Exception as e:
+                logger.warning(f"Failed to decode as base64 for Document AI, treating as UTF-8: {str(e)}")
+                # If not base64, try to encode as UTF-8
+                file_content = file_content.encode('utf-8')
+        
         documentai_client = get_documentai_client()
         if not documentai_client:
             logger.warning("DocumentAI client not available")
