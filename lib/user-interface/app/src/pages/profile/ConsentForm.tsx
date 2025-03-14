@@ -1,25 +1,79 @@
-import React, { useState } from 'react';
-import { Container, Form, Button, Row, Col, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import React, { useState, useEffect, useContext } from 'react';
+import { Container, Form, Button, Row, Col, OverlayTrigger, Tooltip, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../../common/language-context'; // Updated import
+import { AppContext } from '../../common/app-context';
+import { ApiClient } from '../../common/api-client/api-client';
+import { UserProfile } from '../../common/types';
+import { useNotifications } from '../../components/notif-manager';
+import { useLanguage } from '../../common/language-context'; 
 import './ProfileForms.css';
 
 export default function ConsentForm() {
+  const appContext = useContext(AppContext);
+  const apiClient = new ApiClient(appContext);
+  const navigate = useNavigate();
+  const { addNotification } = useNotifications();
+  const { t } = useLanguage();
+
   const [isChecked, setIsChecked] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
-  const navigate = useNavigate();
-  const { t } = useLanguage();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  // Load profile on component mount
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await apiClient.profile.getProfile();
+      setProfile(data);
+      
+      // Set initial checkbox state based on consentGiven value
+      if (data.consentGiven) {
+        setIsChecked(true);
+      }
+      
+      setError(null);
+    } catch (err) {
+      setError('Service unavailable');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsChecked(e.target.checked);
     if (showTooltip) setShowTooltip(false);
   };
 
-  const handleContinue = () => {
-    if (isChecked) {
-      navigate('/view-update-add-child');
-    } else {
+  const handleContinue = async () => {
+    if (!isChecked) {
       setShowTooltip(true);
+      return;
+    }
+    
+    // If consent was already given, just navigate
+    if (profile?.consentGiven) {
+      navigate('/view-update-add-child');
+      return;
+    }
+    
+    // Otherwise update the profile with consent
+    try {
+      setSaving(true);
+      await apiClient.profile.updateProfile({ ...profile, consentGiven: true });
+      addNotification('success', 'Consent saved successfully');
+      navigate('/view-update-add-child');
+    } catch (err) {
+      addNotification('error', 'Failed to save consent');
+      setError('Failed to save consent. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -28,6 +82,29 @@ export default function ConsentForm() {
       {t('consent.tooltip')}
     </Tooltip>
   );
+
+  if (loading) {
+    return (
+      <Container className="text-center profile-form-container">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="profile-form-container">
+        <Row style={{ width: '100%', justifyContent: 'center' }}>
+          <Col xs={12} md={8} lg={6}>
+            <div className="alert alert-danger">{error}</div>
+            <Button onClick={loadProfile} variant="primary">Try Again</Button>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
 
   return (
     <Container 
@@ -41,7 +118,7 @@ export default function ConsentForm() {
             
             <div className="consent-box">
               <p className="consent-text">
-                {t('consent.text')}
+              {t('consent.text')}
               </p>
               
               <Form.Group controlId="consentCheckbox">
@@ -64,10 +141,17 @@ export default function ConsentForm() {
               <Button 
                 variant="primary" 
                 onClick={handleContinue}
-                disabled={!isChecked}
+                disabled={!isChecked || saving}
                 className="button-text"
               >
-                {t('consent.button')}
+                {saving ? (
+                  <>
+                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                    Saving...
+                  </>
+                ) : (
+                  t('consent.button')
+                )}
               </Button>
             </div>
           </div>

@@ -1,26 +1,15 @@
 import { useContext } from "react";
 import {
   BrowserRouter,
-  Outlet,
   Route,
   Routes,
-  Navigate,
   useLocation
 } from "react-router-dom";
 import { AppContext } from "./common/app-context";
 import GlobalHeader from "./components/global-header";
-import Playground from "./pages/chatbot/playground/playground";
-import DataPage from "./pages/admin/data-view-page";
-import UserFeedbackPage from "./pages/admin/user-feedback-page";
-import SessionPage from "./pages/chatbot/sessions/sessions";
 import WelcomePage from "./pages/WelcomePage";
-import { v4 as uuidv4 } from "uuid";
 import "./styles/app.scss";
-import ConfigurationPage from "./pages/admin/sys-prompt-config/sys_prompt_config_page";
-import LlmEvaluationPage from "./pages/admin/llm-eval/llm-evaluation-page"; 
-import DetailedEvaluationPage from "./pages/admin/llm-eval/detailed-evaluation-page";
 import PreferredLanguage  from './pages/profile/PreferredLanguage'; 
-import City  from './pages/profile/City'; 
 import UserProfileForm from './pages/profile/UserProfileForm';
 import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
 import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslationsPage';
@@ -49,7 +38,6 @@ function AppContent() {
       <div>
         <Routes>    
           <Route path="/" element={<PreferredLanguage  />} />
-          <Route path="/city" element={<City />} />
           <Route path="/consent-form" element={<ConsentForm />} />
           <Route
                 index
@@ -64,27 +52,6 @@ function AppContent() {
             <Route path="/iep-documents" element={<IEPDocumentView />} />
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} />            
-            <Route path="/chatbot" element={<Outlet />}>
-              <Route path="playground/:sessionId" element={<Playground />} />
-              <Route path="sessions" element={<SessionPage />} />              
-            </Route>
-            <Route path="/admin" element={<Outlet />}>                 
-             <Route path="data" element={<DataPage />} />   
-             <Route path="configuration" element={<ConfigurationPage />} /> 
-             <Route path="user-feedback" element={<UserFeedbackPage />} /> 
-             <Route path="llm-evaluation" element={<Outlet />}>
-            <Route index element={<LlmEvaluationPage />} />
-            <Route
-              path=":evaluationId"
-              element={
-                <DetailedEvaluationPage
-                  documentType="detailedEvaluation" 
-                />
-              }
-            />
-          </Route>                          
-            </Route>            
-            <Route path="*" element={<Navigate to={`/chatbot/playground/${uuidv4()}`} replace />} />
         </Routes>
       </div>
     </div>

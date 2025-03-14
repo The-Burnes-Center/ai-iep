@@ -98,20 +98,6 @@ export default function UserProfileForm() {
       <Form onSubmit={handleSubmit}>
         <Row className="mb-3">
           <Col md={6}>
-            <Form.Group controlId="formEmail">
-              <Form.Label>Email</Form.Label>
-              <Form.Control 
-                type="email" 
-                value={profile?.email || ''} 
-                disabled 
-              />
-              <Form.Text className="text-muted">
-                Email cannot be changed
-              </Form.Text>
-            </Form.Group>
-          </Col>
-
-          <Col md={6}>
             <Form.Group controlId="formPhone">
               <Form.Label>Phone</Form.Label>
               <Form.Control 
@@ -125,22 +111,6 @@ export default function UserProfileForm() {
         </Row>
 
         <Row className="mb-3">
-          <Col md={6}>
-            <Form.Group controlId="formPrimaryLanguage">
-              <Form.Label>Primary Language</Form.Label>
-              <Form.Select
-                value={profile?.primaryLanguage || 'en'}
-                onChange={e => setProfile(prev => prev ? {...prev, primaryLanguage: e.target.value} : null)}
-              >
-                {LANGUAGE_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-
           <Col md={6}>
             <Form.Group controlId="formSecondaryLanguage">
               <Form.Label>Secondary Language</Form.Label>

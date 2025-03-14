@@ -5,7 +5,7 @@ import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile, Child } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
-import { useLanguage } from '../../common/language-context'; // Updated import
+import { useLanguage } from '../../common/language-context'; 
 import './ProfileForms.css';
 
 export default function ViewAndAddChild() {

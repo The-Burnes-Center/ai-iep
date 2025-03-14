@@ -49,6 +49,7 @@ export interface UserProfile {
   children: Child[];
   createdAt: number;
   updatedAt: number;
+  consentGiven: Boolean;
 }
 
 export interface ProfileResponse {
