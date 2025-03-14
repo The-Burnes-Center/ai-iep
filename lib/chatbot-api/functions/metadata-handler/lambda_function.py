@@ -692,7 +692,7 @@ def translate_content(content, target_languages):
                     modelId=model_id,
                     body=json.dumps({
                         'anthropic_version': 'bedrock-2023-05-31',
-                        'max_tokens': 4000,
+                        'max_tokens': 8000,
                         'temperature': 0,
                         'system': 'You are an expert translator specializing in educational documents, particularly IEPs.',
                         'messages': [
@@ -743,8 +743,8 @@ def translate_content(content, target_languages):
                             modelId=model_id,
                             body=json.dumps({
                                 'anthropic_version': 'bedrock-2023-05-31',
-                                'max_tokens': 2000,
-                                'temperature': 0.1,
+                                'max_tokens': 8000,
+                                'temperature': 0,
                                 'system': 'You are an expert translator specializing in educational documents, particularly IEPs.',
                                 'messages': [
                                     {'role': 'user', 'content': prompt}
@@ -826,8 +826,8 @@ def summarize_and_categorize(content_text):
             modelId=model_id,
             body=json.dumps({
                 'anthropic_version': 'bedrock-2023-05-31',
-                'max_tokens': 4000,
-                'temperature': 0.1,
+                'max_tokens': 8000,
+                'temperature': 0,
                 'system': 'You are an expert in analyzing and summarizing educational documents, especially Individualized Education Programs (IEPs).',
                 'messages': [
                     {'role': 'user', 'content': prompt}
