@@ -479,6 +479,7 @@ def process_single_chunk(chunk, chunk_index, total_chunks):
             return f"CHUNK {chunk_index} ANALYSIS:\nThis chunk contains insufficient text content to analyze (less than 200 characters)."
         
         logger.info(f"Processing chunk {chunk_index}/{total_chunks} of length {len(chunk)} characters")
+        logger.info(f"Chunk {chunk_index} content preview: {chunk[:200].replace(chr(10), ' ')}...")
         
         # Generate the prompt for chunk analysis using the function from config.py
         prompt = get_chunk_analysis_prompt(chunk, chunk_index, total_chunks)
@@ -553,6 +554,7 @@ def generate_final_json_analysis(combined_text_analysis):
         # Validate combined text analysis has meaningful content
         if not combined_text_analysis or len(combined_text_analysis.strip()) < 100:
             logger.warning(f"Combined text analysis too short or empty: {len(combined_text_analysis) if combined_text_analysis else 0} chars")
+            logger.warning(f"Combined text analysis preview: {combined_text_analysis[:200] if combined_text_analysis else 'None'}")
             # Return a basic structure if input is insufficient
             return {
                 "summary": "The document analysis could not be completed due to insufficient text content.",
@@ -607,6 +609,7 @@ def generate_final_json_analysis(combined_text_analysis):
         if result:
             logger.info(f"Successfully generated structured JSON from combined analysis")
             logger.info(f"Result structure keys: {list(result.keys())}")
+            logger.info(f"Result full content: {json.dumps(result, default=str)[:1000]}...")
             if 'sections' in result:
                 logger.info(f"Sections keys: {list(result['sections'].keys())}")
         else:
@@ -885,6 +888,7 @@ def extract_text_from_pdf(file_content):
         # If we got good text, return it
         if full_text and len(full_text.strip()) > 500:
             logger.info(f"Successfully extracted {len(full_text)} characters using standard extraction")
+            logger.info(f"Extracted text preview: {full_text[:500].replace(chr(10), ' ')}...")
             return full_text
             
         # Method 2: Try extracting text from raw content streams
@@ -908,12 +912,14 @@ def extract_text_from_pdf(file_content):
         # If we got good alternative text, use it
         if alternative_text and len(alternative_text.strip()) > 500:
             logger.info(f"Successfully extracted {len(alternative_text)} characters using content stream extraction")
+            logger.info(f"Alternative text preview: {alternative_text[:500].replace(chr(10), ' ')}...")
             return alternative_text
             
         # If we didn't get enough text from either method, combine both
         combined_text = full_text + "\n\n" + alternative_text
         if combined_text and len(combined_text.strip()) > 500:
             logger.info(f"Using combined extraction methods: {len(combined_text)} characters")
+            logger.info(f"Combined text preview: {combined_text[:500].replace(chr(10), ' ')}...")
             return combined_text
             
         # If we still don't have enough text, log a warning and return what we have
