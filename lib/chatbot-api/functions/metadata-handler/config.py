@@ -111,9 +111,7 @@ def get_all_tags():
     }
 
 def get_full_prompt(key, content):
-    """
-    Generate the full analysis prompt for the AI model, instructing it to summarize the IEP and extract structured data.
-    """
+   
     section_points = {section: points for section, points in SECTION_KEY_POINTS.items()}
     
     prompt = f"""
@@ -133,7 +131,6 @@ Please analyze this IEP document and provide:
    {', '.join(IEP_SECTIONS.keys())}
 
    Provide:
-   - Location in document (beginning, middle, or end)
    - A clear, detailed summary covering these key points:
 {json.dumps(section_points, indent=8)}
    - Any specific numbers, hours, or measurements mentioned
@@ -152,24 +149,21 @@ For the 'services' section specifically:
      * 30 minutes = 0.5 hours
    - Be consistent with this format throughout the entire summary
 
-Please format your response as JSON with the following structure:
+Format your response as a JSON object with the following structure:
+```json
 {{
-    "summary": "Comprehensive parent-friendly summary of the IEP",
-    "sections": {{
-        "section_name": {{
-            "present": true/false,
-            "summary": "Detailed explanation covering all key points for this section",
-            "key_points": {{
-                "point_category": "Specific details found for this category",
-                ...
-            }},
-            "important_dates": ["List of any important dates mentioned"],
-            "parent_actions": ["List of any required parent actions"],
-            "location": "beginning/middle/end"
-        }},
-        ...
+  "summary": "A concise summary of the document",
+  "sections": [
+    {{
+      "title": "Section title",
+      "content": "Section content"
     }}
+  ]
 }}
+```
+
+IMPORTANT: Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
+
 
 Critical Requirements:
 - Do not omit any important details or measurements.
