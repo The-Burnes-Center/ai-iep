@@ -115,39 +115,27 @@ def get_full_prompt(key, content):
     section_points = {section: points for section, points in SECTION_KEY_POINTS.items()}
     
     prompt = f"""
-You are a helpful education expert who makes IEPs (Individualized Education Programs) easy for parents to understand. Your task is to create a thorough yet clear summary of this IEP document.
+You are an expert IEP document summarizer. Analyze the following student IEP document and extract the key information.
 
-Please analyze this IEP document and provide:
+Extract the following:
+1. A concise summary of the entire document focusing on the student's needs, goals, and accommodations
+2. Structured sections based on the document's content
 
-1. A comprehensive parent-friendly summary that:
-   - Covers all major decisions and services in the IEP
-   - Uses simple language (8th-grade reading level)
-   - Explains what the plan means for the child's daily school life
-   - Highlights any important dates, changes, or actions needed
-   - Incorporates any significant concerns or input from parents or teachers
-   - Has a warm, supportive tone
+When analyzing the document, pay special attention to these important sections:
+{', '.join(IEP_SECTIONS.keys())}
 
-2. For each of these sections found in the document:
-   {', '.join(IEP_SECTIONS.keys())}
+For each section, cover these key points where applicable:
+{json.dumps(section_points, indent=4)}
 
-   Provide:
-   - A clear, detailed summary covering these key points:
-{json.dumps(section_points, indent=8)}
-   - Any specific numbers, hours, or measurements mentioned
-   - Important dates or deadlines in that section
-   - Required parent actions or decisions noted
+Special instructions:
+- For the 'services' section specifically:
+  * ALWAYS convert any service durations from minutes to hours per week
+  * Format service durations as "X hours per week" (NOT minutes)
+  * Example: "5 hours per week of specialized instruction" (not "300 minutes per week")
 
-For the 'services' section specifically:
-   - ALWAYS convert any service durations from minutes to hours per week
-   - Format service durations as "X hours per week" (NOT minutes)
-   - Example of correct format:
-     "Services: 5 hours per week of specialized academic instruction, 1.67 hours per week of speech therapy, 0.5 hours per week of occupational therapy"
-   - DO NOT use minutes in the output (e.g., avoid "300 minutes/week")
-   - If you need to convert minutes to hours:
-     * 300 minutes = 5 hours
-     * 100 minutes = 1.67 hours
-     * 30 minutes = 0.5 hours
-   - Be consistent with this format throughout the entire summary
+- Use simple language (8th-grade reading level)
+- Explain technical terms in parentheses
+- Include all specific services, accommodations, and important dates
 
 Format your response as a JSON object with the following structure:
 ```json
@@ -164,17 +152,7 @@ Format your response as a JSON object with the following structure:
 
 IMPORTANT: Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
 
-
-Critical Requirements:
-- Do not omit any important details or measurements.
-- Keep all specific services, hours, and accommodations in the summary.
-- ALWAYS convert any service duration from minutes to hours per week - NEVER use minutes in the output.
-- Explain technical terms while preserving their official names.
-- Include all dates, deadlines, and required actions.
-- Write in clear language at an 8th-grade reading level.
-- Organize information so it's easy to reference.
-- Highlight anything that needs parent attention or decisions.
-
-Document Name: {key}
-Document Content: {content}"""
+Document content:
+{content}
+"""
     return prompt
