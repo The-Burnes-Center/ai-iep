@@ -9,7 +9,6 @@ The Metadata Handler is a serverless AWS Lambda function that processes IEP (Ind
 - **Multilingual Support**: Translates summaries and sections into multiple languages based on user preferences
 - **API Access**: Provides endpoints to retrieve document metadata, summaries, and sections in different languages
 - **Structured Storage**: Stores processed data in DynamoDB with proper indexing for efficient retrieval
-- **Abstracted LLM Service**: Centralized language model service for easy provider switching (Claude, OpenAI)
 
 ## Workflow
 1. **Document Upload**: PDF is uploaded to S3 bucket, triggering Lambda via S3 event
@@ -26,11 +25,6 @@ The Metadata Handler is a serverless AWS Lambda function that processes IEP (Ind
 - **lambda_function.py**: Main handler orchestrating the entire process
 - **google_auth.py**: Handles Document AI integration for text extraction
 - **config.py**: Contains prompts, section definitions, and language codes
-- **document_processor.py**: Handles document analysis and chunk processing
-- **translation.py**: Manages content translation into multiple languages
-- **llm_service.py**: Abstracts LLM provider interactions (Claude, OpenAI)
-- **database.py**: Manages data storage and retrieval from DynamoDB
-- **utils.py**: Contains utility functions used throughout the service
 - **requirements.txt**: Dependencies for the Lambda function
 
 ## DynamoDB Schema
@@ -75,44 +69,6 @@ Only references to documents are stored in the User Profiles table. Each child c
   - `lang` (optional): Language code (defaults to 'en')
 - **Response**: Document metadata including summary, sections, and available languages
 
-## LLM Service
-
-The application includes an abstracted language model service that centralizes all interactions with LLM providers:
-
-### Features
-- **Provider Abstraction**: Uniform interface for different LLM providers (currently Claude, with OpenAI support prepared)
-- **Model Configuration**: Easily configure different models for different use cases (analysis, translation)
-- **Consistent Error Handling**: Standardized approach to handling API errors and retries
-- **Future Extensibility**: Easy integration of new LLM providers as they become available
-
-### Usage
-```python
-from llm_service import invoke_llm, invoke_claude, LLMProvider
-
-# Basic usage with default provider (Claude)
-response = invoke_llm(prompt="Analyze this text...")
-
-# Explicit provider selection
-response = invoke_llm(
-    prompt="Analyze this text...",
-    provider=LLMProvider.CLAUDE,
-    temperature=0.2,
-    max_tokens=4000
-)
-
-# Convenience function for Claude
-response = invoke_claude(prompt="Analyze this text...")
-
-# Future OpenAI integration
-# response = invoke_llm(
-#     prompt="Analyze this text...",
-#     provider=LLMProvider.OPENAI,
-#     model="gpt-4"
-# )
-```
-
-See `llm_service_example.py` for more usage examples.
-
 ## Configuration
 The function uses the following environment variables:
 - `IEP_DOCUMENTS_TABLE`: DynamoDB table for document storage
@@ -122,13 +78,7 @@ The function uses the following environment variables:
 - `DOCUMENT_AI_LOCATION`: Google Cloud region for Document AI
 - `DOCUMENT_AI_PROCESSOR_ID`: Document AI processor ID
 - `GOOGLE_SERVICE_ACCOUNT_SECRET`: AWS Secrets Manager secret name for Google credentials
-- `ANTHROPIC_MODEL`: Claude model ID for primary document analysis (default: claude-3-5-sonnet-20241022-v2:0)
-- `ANTHROPIC_MODEL_3_7`: Claude model ID for fallback processing (default: claude-3-7-sonnet-20250219-v1:0)
-
-## LLM Models
-The application now uses only two Claude models:
-- Claude 3.5 Sonnet (anthropic.claude-3-5-sonnet-20241022-v2:0): Default model for all document processing and translation
-- Claude 3.7 Sonnet (anthropic.claude-3-7-sonnet-20250219-v1:0): Used as a fallback for complex JSON handling
+- `CLAUDE_MODEL_ID`: Claude model ID for content analysis and translation
 
 ## Error Handling
 - Each major operation is wrapped in try/except blocks

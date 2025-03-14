@@ -76,25 +76,14 @@ def get_service_account_from_secretsmanager():
         # Return the secret as a JSON object
         if 'SecretString' in response:
             secret = response['SecretString']
-            creds = json.loads(secret)
-            print(f"✅ Successfully retrieved credentials with project_id: {creds.get('project_id')}")
-            print(f"✅ Service account email: {creds.get('client_email')}")
-            
-            # Compare with environment variable
-            env_project_id = os.environ.get('DOCUMENT_AI_PROJECT_ID')
-            if env_project_id and env_project_id != creds.get('project_id'):
-                print(f"⚠️ WARNING: Environment project ID ({env_project_id}) does not match credentials project ID ({creds.get('project_id')})")
-            
-            return creds
+            return json.loads(secret)
         else:
             print("Secret value is not a string, attempting to decode binary")
             decoded_binary = base64.b64decode(response['SecretBinary'])
-            creds = json.loads(decoded_binary)
-            print(f"✅ Successfully retrieved binary credentials with project_id: {creds.get('project_id')}")
-            return creds
+            return json.loads(decoded_binary)
             
     except Exception as e:
-        print(f"❌ Error retrieving secret: {e}")
+        print(f"Error retrieving secret: {e}")
         traceback.print_exc()
         return None
 
@@ -114,33 +103,6 @@ def process_document(project_id, location, processor_id, file_content, mime_type
     Returns:
         Extracted text from the document, or None if processing failed
     """
-    # Log environment variables for debugging
-    env_project_id = os.environ.get('DOCUMENT_AI_PROJECT_ID')
-    env_location = os.environ.get('DOCUMENT_AI_LOCATION', 'us-central1')
-    env_processor_id = os.environ.get('DOCUMENT_AI_PROCESSOR_ID')
-    
-    print(f"📝 Document AI Environment Configuration:")
-    print(f"  - Environment Project ID: {env_project_id}")
-    print(f"  - Environment Location: {env_location}")
-    print(f"  - Environment Processor ID: {env_processor_id}")
-    print(f"  - Function Argument Project ID: {project_id}")
-    print(f"  - Function Argument Location: {location}")
-    print(f"  - Function Argument Processor ID: {processor_id}")
-    
-    # Check if the project_id matches the one from secrets
-    try:
-        service_account = get_service_account_from_secretsmanager()
-        if service_account:
-            sa_project_id = service_account.get('project_id')
-            print(f"📝 Service Account Project ID: {sa_project_id}")
-            
-            if project_id != sa_project_id:
-                print(f"⚠️ WARNING: Function arg project_id ({project_id}) doesn't match service account project_id ({sa_project_id})")
-                print(f"⚠️ Attempting to use correct project_id from service account")
-                project_id = sa_project_id
-    except Exception as sa_error:
-        print(f"❌ Error checking service account project ID: {sa_error}")
-    
     # Check if we should immediately use PDF fallback for PDFs
     if mime_type.lower() == "application/pdf":
         print("PDF detected, attempting to process with both Document AI and PDF fallback")
@@ -170,7 +132,7 @@ def process_document(project_id, location, processor_id, file_content, mime_type
             headers = {"Content-Type": "application/json"}
             
             # Make the API request
-            print(f"Making Document AI API request with API key to URL: {api_url}")
+            print(f"Making Document AI API request with API key")
             response = requests.post(
                 api_url, 
                 headers=headers, 
@@ -184,104 +146,29 @@ def process_document(project_id, location, processor_id, file_content, mime_type
                 result = response.json()
                 document_text = result.get("document", {}).get("text", "")
                 if document_text:
-                    print("✅ Successfully processed document with Document AI")
+                    print("Successfully processed document with Document AI")
                     return document_text
                 else:
-                    print("⚠️ Document AI returned empty text, will try fallback")
+                    print("Document AI returned empty text, will try fallback")
             else:
-                print(f"❌ Document AI API error: {response.status_code}")
-                print(f"❌ Error response: {response.text[:1000]}")  # Print first 1000 chars of response
+                print(f"Document AI API error: {response.status_code}")
+                print(f"Response: {response.text[:1000]}")  # Print first 1000 chars of response
         else:
-            # Try to use service account-based authentication
-            service_account = get_service_account_from_secretsmanager()
-            if service_account:
-                print("💡 No API key found, attempting service account authentication")
-                
-                try:
-                    import google.auth
-                    from google.auth.transport.requests import Request
-                    from google.oauth2 import service_account
-                    
-                    # Check if we have the required Google auth libraries
-                    print("✅ Required Google auth libraries are available")
-                    
-                    # Create service account credentials
-                    credentials = service_account.Credentials.from_service_account_info(
-                        service_account, 
-                        scopes=['https://www.googleapis.com/auth/cloud-platform']
-                    )
-                    
-                    # Get an access token
-                    credentials.refresh(Request())
-                    access_token = credentials.token
-                    print(f"✅ Successfully obtained access token: {access_token[:10]}...")
-                    
-                    # Encode file content as base64
-                    encoded_content = base64.b64encode(file_content).decode('utf-8')
-                    
-                    # Construct the request payload
-                    payload = {
-                        "rawDocument": {
-                            "content": encoded_content,
-                            "mimeType": mime_type
-                        }
-                    }
-                    
-                    # Use the service account project ID from credentials if available
-                    project_id_to_use = service_account.get('project_id', project_id)
-                    
-                    # Construct the API URL
-                    api_url = f"https://{location}-documentai.googleapis.com/v1/projects/{project_id_to_use}/locations/{location}/processors/{processor_id}:process"
-                    headers = {
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {access_token}"
-                    }
-                    
-                    # Make the API request
-                    print(f"Making Document AI API request with service account to URL: {api_url}")
-                    response = requests.post(
-                        api_url, 
-                        headers=headers, 
-                        json=payload,
-                        verify=False  # For Lambda environment issues
-                    )
-                    
-                    # Check if the request was successful
-                    if response.status_code == 200:
-                        # Extract and return the document text
-                        result = response.json()
-                        document_text = result.get("document", {}).get("text", "")
-                        if document_text:
-                            print("✅ Successfully processed document with Document AI using service account")
-                            return document_text
-                        else:
-                            print("⚠️ Document AI returned empty text with service account, will try fallback")
-                    else:
-                        print(f"❌ Document AI API error with service account: {response.status_code}")
-                        print(f"❌ Error response: {response.text[:1000]}")
-                
-                except ImportError as imp_err:
-                    print(f"❌ Required Google auth libraries not available: {imp_err}")
-                except Exception as auth_err:
-                    print(f"❌ Error using service account authentication: {auth_err}")
-                    traceback.print_exc()
-            else:
-                print("❌ No API key available for Document AI and service account retrieval failed")
+            print("No API key available for Document AI")
                         
     except Exception as e:
-        print(f"❌ Error using Document AI: {e}")
-        traceback.print_exc()
+        print(f"Error using Document AI with API key: {e}")
         
     # If we reach here, either Document AI failed or we don't have credentials
     # Try PDF fallback for PDFs
     if mime_type.lower() == "application/pdf":
-        print("⚠️ Document AI failed or unavailable, using PDF fallback extraction")
+        print("Document AI failed or unavailable, using PDF fallback extraction")
         pdf_text = extract_text_from_pdf(file_content)
         if pdf_text:
-            print("✅ Successfully extracted text with PyPDF2 fallback")
+            print("Successfully extracted text with PyPDF2 fallback")
             return pdf_text
         else:
-            print("❌ PyPDF2 fallback also failed")
+            print("PyPDF2 fallback also failed")
     
     # If all methods failed
     return None
@@ -294,27 +181,12 @@ def get_documentai_client():
     print("Initializing Document AI REST client...")
     print(f"Python version: {sys.version}")
     
-    # Try to get the service account credentials directly
-    try:
-        service_account = get_service_account_from_secretsmanager()
-        if service_account:
-            print(f"✅ Successfully retrieved service account credentials for get_documentai_client")
-            print(f"  - Service Account Project ID: {service_account.get('project_id')}")
-            print(f"  - Service Account Email: {service_account.get('client_email')}")
-        else:
-            print("⚠️ No service account credentials available for get_documentai_client")
-    except Exception as e:
-        print(f"❌ Error retrieving service account in get_documentai_client: {e}")
-    
     class SimpleDocumentAIClient:
         def __init__(self):
             self.project_id = os.environ.get('DOCUMENT_AI_PROJECT_ID')
             self.location = os.environ.get('DOCUMENT_AI_LOCATION', 'us-central1')
             self.processor_id = os.environ.get('DOCUMENT_AI_PROCESSOR_ID')
-            print(f"✅ SimpleDocumentAIClient initialized with:")
-            print(f"  - Project ID: {self.project_id}")
-            print(f"  - Location: {self.location}")
-            print(f"  - Processor ID: {self.processor_id}")
+            print("Successfully initialized Document AI REST client")
             
         def processor_path(self, project_id, location, processor_id):
             """Just returns the processor path string for compatibility."""
@@ -342,17 +214,8 @@ def get_documentai_client():
                 
                 # Get the document content and mime type
                 raw_document = request.get('raw_document', {})
-                content_base64 = raw_document.get('content')
+                content = raw_document.get('content')
                 mime_type = raw_document.get('mime_type', 'application/pdf')
-                
-                # Decode base64 content to bytes
-                try:
-                    import base64
-                    content = base64.b64decode(content_base64)
-                    print(f"Successfully decoded base64 content, size: {len(content)} bytes")
-                except Exception as e:
-                    print(f"Error decoding base64 content: {e}")
-                    content = content_base64
                 
                 # Process the document using our simplified function
                 text = process_document(
@@ -366,6 +229,10 @@ def get_documentai_client():
                 if text is None:
                     # If both Document AI and fallback failed
                     raise ValueError("Document processing failed with all methods")
+                
+                # WARNING: At this point, text could be from DocAI or from PyPDF2 fallback
+                # This is causing confusion in the logs because lambda_function.py doesn't know
+                # which method actually succeeded
                 
                 # Create a response object that matches the expected structure
                 # and include a new attribute to indicate if text came from fallback
