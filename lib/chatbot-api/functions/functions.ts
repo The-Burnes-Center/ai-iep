@@ -387,7 +387,7 @@ export class LambdaFunctionStack extends cdk.Stack {
               ],
             },
           }),
-          handler: 'lambda_handler.lambda_handler',
+          handler: 'lambda_function.lambda_handler',
           environment: {
             "BUCKET": props.knowledgeBucket.bucketName,
             "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
