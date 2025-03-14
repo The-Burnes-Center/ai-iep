@@ -141,6 +141,11 @@ Please analyze this IEP document and provide:
    - Required parent actions or decisions noted
    - If any service duration is given in minutes per week/year, convert it to hours per week/year for clarity.
 
+For the 'services' section specifically:
+   - ALWAYS convert any service durations from minutes to hours per week (e.g., "120 minutes per week" should be shown as "2 hours per week")
+   - For clarity, you may include both formats: "2 hours per week (120 minutes)"
+   - This conversion is critical for helping parents understand the actual time commitment
+
 Please format your response as JSON with the following structure:
 {{
     "summary": "Comprehensive parent-friendly summary of the IEP",
@@ -163,7 +168,7 @@ Please format your response as JSON with the following structure:
 Critical Requirements:
 - Do not omit any important details or measurements.
 - Keep all specific services, hours, and accommodations in the summary.
-- If any service duration is given in minutes per week/year, convert it to hours per week/year for clarity.
+- ALWAYS convert any service duration from minutes per week/year to hours per week/year for clarity.
 - Explain technical terms while preserving their official names.
 - Include all dates, deadlines, and required actions.
 - Write in clear language at an 8th-grade reading level.
