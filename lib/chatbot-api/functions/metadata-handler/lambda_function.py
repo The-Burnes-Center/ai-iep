@@ -808,12 +808,6 @@ def summarize_and_categorize(content_text):
     # Update to Claude 3.5 Sonnet for better performance
     model_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0'
     
-    # Truncate the content if it's too long
-    max_content_length = 65000  # Claude has a token limit
-    if len(content_text) > max_content_length:
-        print(f"Content too long ({len(content_text)} chars), truncating to {max_content_length} chars")
-        content_text = content_text[:max_content_length]
-    
     # Ensure content is valid
     if not content_text or not content_text.strip():
         print("Empty document content, cannot summarize")
@@ -823,31 +817,8 @@ def summarize_and_categorize(content_text):
         }
     
     try:
-        # Create a clear and consistent prompt for Claude
-        prompt = f"""
-You are an expert IEP document summarizer. Analyze the following student IEP document and extract the key information.
-Extract the following:
-1. A short summary (3-4 sentences) of the entire document focusing on the student's needs, goals, and accommodations
-2. Structured sections based on the document's content 
-
-Format your response as a JSON object with the following structure:
-```json
-{{
-  "summary": "A concise summary of the document",
-  "sections": [
-    {{
-      "title": "Section title",
-      "content": "Section content"
-    }}
-  ]
-}}
-```
-
-IMPORTANT: Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
-
-Document content:
-{content_text}
-"""
+        # Use the get_full_prompt function from config.py
+        prompt = get_full_prompt("IEP Document", content_text)
         
         # Call Claude
         bedrock_runtime = boto3.client('bedrock-runtime')
