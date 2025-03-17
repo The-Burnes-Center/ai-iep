@@ -143,7 +143,7 @@ Format your response as a JSON object with the following structure:
   "summary": "A concise summary of the document, that will be read by the parent of the student, so make it very simple and easy to understand and keep the tone to make them understand the student's needs and goals",
   "sections": [
     {{
-      "title": "Section title",
+      "title": "Section title" - ENUM from {', '.join(IEP_SECTIONS.keys())},
       "content": "Section content with key points, cover all the key points for the section"
     }}
   ]
