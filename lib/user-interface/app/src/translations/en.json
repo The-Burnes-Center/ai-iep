@@ -64,6 +64,8 @@
     "sections.services": "Services",
     "sections.placement": "Placement",
     "sections.presentLevels": "Present Levels of Performance",    
+    "sections.eligibility": "Assistive Technology",
+    "sections.informedConsent": "State Testing",   
     "sections.assistiveTechnology": "Assistive Technology",
     "sections.stateTesting": "State Testing",    
 

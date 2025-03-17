@@ -51,7 +51,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     { apiName: "Goals", englishName: "Goals", displayName: "Goals" },
     { apiName: "Services", englishName: "Services", displayName: "Services" },
     { apiName: "Placement", englishName: "Placement", displayName: "Placement" },
-    { apiName: "Present Levels of Performance", englishName: "Present Levels", displayName: "Present Levels" },
+    { apiName: "Present Levels", englishName: "Present Levels", displayName: "Present Levels" },
+    { apiName: "Eligibility", englishName: "Eligibility", displayName: "Eligibility" },
+    { apiName: "Informed Consent", englishName: "Informed Consent", displayName: "Informed Consent" },
     { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: "Assistive Technology" },
     { apiName: "State Testing", englishName: "State Testing", displayName: "State Testing" },
   ]);
@@ -65,7 +67,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
         { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
         { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
-        { apiName: "Present Levels of Performance", englishName: "Present Levels", displayName: t('sections.presentLevels') },
+        { apiName: "Present Levels", englishName: "Present Levels", displayName: t('sections.presentLevels') },
+        { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
+        { apiName: "Informed Consent", englishName: "Informed Consent", displayName: t('sections.informedConsent') },
         { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: t('sections.assistiveTechnology') },
         { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') },
       ];

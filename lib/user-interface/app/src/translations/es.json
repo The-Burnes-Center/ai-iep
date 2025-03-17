@@ -63,9 +63,11 @@
     "sections.goals": "Objetivos",
     "sections.services": "Servicios",
     "sections.placement": "Ubicación",
+    "sections.eligibility": "Elegibilidad",
+    "sections.informedConsent": "Consentimiento Informado",
     "sections.presentLevels": "Niveles Actuales de Desempeño",
     "sections.assistiveTechnology": "Tecnología de asistencia",
-    "sections.stateTesting": "Pruebas estatales",    
+    "sections.stateTesting": "Pruebas estatales",  
 
     "upload.title": "Subir Documento IEP",
     "upload.maxSize": "Tamaño máximo de archivo: 100MB.",
