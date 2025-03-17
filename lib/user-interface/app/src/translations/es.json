@@ -42,7 +42,7 @@
     "summary.processing.message": "Esto puede tomar unos minutos. Mientras tanto, eche un vistazo a sus derechos como padre:",
     "summary.failed.title": "Procesamiento Fallido",
     "summary.failed.message": "Hubo un error al procesar su documento. Por favor, intente subirlo de nuevo.",
-    "summary.preferredLanguage": "Idioma Preferido",
+    "summary.preferredLanguage": "Español",
     "summary.english": "Inglés",
     "summary.iepSummary": "Resumen del IEP",
     "summary.noTranslatedSummary.title": "No Hay Resumen Traducido Disponible",
@@ -64,6 +64,8 @@
     "sections.services": "Servicios",
     "sections.placement": "Ubicación",
     "sections.presentLevels": "Niveles Actuales de Desempeño",
+    "sections.assistiveTechnology": "Tecnología de asistencia",
+    "sections.stateTesting": "Pruebas estatales",    
 
     "upload.title": "Subir Documento IEP",
     "upload.maxSize": "Tamaño máximo de archivo: 100MB.",

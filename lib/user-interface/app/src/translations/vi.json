@@ -42,7 +42,7 @@
     "summary.processing.message": "Điều này có thể mất vài phút. Trong khi chờ đợi, hãy xem quyền của bạn với tư cách là phụ huynh:",
     "summary.failed.title": "Xử lý thất bại",
     "summary.failed.message": "Đã xảy ra lỗi khi xử lý tài liệu của bạn. Vui lòng thử tải lên lại.",
-    "summary.preferredLanguage": "Ngôn ngữ ưa thích",
+    "summary.preferredLanguage": "Tiếng Việt",
     "summary.english": "Tiếng Anh",
     "summary.iepSummary": "Tóm tắt IEP",
     "summary.noTranslatedSummary.title": "Không có bản tóm tắt đã dịch",
@@ -64,6 +64,8 @@
     "sections.services": "Dịch Vụ",
     "sections.placement": "Vị Trí Sắp Xếp",
     "sections.presentLevels": "Mức Độ Hiệu Suất Hiện Tại",
+    "sections.assistiveTechnology": "Công nghệ hỗ trợ",
+    "sections.stateTesting": "Kiểm tra của tiểu bang",    
   
     "upload.title": "Tải lên tài liệu IEP",
     "upload.maxSize": "Kích thước tệp tối đa: 100MB.",

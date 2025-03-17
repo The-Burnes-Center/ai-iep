@@ -45,18 +45,22 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Define the desired section order and display names
   const sectionConfig = [
-    { apiName: "Student Information", displayName: t('sections.studentInfo') },
-    { apiName: "Accommodations", displayName: t('sections.accommodations') },
-    { apiName: "Goals", displayName: t('sections.goals') },
-    { apiName: "Services", displayName: t('sections.services') },
-    { apiName: "Placement", displayName: t('sections.placement') },
-    { apiName: "Present Levels", displayName: t('sections.presentLevels') }
+    { apiName: "Student Information", englishName: "Student Information", displayName: t('sections.studentInfo') },
+    { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
+    { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
+    { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
+    { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
+    { apiName: "Present Levels of Performance", englishName: "Present Levels", displayName: t('sections.presentLevels') },
+    { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: t('sections.assistiveTechnology') },
+    { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') },
   ];
 
-  // Function to get display name for a section
-  const getDisplayName = (apiName: string): string => {
+  const getDisplayName = (apiName: string, useTranslation: boolean = false): string => {
     const config = sectionConfig.find(s => s.apiName === apiName);
-    return config ? config.displayName : apiName;
+    if (!config) return apiName;
+    
+    // Return either the translated name or the English name
+    return useTranslation ? config.displayName : config.englishName;
   };
 
   // Function to sort sections based on the predefined order
@@ -162,7 +166,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     
                     extractedSections.push({ 
                       name: sectionName,
-                      displayName: getDisplayName(sectionName), 
+                      displayName: getDisplayName(sectionName,false), 
                       content: content
                     });
                   }
@@ -194,7 +198,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     
                     extractedTranslatedSections.push({ 
                       name: sectionName,
-                      displayName: getDisplayName(sectionName), 
+                      displayName: getDisplayName(sectionName,true), 
                       content: content
                     });
                   }

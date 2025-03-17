@@ -42,7 +42,7 @@
     "summary.processing.message": "This may take a few minutes. Meanwhile, please take a look at your rights as a parent:",
     "summary.failed.title": "Processing Failed",
     "summary.failed.message": "There was an error processing your document. Please try uploading it again.",
-    "summary.preferredLanguage": "Preferred Language",
+    "summary.preferredLanguage": "English",
     "summary.english": "English",
     "summary.iepSummary": "IEP Summary",
     "summary.noTranslatedSummary.title": "No Translated Summary Available",
@@ -64,6 +64,8 @@
     "sections.services": "Services",
     "sections.placement": "Placement",
     "sections.presentLevels": "Present Levels of Performance",    
+    "sections.assistiveTechnology": "Assistive Technology",
+    "sections.stateTesting": "State Testing",    
 
     "upload.title": "Upload IEP Document",
     "upload.maxSize": "Maximum file size: 100MB.",
