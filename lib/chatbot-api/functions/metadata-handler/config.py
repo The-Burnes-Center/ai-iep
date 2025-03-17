@@ -119,7 +119,7 @@ You are an expert IEP document summarizer. Analyze the following student IEP doc
 
 Extract the following:
 1. A concise summary of the entire document focusing on the student's needs, goals, and accommodations
-2. Structured sections based on the document's content
+2. Structured sections based on the document's content, always only include the following sections: {', '.join(IEP_SECTIONS.keys())}.
 
 When analyzing the document, pay special attention to these important sections:
 {', '.join(IEP_SECTIONS.keys())}
@@ -152,6 +152,7 @@ Format your response as a JSON object with the following structure:
 
 IMPORTANT: 1.Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
 2. Make sure to include all the sections and key points in the response. {get_all_tags()}, keep the section title same as the section name for consistency.
+3. Make sure to cover all the key points for each section, and make sure to keep the tone to make it easy to understand for the parent.
 
 Document content:
 {content}
