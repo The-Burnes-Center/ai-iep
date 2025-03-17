@@ -2,18 +2,18 @@ import json
 
 # Define IEP sections and their descriptions
 IEP_SECTIONS = {
-    'present_levels': 'Present levels of academic achievement and functional performance',
-    'eligibility': 'Student eligibility determination and documentation',
-    'placement': 'Educational placement and least restrictive environment',
-    'goals': 'Measurable annual goals and objectives',
-    'services': 'Special education and related services to be provided',
-    'informed_consent': 'Parent/Guardian informed consent and participation',
-    'accommodations': 'Accommodations and modifications'
+    'Present Levels': 'Present levels of academic achievement and functional performance',
+    'Eligibility': 'Student eligibility determination and documentation',
+    'Placement': 'Educational placement and least restrictive environment',
+    'Goals': 'Measurable annual goals and objectives',
+    'Services': 'Special education and related services to be provided',
+    'Informed Consent': 'Parent/Guardian informed consent and participation',
+    'Accommodations': 'Accommodations and modifications'
 }
 
 # Section-specific key points to extract
 SECTION_KEY_POINTS = {
-    'present_levels': [
+    'Present Levels': [
         'Current academic performance in each subject',
         'Social and behavioral skills',
         'Physical and health status',
@@ -21,42 +21,42 @@ SECTION_KEY_POINTS = {
         'Life and self-help skills',
         "Teacher observations and input"  # Added to capture teacher feedback
     ],
-    'eligibility': [
+    'Eligibility': [
         'Primary disability category',
         'How disability affects learning',
         'Evaluation results and dates',
         'Eligibility criteria met',
         'Team decisions and recommendations'
     ],
-    'placement': [
+    'Placement': [
         'Type of classroom setting',
         'Percentage of time in regular classes',
         'Reasons for placement decision',
         'Transportation needs',
         'Extended school year services'
     ],
-    'goals': [
+    'Goals': [
         'Academic goals for each subject',
         'Behavioral/social goals',
         'Life skills goals',
         'How progress will be measured',
         'Timeline for achievement'
     ],
-    'services': [
+    'Services': [
         'Types of special education services',
         'Related services (speech, OT, PT, etc.)',
         'Frequency and duration of services',
         'Who will provide services',
         'When services begin and end'
     ],
-    'informed_consent': [
+    'Informed Consent': [
         'Parent rights and responsibilities',
         'Consent given or refused',
         'Parent concerns and input',  # Ensures parent concerns are captured
         'Team meeting participants',
         'Important dates and deadlines'
     ],
-    'accommodations': [
+    'Accommodations': [
         'Classroom accommodations',
         'Testing accommodations',
         'Behavioral supports',
@@ -131,7 +131,7 @@ Special instructions:
 - For the 'services' section specifically:
   * ALWAYS convert any service durations from minutes to hours per week
   * Format service durations as "X hours per week" (NOT minutes)
-  * Example: "5 hours per week of specialized instruction" (not "300 minutes per week")
+  * Example: "5 hours per week of specialized instruction" (not "300 minutes per week"), for eg 100 minutes = 1 hr and 40 minutes so its easy to understand
 
 - Use simple language (8th-grade reading level)
 - Explain technical terms in parentheses
@@ -140,17 +140,18 @@ Special instructions:
 Format your response as a JSON object with the following structure:
 ```json
 {{
-  "summary": "A concise summary of the document",
+  "summary": "A concise summary of the document, that will be read by the parent of the student, so make it very simple and easy to understand and keep the tone to make them understand the student's needs and goals",
   "sections": [
     {{
       "title": "Section title",
-      "content": "Section content"
+      "content": "Section content with key points, cover all the key points for the section"
     }}
   ]
 }}
 ```
 
-IMPORTANT: Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
+IMPORTANT: 1.Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
+2. Make sure to include all the sections and key points in the response. {get_all_tags()}, keep the section title same as the section name for consistency.
 
 Document content:
 {content}
