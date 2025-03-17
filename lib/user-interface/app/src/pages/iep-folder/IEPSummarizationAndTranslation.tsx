@@ -41,22 +41,44 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isFirstRender = useRef<boolean>(true);
 
-  const { t } = useLanguage();
+  const { t, translationsLoaded } = useLanguage();
 
-  // Define the desired section order and display names
-  const sectionConfig = [
-    { apiName: "Student Information", englishName: "Student Information", displayName: t('sections.studentInfo') },
-    { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
-    { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
-    { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
-    { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
-    { apiName: "Present Levels of Performance", englishName: "Present Levels", displayName: t('sections.presentLevels') },
-    { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: t('sections.assistiveTechnology') },
-    { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') },
-  ];
+  // Move sectionConfig inside the useEffect to rebuild it when translations change
+  // This is a reference to store the section config
+  const sectionConfigRef = useRef([
+    { apiName: "Student Information", englishName: "Student Information", displayName: "Student Information" },
+    { apiName: "Accommodations", englishName: "Accommodations", displayName: "Accommodations" },
+    { apiName: "Goals", englishName: "Goals", displayName: "Goals" },
+    { apiName: "Services", englishName: "Services", displayName: "Services" },
+    { apiName: "Placement", englishName: "Placement", displayName: "Placement" },
+    { apiName: "Present Levels of Performance", englishName: "Present Levels", displayName: "Present Levels" },
+    { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: "Assistive Technology" },
+    { apiName: "State Testing", englishName: "State Testing", displayName: "State Testing" },
+  ]);
+
+  // Update section config when translations are loaded
+  useEffect(() => {
+    if (translationsLoaded) {
+      sectionConfigRef.current = [
+        { apiName: "Student Information", englishName: "Student Information", displayName: t('sections.studentInfo') },
+        { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
+        { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
+        { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
+        { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
+        { apiName: "Present Levels of Performance", englishName: "Present Levels", displayName: t('sections.presentLevels') },
+        { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: t('sections.assistiveTechnology') },
+        { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') },
+      ];
+      
+      // Re-process sections with new translations if we have a document
+      if (recentDocument && recentDocument.status === "PROCESSED") {
+        processDocumentSections(recentDocument);
+      }
+    }
+  }, [t, translationsLoaded]);
 
   const getDisplayName = (apiName: string, useTranslation: boolean = false): string => {
-    const config = sectionConfig.find(s => s.apiName === apiName);
+    const config = sectionConfigRef.current.find(s => s.apiName === apiName);
     if (!config) return apiName;
     
     // Return either the translated name or the English name
@@ -66,8 +88,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Function to sort sections based on the predefined order
   const sortSections = (sectionsArray: {name: string, displayName: string, content: string}[]) => {
     return [...sectionsArray].sort((a, b) => {
-      const indexA = sectionConfig.findIndex(s => s.apiName === a.name);
-      const indexB = sectionConfig.findIndex(s => s.apiName === b.name);
+      const indexA = sectionConfigRef.current.findIndex(s => s.apiName === a.name);
+      const indexB = sectionConfigRef.current.findIndex(s => s.apiName === b.name);
       
       // If both sections are in our predefined order list
       if (indexA !== -1 && indexB !== -1) {
@@ -89,6 +111,65 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     });
   };
 
+  // Extracted function to process document sections - can be called when translations change
+  const processDocumentSections = (document: any) => {
+    if (!document || document.status !== "PROCESSED") return;
+
+    // Process English sections
+    if (document.sections) {
+      try {
+        const extractedSections = [];
+        const sectionsData = document.sections;
+        
+        if (sectionsData) {
+          for (const [sectionName, sectionContent] of Object.entries(sectionsData)) {
+            const sectionContentObj = sectionContent as any;
+            const content = sectionContentObj?.M?.S?.S || '';
+            
+            extractedSections.push({ 
+              name: sectionName,
+              displayName: getDisplayName(sectionName, false), 
+              content: content
+            });
+          }
+        }
+        
+        const orderedSections = sortSections(extractedSections);
+        setSections(orderedSections);
+      } catch (e) {
+        console.error("Error extracting sections:", e);
+        setSections([]);
+      }
+    }
+    
+    // Process translated sections
+    if (document.translatedSections) {
+      try {
+        const extractedTranslatedSections = [];
+        const translatedSectionsData = document.translatedSections;
+        
+        if (translatedSectionsData) {
+          for (const [sectionName, sectionContent] of Object.entries(translatedSectionsData)) {
+            const sectionContentObj = sectionContent as any;
+            const content = sectionContentObj?.M?.S?.S || '';
+            
+            extractedTranslatedSections.push({ 
+              name: sectionName,
+              displayName: getDisplayName(sectionName, true), 
+              content: content
+            });
+          }
+        }
+        
+        const orderedTranslatedSections = sortSections(extractedTranslatedSections);
+        setTranslatedSections(orderedTranslatedSections);
+      } catch (e) {
+        console.error("Error extracting translated sections:", e);
+        setTranslatedSections([]);
+      }
+    }
+  };
+
   // Function to start polling if document is processing
   const startPollingIfProcessing = (document: any) => {
     // Clear any existing polling interval
@@ -107,7 +188,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
+  // Effect for document fetching - only depends on refreshCounter now
   useEffect(() => {
+    // Skip fetching if translations aren't loaded yet
+    if (!translationsLoaded) return;
+    
     const fetchDocuments = async () => {
       // Only set loading on initial fetch
       if (isFirstRender.current) {
@@ -149,71 +234,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               setTranslatedSummary('');
             }
             
-            // Extract sections if available
-            if (mostRecentDocWithSummary.sections) {
-              try {
-                const extractedSections = [];
-                const sectionsData = mostRecentDocWithSummary.sections;
-                
-                if (sectionsData) {
-                  // Iterate through each section
-                  for (const [sectionName, sectionContent] of Object.entries(sectionsData)) {
-                    // Extract content by traversing M -> S -> S with type safety
-                    const sectionContentObj = sectionContent as any;
-                    const content = sectionContentObj?.M?.S?.S || '';
-
-                    console.log("These are extracted sections",extractedSections);
-                    
-                    extractedSections.push({ 
-                      name: sectionName,
-                      displayName: getDisplayName(sectionName,false), 
-                      content: content
-                    });
-                  }
-                }
-                
-                // Sort sections according to our defined order
-                const orderedSections = sortSections(extractedSections);
-                setSections(orderedSections);
-              } catch (e) {
-                console.error("Error extracting sections:", e);
-                setSections([]);
-              }
-            } else {
-              setSections([]);
-            }
-            
-            // Extract translated sections if available
-            if (mostRecentDocWithSummary.translatedSections) {
-              try {
-                const extractedTranslatedSections = [];
-                const translatedSectionsData = mostRecentDocWithSummary.translatedSections;
-                
-                if (translatedSectionsData) {
-                  // Iterate through each section
-                  for (const [sectionName, sectionContent] of Object.entries(translatedSectionsData)) {
-                    // Extract content by traversing M -> S -> S with type safety
-                    const sectionContentObj = sectionContent as any;
-                    const content = sectionContentObj?.M?.S?.S || '';
-                    
-                    extractedTranslatedSections.push({ 
-                      name: sectionName,
-                      displayName: getDisplayName(sectionName,true), 
-                      content: content
-                    });
-                  }
-                }
-                
-                // Sort translated sections according to our defined order
-                const orderedTranslatedSections = sortSections(extractedTranslatedSections);
-                setTranslatedSections(orderedTranslatedSections);
-              } catch (e) {
-                console.error("Error extracting translated sections:", e);
-                setTranslatedSections([]);
-              }
-            } else {
-              setTranslatedSections([]);
-            }
+            // Process sections using the extracted function
+            processDocumentSections(mostRecentDocWithSummary);
           }
         } else {
           setRecentDocument(null);
@@ -244,7 +266,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         clearInterval(pollingIntervalRef.current);
       }
     };
-  }, [refreshCounter]);
+  }, [refreshCounter, translationsLoaded]);
 
   // Check if translated content exists
   const hasTranslatedContent = translatedSummary || translatedSections.length > 0;
@@ -297,6 +319,20 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const handleBackClick = () => {
     navigate('/welcome-page');
   };
+
+  // If translations aren't loaded yet, show a loading state
+  if (!translationsLoaded) {
+    return (
+      <Container className="summary-container mt-4 mb-5">
+        <div className="text-center my-5">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading translations...</span>
+          </Spinner>
+          <p className="mt-3">Loading translations...</p>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container className="summary-container mt-4 mb-5">
@@ -448,8 +484,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                               </>
                             ) : (
                               <Alert variant="info">
-                                <h5>{t('summary.noSections.title')}No Sections Available</h5>
-                                <p>{t('summary.noSections.message')}No English sections were found for this document.</p>
+                                <h5>{t('summary.noSections.title')}</h5>
+                                <p>{t('summary.noSections.message')}</p>
                               </Alert>
                             )}
                           </Tab>
@@ -457,8 +493,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         
                         {!summary && !translatedSummary && sections.length === 0 && translatedSections.length === 0 && (
                           <Alert variant="info">
-                            <h5>{t('summary.noContentAvailable.title')}No Content Available</h5>
-                            <p>{t('summary.noContentAvailable.message')}The document has been processed, but no summary or sections were found in any language.</p>
+                            <h5>{t('summary.noContentAvailable.title')}</h5>
+                            <p>{t('summary.noContentAvailable.message')}</p>
                           </Alert>
                         )}
                       </>

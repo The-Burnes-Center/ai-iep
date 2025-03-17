@@ -9,6 +9,7 @@ interface LanguageContextType {
   language: SupportedLanguage;
   setLanguage: (lang: SupportedLanguage) => void;
   t: (key: string) => string;
+  translationsLoaded: boolean; // Added translationsLoaded flag
 }
 
 // Create the context with default values
@@ -16,6 +17,7 @@ export const LanguageContext = createContext<LanguageContextType>({
   language: 'en',
   setLanguage: () => {},
   t: (key: string) => key,
+  translationsLoaded: false, // Default is false
 });
 
 // Language context storage key
@@ -31,11 +33,14 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   
   // Initialize with empty translations
   const [translations, setTranslations] = useState<Record<string, string>>({});
+  // Add translationsLoaded state
+  const [translationsLoaded, setTranslationsLoaded] = useState<boolean>(false);
 
   // Update language and store preference
   const setLanguage = (lang: SupportedLanguage) => {
     setLanguageState(lang);
     StorageHelper.setItem(LANGUAGE_STORAGE_KEY, lang);
+    setTranslationsLoaded(false); // Reset loading state when changing language
     loadTranslations(lang);
   };
 
@@ -45,29 +50,45 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       // Dynamic import to load only the needed language file
       const translationModule = await import(`../translations/${lang}.json`);
       setTranslations(translationModule.default);
+      setTranslationsLoaded(true); // Set to true when translations are loaded
     } catch (error) {
       console.error(`Failed to load translations for ${lang}:`, error);
       // Fallback to English if translation file is missing
       if (lang !== 'en') {
-        const fallbackModule = await import('../translations/en.json');
-        setTranslations(fallbackModule.default);
+        try {
+          const fallbackModule = await import('../translations/en.json');
+          setTranslations(fallbackModule.default);
+        } catch (fallbackError) {
+          console.error('Failed to load fallback translations:', fallbackError);
+        }
       }
+      setTranslationsLoaded(true); // Still set to true even if there was an error
     }
   };
 
   // Load translations on initial render
   useEffect(() => {
     loadTranslations(language);
-  }, []);
+  }, [language]); // Added language as dependency to reload when it changes
 
   // Translation function
   const t = (key: string): string => {
     return translations[key] || key;
   };
 
-// Alternative return statement
-const contextValue = { language, setLanguage, t };
-return React.createElement(LanguageContext.Provider, { value: contextValue }, children);
+  // Include translationsLoaded in the context value
+  const contextValue = { 
+    language, 
+    setLanguage, 
+    t,
+    translationsLoaded
+  };
+  
+  return React.createElement(
+    LanguageContext.Provider, 
+    { value: contextValue }, 
+    children
+  );
 };
 
 // Custom hook for using the language context
