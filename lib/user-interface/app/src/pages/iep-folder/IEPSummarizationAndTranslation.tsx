@@ -456,7 +456,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           <Tab eventKey="english" title={t('summary.english')}>
                             {summary ? (
                               <>
-                                <h4 className="mt-4">{t('summary.iepSummary')}</h4>
+                                <h4 className="mt-4">IEP Summary</h4>
                                 <Card className="summary-content mb-4">
                                   <Card.Body>
                                     <p className="mb-0">{summary}</p>
@@ -472,7 +472,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                             
                             {sections.length > 0 ? (
                               <>
-                                <h4 className="mt-4">{t('summary.keyInsights')}</h4>
+                                <h4 className="mt-4">Key Insights</h4>
                                 <Accordion className="mb-3 summary-accordion">
                                   {sections.map((section, index) => (
                                     <Accordion.Item key={index} eventKey={index.toString()}>
