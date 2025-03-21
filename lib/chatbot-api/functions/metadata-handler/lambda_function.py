@@ -15,6 +15,7 @@ import logging
 import uuid
 import traceback
 import re
+from mistral_ocr import process_document_with_mistral_ocr
 
 # AWS clients
 s3 = boto3.client('s3')
@@ -22,6 +23,17 @@ s3 = boto3.client('s3')
 bedrock_retrieve = boto3.client('bedrock-agent-runtime', region_name='us-east-1')  # for knowledge base retrieval
 bedrock_invoke = boto3.client('bedrock-runtime', region_name='us-east-1')    # for model invocation
 dynamodb = boto3.client('dynamodb')  # for document status updates
+ssm = boto3.client('ssm')  # for accessing parameter store
+
+# Retrieve MISTRAL_API_KEY from Parameter Store
+mistral_api_key_param_name = os.environ.get('MISTRAL_API_KEY_PARAMETER_NAME')
+try:
+    mistral_api_key = ssm.get_parameter(Name=mistral_api_key_param_name, WithDecryption=True)['Parameter']['Value']
+    os.environ['MISTRAL_API_KEY'] = mistral_api_key
+except Exception as e:
+    logging.error(f"Error retrieving MISTRAL_API_KEY from SSM: {str(e)}")
+    # Fallback to environment variable if provided directly
+    mistral_api_key = os.environ.get('MISTRAL_API_KEY')
 
 # Google Document AI client import - import it later to avoid initialization issues
 # from google.cloud import documentai
@@ -73,7 +85,7 @@ def format_data_for_dynamodb(section_data):
         return {"S": str(section_data)}
 
 
-def update_iep_document_status(iep_id, status, error_message=None, child_id=None, summaries=None, user_id=None, object_key=None):
+def update_iep_document_status(iep_id, status, error_message=None, child_id=None, summaries=None, user_id=None, object_key=None, ocr_data=None):
     """
     Update the status of a document in the DynamoDB table.
     
@@ -85,6 +97,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
         summaries (dict, optional): Document summaries to store
         user_id (str, optional): The user ID associated with the document
         object_key (str, optional): The S3 object key for extracting user_id if not provided directly
+        ocr_data (dict, optional): OCR data from Mistral to store
     """
     try:
         # Check if iep_id is valid
@@ -162,6 +175,13 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     update_expr += ", errorMessage = :error_message"
                     expr_attr_values[':error_message'] = error_message
                 
+                # Add OCR data if provided
+                if ocr_data:
+                    update_expr += ", ocrData = :ocr_data, ocrCompletedAt = :ocr_completed_at"
+                    expr_attr_values[':ocr_data'] = ocr_data
+                    expr_attr_values[':ocr_completed_at'] = current_time
+                    print(f"Adding OCR data to document")
+                
                 if status == 'PROCESSED' and summaries:
                     # Format summaries and sections for DynamoDB storage using the new helper function
                     formatted_summaries = {"M": {}}
@@ -221,6 +241,12 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                 
                 if user_id:
                     item['userId'] = user_id
+                
+                # Add OCR data if provided
+                if ocr_data:
+                    item['ocrData'] = ocr_data
+                    item['ocrCompletedAt'] = current_time
+                    print(f"Adding OCR data to new document")
                     
                 # Add document URL field
                 bucket_name = os.environ.get('BUCKET', '')
@@ -1405,6 +1431,35 @@ def handle_s3_upload_event(event):
         else:
             print(f"Warning: S3 key doesn't match expected format. Key: {key}")
         
+        # Process the document using Mistral OCR API
+        print("Processing document with Mistral OCR API...")
+        ocr_result = process_document_with_mistral_ocr(bucket, key)
+        
+        # Print the OCR result
+        print("Mistral OCR result:")
+        print(json.dumps(ocr_result, indent=2))
+        
+        # Check if OCR was successful
+        if "error" in ocr_result:
+            print(f"Error processing document with Mistral OCR: {ocr_result['error']}")
+            
+            # Continue with the existing pipeline if Mistral OCR fails
+            print("Falling back to existing document processing pipeline...")
+        else:
+            print("Successfully processed document with Mistral OCR")
+            
+            # Store the OCR results in DynamoDB immediately
+            print(f"Storing OCR results in DynamoDB for iepId: {iep_id}")
+            update_iep_document_status(
+                iep_id=iep_id,
+                status="PROCESSING",  # Keep the status as PROCESSING since we're still going to do full processing
+                child_id=child_id,
+                user_id=user_id,
+                object_key=key,
+                ocr_data=ocr_result
+            )
+            print(f"Successfully stored OCR data in DynamoDB for iepId: {iep_id}")
+            
         # Get the document from S3
         try:
             s3 = boto3.client('s3')
@@ -1541,7 +1596,8 @@ def handle_s3_upload_event(event):
             child_id=child_id, 
             summaries=summaries,
             user_id=user_id,
-            object_key=key
+            object_key=key,
+            ocr_data=ocr_result
         )
         
         print(f"Document saved to DynamoDB with iepId: {iep_id}")

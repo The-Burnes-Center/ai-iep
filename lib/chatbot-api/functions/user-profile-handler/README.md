@@ -68,7 +68,33 @@ User identity information (email, etc.) is managed exclusively through Amazon Co
   summaries: {            // Document summaries in different languages
     [languageCode: string]: string
   },
-  status: string,         // Document processing status (PROCESSING, PROCESSED, FAILED)
+  sections: {             // Document sections in different languages
+    [languageCode: string]: {
+      [sectionTitle: string]: string
+    }
+  },
+  status: string,         // Document processing status (PROCESSING, PROCESSED, FAILED, OCR_COMPLETED, OCR_FAILED)
+  ocrData: {              // OCR extraction data from Mistral API
+    pages: [              // Array of pages with extracted text
+      {
+        index: number,    // Page index (0-based)
+        markdown: string, // Extracted text in markdown format
+        images: any[],    // Any images found in the document
+        dimensions: {     // Page dimensions
+          dpi: number,    // Dots per inch
+          height: number, // Page height
+          width: number   // Page width
+        }
+      }
+    ],
+    model: string,        // Model used for OCR (e.g., "mistral-ocr-2503-completion")
+    usage: {              // Usage statistics 
+      pages_processed: number,    // Number of pages processed
+      document_size_bytes: number // Document size in bytes
+    },
+    success: boolean      // Whether OCR processing was successful
+  },
+  ocrCompletedAt: string, // ISO timestamp when OCR processing completed
   createdAt: number,      // Creation timestamp
   updatedAt: number,      // Last update timestamp
   ttl?: number           // Optional TTL for record expiration
@@ -212,6 +238,9 @@ GET /profile/children/{childId}/documents
 Authorization: Bearer <jwt-token>
 ```
 
+Query Parameters:
+- `include_ocr` (optional): Boolean flag to include OCR data in response (default: true)
+
 **Response (200) - Document Found**
 ```json
 {
@@ -225,6 +254,33 @@ Authorization: Bearer <jwt-token>
     "zh": "string",
     "vi": "string"
   },
+  "sections": {
+    "en": {
+      "section1": "string",
+      "section2": "string"
+    }
+  },
+  "ocrData": {
+    "pages": [
+      {
+        "index": 0,
+        "markdown": "string",
+        "images": [],
+        "dimensions": {
+          "dpi": number,
+          "height": number,
+          "width": number
+        }
+      }
+    ],
+    "model": "string",
+    "usage": {
+      "pages_processed": number,
+      "document_size_bytes": number
+    },
+    "success": boolean
+  },
+  "ocrCompletedAt": "string",
   "createdAt": number,
   "updatedAt": number
 }
@@ -238,7 +294,7 @@ Authorization: Bearer <jwt-token>
 }
 ```
 
-**Note**: Only the most recent document for a child is returned. When a new document is uploaded for a child, any existing documents for that child are automatically deleted.
+**Note**: Only the most recent document for a child is returned. When a new document is uploaded for a child, any existing documents for that child are automatically deleted. The document response now includes OCR data that provides detailed text extraction from the IEP document in markdown format, organized by page.
 
 ### 5. Delete Child's IEP Documents
 ```http

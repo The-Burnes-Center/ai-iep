@@ -12,6 +12,7 @@ import * as bedrock from "aws-cdk-lib/aws-bedrock";
 import { StepFunctionsStack } from './step-functions/step-functions';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { getTagProps, tagResource } from '../../tags';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 
 interface LambdaFunctionStackProps {  
@@ -396,7 +397,8 @@ export class LambdaFunctionStack extends cdk.Stack {
             "ANTHROPIC_MODEL": "anthropic.claude-3-5-sonnet-20240620-v1:0",
             "DOCUMENT_AI_PROJECT_ID": "530075910224",
             "DOCUMENT_AI_LOCATION": "us",
-            "DOCUMENT_AI_PROCESSOR_ID": "a29e1e3fb61fc7c3"
+            "DOCUMENT_AI_PROCESSOR_ID": "a29e1e3fb61fc7c3",
+            "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
           },
           timeout: cdk.Duration.seconds(600),
           memorySize: 1024
@@ -445,6 +447,17 @@ export class LambdaFunctionStack extends cdk.Stack {
             'bedrock:StartIngestionJob'
           ],
           resources: [props.knowledgeBase.attrKnowledgeBaseArn]
+        }));
+    
+        // Add SSM permission to access the parameter
+        metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          actions: [
+            'ssm:GetParameter'
+          ],
+          resources: [
+            `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`
+          ]
         }));
     
         this.metadataHandlerFunction = metadataHandlerFunction;

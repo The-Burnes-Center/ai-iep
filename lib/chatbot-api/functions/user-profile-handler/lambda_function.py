@@ -329,6 +329,12 @@ def get_child_documents(event: Dict) -> Dict:
         user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
         child_id = event['pathParameters']['childId']
         
+        # Check if we should include OCR data
+        query_params = event.get('queryStringParameters') or {}
+        include_ocr = query_params.get('include_ocr', 'true').lower() == 'true'
+        
+        print(f"Getting documents for childId: {child_id}, userId: {user_id}, include_ocr: {include_ocr}")
+        
         # Query documents by childId
         response = iep_documents_table.query(
             IndexName='byChildId',
@@ -357,6 +363,13 @@ def get_child_documents(event: Dict) -> Dict:
                         'createdAt': doc.get('createdAt', ''),
                         'updatedAt': doc.get('updatedAt', '')
                     }
+                    
+                    # Add OCR data if available and requested
+                    if include_ocr and 'ocrData' in doc:
+                        print(f"Including OCR data in response for document {doc['iepId']}")
+                        latest_doc['ocrData'] = doc['ocrData']
+                        if 'ocrCompletedAt' in doc:
+                            latest_doc['ocrCompletedAt'] = doc['ocrCompletedAt']
         
         # If no document found
         if not latest_doc:
