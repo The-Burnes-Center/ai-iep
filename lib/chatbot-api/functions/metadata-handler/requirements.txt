@@ -1,15 +1,14 @@
-boto3==1.34.7
+boto3>=1.34.11
 # Only the essential libraries
-requests==2.31.0
-urllib3==2.0.7
+requests>=2.31.0
+urllib3>=1.26.18
 certifi==2024.2.2
 # PDF parsing fallback
-PyPDF2==3.0.1
+PyPDF2>=3.0.0
 # mistral ai
 mistralai>=0.0.32
-anthropic==0.16.0
-google-cloud-documentai==2.31.0
-google-cloud-storage==2.14.0
-google-api-python-client==2.115.0
-google-auth==2.28.1
-google-auth-httplib2==0.1.1
+cryptography>=41.0.7
+fpdf>=1.7.2
+protobuf>=4.22.3
+python-dotenv>=1.0.0
+pillow>=10.1.0

@@ -395,9 +395,6 @@ export class LambdaFunctionStack extends cdk.Stack {
             "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
             "KNOWLEDGE_BASE_ID": props.knowledgeBase.ref,
             "ANTHROPIC_MODEL": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-            "DOCUMENT_AI_PROJECT_ID": "530075910224",
-            "DOCUMENT_AI_LOCATION": "us",
-            "DOCUMENT_AI_PROCESSOR_ID": "a29e1e3fb61fc7c3",
             "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
           },
           timeout: cdk.Duration.seconds(600),
@@ -411,16 +408,12 @@ export class LambdaFunctionStack extends cdk.Stack {
             'bedrock:InvokeModel',
             'bedrock:Retrieve',
             'bedrock-agent-runtime:Retrieve',
-            // Add permission to access the secret in AWS Secrets Manager
-            'secretsmanager:GetSecretValue',
           ],
           resources: [
             props.knowledgeBucket.bucketArn,
             props.knowledgeBucket.bucketArn + "/*",
             'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
             props.knowledgeBase.attrKnowledgeBaseArn,
-            // Add the ARN of the secret in AWS Secrets Manager
-            'arn:aws:secretsmanager:us-east-1:530075910224:secret:GoogleDocumentAICredentials*',
           ]
         }));
     

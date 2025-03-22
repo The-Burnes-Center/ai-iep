@@ -1,6 +1,6 @@
 import os
 import time
-import datetime  # Add missing datetime import
+import datetime
 from datetime import datetime, timezone
 
 import json
@@ -19,7 +19,6 @@ from mistral_ocr import process_document_with_mistral_ocr
 
 # AWS clients
 s3 = boto3.client('s3')
-# bedrock_retrieve = boto3.client('bedrock-runtime', region_name='us-east-1')  # for knowledge base retrieval
 bedrock_retrieve = boto3.client('bedrock-agent-runtime', region_name='us-east-1')  # for knowledge base retrieval
 bedrock_invoke = boto3.client('bedrock-runtime', region_name='us-east-1')    # for model invocation
 dynamodb = boto3.client('dynamodb')  # for document status updates
@@ -29,21 +28,10 @@ ssm = boto3.client('ssm')  # for accessing parameter store
 mistral_api_key_param_name = os.environ.get('MISTRAL_API_KEY_PARAMETER_NAME')
 try:
     mistral_api_key = ssm.get_parameter(Name=mistral_api_key_param_name, WithDecryption=True)['Parameter']['Value']
-    os.environ['MISTRAL_API_KEY'] = mistral_api_key
+    print(f"Successfully retrieved Mistral API key from parameter store")
 except Exception as e:
-    logging.error(f"Error retrieving MISTRAL_API_KEY from SSM: {str(e)}")
-    # Fallback to environment variable if provided directly
-    mistral_api_key = os.environ.get('MISTRAL_API_KEY')
-
-# Google Document AI client import - import it later to avoid initialization issues
-# from google.cloud import documentai
-from google_auth import get_documentai_client
-
-# Knowledge Base ID for retrieval (set in environment)
-kb_id = os.environ.get('KB_ID')
-
-# Import the necessary libraries for translation
-import boto3
+    print(f"Error retrieving Mistral API key: {str(e)}")
+    mistral_api_key = None
 
 def format_data_for_dynamodb(section_data):
     """
@@ -1077,51 +1065,10 @@ def summarize_and_analyze_document(file_content, user_profile=None):
     print("Analyzing document...")
     
     try:
-        # Extract text from the document using Google Document AI with PyPDF2 fallback
-        from google_auth import process_document, get_documentai_client
-        
-        # Get Document AI client and process the document
-        documentai_client = get_documentai_client()
-        project_id = os.environ.get('DOCUMENT_AI_PROJECT_ID')
-        location = os.environ.get('DOCUMENT_AI_LOCATION', 'us-central1')
-        processor_id = os.environ.get('DOCUMENT_AI_PROCESSOR_ID')
-        
-        print(f"Processing document with Google Document AI (project: {project_id}, location: {location}, processor: {processor_id})")
-        
-        # Create request to process document
-        name = documentai_client.processor_path(project_id, location, processor_id)
-        
-        # Process document with Document AI
-        document_result = documentai_client.process_document(
-                                request={
-                'name': name,
-                'raw_document': {
-                    'content': file_content,
-                    'mime_type': 'application/pdf'
-                }
-            }
-        )
-        
-        # Check if text extraction was successful
-        extracted_text = None
-        
-        if hasattr(document_result, 'document') and hasattr(document_result.document, 'text'):
-            extracted_text = document_result.document.text
+        # Extract text from the document using PyPDF2
+        print("Processing document with PyPDF2")
+        extracted_text = extract_text_from_pdf(file_content)
             
-            # Check if the result came from the fallback method
-            if hasattr(document_result, 'from_fallback') and document_result.from_fallback:
-                print("Text successfully extracted using PyPDF2 fallback")
-            else:
-                print("Text successfully extracted using Google Document AI")
-        
-        # If Document AI failed, try the direct PDF extraction fallback
-        if not extracted_text:
-            print("Document AI text extraction failed, trying direct PDF fallback")
-            extracted_text = extract_text_from_pdf(file_content)
-            
-            if extracted_text:
-                print("Text successfully extracted using direct PDF fallback")
-        
         # Only proceed if we successfully extracted text
         if not extracted_text:
             return {
