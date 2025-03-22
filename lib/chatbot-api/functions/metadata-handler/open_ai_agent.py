@@ -4,7 +4,8 @@ import logging
 import json
 from datetime import datetime
 from openai import OpenAI
-from openai_agents import Assistant, Thread, OpenAIAgents
+# Correct imports for openai-agents package
+from agents import Agent, Runner
 from config import get_full_prompt, get_all_tags, IEP_SECTIONS
 
 # Configure logging
@@ -39,26 +40,6 @@ def get_openai_api_key():
         
     return openai_api_key
 
-def create_openai_agent_client():
-    """
-    Creates an OpenAI Agent client with the API key and returns it.
-    
-    Returns:
-        OpenAIAgents: The OpenAI Agents client.
-    """
-    api_key = get_openai_api_key()
-    if not api_key:
-        logger.error("Could not create OpenAI Agents client - API key not available")
-        return None
-    
-    try:
-        client = OpenAIAgents(api_key=api_key)
-        logger.info("Successfully created OpenAI Agents client")
-        return client
-    except Exception as e:
-        logger.error(f"Error creating OpenAI Agents client: {str(e)}")
-        return None
-
 def analyze_document_with_agent(text, model="gpt-4o"):
     """
     Analyze an IEP document using OpenAI's Agent architecture.
@@ -76,85 +57,53 @@ def analyze_document_with_agent(text, model="gpt-4o"):
         return {"error": "OpenAI API key not available"}
     
     try:
-        logger.info(f"Creating OpenAI Agents client for document analysis using {model}")
-        client = OpenAIAgents(api_key=api_key)
+        # Set the API key in environment for the agent
+        os.environ['OPENAI_API_KEY'] = api_key
+        
+        logger.info(f"Creating agent for document analysis using {model}")
         
         # Get the prompt from config.py
         prompt = get_full_prompt("IEP Document", text)
         
-        # Create an assistant for document analysis
-        assistant = client.assistant.create(
+        # Create an agent for document analysis using the agents package
+        agent = Agent(
             name="IEP Document Analyzer",
             model=model,
             instructions=prompt
         )
         
-        # Create a thread for the conversation
-        thread = client.thread.create()
+        # Run the agent
+        result = Runner.run_sync(agent, "Please analyze this IEP document according to the instructions.")
         
-        # Add the document content to the thread
-        client.message.create(
-            thread_id=thread.id,
-            role="user",
-            content="Please analyze this IEP document and extract the key information as specified in your instructions."
-        )
+        logger.info("Agent completed analysis")
         
-        # Run the assistant on the thread
-        run = client.run.create(
-            thread_id=thread.id,
-            assistant_id=assistant.id
-        )
+        # Extract the final output
+        analysis_text = result.final_output
         
-        # Wait for the run to complete
-        run = client.run.wait(
-            thread_id=thread.id,
-            run_id=run.id
-        )
-        
-        # Get the assistant's response
-        messages = client.message.list(
-            thread_id=thread.id,
-            order="desc",
-            limit=1
-        )
-        
-        # Extract the analysis results
-        if messages.data:
-            latest_message = messages.data[0]
+        # Try to parse any JSON in the response
+        try:
+            # Look for JSON within the text
+            json_start = analysis_text.find('{')
+            json_end = analysis_text.rfind('}') + 1
             
-            # Handle the case where the message content might be a list of content blocks
-            if hasattr(latest_message.content[0], 'text'):
-                analysis_text = latest_message.content[0].text.value
+            if json_start >= 0 and json_end > json_start:
+                json_str = analysis_text[json_start:json_end]
+                analysis_result = json.loads(json_str)
             else:
-                analysis_text = str(latest_message.content)
-            
-            # Try to parse any JSON in the response
-            try:
-                # Look for JSON within the text
-                json_start = analysis_text.find('{')
-                json_end = analysis_text.rfind('}') + 1
-                
-                if json_start >= 0 and json_end > json_start:
-                    json_str = analysis_text[json_start:json_end]
-                    analysis_result = json.loads(json_str)
-                else:
-                    # If no JSON found, use the whole text as a summary
-                    analysis_result = {
-                        "summary": analysis_text,
-                        "sections": []
-                    }
-            except json.JSONDecodeError:
-                # If JSON parsing fails, use the text as a summary
+                # If no JSON found, use the whole text as a summary
                 analysis_result = {
                     "summary": analysis_text,
                     "sections": []
                 }
-            
-            logger.info(f"Successfully analyzed document with OpenAI Agent")
-            return analysis_result
-        else:
-            logger.error("No response received from OpenAI Assistant")
-            return {"error": "No response received from assistant"}
+        except json.JSONDecodeError:
+            # If JSON parsing fails, use the text as a summary
+            analysis_result = {
+                "summary": analysis_text,
+                "sections": []
+            }
+        
+        logger.info(f"Successfully analyzed document with OpenAI Agent")
+        return analysis_result
             
     except Exception as e:
         logger.error(f"Error analyzing document with OpenAI Agent: {str(e)}")

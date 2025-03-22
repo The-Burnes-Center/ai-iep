@@ -7,8 +7,9 @@ certifi==2024.2.2
 PyPDF2>=3.0.0
 # mistral ai
 mistralai>=0.0.32
-# openai library
-openai-agents>=0.3.1
+# openai libraries
+openai>=1.2.0
+openai-agents
 cryptography>=41.0.7
 fpdf>=1.7.2
 protobuf>=4.22.3

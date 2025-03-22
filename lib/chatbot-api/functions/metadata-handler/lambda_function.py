@@ -16,7 +16,7 @@ import uuid
 import traceback
 import re
 from mistral_ocr import process_document_with_mistral_ocr
-from open_ai_agent import get_openai_api_key, create_openai_agent_client, analyze_document_with_agent
+from open_ai_agent import get_openai_api_key, analyze_document_with_agent
 
 # AWS clients
 s3 = boto3.client('s3')
@@ -41,16 +41,10 @@ try:
     print(f"Successfully retrieved OpenAI API key from parameter store")
     # Set it in environment for the open_ai_agent module
     os.environ['OPENAI_API_KEY'] = openai_api_key
-    # Initialize OpenAI Agent client
-    openai_agent_client = create_openai_agent_client()
-    if openai_agent_client:
-        print("Successfully initialized OpenAI Agents client")
-    else:
-        print("Failed to initialize OpenAI Agents client")
+    print("OpenAI API key set in environment for agents")
 except Exception as e:
     print(f"Error retrieving OpenAI API key: {str(e)}")
     openai_api_key = None
-    openai_agent_client = None
 
 def format_data_for_dynamodb(section_data):
     """
