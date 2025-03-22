@@ -395,7 +395,8 @@ export class LambdaFunctionStack extends cdk.Stack {
             "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
             "KNOWLEDGE_BASE_ID": props.knowledgeBase.ref,
             "ANTHROPIC_MODEL": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-            "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
+            "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
+            "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
           },
           timeout: cdk.Duration.seconds(600),
           memorySize: 1024
@@ -449,7 +450,8 @@ export class LambdaFunctionStack extends cdk.Stack {
             'ssm:GetParameter'
           ],
           resources: [
-            `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`
+            `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`,
+            `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
           ]
         }));
     

@@ -16,6 +16,7 @@ import uuid
 import traceback
 import re
 from mistral_ocr import process_document_with_mistral_ocr
+from open_ai_agent import get_openai_api_key, create_openai_agent_client, analyze_document_with_agent
 
 # AWS clients
 s3 = boto3.client('s3')
@@ -32,6 +33,24 @@ try:
 except Exception as e:
     print(f"Error retrieving Mistral API key: {str(e)}")
     mistral_api_key = None
+
+# Retrieve OPENAI_API_KEY from Parameter Store
+openai_api_key_param_name = os.environ.get('OPENAI_API_KEY_PARAMETER_NAME')
+try:
+    openai_api_key = ssm.get_parameter(Name=openai_api_key_param_name, WithDecryption=True)['Parameter']['Value']
+    print(f"Successfully retrieved OpenAI API key from parameter store")
+    # Set it in environment for the open_ai_agent module
+    os.environ['OPENAI_API_KEY'] = openai_api_key
+    # Initialize OpenAI Agent client
+    openai_agent_client = create_openai_agent_client()
+    if openai_agent_client:
+        print("Successfully initialized OpenAI Agents client")
+    else:
+        print("Failed to initialize OpenAI Agents client")
+except Exception as e:
+    print(f"Error retrieving OpenAI API key: {str(e)}")
+    openai_api_key = None
+    openai_agent_client = None
 
 def format_data_for_dynamodb(section_data):
     """
@@ -811,7 +830,7 @@ def translate_content(content, target_languages):
 
 def summarize_and_categorize(content_text):
     """
-    Extract summary and sections from document content using Claude.
+    Extract summary and sections from document content using OpenAI Agents.
     
     Args:
         content_text (str): The text content from the document
@@ -819,9 +838,6 @@ def summarize_and_categorize(content_text):
     Returns:
         dict: Contains summary and sections
     """
-    # Update to Claude 3.5 Sonnet for better performance
-    model_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0'
-    
     # Ensure content is valid
     if not content_text or not content_text.strip():
         print("Empty document content, cannot summarize")
@@ -831,104 +847,118 @@ def summarize_and_categorize(content_text):
         }
     
     try:
-        # Use the get_full_prompt function from config.py
-        prompt = get_full_prompt("IEP Document", content_text)
+        # Try to use OpenAI Agent first
+        print("Using OpenAI Agent to analyze document content")
+        result = analyze_document_with_agent(content_text)
         
-        # Call Claude
-        bedrock_runtime = boto3.client('bedrock-runtime')
-        response = bedrock_runtime.invoke_model(
-            modelId=model_id,
-            body=json.dumps({
-                'anthropic_version': 'bedrock-2023-05-31',
-                'max_tokens': 8000,
-                'temperature': 0,
-                'system': 'You are an expert in analyzing and summarizing educational documents, especially Individualized Education Programs (IEPs).',
-                'messages': [
-                    {'role': 'user', 'content': prompt}
-                ]
-            })
-        )
-        
-        # Parse response from Claude
-        response_body = json.loads(response['body'].read().decode('utf-8'))
-        
-        # Log the raw output for debugging
-        print(f"Raw Claude output: {json.dumps(response_body)[:500]}...")
-        
-        # Extract text content from Claude's response
-        content = ''
-        if 'content' in response_body:
-            if isinstance(response_body['content'], list):
-                # Handle message format with content blocks
-                for block in response_body['content']:
-                    if 'text' in block:
-                        content += block['text']
-            elif isinstance(response_body['content'], str):
-                # Handle direct content string
-                content = response_body['content']
-        elif 'completion' in response_body:
-            # Handle simple completion response format
-            content = response_body['completion']
+        if "error" not in result:
+            print("Successfully analyzed document with OpenAI Agent")
+            return result
         else:
-            print(f"Unexpected Claude response format: {response_body.keys()}")
-            # Try to find any usable text in the response
-            content = str(response_body)
-        
-        # Extract JSON from content
-        # Look for JSON in various formats (fenced code blocks, within content, etc.)
-        print(f"Attempting to extract JSON from content: {content[:200]}...")
-        
-        # Try different regex patterns to find JSON
-        json_patterns = [
-            # Match JSON between ```json and ``` markers
-            r'```(?:json)?\s*([\s\S]*?)\s*```',
-            # Match a complete JSON object (assuming one is present)
-            r'(?s)\{.*\}',
-            # Match a complete JSON array (assuming one is present)
-            r'(?s)\[.*\]'
-        ]
-        
-        result_json = None
-        
-        for pattern in json_patterns:
-            matches = re.findall(pattern, content)
-            if matches:
-                for match in matches:
-                    try:
-                        candidate = json.loads(match)
-                        # Check if it has the expected structure
-                        if isinstance(candidate, dict) and 'summary' in candidate:
-                            result_json = candidate
-                            break
-                    except json.JSONDecodeError:
-                        continue
-                if result_json:
-                    break
-        
-        # If no valid JSON found, create a fallback structure
-        if not result_json:
-            print("Could not parse JSON from the Claude response, using fallback structure")
-            # Extract something that looks like a summary
-            summary_match = re.search(r'summary["\s:]+([^"]*)', content, re.IGNORECASE)
-            summary = summary_match.group(1).strip() if summary_match else "No summary available"
+            print(f"OpenAI Agent analysis failed: {result.get('error')}, falling back to Claude")
             
-            # Create a default structure
-            result_json = {
-                'summary': summary,
-                'sections': []
-            }
-        
-        # Validate and clean up the result
-        if not result_json.get('summary'):
-            result_json['summary'] = "No summary available"
-        
-        # Ensure sections is a list of dictionaries with title and content
-        if 'sections' not in result_json or not isinstance(result_json['sections'], list):
-            result_json['sections'] = []
-        
-        # Log success
-        print(f"Successfully extracted summary and sections from document")
-        return result_json
+            # Fallback to Claude if OpenAI Agent fails
+            # Update to Claude 3.5 Sonnet for better performance
+            model_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0'
+            
+            # Use the get_full_prompt function from config.py
+            prompt = get_full_prompt("IEP Document", content_text)
+            
+            # Call Claude
+            bedrock_runtime = boto3.client('bedrock-runtime')
+            response = bedrock_runtime.invoke_model(
+                modelId=model_id,
+                body=json.dumps({
+                    'anthropic_version': 'bedrock-2023-05-31',
+                    'max_tokens': 8000,
+                    'temperature': 0,
+                    'system': 'You are an expert in analyzing and summarizing educational documents, especially Individualized Education Programs (IEPs).',
+                    'messages': [
+                        {'role': 'user', 'content': prompt}
+                    ]
+                })
+            )
+            
+            # Parse response from Claude
+            response_body = json.loads(response['body'].read().decode('utf-8'))
+            
+            # Log the raw output for debugging
+            print(f"Raw Claude output: {json.dumps(response_body)[:500]}...")
+            
+            # Extract text content from Claude's response
+            content = ''
+            if 'content' in response_body:
+                if isinstance(response_body['content'], list):
+                    # Handle message format with content blocks
+                    for block in response_body['content']:
+                        if 'text' in block:
+                            content += block['text']
+                elif isinstance(response_body['content'], str):
+                    # Handle direct content string
+                    content = response_body['content']
+            elif 'completion' in response_body:
+                # Handle simple completion response format
+                content = response_body['completion']
+            else:
+                print(f"Unexpected Claude response format: {response_body.keys()}")
+                # Try to find any usable text in the response
+                content = str(response_body)
+            
+            # Extract JSON from content
+            # Look for JSON in various formats (fenced code blocks, within content, etc.)
+            print(f"Attempting to extract JSON from content: {content[:200]}...")
+            
+            # Try different regex patterns to find JSON
+            json_patterns = [
+                # Match JSON between ```json and ``` markers
+                r'```(?:json)?\s*([\s\S]*?)\s*```',
+                # Match a complete JSON object (assuming one is present)
+                r'(?s)\{.*\}',
+                # Match a complete JSON array (assuming one is present)
+                r'(?s)\[.*\]'
+            ]
+            
+            result_json = None
+            
+            for pattern in json_patterns:
+                matches = re.findall(pattern, content)
+                if matches:
+                    for match in matches:
+                        try:
+                            candidate = json.loads(match)
+                            # Check if it has the expected structure
+                            if isinstance(candidate, dict) and 'summary' in candidate:
+                                result_json = candidate
+                                break
+                        except json.JSONDecodeError:
+                            continue
+                    if result_json:
+                        break
+            
+            # If no valid JSON found, create a fallback structure
+            if not result_json:
+                print("Could not parse JSON from the Claude response, using fallback structure")
+                # Extract something that looks like a summary
+                summary_match = re.search(r'summary["\s:]+([^"]*)', content, re.IGNORECASE)
+                summary = summary_match.group(1).strip() if summary_match else "No summary available"
+                
+                # Create a default structure
+                result_json = {
+                    'summary': summary,
+                    'sections': []
+                }
+            
+            # Validate and clean up the result
+            if not result_json.get('summary'):
+                result_json['summary'] = "No summary available"
+            
+            # Ensure sections is a list of dictionaries with title and content
+            if 'sections' not in result_json or not isinstance(result_json['sections'], list):
+                result_json['sections'] = []
+            
+            # Log success
+            print(f"Successfully extracted summary and sections from document using Claude fallback")
+            return result_json
         
     except Exception as e:
         print(f"Error during summarize_and_categorize: {str(e)}")
