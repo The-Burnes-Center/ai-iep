@@ -1284,6 +1284,52 @@ def lambda_handler(event, context):
         # This is an API Gateway event
         return handle_api_request(event)
 
+def get_all_ocr_text_with_page_numbers(ocr_result):
+    """
+    Extract all text from OCR result with page numbers embedded.
+    
+    Args:
+        ocr_result (dict): OCR result from Mistral OCR API
+        
+    Returns:
+        str: All text content with page numbers embedded
+    """
+    if not ocr_result or not isinstance(ocr_result, dict) or 'pages' not in ocr_result:
+        print("Invalid OCR result format or missing 'pages' field")
+        return ""
+    
+    all_text = []
+    for page in ocr_result['pages']:
+        if isinstance(page, dict) and 'markdown' in page and 'index' in page:
+            page_number = page['index'] + 1  # Convert to 1-based indexing for human readability
+            page_text = page.get('markdown', '')
+            if page_text:
+                all_text.append(f"--- PAGE {page_number} ---\n{page_text}\n")
+                
+    return "\n".join(all_text)
+
+def get_ocr_text_for_page(ocr_result, page_index):
+    """
+    Extract text for a specific page from OCR result.
+    
+    Args:
+        ocr_result (dict): OCR result from Mistral OCR API
+        page_index (int): 0-based page index to retrieve
+        
+    Returns:
+        str: Text content for the specified page or empty string if not found
+    """
+    if not ocr_result or not isinstance(ocr_result, dict) or 'pages' not in ocr_result:
+        print(f"Invalid OCR result format or missing 'pages' field")
+        return ""
+    
+    for page in ocr_result['pages']:
+        if isinstance(page, dict) and 'index' in page and page['index'] == page_index:
+            return page.get('markdown', '')
+            
+    print(f"Page index {page_index} not found in OCR result")
+    return ""
+
 def handle_s3_upload_event(event):
     """Handle S3 event for document processing"""
     # Extract information from the event
@@ -1322,6 +1368,15 @@ def handle_s3_upload_event(event):
         # Print the OCR result
         print("Mistral OCR result:")
         print(json.dumps(ocr_result, indent=2))
+        
+        # Add debugging for OCR result structure
+        print("OCR Result Keys:", list(ocr_result.keys() if isinstance(ocr_result, dict) else ["Not a dictionary"]))
+        if isinstance(ocr_result, dict) and 'pages' in ocr_result:
+            print(f"Number of pages: {len(ocr_result['pages'])}")
+            if ocr_result['pages']:
+                print(f"First page keys: {list(ocr_result['pages'][0].keys() if isinstance(ocr_result['pages'][0], dict) else ['Not a dictionary'])}")
+                if isinstance(ocr_result['pages'][0], dict) and 'markdown' in ocr_result['pages'][0]:
+                    print(f"First page markdown preview: {ocr_result['pages'][0]['markdown'][:150]}...")
         
         # Check if OCR was successful
         if "error" in ocr_result:
@@ -1369,9 +1424,10 @@ def handle_s3_upload_event(event):
         else:
             print("No language preferences found in user profile")
         
-        # Use the OCR text for processing
-        if 'text' not in ocr_result:
-            error_message = "No text found in OCR result"
+        # Extract text content from the OCR result
+        content_text = get_all_ocr_text_with_page_numbers(ocr_result)
+        if not content_text:
+            error_message = "No text content found in OCR result pages"
             print(error_message)
             
             # Update document status to FAILED
@@ -1391,8 +1447,8 @@ def handle_s3_upload_event(event):
                 })
             }
         
-        # Process the document content from OCR
-        content_text = ocr_result['text']
+        # Process the document content from OCR with page numbers embedded
+        content_text = content_text.strip()
         
         try:
             # First try with OpenAI Agent
