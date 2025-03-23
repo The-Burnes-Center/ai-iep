@@ -8,7 +8,6 @@ import urllib.parse
 import boto3
 from botocore.exceptions import ClientError
 from config import get_full_prompt, IEP_SECTIONS, get_translation_prompt, LANGUAGE_CODES
-from PyPDF2 import PdfReader
 import io
 import base64
 import logging
@@ -1065,95 +1064,6 @@ def get_user_profile(user_id):
         return None
 
 
-def extract_text_from_pdf(file_content):
-    """
-    Extract text from a PDF file using PyPDF2 as a fallback.
-    
-    Args:
-        file_content (bytes): The PDF file content as bytes
-        
-    Returns:
-        str: The extracted text
-    """
-    try:
-        print(f"Using PyPDF2 fallback to extract text from PDF")
-        pdf_reader = PdfReader(io.BytesIO(file_content))
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text() + "\n"
-        return text
-    except Exception as e:
-        print(f"Error extracting text from PDF with PyPDF2: {e}")
-        return None
-
-
-def summarize_and_analyze_document(file_content, user_profile=None):
-    """Analyze a document to extract text and generate a summary."""
-    print("Analyzing document...")
-    
-    try:
-        # Extract text from the document using PyPDF2
-        print("Processing document with PyPDF2")
-        extracted_text = extract_text_from_pdf(file_content)
-            
-        # Only proceed if we successfully extracted text
-        if not extracted_text:
-            return {
-                "success": False,
-                "error": "Failed to extract text from the document"
-            }
-
-        # Summarize and categorize the document
-        result = summarize_and_categorize(extracted_text)
-        
-        # Handle language preferences from user profile
-        target_languages = []
-        
-        if user_profile:
-            if 'languages' in user_profile:
-                # Use the existing languages array from user profile
-                all_languages = user_profile.get('languages', [])
-                print(f"Using languages from user profile: {all_languages}")
-                
-                # Only include non-English languages for translation
-                target_languages = [lang for lang in all_languages if lang != 'en']
-                if target_languages:
-                    print(f"Target languages for translation: {target_languages}")
-                else:
-                    print("No non-English languages found for translation")
-            else:
-                print("No 'languages' field found in user profile")
-        else:
-            print("No user profile provided, skipping translations")
-        
-        # Translate summary if target languages are specified
-        if target_languages:
-            print(f"Translating content to: {', '.join(target_languages)}")
-            if 'summary' in result:
-                result['summary'] = translate_content(result['summary'], target_languages)
-            
-            # Translate each section
-            if 'sections' in result:
-                translated_sections = []
-                for section in result['sections']:
-                    translated_section = section.copy()
-                    # Translate the content of the section
-                    if 'content' in section:
-                        translated_section['content'] = translate_content(section['content'], target_languages)
-                    translated_sections.append(translated_section)
-                result['sections'] = translated_sections
-        
-        return {
-            "success": True,
-            "result": result
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-
 def handle_api_request(event):
     """
     Handle API Gateway event for metadata requests.
@@ -1417,8 +1327,22 @@ def handle_s3_upload_event(event):
         if "error" in ocr_result:
             print(f"Error processing document with Mistral OCR: {ocr_result['error']}")
             
-            # Continue with the existing pipeline if Mistral OCR fails
-            print("Falling back to existing document processing pipeline...")
+            # Update document status to FAILED
+            update_iep_document_status(
+                iep_id=iep_id,
+                status="FAILED",
+                error_message=f"OCR processing failed: {ocr_result['error']}",
+                child_id=child_id,
+                user_id=user_id,
+                object_key=key
+            )
+            
+            return {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'message': f"OCR processing failed: {ocr_result['error']}"
+                })
+            }
         else:
             print("Successfully processed document with Mistral OCR")
             
@@ -1426,34 +1350,13 @@ def handle_s3_upload_event(event):
             print(f"Storing OCR results in DynamoDB for iepId: {iep_id}")
             update_iep_document_status(
                 iep_id=iep_id,
-                status="PROCESSING",  # Keep the status as PROCESSING since we're still going to do full processing
+                status="PROCESSING",
                 child_id=child_id,
                 user_id=user_id,
                 object_key=key,
                 ocr_data=ocr_result
             )
             print(f"Successfully stored OCR data in DynamoDB for iepId: {iep_id}")
-            
-        # Get the document from S3
-        try:
-            s3 = boto3.client('s3')
-            response = s3.get_object(Bucket=bucket, Key=key)
-            file_content = response['Body'].read()
-        except Exception as s3_error:
-            print(f"Error retrieving object from S3: {str(s3_error)}")
-            # Check if we might be dealing with URL encoding issues
-            if 'NoSuchKey' in str(s3_error) and '%' in key:
-                try:
-                    # Try a different URL decoding approach
-                    alternate_key = urllib.parse.unquote(key)
-                    print(f"Retrying with alternate key: {alternate_key}")
-                    response = s3.get_object(Bucket=bucket, Key=alternate_key)
-                    file_content = response['Body'].read()
-                except Exception as retry_error:
-                    print(f"Retry also failed: {str(retry_error)}")
-                    raise
-            else:
-                raise
         
         # Get user profile for language preferences
         user_profile = None
@@ -1466,19 +1369,192 @@ def handle_s3_upload_event(event):
         else:
             print("No language preferences found in user profile")
         
-        # Process the document using our new function with user profile for translations
-        analysis_result = summarize_and_analyze_document(file_content, user_profile)
-        
-        if not analysis_result.get('success', False):
-            print(f"Error processing document: {analysis_result.get('error', 'Unknown error')}")
+        # Use the OCR text for processing
+        if 'text' not in ocr_result:
+            error_message = "No text found in OCR result"
+            print(error_message)
+            
+            # Update document status to FAILED
+            update_iep_document_status(
+                iep_id=iep_id,
+                status="FAILED",
+                error_message=error_message,
+                child_id=child_id,
+                user_id=user_id,
+                object_key=key
+            )
+            
             return {
                 'statusCode': 500,
                 'body': json.dumps({
-                    'message': f"Error processing document: {analysis_result.get('error', 'Unknown error')}"
+                    'message': error_message
                 })
             }
         
-        result = analysis_result.get('result', {})
+        # Process the document content from OCR
+        content_text = ocr_result['text']
+        
+        try:
+            # First try with OpenAI Agent
+            print("Using OpenAI Agent to analyze document content")
+            result = analyze_document_with_agent(content_text)
+            
+            if "error" in result:
+                print(f"OpenAI Agent analysis failed: {result.get('error')}, falling back to Claude")
+                
+                # Fallback to Claude if OpenAI Agent fails
+                # Update to Claude 3.5 Sonnet for better performance
+                model_id = 'anthropic.claude-3-5-sonnet-20240620-v1:0'
+                
+                # Use the get_full_prompt function from config.py
+                prompt = get_full_prompt("IEP Document", content_text)
+                
+                # Call Claude
+                bedrock_runtime = boto3.client('bedrock-runtime')
+                response = bedrock_runtime.invoke_model(
+                    modelId=model_id,
+                    body=json.dumps({
+                        'anthropic_version': 'bedrock-2023-05-31',
+                        'max_tokens': 8000,
+                        'temperature': 0,
+                        'system': 'You are an expert in analyzing and summarizing educational documents, especially Individualized Education Programs (IEPs).',
+                        'messages': [
+                            {'role': 'user', 'content': prompt}
+                        ]
+                    })
+                )
+                
+                # Parse response from Claude
+                response_body = json.loads(response['body'].read().decode('utf-8'))
+                
+                # Log the raw output for debugging
+                print(f"Raw Claude output: {json.dumps(response_body)[:500]}...")
+                
+                # Extract text content from Claude's response
+                content = ''
+                if 'content' in response_body:
+                    if isinstance(response_body['content'], list):
+                        # Handle message format with content blocks
+                        for block in response_body['content']:
+                            if 'text' in block:
+                                content += block['text']
+                    elif isinstance(response_body['content'], str):
+                        # Handle direct content string
+                        content = response_body['content']
+                elif 'completion' in response_body:
+                    # Handle simple completion response format
+                    content = response_body['completion']
+                else:
+                    print(f"Unexpected Claude response format: {response_body.keys()}")
+                    # Try to find any usable text in the response
+                    content = str(response_body)
+                
+                # Extract JSON from content
+                # Look for JSON in various formats (fenced code blocks, within content, etc.)
+                print(f"Attempting to extract JSON from content: {content[:200]}...")
+                
+                # Try different regex patterns to find JSON
+                json_patterns = [
+                    # Match JSON between ```json and ``` markers
+                    r'```(?:json)?\s*([\s\S]*?)\s*```',
+                    # Match a complete JSON object (assuming one is present)
+                    r'(?s)\{.*\}',
+                    # Match a complete JSON array (assuming one is present)
+                    r'(?s)\[.*\]'
+                ]
+                
+                result_json = None
+                
+                for pattern in json_patterns:
+                    matches = re.findall(pattern, content)
+                    if matches:
+                        for match in matches:
+                            try:
+                                candidate = json.loads(match)
+                                # Check if it has the expected structure
+                                if isinstance(candidate, dict) and 'summary' in candidate:
+                                    result_json = candidate
+                                    break
+                            except json.JSONDecodeError:
+                                continue
+                        if result_json:
+                            break
+                
+                # If no valid JSON found, create a fallback structure
+                if not result_json:
+                    print("Could not parse JSON from the Claude response, using fallback structure")
+                    # Extract something that looks like a summary
+                    summary_match = re.search(r'summary["\s:]+([^"]*)', content, re.IGNORECASE)
+                    summary = summary_match.group(1).strip() if summary_match else "No summary available"
+                    
+                    # Create a default structure
+                    result_json = {
+                        'summary': summary,
+                        'sections': []
+                    }
+                
+                # Validate and clean up the result
+                if not result_json.get('summary'):
+                    result_json['summary'] = "No summary available"
+                
+                # Ensure sections is a list of dictionaries with title and content
+                if 'sections' not in result_json or not isinstance(result_json['sections'], list):
+                    result_json['sections'] = []
+                
+                # Log success
+                print(f"Successfully extracted summary and sections from document using Claude fallback")
+                result = result_json
+        except Exception as e:
+            print(f"Error analyzing document content: {str(e)}")
+            traceback.print_exc()
+            
+            # Update document status to FAILED
+            update_iep_document_status(
+                iep_id=iep_id,
+                status="FAILED",
+                error_message=f"Error analyzing document content: {str(e)}",
+                child_id=child_id,
+                user_id=user_id,
+                object_key=key
+            )
+            
+            return {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'message': f"Error analyzing document content: {str(e)}"
+                })
+            }
+        
+        # Handle translations
+        target_languages = []
+        if user_profile and 'languages' in user_profile:
+            # Use the existing languages array from user profile
+            all_languages = user_profile.get('languages', [])
+            print(f"Using languages from user profile: {all_languages}")
+            
+            # Only include non-English languages for translation
+            target_languages = [lang for lang in all_languages if lang != 'en']
+            if target_languages:
+                print(f"Target languages for translation: {target_languages}")
+            else:
+                print("No non-English languages found for translation")
+        
+        # Translate summary if target languages are specified
+        if target_languages and 'summary' in result:
+            print(f"Translating summary to: {', '.join(target_languages)}")
+            result['summary'] = translate_content(result['summary'], target_languages)
+            
+            # Translate each section
+            if 'sections' in result:
+                translated_sections = []
+                for section in result['sections']:
+                    translated_section = section.copy()
+                    # Translate the content of the section
+                    if 'content' in section:
+                        translated_section['content'] = translate_content(section['content'], target_languages)
+                    translated_sections.append(translated_section)
+                result['sections'] = translated_sections
+                print("Completed translations for all sections")
         
         # Use the IEP ID from the S3 key path if available, otherwise generate a new one
         if not iep_id:
@@ -1587,6 +1663,18 @@ def handle_s3_upload_event(event):
     except Exception as e:
         print(f"Error processing S3 event: {str(e)}")
         traceback.print_exc()
+        
+        # Update document status to FAILED
+        if iep_id:
+            update_iep_document_status(
+                iep_id=iep_id,
+                status="FAILED",
+                error_message=f"Error processing document: {str(e)}",
+                child_id=child_id,
+                user_id=user_id,
+                object_key=key
+            )
+        
         return {
             'statusCode': 500, 
             'body': json.dumps({
