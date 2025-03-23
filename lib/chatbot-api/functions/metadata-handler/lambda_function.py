@@ -30,6 +30,9 @@ mistral_api_key_param_name = os.environ.get('MISTRAL_API_KEY_PARAMETER_NAME')
 try:
     mistral_api_key = ssm.get_parameter(Name=mistral_api_key_param_name, WithDecryption=True)['Parameter']['Value']
     print(f"Successfully retrieved Mistral API key from parameter store")
+    # Set it in environment for the mistral_ocr module
+    os.environ['MISTRAL_API_KEY'] = mistral_api_key
+    print("Mistral API key set in environment")
 except Exception as e:
     print(f"Error retrieving Mistral API key: {str(e)}")
     mistral_api_key = None

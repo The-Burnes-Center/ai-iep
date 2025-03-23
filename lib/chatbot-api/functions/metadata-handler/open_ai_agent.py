@@ -14,15 +14,17 @@ logger = logging.getLogger(__name__)
 
 def get_openai_api_key():
     """
-    Retrieves the OpenAI API key either from the environment variable or from SSM Parameter Store.
+    Retrieves the OpenAI API key from the environment variable.
+    The Lambda function should have already set this from SSM Parameter Store.
     Returns:
         str: The OpenAI API key.
     """
-    # First check if it's already in the environment
+    # Get from environment - Lambda should have already set this
     openai_api_key = os.environ.get('OPENAI_API_KEY')
     
-    # If not in environment, try to get from SSM Parameter Store
     if not openai_api_key:
+        logger.warning("OpenAI API key not found in environment variables")
+        # Fallback to SSM in case Lambda didn't set it
         param_name = os.environ.get('OPENAI_API_KEY_PARAMETER_NAME')
         if param_name:
             try:
@@ -57,9 +59,7 @@ def analyze_document_with_agent(text, model="gpt-4o"):
         return {"error": "OpenAI API key not available"}
     
     try:
-        # Set the API key in environment for the agent
-        os.environ['OPENAI_API_KEY'] = api_key
-        
+        # API key should already be set in environment by the Lambda
         logger.info(f"Creating agent for document analysis using {model}")
         
         # Get the prompt from config.py

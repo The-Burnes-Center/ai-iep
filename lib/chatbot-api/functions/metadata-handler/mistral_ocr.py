@@ -12,15 +12,17 @@ logger = logging.getLogger(__name__)
 
 def get_mistral_api_key():
     """
-    Retrieves the Mistral API key either from the environment variable or from SSM Parameter Store.
+    Retrieves the Mistral API key from the environment variable.
+    The Lambda function should have already set this from SSM Parameter Store.
     Returns:
         str: The Mistral API key.
     """
-    # First check if it's already in the environment
+    # Get from environment - Lambda should have already set this
     mistral_api_key = os.environ.get('MISTRAL_API_KEY')
     
-    # If not in environment, try to get from SSM Parameter Store
     if not mistral_api_key:
+        logger.warning("Mistral API key not found in environment variables")
+        # Fallback to SSM in case Lambda didn't set it
         param_name = os.environ.get('MISTRAL_API_KEY_PARAMETER_NAME')
         if param_name:
             try:
