@@ -384,7 +384,7 @@ export class LambdaFunctionStack extends cdk.Stack {
               image: lambda.Runtime.PYTHON_3_12.bundlingImage,
               command: [
                 'bash', '-c',
-                'pip install -r requirements.txt -t /asset-output && cp -au . /asset-output'
+                'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
               ],
             },
           }),
