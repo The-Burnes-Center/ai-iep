@@ -129,9 +129,10 @@ For each section, cover these key points where applicable:
 
 Special instructions:
 - For the 'services' section specifically:
-  * ALWAYS convert any service durations from minutes to hours per week
-  * Format service durations as "X hours per week" (NOT minutes)
-  * Example: "5 hours per week of specialized instruction" (not "300 minutes per week"), for eg 100 minutes = 1 hr and 40 minutes so its easy to understand
+  * ALWAYS show the original duration in minutes as mentioned in the IEP
+  * In parentheses, include the conversion to hours per week
+  * Format as: "X min/week (Y hrs/week)"
+  * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
 
 - Use simple language (8th-grade reading level)
 - Explain technical terms in parentheses
