@@ -15,6 +15,9 @@ export class S3BucketStack extends cdk.Stack {
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
+      encryption: s3.BucketEncryption.S3_MANAGED,
       cors: [{
         allowedMethods: [s3.HttpMethods.GET,s3.HttpMethods.POST,s3.HttpMethods.PUT,s3.HttpMethods.DELETE],
         allowedOrigins: ['*'],      
@@ -27,6 +30,9 @@ export class S3BucketStack extends cdk.Stack {
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
+      encryption: s3.BucketEncryption.S3_MANAGED,
       cors: [{
         allowedMethods: [s3.HttpMethods.GET,s3.HttpMethods.POST,s3.HttpMethods.PUT,s3.HttpMethods.DELETE],
         allowedOrigins: ['*'], 
@@ -38,6 +44,9 @@ export class S3BucketStack extends cdk.Stack {
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      enforceSSL: true,
+      encryption: s3.BucketEncryption.S3_MANAGED,
       cors: [{
         allowedMethods: [s3.HttpMethods.GET,s3.HttpMethods.POST,s3.HttpMethods.PUT,s3.HttpMethods.DELETE],
         allowedOrigins: ['*'], 
