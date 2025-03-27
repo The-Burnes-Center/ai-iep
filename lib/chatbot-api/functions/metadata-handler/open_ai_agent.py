@@ -6,7 +6,7 @@ from datetime import datetime
 from openai import OpenAI
 # Correct imports for openai-agents package
 from agents import Agent, Runner
-from config import get_full_prompt, get_all_tags, IEP_SECTIONS
+from config import get_full_prompt, get_all_tags, IEP_SECTIONS, get_translation_prompt, clean_translation
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -107,4 +107,52 @@ def analyze_document_with_agent(text, model="gpt-4o"):
             
     except Exception as e:
         logger.error(f"Error analyzing document with OpenAI Agent: {str(e)}")
+        return {"error": str(e)}
+
+def translate_with_agent(content, target_language, model="gpt-4o"):
+    """
+    Translate content using OpenAI's Agent architecture.
+    
+    Args:
+        content (str or dict): The content to translate
+        target_language (str): The target language code
+        model (str): The OpenAI model to use, defaults to gpt-4o
+        
+    Returns:
+        str or dict: Translated content
+    """
+    api_key = get_openai_api_key()
+    if not api_key:
+        logger.error("OpenAI API key not available, cannot translate content")
+        return {"error": "OpenAI API key not available"}
+    
+    try:
+        logger.info(f"Creating translation agent for {target_language}")
+        
+        # Get the translation prompt from config.py
+        prompt = get_translation_prompt(content, target_language)
+        
+        # Create an agent for translation
+        agent = Agent(
+            name=f"Translation Agent ({target_language})",
+            model=model,
+            instructions=prompt
+        )
+        
+        # Run the agent
+        result = Runner.run_sync(agent, "Please translate the content according to the instructions.")
+        
+        logger.info("Translation agent completed")
+        
+        # Extract the final output
+        translated_text = result.final_output
+        
+        # Clean up the translation to remove any JSON structure or explanatory text
+        translated_text = clean_translation(translated_text)
+        
+        logger.info(f"Successfully translated content to {target_language}")
+        return translated_text.strip()
+            
+    except Exception as e:
+        logger.error(f"Error translating content with OpenAI Agent: {str(e)}")
         return {"error": str(e)}

@@ -1,4 +1,5 @@
 import json
+import re
 
 # Define IEP sections and their descriptions
 IEP_SECTIONS = {
@@ -159,3 +160,16 @@ Document content:
 {content}
 """
     return prompt
+
+def clean_translation(text):
+    """Clean up translation output to remove any JSON structure or explanatory text"""
+    # Remove any JSON structure markers
+    text = text.replace('```json', '').replace('```', '')
+    
+    # Remove any explanatory text
+    text = re.sub(r'^.*?(?=\w)', '', text, flags=re.MULTILINE)
+    
+    # Remove any trailing whitespace or newlines
+    text = text.strip()
+    
+    return text

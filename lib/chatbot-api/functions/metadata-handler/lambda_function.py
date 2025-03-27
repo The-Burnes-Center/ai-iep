@@ -15,12 +15,11 @@ import uuid
 import traceback
 import re
 from mistral_ocr import process_document_with_mistral_ocr
-from open_ai_agent import get_openai_api_key, analyze_document_with_agent
+from open_ai_agent import get_openai_api_key, analyze_document_with_agent, translate_with_agent
 
 # AWS clients
 s3 = boto3.client('s3')
 bedrock_retrieve = boto3.client('bedrock-agent-runtime', region_name='us-east-1')  # for knowledge base retrieval
-bedrock_invoke = boto3.client('bedrock-runtime', region_name='us-east-1')    # for model invocation
 dynamodb = boto3.client('dynamodb')  # for document status updates
 ssm = boto3.client('ssm')  # for accessing parameter store
 
@@ -624,49 +623,9 @@ def retrieve_knowledge_base_documents(file_name, knowledge_base_id):
         return {'content': None, 'uri': None, 'error': str(e)}
 
 
-def clean_translation(translated_text):
-    """
-    Clean translation output by removing any JSON formatting or explanatory text
-    that might still be present in Claude's response.
-    
-    Args:
-        translated_text (str): Raw translated text from Claude
-        
-    Returns:
-        str: Cleaned translation text
-    """
-    if not translated_text:
-        return ""
-        
-    # Remove JSON-like formatting 
-    json_pattern = r'```(?:json)?\s*\{[\s\S]*?\}\s*```'
-    cleaned_text = re.sub(json_pattern, '', translated_text)
-    
-    # Remove introductory sentences
-    intro_patterns = [
-        r'^here\'s the translation.*?:\s*', 
-        r'^here\'s the content in.*?:\s*',
-        r'^translation:\s*',
-        r'^here is the.*?translation:?\s*',
-        r'^the translation is:?\s*'
-    ]
-    
-    for pattern in intro_patterns:
-        cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
-    
-    # Remove any remaining JSON structure
-    cleaned_text = re.sub(r'^\s*\{\s*"[^"]+"\s*:\s*"([\s\S]*?)"\s*\}\s*$', r'\1', cleaned_text)
-    cleaned_text = re.sub(r'^\s*\{\s*"[^"]+"\s*:\s*\{\s*"[^"]+"\s*:\s*"([\s\S]*?)"\s*\}\s*\}\s*$', r'\1', cleaned_text)
-    
-    # Unescape any escaped quotes that might be inside the JSON strings
-    cleaned_text = cleaned_text.replace('\\"', '"')
-    
-    return cleaned_text.strip()
-
-
 def translate_content(content, target_languages):
     """
-    Translate content to the specified target languages using Claude with custom prompts
+    Translate content to the specified target languages using OpenAI Agent
     
     Args:
         content (str or dict): The content to translate. Either a string or a dict with text fields
@@ -679,147 +638,49 @@ def translate_content(content, target_languages):
         print("No target languages specified or empty content, skipping translation")
         return {"original": content}
     
-    print(f"Starting translation of content to languages: {target_languages}")
-    
-    # Debug: Log content type and length to better understand what we're translating
-    content_type = type(content).__name__
-    content_length = len(content) if isinstance(content, str) else "N/A (not a string)"
-    print(f"Content type: {content_type}, length: {content_length}")
-    
-    # Debug: Print LANGUAGE_CODES to check available languages
-    print(f"Available language codes: {json.dumps(LANGUAGE_CODES, indent=2)}")
-    
-    # Initialize bedrock runtime client for Claude
-    bedrock_runtime = boto3.client('bedrock-runtime')
+    print(f"Starting translation to languages: {target_languages}")
     result = {"original": content}
-    
-    # Use Claude 3.5 Sonnet for better translation quality
-    model_id = os.environ.get('CLAUDE_MODEL_ID', 'anthropic.claude-3-5-sonnet-20240620-v1:0')
-    print(f"Using Claude model: {model_id} for translation")
     
     for lang_code in target_languages:
         try:
-            print(f"Translating content to {lang_code}...")
-            
             # Find the language name from language code for the prompt
             language_name = next((name for name, code in LANGUAGE_CODES.items() 
                                if code == lang_code), lang_code)
             
-            print(f"Found language name: {language_name} for code: {lang_code}")
-            
             if isinstance(content, str):
-                # Get the translation prompt for the specific language
-                prompt = get_translation_prompt(content, language_name)
-                print(f"Generated translation prompt for string content (length: {len(prompt)})")
+                # Use OpenAI Agent for translation
+                translated_text = translate_with_agent(content, language_name)
                 
-                # Debug: Log the first 100 chars of the prompt
-                print(f"Prompt start: {prompt[:100]}...")
-                
-                # Call Claude to translate
-                print(f"Calling Claude to translate to {language_name}...")
-                response = bedrock_runtime.invoke_model(
-                    modelId=model_id,
-                    body=json.dumps({
-                        'anthropic_version': 'bedrock-2023-05-31',
-                        'max_tokens': 8000,
-                        'temperature': 0,
-                        'system': 'You are an expert translator specializing in educational documents, particularly IEPs.',
-                        'messages': [
-                            {'role': 'user', 'content': prompt}
-                        ]
-                    })
-                )
-                
-                # Parse the response
-                response_body = json.loads(response['body'].read().decode('utf-8'))
-                print(f"Received response from Claude for {language_name} translation")
-                
-                # Log the response structure
-                print(f"Response structure keys: {list(response_body.keys())}")
-                
-                # Extract translated text
-                translated_text = ""
-                if 'content' in response_body:
-                    if isinstance(response_body['content'], list):
-                        for block in response_body['content']:
-                            if 'text' in block:
-                                translated_text += block['text']
-                    else:
-                        translated_text = response_body['content']
-                elif 'completion' in response_body:
-                    translated_text = response_body['completion']
-                
-                # Clean up the translation to remove any JSON structure or explanatory text
-                translated_text = clean_translation(translated_text)
-                
-                # Log the length of translated text
-                print(f"Translated text length: {len(translated_text) if translated_text else 0}")
-                
-                result[lang_code] = translated_text.strip()
-                print(f"Successfully added {lang_code} translation to result (length: {len(translated_text.strip())})")
+                if "error" in translated_text:
+                    print(f"Error translating to {lang_code}: {translated_text['error']}")
+                    continue
+                    
+                result[lang_code] = translated_text
                 
             elif isinstance(content, dict):
                 # Translate each field in the dictionary
                 translated_dict = {}
-                print(f"Content is a dictionary with {len(content)} fields, translating each field...")
+                
                 for key, value in content.items():
                     if isinstance(value, str) and value.strip():
-                        prompt = get_translation_prompt(value, language_name)
-                        print(f"Translating field '{key}' to {language_name}...")
+                        # Use OpenAI Agent for translation
+                        translated_text = translate_with_agent(value, language_name)
                         
-                        # Call Claude to translate
-                        response = bedrock_runtime.invoke_model(
-                            modelId=model_id,
-                            body=json.dumps({
-                                'anthropic_version': 'bedrock-2023-05-31',
-                                'max_tokens': 8000,
-                                'temperature': 0,
-                                'system': 'You are an expert translator specializing in educational documents, particularly IEPs.',
-                                'messages': [
-                                    {'role': 'user', 'content': prompt}
-                                ]
-                            })
-                        )
-                        
-                        # Parse the response
-                        response_body = json.loads(response['body'].read().decode('utf-8'))
-                        
-                        # Extract translated text
-                        translated_text = ""
-                        if 'content' in response_body:
-                            if isinstance(response_body['content'], list):
-                                for block in response_body['content']:
-                                    if 'text' in block:
-                                        translated_text += block['text']
-                            else:
-                                translated_text = response_body['content']
-                        elif 'completion' in response_body:
-                            translated_text = response_body['completion']
-                        
-                        # Clean the translation
-                        translated_text = clean_translation(translated_text)
-                        
-                        translated_dict[key] = translated_text.strip()
-                        print(f"Translated field '{key}' to {language_name} (length: {len(translated_text.strip())})")
+                        if "error" in translated_text:
+                            print(f"Error translating field '{key}' to {lang_code}: {translated_text['error']}")
+                            translated_dict[key] = value  # Keep original value on error
+                        else:
+                            translated_dict[key] = translated_text
                     else:
                         # Keep non-string values or empty strings as is
                         translated_dict[key] = value
-                        print(f"Skipped translation for field '{key}' (not a string or empty)")
                         
                 result[lang_code] = translated_dict
-                print(f"Successfully added dictionary translation for {lang_code} with {len(translated_dict)} fields")
-                
-            print(f"Successfully translated content to {lang_code}")
             
         except Exception as e:
             print(f"Error translating to {lang_code}: {str(e)}")
             traceback.print_exc()
-            # Skip this language if translation fails
             continue
-    
-    # Log the final result structure
-    result_languages = list(result.keys())
-    print(f"Translation complete. Result contains languages: {result_languages}")
     
     return result
 
@@ -1185,28 +1046,16 @@ def lambda_handler(event, context):
         return handle_api_request(event)
 
 def get_all_ocr_text_with_page_numbers(ocr_result):
-    """
-    Extract all text from OCR result with page numbers embedded.
-    
-    Args:
-        ocr_result (dict): OCR result from Mistral OCR API
+    """Extract all text content from OCR result with page numbers"""
+    if not ocr_result or 'pages' not in ocr_result:
+        return None
         
-    Returns:
-        str: All text content with page numbers embedded
-    """
-    if not ocr_result or not isinstance(ocr_result, dict) or 'pages' not in ocr_result:
-        print("Invalid OCR result format or missing 'pages' field")
-        return ""
+    text_content = []
+    for i, page in enumerate(ocr_result['pages'], 1):
+        if 'markdown' in page:
+            text_content.append(f"Page {i}:\n{page['markdown']}")
     
-    all_text = []
-    for page in ocr_result['pages']:
-        if isinstance(page, dict) and 'markdown' in page and 'index' in page:
-            page_number = page['index'] + 1  # Convert to 1-based indexing for human readability
-            page_text = page.get('markdown', '')
-            if page_text:
-                all_text.append(f"--- PAGE {page_number} ---\n{page_text}\n")
-                
-    return "\n".join(all_text)
+    return "\n\n".join(text_content)
 
 def get_ocr_text_for_page(ocr_result, page_index):
     """
@@ -1232,19 +1081,15 @@ def get_ocr_text_for_page(ocr_result, page_index):
 
 def handle_s3_upload_event(event):
     """Handle S3 event for document processing"""
-    # Extract information from the event
     try:
         record = event['Records'][0]
         bucket = record['s3']['bucket']['name']
         key = record['s3']['object']['key']
-        
-        # URL decode the key to handle special characters (spaces, +, etc.)
         key = urllib.parse.unquote_plus(key)
         
-        print(f"Processing document from S3 bucket: {bucket}, key: {key}")
+        print(f"Processing document: {key}")
         
         # Extract user ID, child ID, and IEP ID from the key
-        # Actual format: [userId]/[childId]/[iepId]/[fileName]
         key_parts = key.split('/')
         user_id = None
         child_id = None
@@ -1253,36 +1098,14 @@ def handle_s3_upload_event(event):
         if len(key_parts) >= 3:
             user_id = key_parts[0]
             child_id = key_parts[1]
-            # The iepId part might be prefixed with "iep-" which we want to preserve
-            if len(key_parts) >= 3:
-                iep_id = key_parts[2]
-            
-            print(f"Extracted from key: userId={user_id}, childId={child_id}, iepId={iep_id}")
-        else:
-            print(f"Warning: S3 key doesn't match expected format. Key: {key}")
+            iep_id = key_parts[2]
         
         # Process the document using Mistral OCR API
-        print("Processing document with Mistral OCR API...")
         ocr_result = process_document_with_mistral_ocr(bucket, key)
-        
-        # Print the OCR result
-        print("Mistral OCR result:")
-        print(json.dumps(ocr_result, indent=2))
-        
-        # Add debugging for OCR result structure
-        print("OCR Result Keys:", list(ocr_result.keys() if isinstance(ocr_result, dict) else ["Not a dictionary"]))
-        if isinstance(ocr_result, dict) and 'pages' in ocr_result:
-            print(f"Number of pages: {len(ocr_result['pages'])}")
-            if ocr_result['pages']:
-                print(f"First page keys: {list(ocr_result['pages'][0].keys() if isinstance(ocr_result['pages'][0], dict) else ['Not a dictionary'])}")
-                if isinstance(ocr_result['pages'][0], dict) and 'markdown' in ocr_result['pages'][0]:
-                    print(f"First page markdown preview: {ocr_result['pages'][0]['markdown'][:150]}...")
         
         # Check if OCR was successful
         if "error" in ocr_result:
-            print(f"Error processing document with Mistral OCR: {ocr_result['error']}")
-            
-            # Update document status to FAILED
+            print(f"OCR processing failed: {ocr_result['error']}")
             update_iep_document_status(
                 iep_id=iep_id,
                 status="FAILED",
@@ -1291,46 +1114,31 @@ def handle_s3_upload_event(event):
                 user_id=user_id,
                 object_key=key
             )
-            
             return {
                 'statusCode': 500,
                 'body': json.dumps({
                     'message': f"OCR processing failed: {ocr_result['error']}"
                 })
             }
-        else:
-            print("Successfully processed document with Mistral OCR")
-            
-            # Store the OCR results in DynamoDB immediately
-            print(f"Storing OCR results in DynamoDB for iepId: {iep_id}")
-            update_iep_document_status(
-                iep_id=iep_id,
-                status="PROCESSING",
-                child_id=child_id,
-                user_id=user_id,
-                object_key=key,
-                ocr_data=ocr_result
-            )
-            print(f"Successfully stored OCR data in DynamoDB for iepId: {iep_id}")
+        
+        # Store the OCR results in DynamoDB
+        update_iep_document_status(
+            iep_id=iep_id,
+            status="PROCESSING",
+            child_id=child_id,
+            user_id=user_id,
+            object_key=key,
+            ocr_data=ocr_result
+        )
         
         # Get user profile for language preferences
-        user_profile = None
-        if user_id:
-            user_profile = get_user_profile(user_id)
-            
-        # Log language preferences
-        if user_profile and 'languages' in user_profile:
-            print(f"User has language preferences: {user_profile.get('languages', [])}")
-        else:
-            print("No language preferences found in user profile")
+        user_profile = get_user_profile(user_id) if user_id else None
         
         # Extract text content from the OCR result
         content_text = get_all_ocr_text_with_page_numbers(ocr_result)
         if not content_text:
-            error_message = "No text content found in OCR result pages"
+            error_message = "No text content found in OCR result"
             print(error_message)
-            
-            # Update document status to FAILED
             update_iep_document_status(
                 iep_id=iep_id,
                 status="FAILED",
@@ -1339,7 +1147,6 @@ def handle_s3_upload_event(event):
                 user_id=user_id,
                 object_key=key
             )
-            
             return {
                 'statusCode': 500,
                 'body': json.dumps({
@@ -1347,19 +1154,16 @@ def handle_s3_upload_event(event):
                 })
             }
         
-        # Process the document content from OCR with page numbers embedded
+        # Process the document content
         content_text = content_text.strip()
         
         try:
             # Use OpenAI Agent for document analysis
-            print("Using OpenAI Agent to analyze document content")
             result = analyze_document_with_agent(content_text)
             
             if "error" in result:
-                error_message = f"OpenAI Agent analysis failed: {result.get('error')}"
+                error_message = f"Document analysis failed: {result.get('error')}"
                 print(error_message)
-                
-                # Update document status to FAILED
                 update_iep_document_status(
                     iep_id=iep_id,
                     status="FAILED",
@@ -1368,7 +1172,6 @@ def handle_s3_upload_event(event):
                     user_id=user_id,
                     object_key=key
                 )
-                
                 return {
                     'statusCode': 500,
                     'body': json.dumps({
@@ -1377,11 +1180,9 @@ def handle_s3_upload_event(event):
                 }
                 
         except Exception as e:
-            error_message = f"Error analyzing document content: {str(e)}"
+            error_message = f"Error analyzing document: {str(e)}"
             print(error_message)
             traceback.print_exc()
-            
-            # Update document status to FAILED
             update_iep_document_status(
                 iep_id=iep_id,
                 status="FAILED",
@@ -1390,7 +1191,6 @@ def handle_s3_upload_event(event):
                 user_id=user_id,
                 object_key=key
             )
-            
             return {
                 'statusCode': 500,
                 'body': json.dumps({
@@ -1401,119 +1201,66 @@ def handle_s3_upload_event(event):
         # Handle translations
         target_languages = []
         if user_profile and 'languages' in user_profile:
-            # Use the existing languages array from user profile
-            all_languages = user_profile.get('languages', [])
-            print(f"Using languages from user profile: {all_languages}")
-            
-            # Only include non-English languages for translation
-            target_languages = [lang for lang in all_languages if lang != 'en']
-            if target_languages:
-                print(f"Target languages for translation: {target_languages}")
-            else:
-                print("No non-English languages found for translation")
+            target_languages = [lang for lang in user_profile.get('languages', []) if lang != 'en']
         
-        # Translate summary if target languages are specified
-        if target_languages and 'summary' in result:
-            print(f"Translating summary to: {', '.join(target_languages)}")
-            result['summary'] = translate_content(result['summary'], target_languages)
+        # Translate content if needed
+        if target_languages:
+            if 'summary' in result:
+                result['summary'] = translate_content(result['summary'], target_languages)
             
-            # Translate each section
             if 'sections' in result:
                 translated_sections = []
                 for section in result['sections']:
                     translated_section = section.copy()
-                    # Translate the content of the section
                     if 'content' in section:
                         translated_section['content'] = translate_content(section['content'], target_languages)
                     translated_sections.append(translated_section)
                 result['sections'] = translated_sections
-                print("Completed translations for all sections")
         
-        # Use the IEP ID from the S3 key path if available, otherwise generate a new one
-        if not iep_id:
-            iep_id = str(uuid.uuid4())
-            print(f"Generated new iepId: {iep_id}")
-        else:
-            print(f"Using iepId from path: {iep_id}")
-        
-        # Format summaries for DynamoDB storage - handle both original and translated content
+        # Format data for DynamoDB storage
         formatted_summaries = {"M": {}}
-        
-        # Format the English summary (always present)
         if isinstance(result.get('summary'), str):
-            # Original summary is a simple string (no translations yet)
             formatted_summaries["M"]["en"] = {"S": result.get('summary', '')}
         elif isinstance(result.get('summary'), dict):
-            # Summary includes translations
             if 'original' in result['summary']:
-                # Store English as the original
                 formatted_summaries["M"]["en"] = {"S": result['summary']['original']}
-                
-                # Add all translated versions
                 for lang_code, translated_text in result['summary'].items():
                     if lang_code != 'original':
                         formatted_summaries["M"][lang_code] = {"S": translated_text}
         
-        # Format sections for DynamoDB storage
-        # Make sure we initialize both 'en' and any translated language entries
+        # Format sections
         formatted_sections = {"M": {}}
         sections = result.get('sections', [])
-        
-        # Always ensure there's an 'en' entry for sections
         formatted_sections["M"]["en"] = {"M": {}}
         
-        # Get the list of all languages we'll be handling
-        all_languages = ['en']  # Always include English
+        all_languages = ['en']
         if user_profile and 'languages' in user_profile:
-            # Add any other languages from user profile
             for lang in user_profile.get('languages', []):
                 if lang != 'en' and lang not in all_languages:
                     all_languages.append(lang)
-                    # Initialize the language section if it doesn't exist
-                    if lang not in formatted_sections["M"]:
-                        formatted_sections["M"][lang] = {"M": {}}
+                    formatted_sections["M"][lang] = {"M": {}}
         
-        print(f"Preparing section data for languages: {all_languages}")
-        
-        # Process each section
+        # Process sections
         for section in sections:
             section_title = section.get('title', 'Untitled Section')
             section_content = section.get('content', '')
             
-            # Handle case where content might be a dict with translations
             if isinstance(section_content, str):
-                # Simple string content - English only
-                if 'en' not in formatted_sections["M"]:
-                    formatted_sections["M"]["en"] = {"M": {}}
                 formatted_sections["M"]["en"]["M"][section_title] = {"S": section_content}
             elif isinstance(section_content, dict):
-                # Content with translations
                 if 'original' in section_content:
-                    # Store English version
-                    if 'en' not in formatted_sections["M"]:
-                        formatted_sections["M"]["en"] = {"M": {}}
                     formatted_sections["M"]["en"]["M"][section_title] = {"S": section_content['original']}
-                    
-                    # Add translated versions
                     for lang_code, translated_text in section_content.items():
                         if lang_code != 'original':
-                            if lang_code not in formatted_sections["M"]:
-                                formatted_sections["M"][lang_code] = {"M": {}}
                             formatted_sections["M"][lang_code]["M"][section_title] = {"S": translated_text}
         
-        # Print the section structure for debugging
-        print(f"Formatted sections structure: {json.dumps(formatted_sections, default=str)[:500]}...")
-        print(f"Section languages: {list(formatted_sections['M'].keys())}")
-        print(f"English sections: {list(formatted_sections['M']['en']['M'].keys()) if 'en' in formatted_sections['M'] else 'None'}")
-        
-        # Prepare the summaries structure for DynamoDB
+        # Save to DynamoDB
         summaries = {
             'summaries': formatted_summaries,
             'sections': formatted_sections
         }
         
-        # Save the document data to DynamoDB - this now includes all language versions
-        save_result = update_iep_document_status(
+        update_iep_document_status(
             iep_id=iep_id, 
             status='PROCESSED', 
             child_id=child_id, 
@@ -1523,21 +1270,19 @@ def handle_s3_upload_event(event):
             ocr_data=ocr_result
         )
         
-        print(f"Document saved to DynamoDB with iepId: {iep_id}")
-        
+        print(f"Document processed successfully: {iep_id}")
         return {
             'statusCode': 200,
             'body': json.dumps({
                 'message': 'Document processed successfully',
-                'iepId': iep_id,
-                'saveResult': save_result
+                'iepId': iep_id
             })
         }
+        
     except Exception as e:
-        print(f"Error processing S3 event: {str(e)}")
+        print(f"Error processing document: {str(e)}")
         traceback.print_exc()
         
-        # Update document status to FAILED
         if iep_id:
             update_iep_document_status(
                 iep_id=iep_id,
@@ -1551,6 +1296,6 @@ def handle_s3_upload_event(event):
         return {
             'statusCode': 500, 
             'body': json.dumps({
-                'message': f"Error processing S3 event: {str(e)}"
+                'message': f"Error processing document: {str(e)}"
             })
         }
