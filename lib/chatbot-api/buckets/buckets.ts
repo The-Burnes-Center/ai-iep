@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from "constructs";
 import { createBucketPolicy } from './bucket-policy';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 export class S3BucketStack extends cdk.Stack {
   public readonly knowledgeBucket: s3.Bucket;
@@ -38,6 +39,26 @@ export class S3BucketStack extends cdk.Stack {
       bucket: this.knowledgeBucket,
       allowedUsers: allowedUsers
     });
+    
+    // Add direct permissions for Lambda functions in the same stack
+    this.knowledgeBucket.addToResourcePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      principals: [
+        new iam.ArnPrincipal('arn:aws:iam::530075910224:user/dhruv'),
+        new iam.ArnPrincipal('arn:aws:iam::530075910224:root')
+      ],
+      actions: [
+        's3:GetObject',
+        's3:PutObject',
+        's3:DeleteObject',
+        's3:ListBucket',
+        's3:GetBucketLocation'
+      ],
+      resources: [
+        this.knowledgeBucket.bucketArn,
+        `${this.knowledgeBucket.bucketArn}/*`
+      ]
+    }));
 
     this.feedbackBucket = new s3.Bucket(scope, 'FeedbackDownloadBucket', {
       // bucketName: 'feedback-download',
