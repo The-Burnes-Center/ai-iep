@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from "constructs";
+import { createBucketPolicy } from './bucket-policy';
 
 export class S3BucketStack extends cdk.Stack {
   public readonly knowledgeBucket: s3.Bucket;
@@ -23,6 +24,19 @@ export class S3BucketStack extends cdk.Stack {
         allowedOrigins: ['*'],      
         allowedHeaders: ["*"]
       }]
+    });
+
+    // Apply restrictive bucket policy to the knowledge bucket (which contains IEP documents)
+    // Replace these ARNs with the actual ARNs of the users who should have access
+    const allowedUsers = [
+      'arn:aws:iam::530075910224:user/dhruv', 
+      'arn:aws:iam::530075910224:root',       
+    ];
+
+    // Create and apply the bucket policy
+    createBucketPolicy(this, 'KnowledgeBucketPolicy', {
+      bucket: this.knowledgeBucket,
+      allowedUsers: allowedUsers
     });
 
     this.feedbackBucket = new s3.Bucket(scope, 'FeedbackDownloadBucket', {
