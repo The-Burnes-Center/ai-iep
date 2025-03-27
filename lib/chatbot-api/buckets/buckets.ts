@@ -45,7 +45,11 @@ export class S3BucketStack extends cdk.Stack {
       effect: iam.Effect.ALLOW,
       principals: [
         new iam.ArnPrincipal('arn:aws:iam::530075910224:user/dhruv'),
-        new iam.ArnPrincipal('arn:aws:iam::530075910224:root')
+        new iam.ArnPrincipal('arn:aws:iam::530075910224:root'),
+        // Allow Lambda service principal
+        new iam.ServicePrincipal('lambda.amazonaws.com'),
+        // Allow API Gateway service principal for the uploads via frontend
+        new iam.ServicePrincipal('apigateway.amazonaws.com')
       ],
       actions: [
         's3:GetObject',
@@ -53,26 +57,6 @@ export class S3BucketStack extends cdk.Stack {
         's3:DeleteObject',
         's3:ListBucket',
         's3:GetBucketLocation'
-      ],
-      resources: [
-        this.knowledgeBucket.bucketArn,
-        `${this.knowledgeBucket.bucketArn}/*`
-      ]
-    }));
-    
-    // Add explicit deny for all non-authorized users (except Lambda execution roles)
-    this.knowledgeBucket.addToResourcePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.DENY,
-      notPrincipals: [
-        new iam.ArnPrincipal('arn:aws:iam::530075910224:user/dhruv'),
-        new iam.ArnPrincipal('arn:aws:iam::530075910224:root'),
-        new iam.ArnPrincipal('arn:aws:iam::530075910224:role/AIEPStack-CustomS3AutoDeleteObjectsCustomResourcePr-sqv2IxboHq9K')
-      ],
-      actions: [
-        's3:GetObject',
-        's3:PutObject',
-        's3:DeleteObject',
-        's3:ListBucket'
       ],
       resources: [
         this.knowledgeBucket.bucketArn,
