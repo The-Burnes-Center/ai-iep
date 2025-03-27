@@ -131,7 +131,7 @@ Special instructions:
 - For the 'services' section specifically:
   * ALWAYS show the original duration in minutes as mentioned in the IEP
   * In parentheses, include the conversion to hours per week
-  * Format as: "X min/week (Y hrs/week)"
+  * Format as: "X min/week (Y hrs/week) if the duration is more than 60 minutes"
   * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
 
 - Use simple language (8th-grade reading level)
