@@ -18,14 +18,37 @@ export function createBucketPolicy(scope: Construct, id: string, props: BucketPo
     const allowStatement = new PolicyStatement({
       effect: Effect.ALLOW,
       principals: props.allowedUsers.map(user => new ArnPrincipal(user)),
-      actions: ['s3:*'],
+      actions: [
+        's3:GetObject',
+        's3:PutObject',
+        's3:DeleteObject',
+        's3:ListBucket',
+        's3:GetBucketLocation'
+      ],
       resources: [
         props.bucket.bucketArn,
         `${props.bucket.bucketArn}/*`
       ],
     });
 
+    // Add the statement that requires secure transport
+    const secureTransportStatement = new PolicyStatement({
+      effect: Effect.DENY,
+      principals: [new ArnPrincipal('*')],
+      actions: ['s3:*'],
+      resources: [
+        props.bucket.bucketArn,
+        `${props.bucket.bucketArn}/*`
+      ],
+      conditions: {
+        'Bool': {
+          'aws:SecureTransport': 'false'
+        }
+      }
+    });
+
     policy.document.addStatements(allowStatement);
+    policy.document.addStatements(secureTransportStatement);
   }
 
   return policy;
