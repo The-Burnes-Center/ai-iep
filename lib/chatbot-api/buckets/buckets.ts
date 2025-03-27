@@ -59,6 +59,26 @@ export class S3BucketStack extends cdk.Stack {
         `${this.knowledgeBucket.bucketArn}/*`
       ]
     }));
+    
+    // Add explicit deny for all non-authorized users (except Lambda execution roles)
+    this.knowledgeBucket.addToResourcePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.DENY,
+      notPrincipals: [
+        new iam.ArnPrincipal('arn:aws:iam::530075910224:user/dhruv'),
+        new iam.ArnPrincipal('arn:aws:iam::530075910224:root'),
+        new iam.ArnPrincipal('arn:aws:iam::530075910224:role/AIEPStack-CustomS3AutoDeleteObjectsCustomResourcePr-sqv2IxboHq9K')
+      ],
+      actions: [
+        's3:GetObject',
+        's3:PutObject',
+        's3:DeleteObject',
+        's3:ListBucket'
+      ],
+      resources: [
+        this.knowledgeBucket.bucketArn,
+        `${this.knowledgeBucket.bucketArn}/*`
+      ]
+    }));
 
     this.feedbackBucket = new s3.Bucket(scope, 'FeedbackDownloadBucket', {
       // bucketName: 'feedback-download',
