@@ -46,6 +46,8 @@ export class S3BucketStack extends cdk.Stack {
       principals: [
         new iam.ArnPrincipal('arn:aws:iam::530075910224:user/dhruv'),
         new iam.ArnPrincipal('arn:aws:iam::530075910224:root'),
+        // Use roles instead of function ARNs
+        new iam.ArnPrincipal('arn:aws:iam::530075910224:role/AIEPStack-ChatbotAPIMetadataHandlerFunctionServiceR-r5pXSumdiwSl'),
         // Allow Lambda service principal
         new iam.ServicePrincipal('lambda.amazonaws.com'),
         // Allow API Gateway service principal for the uploads via frontend
@@ -62,6 +64,22 @@ export class S3BucketStack extends cdk.Stack {
         this.knowledgeBucket.bucketArn,
         `${this.knowledgeBucket.bucketArn}/*`
       ]
+    }));
+    
+    // Add back the deny statement for non-HTTPS requests
+    this.knowledgeBucket.addToResourcePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.DENY,
+      principals: [new iam.AnyPrincipal()],
+      actions: ['s3:*'],
+      resources: [
+        this.knowledgeBucket.bucketArn,
+        `${this.knowledgeBucket.bucketArn}/*`
+      ],
+      conditions: {
+        'Bool': {
+          'aws:SecureTransport': 'false'
+        }
+      }
     }));
 
     this.feedbackBucket = new s3.Bucket(scope, 'FeedbackDownloadBucket', {

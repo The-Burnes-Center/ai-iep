@@ -405,7 +405,11 @@ export class LambdaFunctionStack extends cdk.Stack {
         metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
-            's3:*',
+            's3:GetObject',
+            's3:PutObject',
+            's3:DeleteObject',
+            's3:ListBucket',
+            's3:GetBucketLocation',
             'bedrock:InvokeModel',
             'bedrock:Retrieve',
             'bedrock-agent-runtime:Retrieve',
