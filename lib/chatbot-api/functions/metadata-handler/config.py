@@ -89,21 +89,32 @@ def get_translation_prompt(content, target_language):
     return f"""
 You are a direct translator for educational documents, particularly IEPs (Individualized Education Programs).
 
-Translate the following content into {target_language}. {language_context}
+Translate the following IEP document content into {target_language}. {language_context}
 
 Translation Guidelines:
 1. Translate directly without adding any introductory text, explanations of your process, or JSON formatting
-2. Do not include phrases like "Here's the translation" or "Here's the content in Spanish"
+2. Do not include phrases like "Here's the translation" or "Here's the content in {target_language}"
 3. Write at an 8th-grade reading level while preserving all important information
 4. For technical terms, keep the official term and add a simple explanation in parentheses once
 5. Keep numbers, dates, and measurements in their original format
 6. Return ONLY the translated text without any wrapper or metadata
+7. Maintain the exact same structure and sections as the English version
+8. Keep all section titles exactly the same as in English
 
-Content to translate:
-{content}
+The content to translate is a JSON object with the following structure:
+```json
+{json.dumps(content, indent=2)}
+```
 
-IMPORTANT: Only provide the direct translation with no additional text, formatting, or explanation.
-""".strip()
+IMPORTANT: 
+1. Return ONLY the translated JSON object with the exact same structure
+2. Keep all section titles and keys exactly the same as in English
+3. Only translate the text content within the "S" fields
+4. Keep all numbers, dates, and measurements in their original format
+5. For the 'services' section, maintain the exact same format for durations (e.g., "300 min/week (5 hrs/week)")
+
+Return the complete translated JSON object with the same structure but translated content.
+"""
 
 def get_all_tags():
     """Compile all sections into a single list for reference."""
@@ -112,8 +123,36 @@ def get_all_tags():
     }
 
 def get_full_prompt(key, content):
-   
+    """
+    Generate a prompt for document analysis.
+    
+    Args:
+        key (str): Document type key
+        content (str): Document content
+    """
     section_points = {section: points for section, points in SECTION_KEY_POINTS.items()}
+    
+    # Build the JSON structure example
+    json_structure = {
+        "summaries": {
+            "M": {
+                "en": {"S": "English summary text"}
+            }
+        },
+        "sections": {
+            "M": {
+                "en": {
+                    "M": {
+                        "Section Name": {
+                            "M": {
+                                "S": {"S": "English section content"}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     
     prompt = f"""
 You are an expert IEP document summarizer. Analyze the following student IEP document and extract the key information.
@@ -141,20 +180,15 @@ Special instructions:
 
 Format your response as a JSON object with the following structure:
 ```json
-{{
-  "summary": "A concise summary of the document, that will be read by the parent of the student, so make it very simple and easy to understand and keep the tone to make them understand the student's needs and goals",
-  "sections": [
-    {{
-      "title": "Section title" - ENUM from {', '.join(IEP_SECTIONS.keys())},
-      "content": "Section content with key points, cover all the key points for the section"
-    }}
-  ]
-}}
+{json.dumps(json_structure, indent=2)}
 ```
 
-IMPORTANT: 1.Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
-2. Make sure to include all the sections and key points in the response. {get_all_tags()}, keep the section title same as the section name for consistency.
-3. Make sure to cover all the key points for each section, and make sure to keep the tone to make it easy to understand for the parent.
+IMPORTANT: 
+1. Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
+2. Make sure to include all the sections and key points.
+3. Keep the section titles consistent.
+4. Ensure all sections are present.
+5. The structure must exactly match the example format above.
 
 Document content:
 {content}

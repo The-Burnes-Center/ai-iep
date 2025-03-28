@@ -109,17 +109,18 @@ def analyze_document_with_agent(text, model="gpt-4o"):
         logger.error(f"Error analyzing document with OpenAI Agent: {str(e)}")
         return {"error": str(e)}
 
+
 def translate_with_agent(content, target_language, model="gpt-4o"):
     """
     Translate content using OpenAI's Agent architecture.
     
     Args:
-        content (str or dict): The content to translate
+        content (dict): The content to translate (complete document structure)
         target_language (str): The target language code
         model (str): The OpenAI model to use, defaults to gpt-4o
         
     Returns:
-        str or dict: Translated content
+        dict: Translated content with the same structure
     """
     api_key = get_openai_api_key()
     if not api_key:
@@ -147,11 +148,39 @@ def translate_with_agent(content, target_language, model="gpt-4o"):
         # Extract the final output
         translated_text = result.final_output
         
-        # Clean up the translation to remove any JSON structure or explanatory text
-        translated_text = clean_translation(translated_text)
-        
-        logger.info(f"Successfully translated content to {target_language}")
-        return translated_text.strip()
+        # Try to parse the JSON response
+        try:
+            # Look for JSON within the text
+            json_start = translated_text.find('{')
+            json_end = translated_text.rfind('}') + 1
+            
+            if json_start >= 0 and json_end > json_start:
+                json_str = translated_text[json_start:json_end]
+                translated_result = json.loads(json_str)
+                
+                # Validate the structure matches the input
+                if not all(key in translated_result for key in content.keys()):
+                    raise ValueError("Translated result missing required fields")
+                
+                # Validate the nested structure
+                for key, value in content.items():
+                    if isinstance(value, dict):
+                        if not isinstance(translated_result[key], dict):
+                            raise ValueError(f"Invalid structure for {key}")
+                        if 'M' in value and 'M' not in translated_result[key]:
+                            raise ValueError(f"Missing 'M' structure in {key}")
+                
+                logger.info(f"Successfully translated content to {target_language}")
+                return translated_result
+            else:
+                return {"error": "No valid JSON found in translation response"}
+                
+        except json.JSONDecodeError:
+            logger.error("Failed to parse translation JSON response")
+            return {"error": "Invalid JSON response"}
+        except ValueError as e:
+            logger.error(f"Invalid translation structure: {str(e)}")
+            return {"error": f"Invalid translation structure: {str(e)}"}
             
     except Exception as e:
         logger.error(f"Error translating content with OpenAI Agent: {str(e)}")

@@ -185,24 +185,13 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     print(f"Adding OCR data to document")
                 
                 if status == 'PROCESSED' and summaries:
-                    # Format summaries and sections for DynamoDB storage using the new helper function
-                    formatted_summaries = {"M": {}}
-                    for lang, summary_content in summaries.get('summaries', {}).get('M', {}).items():
-                        formatted_summaries["M"][lang] = summary_content
-                    
-                    formatted_sections = {"M": {}}
-                    if 'sections' in summaries and 'M' in summaries['sections']:
-                        for lang, sections_content in summaries['sections']['M'].items():
-                            formatted_sections["M"][lang] = {"M": {}}
-                            for section_name, section_data in sections_content.get('M', {}).items():
-                                # Use the helper function to format each section
-                                formatted_sections["M"][lang]["M"][section_name] = format_data_for_dynamodb(section_data)
+                    # The data from LLM is already in DynamoDB format, so we can use it directly
+                    formatted_summaries = summaries.get('summaries', {})
+                    formatted_sections = summaries.get('sections', {})
                     
                     update_expr += ", summaries = :summaries, sections = :sections"
                     expr_attr_values[':summaries'] = formatted_summaries
                     expr_attr_values[':sections'] = formatted_sections
-                    
-                    # Removed tags handling
                     
                     print(f"Updating document with formatted summaries and sections")
                     # Add detailed logging for troubleshooting
@@ -259,31 +248,9 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     item['errorMessage'] = error_message
                     
                 if status == 'PROCESSED' and summaries:
-                    # Format summaries and sections for DynamoDB storage
-                    formatted_summaries = {}
-                    for lang, summary_content in summaries.get('summaries', {}).get('M', {}).items():
-                        formatted_summaries[lang] = summary_content.get('S', '')
-                    
-                    formatted_sections = {}
-                    if 'sections' in summaries and 'M' in summaries['sections']:
-                        formatted_sections = {}
-                        for lang, sections_content in summaries['sections']['M'].items():
-                            formatted_sections[lang] = {}
-                            for section_name, section_data in sections_content.get('M', {}).items():
-                                # Convert from DynamoDB format back to Python dict for storage
-                                if isinstance(section_data, dict) and 'M' in section_data:
-                                    formatted_section = {}
-                                    for k, v in section_data['M'].items():
-                                        if 'S' in v:
-                                            formatted_section[k] = v['S']
-                                        elif 'BOOL' in v:
-                                            formatted_section[k] = v['BOOL']
-                                        elif 'N' in v:
-                                            formatted_section[k] = float(v['N'])
-                                    formatted_sections[lang][section_name] = formatted_section
-                
-                    item['summaries'] = formatted_summaries
-                    item['sections'] = formatted_sections
+                    # The data from LLM is already in DynamoDB format, so we can use it directly
+                    item['summaries'] = summaries.get('summaries', {})
+                    item['sections'] = summaries.get('sections', {})
                 
                 # Use numeric timestamp for createdAt to match expected GSI key type
                 item['createdAt'] = epoch_time
@@ -327,17 +294,9 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                             expr_attr_values[':error_message'] = error_message
                             
                         if status == 'PROCESSED' and summaries:
-                            # Format summaries for UpdateItem 
-                            formatted_summaries_update = {"M": {}}
-                            for lang, summary_content in summaries.get('summaries', {}).get('M', {}).items():
-                                formatted_summaries_update["M"][lang] = summary_content
-                            
-                            formatted_sections_update = {"M": {}}
-                            if 'sections' in summaries and 'M' in summaries['sections']:
-                                for lang, sections_content in summaries['sections']['M'].items():
-                                    formatted_sections_update["M"][lang] = {"M": {}}
-                                    for section_name, section_data in sections_content.get('M', {}).items():
-                                        formatted_sections_update["M"][lang]["M"][section_name] = section_data
+                            # The data from LLM is already in DynamoDB format, so we can use it directly
+                            formatted_summaries_update = summaries.get('summaries', {})
+                            formatted_sections_update = summaries.get('sections', {})
                             
                             update_expr += ", summaries = :summaries, sections = :sections"
                             expr_attr_values[':summaries'] = formatted_summaries_update
@@ -651,7 +610,7 @@ def translate_content(content, target_languages):
                 # Use OpenAI Agent for translation
                 translated_text = translate_with_agent(content, language_name)
                 
-                if "error" in translated_text:
+                if isinstance(translated_text, dict) and "error" in translated_text:
                     print(f"Error translating to {lang_code}: {translated_text['error']}")
                     continue
                     
@@ -666,7 +625,7 @@ def translate_content(content, target_languages):
                         # Use OpenAI Agent for translation
                         translated_text = translate_with_agent(value, language_name)
                         
-                        if "error" in translated_text:
+                        if isinstance(translated_text, dict) and "error" in translated_text:
                             print(f"Error translating field '{key}' to {lang_code}: {translated_text['error']}")
                             translated_dict[key] = value  # Keep original value on error
                         else:
@@ -1158,7 +1117,7 @@ def handle_s3_upload_event(event):
         content_text = content_text.strip()
         
         try:
-            # Use OpenAI Agent for document analysis
+            # First, analyze the document in English
             result = analyze_document_with_agent(content_text)
             
             if "error" in result:
@@ -1178,106 +1137,79 @@ def handle_s3_upload_event(event):
                         'message': error_message
                     })
                 }
-                
-        except Exception as e:
-            error_message = f"Error analyzing document: {str(e)}"
-            print(error_message)
-            traceback.print_exc()
+            
+            # Get target languages from user profile
+            target_languages = []
+            if user_profile and 'languages' in user_profile:
+                target_languages = [lang for lang in user_profile.get('languages', []) if lang != 'en']
+            
+            print(f"Processing document with target languages: {target_languages}")
+            
+            # Format the English result for translation
+            formatted_result = {
+                'summaries': result['summaries'],
+                'sections': result['sections']
+            }
+            
+            # Translate to each target language
+            for lang_code in target_languages:
+                try:
+                    translated_result = translate_with_agent(formatted_result, lang_code)
+                    
+                    if "error" in translated_result:
+                        print(f"Error translating to {lang_code}: {translated_result['error']}")
+                        continue
+                    
+                    # Merge the translated content into the result
+                    # The translated result contains the English content in the 'en' field
+                    formatted_result['summaries']['M'][lang_code] = translated_result['summaries']['M']['en']
+                    formatted_result['sections']['M'][lang_code] = translated_result['sections']['M']['en']
+                    
+                except Exception as e:
+                    print(f"Error translating to {lang_code}: {str(e)}")
+                    continue
+            
+            # Save to DynamoDB
             update_iep_document_status(
-                iep_id=iep_id,
-                status="FAILED",
-                error_message=error_message,
-                child_id=child_id,
+                iep_id=iep_id, 
+                status='PROCESSED', 
+                child_id=child_id, 
+                summaries=formatted_result,
                 user_id=user_id,
-                object_key=key
+                object_key=key,
+                ocr_data=ocr_result
             )
+            
+            print(f"Document processed successfully: {iep_id}")
             return {
-                'statusCode': 500,
+                'statusCode': 200,
                 'body': json.dumps({
-                    'message': error_message
+                    'message': 'Document processed successfully',
+                    'iepId': iep_id
                 })
             }
-        
-        # Handle translations
-        target_languages = []
-        if user_profile and 'languages' in user_profile:
-            target_languages = [lang for lang in user_profile.get('languages', []) if lang != 'en']
-        
-        # Translate content if needed
-        if target_languages:
-            if 'summary' in result:
-                result['summary'] = translate_content(result['summary'], target_languages)
             
-            if 'sections' in result:
-                translated_sections = []
-                for section in result['sections']:
-                    translated_section = section.copy()
-                    if 'content' in section:
-                        translated_section['content'] = translate_content(section['content'], target_languages)
-                    translated_sections.append(translated_section)
-                result['sections'] = translated_sections
-        
-        # Format data for DynamoDB storage
-        formatted_summaries = {"M": {}}
-        if isinstance(result.get('summary'), str):
-            formatted_summaries["M"]["en"] = {"S": result.get('summary', '')}
-        elif isinstance(result.get('summary'), dict):
-            if 'original' in result['summary']:
-                formatted_summaries["M"]["en"] = {"S": result['summary']['original']}
-                for lang_code, translated_text in result['summary'].items():
-                    if lang_code != 'original':
-                        formatted_summaries["M"][lang_code] = {"S": translated_text}
-        
-        # Format sections
-        formatted_sections = {"M": {}}
-        sections = result.get('sections', [])
-        formatted_sections["M"]["en"] = {"M": {}}
-        
-        all_languages = ['en']
-        if user_profile and 'languages' in user_profile:
-            for lang in user_profile.get('languages', []):
-                if lang != 'en' and lang not in all_languages:
-                    all_languages.append(lang)
-                    formatted_sections["M"][lang] = {"M": {}}
-        
-        # Process sections
-        for section in sections:
-            section_title = section.get('title', 'Untitled Section')
-            section_content = section.get('content', '')
+        except Exception as e:
+            error_message = f"Error processing document: {str(e)}"
+            print(error_message)
+            traceback.print_exc()
             
-            if isinstance(section_content, str):
-                formatted_sections["M"]["en"]["M"][section_title] = {"S": section_content}
-            elif isinstance(section_content, dict):
-                if 'original' in section_content:
-                    formatted_sections["M"]["en"]["M"][section_title] = {"S": section_content['original']}
-                    for lang_code, translated_text in section_content.items():
-                        if lang_code != 'original':
-                            formatted_sections["M"][lang_code]["M"][section_title] = {"S": translated_text}
-        
-        # Save to DynamoDB
-        summaries = {
-            'summaries': formatted_summaries,
-            'sections': formatted_sections
-        }
-        
-        update_iep_document_status(
-            iep_id=iep_id, 
-            status='PROCESSED', 
-            child_id=child_id, 
-            summaries=summaries,
-            user_id=user_id,
-            object_key=key,
-            ocr_data=ocr_result
-        )
-        
-        print(f"Document processed successfully: {iep_id}")
-        return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'message': 'Document processed successfully',
-                'iepId': iep_id
-            })
-        }
+            if iep_id:
+                update_iep_document_status(
+                    iep_id=iep_id,
+                    status="FAILED",
+                    error_message=error_message,
+                    child_id=child_id,
+                    user_id=user_id,
+                    object_key=key
+                )
+            
+            return {
+                'statusCode': 500, 
+                'body': json.dumps({
+                    'message': f"Error processing document: {str(e)}"
+                })
+            }
         
     except Exception as e:
         print(f"Error processing document: {str(e)}")
