@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Navbar, Container, Nav, NavDropdown } from 'react-bootstrap';
+import { Navbar, Container, Nav, Button } from 'react-bootstrap';
 import { Auth } from "aws-amplify";
 import { AuthContext } from "../common/auth-context"; 
 import { CHATBOT_NAME } from "../common/constants";
@@ -12,10 +12,9 @@ export default function GlobalHeader() {
   const [userName, setUserName] = useState<string | null>(null);
   const { setAuthenticated } = useContext(AuthContext); 
   const navigate = useNavigate();
+  const [showMenu, setShowMenu] = useState(false);
 
   // This useEffect hook runs once when the component mounts and checks if the user is authenticated
-  // If the user is not authenticated then they are signed out
-  // If they are authenticated we set their userName
   useEffect(() => {
     const fetchUserInfo = async () => {
       // Checks if there's a valid session with AWS Cognito
@@ -37,11 +36,21 @@ export default function GlobalHeader() {
     };
 
     fetchUserInfo();
-  }, []);
+
+    // Add click event listener to close menu when clicking outside
+    const handleClickOutside = (event) => {
+      if (showMenu && !event.target.closest('.menu-container')) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showMenu]);
 
   // When user signs out Auth.signOut() clears out all the tokens
-  // The shared authentication state is updated to false
-  // This triggers a re-render in AppConfigured which shows the LoginScreen
   const handleSignOut = async () => {
     try {
       navigate('/', { replace: true });
@@ -52,38 +61,57 @@ export default function GlobalHeader() {
     }
   };
 
+  const toggleMenu = (e) => {
+    e.stopPropagation();
+    setShowMenu(!showMenu);
+  };
+
   return (
     <Navbar 
       variant="dark" 
       expand="lg" 
       fixed="top"
-      className="custom-navbar" // Using the custom CSS class
+      className="custom-navbar"
     >
       <Container fluid>
         <Navbar.Brand as={Link} to="/welcome-page" className="d-flex align-items-center">
           <span className="aiep-navbar">AIEP</span>
         </Navbar.Brand>
         
+        {/* Mobile hamburger button */}
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         
         <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
           <Nav>
-            {userName && (
-              <NavDropdown 
-                title={
-                  <span>
-                    <i className="bi bi-person-circle me-1"></i>
-                    {userName}
-                  </span>
-                } 
-                id="user-dropdown"
-                align="end"
+            {/* For mobile view - appears when navbar is expanded */}
+            <Nav.Link 
+              className="d-lg-none" 
+              onClick={handleSignOut}
+            >
+              Sign out
+            </Nav.Link>
+            
+            {/* For desktop view - custom hamburger menu */}
+            <div className="d-none d-lg-block menu-container">
+              <Button 
+                variant="link" 
+                className="hamburger-button" 
+                onClick={toggleMenu}
               >
-                <NavDropdown.Item onClick={handleSignOut}>
-                  Sign out
-                </NavDropdown.Item>
-              </NavDropdown>
-            )}
+                <i className="bi bi-list"></i>
+              </Button>
+              
+              {showMenu && (
+                <div className="custom-dropdown-menu">
+                  <div 
+                    className="custom-dropdown-item" 
+                    onClick={handleSignOut}
+                  >
+                    Sign out
+                  </div>
+                </div>
+              )}
+            </div>
           </Nav>
         </Navbar.Collapse>
       </Container>
