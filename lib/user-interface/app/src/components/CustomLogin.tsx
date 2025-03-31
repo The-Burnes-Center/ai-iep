@@ -17,6 +17,7 @@ interface CustomLoginProps {
 }
 
 const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
+  // Existing state variables
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -27,15 +28,23 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [resetCode, setResetCode] = useState('');
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
-  
-  // New state for handling password change requirement
   const [passwordChangeRequired, setPasswordChangeRequired] = useState(false);
   const [cognitoUser, setCognitoUser] = useState<any>(null);
+  
+  // New state variables for sign up
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [signUpConfirmPassword, setSignUpConfirmPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isSignUpComplete, setIsSignUpComplete] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
     
     try {
       const user = await Auth.signIn(username, password);
@@ -124,10 +133,105 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       await Auth.forgotPasswordSubmit(resetEmail, resetCode, newPassword);
       setShowForgotPassword(false);
       setResetSent(false);
-      setError('Password reset successful. Please sign in with your new password.');
+      setSuccessMessage('Password reset successful. Please sign in with your new password.');
     } catch (err) {
       console.error('Error resetting password', err);
       setError(err.message || 'Error resetting password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // New handler for Sign Up
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (signUpPassword !== signUpConfirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Call Cognito's signUp method
+      await Auth.signUp({
+        username: signUpEmail,
+        password: signUpPassword,
+        attributes: {
+          email: signUpEmail,
+        }
+      });
+      
+      console.log('Sign up successful, verification required');
+      setIsSignUpComplete(true);
+    } catch (err) {
+      console.error('Error signing up:', err);
+      
+      // Handle specific Cognito errors
+      if (err.code === 'UsernameExistsException') {
+        setError('An account with this email already exists');
+      } else if (err.code === 'InvalidPasswordException') {
+        setError(err.message || 'Password does not meet requirements');
+      } else if (err.code === 'InvalidParameterException') {
+        setError(err.message || 'Invalid parameter provided');
+      } else {
+        setError(err.message || 'An error occurred during sign up');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // New handler for verification code
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Confirm the sign up with verification code
+      await Auth.confirmSignUp(signUpEmail, verificationCode);
+      console.log('Verification successful');
+      
+      // Reset sign up form and switch back to login
+      setSignUpEmail('');
+      setSignUpPassword('');
+      setSignUpConfirmPassword('');
+      setVerificationCode('');
+      setShowSignUp(false);
+      setIsSignUpComplete(false);
+      setSuccessMessage('Account created successfully! Please sign in with your credentials.');
+    } catch (err) {
+      console.error('Error verifying code:', err);
+      
+      // Handle specific Cognito errors
+      if (err.code === 'CodeMismatchException') {
+        setError('Invalid verification code');
+      } else if (err.code === 'ExpiredCodeException') {
+        setError('Verification code has expired. Please request a new one.');
+      } else {
+        setError(err.message || 'Error verifying your account');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler to resend verification code
+  const handleResendCode = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await Auth.resendSignUp(signUpEmail);
+      setSuccessMessage('Verification code has been resent to your email');
+    } catch (err) {
+      console.error('Error resending code:', err);
+      setError(err.message || 'Error resending verification code');
     } finally {
       setLoading(false);
     }
@@ -190,11 +294,158 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       </Container>
     );
   }
+
+  // Sign Up Verification View
+  if (showSignUp && isSignUpComplete) {
+    return (
+      <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
+        <Col xs={12} md={6} lg={4}>
+          <h1 className="text-center mb-4 aiep-title">AIEP</h1>
+          <h4 className="text-center mb-4">Verify Your Account</h4>
+          
+          <Form onSubmit={handleVerifyCode}>
+            <div className="mobile-form-container">
+              <Form.Group className="mb-3">
+                <Form.Label className="form-label-bold">Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  value={signUpEmail}
+                  readOnly
+                />
+                <Form.Text className="text-muted">
+                  We've sent a verification code to this email address.
+                </Form.Text>
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label className="form-label-bold">Verification Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter the code from your email"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  required
+                />
+              </Form.Group>
+              
+              {error && <Alert variant="danger">{error}</Alert>}
+              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+              
+              <div className="d-grid gap-2">
+                <Button variant="primary" type="submit" disabled={loading} className="button-text">
+                  {loading ? <Spinner animation="border" size="sm" /> : 'Verify Account'}
+                </Button>
+                <Button 
+                  variant="outline-secondary"
+                  onClick={handleResendCode}
+                  disabled={loading}
+                >
+                  Resend Verification Code
+                </Button>
+                <Button 
+                  variant="link" 
+                  onClick={() => {
+                    setShowSignUp(false);
+                    setIsSignUpComplete(false);
+                  }}
+                  disabled={loading}
+                  className="forgot-password-link"
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            </div>
+          </Form>
+        </Col>
+      </Container>
+    );
+  }
+
+  // Sign Up Form View
+  if (showSignUp) {
+    return (
+      <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
+        <Col xs={12} md={6} lg={4}>
+          <h1 className="text-center mb-4 aiep-title">AIEP</h1>
+          <h4 className="text-center mb-4">Create an Account</h4>
+          
+          <Form onSubmit={handleSignUp}>
+            <div className="mobile-form-container">
+              <Form.Group className="mb-3">
+                <Form.Label className="form-label-bold">Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  placeholder="Enter your email"
+                  value={signUpEmail}
+                  onChange={(e) => setSignUpEmail(e.target.value)}
+                  required
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label className="form-label-bold">Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Create a password"
+                  value={signUpPassword}
+                  onChange={(e) => setSignUpPassword(e.target.value)}
+                  required
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label className="form-label-bold">Confirm Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={signUpConfirmPassword}
+                  onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                  required
+                />
+              </Form.Group>
+              
+              {/* Password requirements container */}
+              <Container className="mt-3 mb-3 p-3 border rounded bg-light">
+                <Form.Text className="text-muted">
+                  Password must be at least 8 characters long and include:
+                  <ul>
+                    <li>At least 1 number</li>
+                    <li>At least 1 lowercase letter</li>
+                    <li>At least 1 uppercase letter</li>
+                    <li>At least 1 special character (^ $ * . [ ] &#123; &#125; ( ) ? - " ! @ # % &amp; / \ , &gt; &lt; ' : ; | _ ~ ` + =)</li>
+                  </ul>
+                </Form.Text>
+              </Container>
+              
+              {error && <Alert variant="danger">{error}</Alert>}
+              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+              
+              <div className="d-grid gap-2">
+                <Button variant="primary" type="submit" disabled={loading} className="button-text">
+                  {loading ? <Spinner animation="border" size="sm" /> : 'Sign Up'}
+                </Button>
+                <Button 
+                  variant="link" 
+                  onClick={() => setShowSignUp(false)}
+                  disabled={loading}
+                  className="forgot-password-link"
+                >
+                  Already have an account? Sign In
+                </Button>
+              </div>
+            </div>
+          </Form>
+        </Col>
+      </Container>
+    );
+  }
+
   if (showForgotPassword) {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
-          <h4 className="text-center mb-4 form-label-bold">Reset Password</h4>
+          <h1 className="text-center mb-4 aiep-title">AIEP</h1>
+          <h4 className="text-center mb-4">Reset Password</h4>
           
           {!resetSent ? (
             <Form onSubmit={handleForgotPassword}>
@@ -252,6 +503,19 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   />
                 </Form.Group>
                 
+                {/* Password requirements container */}
+                <Container className="mt-3 mb-3 p-3 border rounded bg-light">
+                  <Form.Text className="text-muted">
+                    Password must be at least 8 characters long and include:
+                    <ul>
+                      <li>At least 1 number</li>
+                      <li>At least 1 lowercase letter</li>
+                      <li>At least 1 uppercase letter</li>
+                      <li>At least 1 special character (^ $ * . [ ] &#123; &#125; ( ) ? - " ! @ # % &amp; / \ , &gt; &lt; ' : ; | _ ~ ` + =)</li>
+                    </ul>
+                  </Form.Text>
+                </Container>
+                
                 {error && <Alert variant="danger">{error}</Alert>}
                 
                 <div className="d-grid gap-2">
@@ -275,6 +539,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     );
   }
 
+  // Main Login View
   return (
     <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
       <Col xs={12} md={6} lg={4}>
@@ -305,19 +570,34 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             </Form.Group>
             
             {error && <Alert variant="danger">{error}</Alert>}
+            {successMessage && <Alert variant="success">{successMessage}</Alert>}
             
             <div className="d-grid gap-2">
               <Button variant="primary" type="submit" disabled={loading} className="button-text">
                 {loading ? <Spinner animation="border" size="sm" /> : 'Sign In'}
               </Button>
-              <Button 
-                variant="link" 
-                onClick={() => setShowForgotPassword(true)}
-                disabled={loading}
-                className="forgot-password-link"
-              >
-                Forgot Password?
-              </Button>
+              <div className="d-flex justify-content-between">
+                <Button 
+                  variant="link" 
+                  onClick={() => setShowForgotPassword(true)}
+                  disabled={loading}
+                  className="forgot-password-link"
+                >
+                  Forgot Password?
+                </Button>
+                <Button 
+                  variant="link" 
+                  onClick={() => {
+                    setShowSignUp(true);
+                    setError(null);
+                    setSuccessMessage(null);
+                  }}
+                  disabled={loading}
+                  className="forgot-password-link"
+                >
+                  Sign Up
+                </Button>
+              </div>
             </div>
           </div>
         </Form>
