@@ -7,7 +7,8 @@ import {
   Form, 
   Button, 
   Alert, 
-  Spinner 
+  Spinner,
+  InputGroup
 } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './CustomLogin.css'; // Import the custom CSS file
@@ -39,6 +40,13 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [isSignUpComplete, setIsSignUpComplete] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // State for toggling password visibility
+  const [showMainPassword, setShowMainPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +54,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     setError(null);
     setSuccessMessage(null);
     
+    // Convert email to lowercase
+    const normalizedUsername = username.toLowerCase();
+    
     try {
-      const user = await Auth.signIn(username, password);
+      const user = await Auth.signIn(normalizedUsername, password);
       console.log('Login successful', user);
       
       // Check for NEW_PASSWORD_REQUIRED challenge
@@ -113,8 +124,13 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     setLoading(true);
     setError(null);
     
+    // Convert email to lowercase
+    const normalizedResetEmail = resetEmail.toLowerCase();
+    
     try {
-      await Auth.forgotPassword(resetEmail);
+      await Auth.forgotPassword(normalizedResetEmail);
+      // Update the resetEmail state with the normalized email
+      setResetEmail(normalizedResetEmail);
       setResetSent(true);
     } catch (err) {
       console.error('Error requesting password reset', err);
@@ -155,16 +171,21 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     setLoading(true);
     setError(null);
     
+    // Convert email to lowercase
+    const normalizedSignUpEmail = signUpEmail.toLowerCase();
+    
     try {
       // Call Cognito's signUp method
       await Auth.signUp({
-        username: signUpEmail,
+        username: normalizedSignUpEmail,
         password: signUpPassword,
         attributes: {
-          email: signUpEmail,
+          email: normalizedSignUpEmail,
         }
       });
       
+      // Update the signUpEmail state with the normalized email
+      setSignUpEmail(normalizedSignUpEmail);
       console.log('Sign up successful, verification required');
       setIsSignUpComplete(true);
     } catch (err) {
@@ -246,39 +267,54 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   
           <Form onSubmit={handleCompleteNewPassword}>
             <div className="mobile-form-container">
-            <Form.Group className="mb-3">
-  {/* Add bottom margin to create vertical space */}
-  <Container className="mt-3 mb-3 p-3 border rounded bg-light">
-    <Form.Text className="text-muted">
-      Password must be at least 8 characters long and include:
-      <ul>
-        <li>At least 1 number</li>
-        <li>At least 1 lowercase letter</li>
-        <li>At least 1 uppercase letter</li>
-        <li>At least 1 special character (^ $ * . [ ] &#123; &#125; ( ) ? - " ! @ # % &amp; / \ , &gt; &lt; ' : ; | _ ~ ` + =)</li>
-      </ul>
-    </Form.Text>
-  </Container>
+              <Form.Group className="mb-3">
+                <Container className="mt-3 mb-3 p-3 border rounded bg-light">
+                  <Form.Text className="text-muted">
+                    Password must be at least 8 characters long and include:
+                    <ul>
+                      <li>At least 1 number</li>
+                      <li>At least 1 lowercase letter</li>
+                      <li>At least 1 uppercase letter</li>
+                      <li>At least 1 special character (^ $ * . [ ] &#123; &#125; ( ) ? - " ! @ # % &amp; / \ , &gt; &lt; ' : ; | _ ~ ` + =)</li>
+                    </ul>
+                  </Form.Text>
+                </Container>
 
-  <Form.Label className="form-label-bold">New Password</Form.Label>
-  <Form.Control
-    type="password"
-    placeholder="Enter new password"
-    value={newPassword}
-    onChange={(e) => setNewPassword(e.target.value)}
-    required
-  />
-</Form.Group>
+                <Form.Label className="form-label-bold">New Password</Form.Label>
+                <InputGroup>
+                  <Form.Control
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                  <Button 
+                    variant="outline-secondary"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                  </Button>
+                </InputGroup>
+              </Form.Group>
   
               <Form.Group className="mb-3">
                 <Form.Label className="form-label-bold">Confirm Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
+                <InputGroup>
+                  <Form.Control
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                  <Button 
+                    variant="outline-secondary"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                  </Button>
+                </InputGroup>
               </Form.Group>
   
               {error && <Alert variant="danger">{error}</Alert>}
@@ -377,31 +413,47 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   type="email"
                   placeholder="Enter your email"
                   value={signUpEmail}
-                  onChange={(e) => setSignUpEmail(e.target.value)}
+                  onChange={(e) => setSignUpEmail(e.target.value.toLowerCase())}
                   required
                 />
               </Form.Group>
               
               <Form.Group className="mb-3">
                 <Form.Label className="form-label-bold">Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Create a password"
-                  value={signUpPassword}
-                  onChange={(e) => setSignUpPassword(e.target.value)}
-                  required
-                />
+                <InputGroup>
+                  <Form.Control
+                    type={showSignUpPassword ? "text" : "password"}
+                    placeholder="Create a password"
+                    value={signUpPassword}
+                    onChange={(e) => setSignUpPassword(e.target.value)}
+                    required
+                  />
+                  <Button 
+                    variant="outline-secondary"
+                    onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                  >
+                    <i className={`bi ${showSignUpPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                  </Button>
+                </InputGroup>
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label className="form-label-bold">Confirm Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={signUpConfirmPassword}
-                  onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                  required
-                />
+                <InputGroup>
+                  <Form.Control
+                    type={showSignUpConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    value={signUpConfirmPassword}
+                    onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                    required
+                  />
+                  <Button 
+                    variant="outline-secondary"
+                    onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                  >
+                    <i className={`bi ${showSignUpConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                  </Button>
+                </InputGroup>
               </Form.Group>
               
               {/* Password requirements container */}
@@ -456,7 +508,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     type="email"
                     placeholder="Enter your email"
                     value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
+                    onChange={(e) => setResetEmail(e.target.value.toLowerCase())}
                     required
                   />
                 </Form.Group>
@@ -494,13 +546,21 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 
                 <Form.Group className="mb-3">
                   <Form.Label className="form-label-bold">New Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    placeholder="Enter new password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
+                  <InputGroup>
+                    <Form.Control
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                    />
+                    <Button 
+                      variant="outline-secondary"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                    </Button>
+                  </InputGroup>
                 </Form.Group>
                 
                 {/* Password requirements container */}
@@ -550,23 +610,31 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             <Form.Group className="mb-3">
               <Form.Label className="form-label-bold">Email</Form.Label>
               <Form.Control
-                type="text"
+                type="email"
                 placeholder="Enter email"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value.toLowerCase())}
                 required
               />
             </Form.Group>
 
             <Form.Group className="mb-3">
               <Form.Label className="form-label-bold">Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <InputGroup>
+                <Form.Control
+                  type={showMainPassword ? "text" : "password"}
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Button 
+                  variant="outline-secondary"
+                  onClick={() => setShowMainPassword(!showMainPassword)}
+                >
+                  <i className={`bi ${showMainPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
+                </Button>
+              </InputGroup>
             </Form.Group>
             
             {error && <Alert variant="danger">{error}</Alert>}
