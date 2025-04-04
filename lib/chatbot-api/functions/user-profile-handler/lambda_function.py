@@ -353,16 +353,34 @@ def get_child_documents(event: Dict) -> Dict:
                 created_at = doc.get('createdAt', 0)
                 if created_at > latest_timestamp:
                     latest_timestamp = created_at
+                    
+                    # Construct the base document
                     latest_doc = {
                         'iepId': doc['iepId'],
                         'childId': doc['childId'],
                         'documentUrl': doc.get('documentUrl', f"s3://{os.environ.get('BUCKET', '')}/{doc['iepId']}"),
                         'status': doc.get('status', 'PROCESSING'),
-                        'summaries': doc.get('summaries', {}),
-                        'sections': doc.get('sections', {}),
                         'createdAt': doc.get('createdAt', ''),
                         'updatedAt': doc.get('updatedAt', '')
                     }
+                    
+                    # Handle summaries with proper structure
+                    if 'summaries' in doc:
+                        latest_doc['summaries'] = doc['summaries']
+                    else:
+                        latest_doc['summaries'] = {}
+                    
+                    # Handle sections with proper structure (array format)
+                    if 'sections' in doc:
+                        latest_doc['sections'] = doc['sections']
+                    else:
+                        latest_doc['sections'] = {}
+                    
+                    # Handle document index
+                    if 'document_index' in doc:
+                        latest_doc['document_index'] = doc['document_index']
+                    else:
+                        latest_doc['document_index'] = {}
                     
                     # Add OCR data if available and requested
                     if include_ocr and 'ocrData' in doc:
@@ -378,6 +396,7 @@ def get_child_documents(event: Dict) -> Dict:
         return create_response(event, 200, latest_doc)
         
     except Exception as e:
+        print(f"Error retrieving documents: {str(e)}")
         return create_response(event, 500, {'message': f'Error retrieving document: {str(e)}'})
 
 def delete_child_documents(event: Dict) -> Dict:
@@ -447,6 +466,10 @@ def delete_child_documents(event: Dict) -> Dict:
                 # Delete each document record that belongs to this user
                 for doc in response['Items']:
                     if 'userId' not in doc or doc['userId'] == user_id:
+                        # Check for document_index field before deletion
+                        if 'document_index' in doc:
+                            print(f"Deleting document with document_index field: {doc['iepId']}")
+                            
                         iep_documents_table.delete_item(
                             Key={
                                 'iepId': doc['iepId'],

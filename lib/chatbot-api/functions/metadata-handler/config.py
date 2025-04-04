@@ -48,7 +48,8 @@ SECTION_KEY_POINTS = {
         'Related services (speech, OT, PT, etc.)',
         'Frequency and duration of services',
         'Who will provide services',
-        'When services begin and end'
+        'When services begin and end',
+        'ALWAYS show the original duration in minutes as mentioned in the IEP, In parentheses, include the conversion to hours. Format as: "X min/week (Y hrs/week) if the duration is more than 60 minutes" Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"'
     ],
     'Informed Consent': [
         'Parent rights and responsibilities',
@@ -77,43 +78,45 @@ LANGUAGE_CODES = {
     'vietnamese': 'vi'
 }
 
-def get_translation_prompt(content, target_language):
-    """Generate a prompt for translating content to the target language in a parent-friendly manner."""
-    # Context guidelines for specific languages
-    language_context = {
+def get_language_context(target_language):
+    """Get the language context for the target language."""
+    return {
         'spanish': 'Use Latin American Spanish. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.',
         'vietnamese': 'Use standard Vietnamese. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.',
         'chinese': 'Use Simplified Chinese (Mandarin). Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
     }.get(target_language, '')
+
+def get_translation_prompt():
+    """Generate a prompt for translating content to the target language in a parent-friendly manner."""
+
     
+# You are a direct translator for educational documents, particularly IEPs (Individualized Education Programs).
+
+# Translate the following IEP document content.
+
+# Translation Guidelines:
+# 1. Translate directly without adding any introductory text, explanations of your process, or JSON formatting
+# 2. Do not include phrases like "Here's the translation" or "Here's the content in {target_language}"
+# 3. Write at an 8th-grade reading level while preserving all important information
+# 4. For technical terms, keep the official term and add a simple explanation in parentheses once
+# 5. Keep numbers, dates, and measurements in their original format
+# 6. Return ONLY the translated text without any wrapper or metadata
+# 7. Maintain the exact same structure and sections as the English version
+# 8. Keep all section titles exactly the same as in English
+
+
+# IMPORTANT: 
+# 1. Return ONLY the translated JSON object with the exact same structure
+# 2. Keep all section titles and keys exactly the same as in English
+# 3. Only translate the text content within the "S" fields
+# 4. Keep all numbers, dates, and measurements in their original format
+# 5. For the 'services' section, maintain the exact same format for durations (e.g., "300 min/week (5 hrs/week)")
+
+# Return the complete translated JSON object with the same structure but translated content.
+
     return f"""
-You are a direct translator for educational documents, particularly IEPs (Individualized Education Programs).
 
-Translate the following IEP document content into {target_language}. {language_context}
-
-Translation Guidelines:
-1. Translate directly without adding any introductory text, explanations of your process, or JSON formatting
-2. Do not include phrases like "Here's the translation" or "Here's the content in {target_language}"
-3. Write at an 8th-grade reading level while preserving all important information
-4. For technical terms, keep the official term and add a simple explanation in parentheses once
-5. Keep numbers, dates, and measurements in their original format
-6. Return ONLY the translated text without any wrapper or metadata
-7. Maintain the exact same structure and sections as the English version
-8. Keep all section titles exactly the same as in English
-
-The content to translate is a JSON object with the following structure:
-```json
-{json.dumps(content, indent=2)}
-```
-
-IMPORTANT: 
-1. Return ONLY the translated JSON object with the exact same structure
-2. Keep all section titles and keys exactly the same as in English
-3. Only translate the text content within the "S" fields
-4. Keep all numbers, dates, and measurements in their original format
-5. For the 'services' section, maintain the exact same format for durations (e.g., "300 min/week (5 hrs/week)")
-
-Return the complete translated JSON object with the same structure but translated content.
+After processing the document in english, please use the translation tool to translate each part of the final output in all the languages we need. use the tool get_language_context to get the language context for translation.
 """
 
 def get_all_tags():
@@ -122,88 +125,155 @@ def get_all_tags():
         'sections': list(IEP_SECTIONS.keys())
     }
 
-def get_full_prompt(key, content):
+def get_full_prompt(key):
     """
     Generate a prompt for document analysis.
     
     Args:
         key (str): Document type key
-        content (str): Document content
     """
     section_points = {section: points for section, points in SECTION_KEY_POINTS.items()}
     
     # Build the JSON structure example
     json_structure = {
         "summaries": {
-            "M": {
-                "en": {"S": "English summary text"}
-            }
+            "en": "English summary text",
+            "es": "Spanish summary text",
+            "vi": "Vietnamese summary text",
+            "zh": "Chinese summary text"
         },
         "sections": {
-            "M": {
-                "en": {
-                    "M": {
-                        "Section Name": {
-                            "M": {
-                                "S": {"S": "English section content"}
-                            }
-                        }
-                    }
+            "en": [
+                {
+                    "title": "Section Name 1",
+                    "content": "English section content (use the markdown format for better readability)",
+                    "ocr_text_used": "All the original text from the iep document used to extract the section content",
+                    "page_numbers": "Page numbers used to extract the section content"
                 }
-            }
+            ],
+            "es": [
+                {
+                    "title": "Section Name 1 in spanish",
+                    "content": "Spanish section content (use the markdown format for better readability)",
+                    "ocr_text_used": "All the original text from the iep document used to extract the section content in english",
+                    "page_numbers": "Page numbers used to extract the section content in spanish"
+                }
+            ],
+            "vi": [
+                {
+                    "title": "Section Name 1 in vietnamese",
+                    "content": "Vietnamese section content (use the markdown format for better readability)",
+                    "ocr_text_used": "All the original text from the iep document used to extract the section content in english",
+                    "page_numbers": "Page numbers used to extract the section content in vietnamese"
+                }
+            ],
+            "zh": [
+                {
+                    "title": "Section Name 1 in chinese",
+                    "content": "Chinese section content (use the markdown format for better readability)",
+                    "ocr_text_used": "All the original text from the iep document used to extract the section content in english",
+                    "page_numbers": "Page numbers used to extract the section content in chinese"
+                }
+            ]
+        },
+        "document_index": {
+            "en": "English document index, page numbers and content of the page, break down the content of the document into sections based on the content of the page",
+            "es": "Spanish document index, page numbers and content of the page, break down the content of the document into sections based on the content of the page",
+            "vi": "Vietnamese document index, page numbers and content of the page, break down the content of the document into sections based on the content of the page",
+            "zh": "Chinese document index, page numbers and content of the page, break down the content of the document into sections based on the content of the page"
         }
     }
+
+#     You are an expert IEP document summarizer. Analyze the following student IEP document and extract the key information.
+
+# First, use the tool "get_all_ocr_text_with_page_numbers" to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
+
+# Extract the following:
+# 1. A concise summary of the entire document. Remember to use the index to help you. and use the page numbers to help me find key sections in the document.
+# 2. Before porcessing each section if necessary use the tool "get_ocr_text_for_page" to retrive specific information about each section based on the index you created, Structured sections based on the document's content, always only include the following sections: {', '.join(IEP_SECTIONS.keys())}.
+
+# When analyzing the document, pay special attention to these important sections:
+# {', '.join(IEP_SECTIONS.keys())}
+
+# For each section, cover these key points where applicable:
+# {json.dumps(section_points, indent=4)}
+
+# Special instructions:
+# - For the 'services' section specifically:
+#   * ALWAYS show the original duration in minutes as mentioned in the IEP
+#   * In parentheses, include the conversion to hours per week
+#   * Format as: "X min/week (Y hrs/week) if the duration is more than 60 minutes"
+#   * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
+# - For "Goals", "Accommodations", and "Services", always return the original text from the document.
+
+# - Use simple language (8th-grade reading level)
+# - Explain technical terms in parentheses
+# - Include all specific services, accommodations, and important dates
+# - Always return the original text from the document.
+# - Always return the page numbers of the document for each section.
+# - Always return the ocr data used to extract the section content.
+# - use the translation agent the data to desired language.
+
+# Format your response as a JSON object with the following structure:
+# ```json
+# {json.dumps(json_structure, indent=2)}
+# ```
+
+# IMPORTANT: 
+# 1. Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
+# 2. Make sure to include all the sections and key points.
+# 3. Keep the section titles consistent.
+# 4. Ensure all sections are present.
+# 5. The structure must exactly match the example format above.
     
     prompt = f"""
-You are an expert IEP document summarizer. Analyze the following student IEP document and extract the key information.
+You are an expert IEP document analyzer and translator. Analyze the following student IEP document and extract the key information.
 
-Extract the following:
-1. A concise summary of the entire document focusing on the student's needs, goals, and accommodations
-2. Structured sections based on the document's content, always only include the following sections: {', '.join(IEP_SECTIONS.keys())}.
+Tasks:
+1. Analyze the document in english and generate first an index of the document based on the page numbers and the content of the page.
+2. Summarize the document in english where you are trying to explain the document in a way that is easy to understand for a parent whose child is in the school system. Mention the strengths and weaknesses of the student in the summary, and the goals and accommodations of the student.
+3. For each section, use the get_section_info tool to understand what information to extract, then use the index to find and extract that information from the document.
+4. Translate ALL extracted information to ALL the languages we need {', '.join(LANGUAGE_CODES.keys())}. DO NOT use placeholders like "..." or "Translated sections" - you must provide COMPLETE translations for every field.
+5. For EACH language, translate ALL sections with the SAME level of detail as the English version.
+6. Use the tool get_language_context to get the language specific context for translation of each language.
+7. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
 
-When analyzing the document, pay special attention to these important sections:
-{', '.join(IEP_SECTIONS.keys())}
+Tools:
+- get_all_ocr_text: to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
+- get_ocr_text_for_page: to retrieve specific information about each section based on the page number of the document.
+- get_language_context: to get the language specific context for translation. Use this tool for EACH language before translating.
+- get_section_info: to get the key points and description for each section. Use this tool for each section to understand what information to extract.
 
-For each section, cover these key points where applicable:
-{json.dumps(section_points, indent=4)}
-
-Special instructions:
+Important Guidelines:
+- Make sure to include ALL the sections and key points.
+- Keep the section titles consistent.
+- Ensure all sections are present in all languages.
+- Keep the reading level at 8th grade.
+- NEVER use placeholder text like "..." or "// Translated sections" - all sections must be fully translated.
+- The content in all languages should have the SAME level of detail.
+- For each section, use get_section_info to understand what information to look for.
 - For the 'services' section specifically:
-  * ALWAYS show the original duration in minutes as mentioned in the IEP
-  * In parentheses, include the conversion to hours per week
-  * Format as: "X min/week (Y hrs/week) if the duration is more than 60 minutes"
-  * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
+    * ALWAYS show the original duration in minutes as mentioned in the IEP
+    * In parentheses, include the conversion to hours per week
+    * Format as: "X min/week (Y hrs/week)" if the duration is more than 60 minutes
+    * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
 
-- Use simple language (8th-grade reading level)
-- Explain technical terms in parentheses
-- Include all specific services, accommodations, and important dates
-
-Format your response as a JSON object with the following structure:
+Format your response as a JSON object with the following structure: 
 ```json
 {json.dumps(json_structure, indent=2)}
 ```
-
-IMPORTANT: 
-1. Your response MUST be valid JSON only. No introduction, explanation, or markdown outside the JSON.
-2. Make sure to include all the sections and key points.
-3. Keep the section titles consistent.
-4. Ensure all sections are present.
-5. The structure must exactly match the example format above.
-
-Document content:
-{content}
 """
     return prompt
 
-def clean_translation(text):
-    """Clean up translation output to remove any JSON structure or explanatory text"""
-    # Remove any JSON structure markers
-    text = text.replace('```json', '').replace('```', '')
+# def clean_translation(text):
+#     """Clean up translation output to remove any JSON structure or explanatory text"""
+#     # Remove any JSON structure markers
+#     text = text.replace('```json', '').replace('```', '')
     
-    # Remove any explanatory text
-    text = re.sub(r'^.*?(?=\w)', '', text, flags=re.MULTILINE)
+#     # Remove any explanatory text
+#     text = re.sub(r'^.*?(?=\w)', '', text, flags=re.MULTILINE)
     
-    # Remove any trailing whitespace or newlines
-    text = text.strip()
+#     # Remove any trailing whitespace or newlines
+#     text = text.strip()
     
-    return text
+#     return text

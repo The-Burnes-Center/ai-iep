@@ -7,7 +7,7 @@ import json
 import urllib.parse
 import boto3
 from botocore.exceptions import ClientError
-from config import get_full_prompt, IEP_SECTIONS, get_translation_prompt, LANGUAGE_CODES
+from config import get_full_prompt, IEP_SECTIONS, LANGUAGE_CODES
 import io
 import base64
 import logging
@@ -15,7 +15,7 @@ import uuid
 import traceback
 import re
 from mistral_ocr import process_document_with_mistral_ocr
-from open_ai_agent import get_openai_api_key, analyze_document_with_agent, translate_with_agent
+from open_ai_agent import OpenAIAgent
 
 # AWS clients
 s3 = boto3.client('s3')
@@ -188,15 +188,18 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     # The data from LLM is already in DynamoDB format, so we can use it directly
                     formatted_summaries = summaries.get('summaries', {})
                     formatted_sections = summaries.get('sections', {})
+                    formatted_document_index = summaries.get('document_index', {})
                     
-                    update_expr += ", summaries = :summaries, sections = :sections"
+                    update_expr += ", summaries = :summaries, sections = :sections, document_index = :document_index"
                     expr_attr_values[':summaries'] = formatted_summaries
                     expr_attr_values[':sections'] = formatted_sections
+                    expr_attr_values[':document_index'] = formatted_document_index
                     
-                    print(f"Updating document with formatted summaries and sections")
+                    print(f"Updating document with formatted summaries, sections, and document_index")
                     # Add detailed logging for troubleshooting
                     print(f"Formatted summaries structure: {json.dumps(formatted_summaries, default=str)}")
                     print(f"Formatted sections structure: {json.dumps(formatted_sections, default=str)}")
+                    print(f"Formatted document_index structure: {json.dumps(formatted_document_index, default=str)}")
                 
                 # Update the item
                 update_params = {
@@ -251,6 +254,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     # The data from LLM is already in DynamoDB format, so we can use it directly
                     item['summaries'] = summaries.get('summaries', {})
                     item['sections'] = summaries.get('sections', {})
+                    item['document_index'] = summaries.get('document_index', {})
                 
                 # Use numeric timestamp for createdAt to match expected GSI key type
                 item['createdAt'] = epoch_time
@@ -297,10 +301,12 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                             # The data from LLM is already in DynamoDB format, so we can use it directly
                             formatted_summaries_update = summaries.get('summaries', {})
                             formatted_sections_update = summaries.get('sections', {})
+                            formatted_document_index_update = summaries.get('document_index', {})
                             
-                            update_expr += ", summaries = :summaries, sections = :sections"
+                            update_expr += ", summaries = :summaries, sections = :sections, document_index = :document_index"
                             expr_attr_values[':summaries'] = formatted_summaries_update
                             expr_attr_values[':sections'] = formatted_sections_update
+                            expr_attr_values[':document_index'] = formatted_document_index_update
                             
                             # Removed tags handling from fallback path
                             
@@ -626,40 +632,6 @@ def lambda_handler(event, context):
     # This is an S3 event
     return iep_processing_pipeline(event)
 
-def get_all_ocr_text_with_page_numbers(ocr_result):
-    """Extract all text content from OCR result with page numbers"""
-    if not ocr_result or 'pages' not in ocr_result:
-        return None
-        
-    text_content = []
-    for i, page in enumerate(ocr_result['pages'], 1):
-        if 'markdown' in page:
-            text_content.append(f"Page {i}:\n{page['markdown']}")
-    
-    return "\n\n".join(text_content)
-
-def get_ocr_text_for_page(ocr_result, page_index):
-    """
-    Extract text for a specific page from OCR result.
-    
-    Args:
-        ocr_result (dict): OCR result from Mistral OCR API
-        page_index (int): 0-based page index to retrieve
-        
-    Returns:
-        str: Text content for the specified page or empty string if not found
-    """
-    if not ocr_result or not isinstance(ocr_result, dict) or 'pages' not in ocr_result:
-        print(f"Invalid OCR result format or missing 'pages' field")
-        return ""
-    
-    for page in ocr_result['pages']:
-        if isinstance(page, dict) and 'index' in page and page['index'] == page_index:
-            return page.get('markdown', '')
-            
-    print(f"Page index {page_index} not found in OCR result")
-    return ""
-
 def iep_processing_pipeline(event):
     """Handle S3 event for document processing"""
     try:
@@ -715,32 +687,12 @@ def iep_processing_pipeline(event):
         # Get user profile for language preferences
         user_profile = get_user_profile(user_id) if user_id else None
         
-        # Extract text content from the OCR result
-        content_text = get_all_ocr_text_with_page_numbers(ocr_result)
-        if not content_text:
-            error_message = "No text content found in OCR result"
-            print(error_message)
-            update_iep_document_status(
-                iep_id=iep_id,
-                status="FAILED",
-                error_message=error_message,
-                child_id=child_id,
-                user_id=user_id,
-                object_key=key
-            )
-            return {
-                'statusCode': 500,
-                'body': json.dumps({
-                    'message': error_message
-                })
-            }
-        
-        # Process the document content
-        content_text = content_text.strip()
+        # Create OpenAIAgent instance with OCR data
+        agent = OpenAIAgent(ocr_data=ocr_result)
         
         try:
-            # First, analyze the document in English
-            result = analyze_document_with_agent(content_text)
+            # Analyze the document - this now includes translations
+            result = agent.analyze_document()
             
             if "error" in result:
                 error_message = f"Document analysis failed: {result.get('error')}"
@@ -760,36 +712,102 @@ def iep_processing_pipeline(event):
                     })
                 }
             
-            # Get target languages from user profile
-            target_languages = []
-            if user_profile and 'languages' in user_profile:
-                target_languages = [lang for lang in user_profile.get('languages', []) if lang != 'en']
-            
-            print(f"Processing document with target languages: {target_languages}")
-            
-            # Format the English result for translation
+            # Format the result for DynamoDB
             formatted_result = {
-                'summaries': result['summaries'],
-                'sections': result['sections']
+                'summaries': {
+                    'M': {
+                        lang: {'S': content} for lang, content in result.get('summaries', {}).items()
+                        if content and isinstance(content, str)
+                    }
+                },
+                'sections': {
+                    'M': {
+                        lang: {
+                            'L': [
+                                {
+                                    'M': {
+                                        'title': {'S': section.get('title', '')},
+                                        'content': {'S': section.get('content', '')},
+                                        'ocr_text_used': {'S': section.get('ocr_text_used', '').replace('<Extracted Page', 'Extracted Page')},
+                                        'page_numbers': {'S': section.get('page_numbers', '')}
+                                    }
+                                } for section in sections
+                                if isinstance(section, dict) and 'title' in section and 'content' in section
+                            ]
+                        } for lang, sections in result.get('sections', {}).items()
+                        if isinstance(sections, list) and sections
+                    }
+                },
+                'document_index': {
+                    'M': {
+                        lang: {'S': content} for lang, content in result.get('document_index', {}).items()
+                        if content and isinstance(content, str)
+                    }
+                }
             }
             
-            # Translate to each target language
-            for lang_code in target_languages:
-                try:
-                    translated_result = translate_with_agent(formatted_result, lang_code)
-                    
-                    if "error" in translated_result:
-                        print(f"Error translating to {lang_code}: {translated_result['error']}")
-                        continue
-                    
-                    # Merge the translated content into the result
-                    # The translated result contains the English content in the 'en' field
-                    formatted_result['summaries']['M'][lang_code] = translated_result['summaries']['M']['en']
-                    formatted_result['sections']['M'][lang_code] = translated_result['sections']['M']['en']
-                    
-                except Exception as e:
-                    print(f"Error translating to {lang_code}: {str(e)}")
-                    continue
+            # Clean up any timestamps or log markers in the data
+            def clean_json_values(data):
+                if isinstance(data, dict):
+                    for key, value in list(data.items()):
+                        # Handle S type
+                        if key == 'S' and isinstance(value, str):
+                            # Remove timestamp patterns
+                            value = re.sub(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z', '', value)
+                            # Remove text indicating missing values or placeholders
+                            value = value.replace('...', '').replace('// Translated sections', '')
+                            # Remove other placeholder indicators
+                            value = re.sub(r'//.*', '', value)
+                            value = value.strip()
+                            data[key] = value
+                        else:
+                            data[key] = clean_json_values(value)
+                elif isinstance(data, list):
+                    return [clean_json_values(item) for item in data]
+                return data
+            
+            # Apply cleaning to the formatted result
+            formatted_result = clean_json_values(formatted_result)
+            
+            # Verify the structure before saving
+            for lang, lang_sections in formatted_result.get('sections', {}).get('M', {}).items():
+                if not lang_sections.get('L'):
+                    print(f"WARNING: Missing sections for language {lang} - creating empty array")
+                    lang_sections['L'] = []
+                elif not isinstance(lang_sections.get('L'), list):
+                    print(f"WARNING: Sections for language {lang} not in list format - fixing")
+                    lang_sections['L'] = []
+            
+            # Verify all required languages are present with at least empty arrays
+            required_languages = LANGUAGE_CODES.values()
+            for lang in required_languages:
+                # Check summaries
+                if lang not in formatted_result.get('summaries', {}).get('M', {}):
+                    print(f"WARNING: Missing summary for language {lang} - using English summary")
+                    # Use English summary as fallback if available
+                    if 'en' in formatted_result.get('summaries', {}).get('M', {}):
+                        formatted_result['summaries']['M'][lang] = formatted_result['summaries']['M']['en']
+                    else:
+                        formatted_result['summaries']['M'][lang] = {'S': ''}
+                
+                # Check sections
+                if lang not in formatted_result.get('sections', {}).get('M', {}):
+                    print(f"WARNING: Missing sections for language {lang} - creating empty array")
+                    formatted_result['sections']['M'][lang] = {'L': []}
+                
+                # Check document index
+                if lang not in formatted_result.get('document_index', {}).get('M', {}):
+                    print(f"WARNING: Missing document index for language {lang} - using English index")
+                    # Use English index as fallback if available
+                    if 'en' in formatted_result.get('document_index', {}).get('M', {}):
+                        formatted_result['document_index']['M'][lang] = formatted_result['document_index']['M']['en']
+                    else:
+                        formatted_result['document_index']['M'][lang] = {'S': ''}
+            
+            # Print the cleaned structure for logging
+            print(f"Formatted summaries languages: {json.dumps(list(formatted_result.get('summaries', {}).get('M', {}).keys()), default=str)}")
+            print(f"Formatted sections languages: {json.dumps(list(formatted_result.get('sections', {}).get('M', {}).keys()), default=str)}")
+            print(f"Formatted document index languages: {json.dumps(list(formatted_result.get('document_index', {}).get('M', {}).keys()), default=str)}")
             
             # Save to DynamoDB
             update_iep_document_status(
