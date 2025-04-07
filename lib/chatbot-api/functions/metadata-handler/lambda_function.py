@@ -769,7 +769,7 @@ def iep_processing_pipeline(event):
             formatted_result = clean_json_values(formatted_result)
             
             # Verify all required languages are present
-            required_languages = LANGUAGE_CODES.keys()
+            required_languages = LANGUAGE_CODES.values()
             for lang in required_languages:
                 # Check summaries
                 if lang not in formatted_result.get('summaries', {}):
