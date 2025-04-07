@@ -264,8 +264,9 @@ Make sure the output has the following data:
 - all sections - title, content, ocr_text_used, page_numbers in all languages
 - document index in all languages
 - all translations are complete and accurate
+- final ouput should be just the JSON object with no other text or comments.
 
-Format your response as a JSON object with the following structure: 
+Output Structure: Format your response as a JSON object with the following structure: 
 ```json
 {json.dumps(json_structure, indent=2)}
 ```
