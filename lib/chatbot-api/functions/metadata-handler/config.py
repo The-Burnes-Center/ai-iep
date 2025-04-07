@@ -63,7 +63,7 @@ SECTION_KEY_POINTS = {
         'Testing accommodations',
         'Behavioral supports',
         'Assistive technology needs',
-        'Environmental modifications'
+        'Environmental modifications',
     ]
 }
 
