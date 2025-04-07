@@ -81,9 +81,9 @@ LANGUAGE_CODES = {
 def get_language_context(target_language):
     """Get the language context for the target language."""
     return {
-        'spanish': 'Use Latin American Spanish. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.',
-        'vietnamese': 'Use standard Vietnamese. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.',
-        'chinese': 'Use Simplified Chinese (Mandarin). Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
+        'es' or 'spanish': 'Use Latin American Spanish. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.',
+        'vi' or 'vietnamese': 'Use standard Vietnamese. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.',
+        'zh' or 'chinese': 'Use Simplified Chinese (Mandarin). Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
     }.get(target_language, '')
 
 def get_translation_prompt():
@@ -145,7 +145,7 @@ def get_full_prompt(key):
         "sections": {
             "en": [
                 {
-                    "title": "Section Name 1",
+                    "title": "Section Name 1 - should be an enum from the list of sections",
                     "content": "English section content (use the markdown format for better readability)",
                     "ocr_text_used": "All the original text from the iep document used to extract the section content",
                     "page_numbers": "Page numbers used to extract the section content"
@@ -257,6 +257,13 @@ Important Guidelines:
     * In parentheses, include the conversion to hours per week
     * Format as: "X min/week (Y hrs/week)" if the duration is more than 60 minutes
     * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
+
+
+Make sure the output has the following data:
+- summary in all languages
+- all sections - title, content, ocr_text_used, page_numbers in all languages
+- document index in all languages
+- all translations are complete and accurate
 
 Format your response as a JSON object with the following structure: 
 ```json

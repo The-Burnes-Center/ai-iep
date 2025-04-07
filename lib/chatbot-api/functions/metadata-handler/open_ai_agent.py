@@ -96,13 +96,13 @@ class OpenAIAgent:
         @function_tool
         def get_ocr_text_for_page(page_index: int):
             """
-            Use this tool to Extract text for a specific page from OCR result.
+            Use this tool to get the markdown text for a specific page from OCR result of the IEP document. Using the index you can get specific information about each section based on the page number of the document. 
             
             Args:
-                page_index (int): 0-based page index to retrieve
+                page_index (int): 0-based page index to retrieve, i.e. page 1 is index 0
                 
             Returns:
-                str: Text content for the specified page or empty string if not found
+                str: Markdown content for the specified page or empty string if not found
             """
             if not self.ocr_data or not isinstance(self.ocr_data, dict) or 'pages' not in self.ocr_data:
                 print(f"Invalid OCR result format or missing 'pages' field")
@@ -112,35 +112,35 @@ class OpenAIAgent:
                 if isinstance(page, dict) and 'index' in page and page['index'] == page_index:
                     return page.get('markdown', '')
                     
-            print(f"Page index {page_index} not found in OCR result")
+            print(f"Page index {page_index} not found in OCR result. Max index is {len(self.ocr_data['pages'])}")
             return ""
         return get_ocr_text_for_page
 
     def _create_language_context_tool(self):
         """Create a tool for getting language context"""
         @function_tool
-        def get_language_context(target_language: str):
+        def get_language_context_for_translation(target_language: str):
             """
             Use this tool to get the language context for translation.
             
             Args:
-                target_language (str): The target language code
+                target_language (str): The target language code, i.e. 'es' for spanish, 'vi' for vietnamese, 'zh' for chinese
                 
             Returns:
                 str: Language-specific context and guidelines
             """
             return get_language_context(target_language)
-        return get_language_context
+        return get_language_context_for_translation
 
     def _create_section_info_tool(self):
         """Create a tool for getting section-specific information"""
         @function_tool
         def get_section_info(section_name: str):
             """
-            Use this tool to get the key points and information for a specific section.
+            Use this tool to get understand what key points and information are important for a specific section.
             
             Args:
-                section_name (str): The name of the section to get information for
+                section_name (str): The name of the section to get information for, {IEP_SECTIONS.keys()}
                 
             Returns:
                 dict: Section information including key points and description
