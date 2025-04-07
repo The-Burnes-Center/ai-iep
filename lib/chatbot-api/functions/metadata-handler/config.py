@@ -266,6 +266,7 @@ Make sure the output has the following data:
 - document index in all languages
 - all translations are complete and accurate
 - final ouput should be just the JSON object with no other text or comments.
+- make sure the final json contains all languages have all the sections, summary and document index.
 
 Output Structure: Format your response as a JSON object with the following structure: 
 ```json
