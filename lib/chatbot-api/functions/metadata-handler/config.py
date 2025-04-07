@@ -261,7 +261,8 @@ Important Guidelines:
 
 Make sure the output has the following data:
 - summary in all languages
-- all sections - title, content, ocr_text_used, page_numbers in all languages
+- make sure all the section are present in the final list of section, i.e. {', '.join(IEP_SECTIONS.keys())}
+- all sections - title, content, ocr_text_used, page_numbers in all languages, i.e. {', '.join(LANGUAGE_CODES.keys())}
 - document index in all languages
 - all translations are complete and accurate
 - final ouput should be just the JSON object with no other text or comments.
