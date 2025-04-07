@@ -273,9 +273,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     Password must be at least 8 characters long and include:
                     <ul>
                       <li>At least 1 number</li>
-                      <li>At least 1 lowercase letter</li>
-                      <li>At least 1 uppercase letter</li>
-                      <li>At least 1 special character (^ $ * . [ ] &#123; &#125; ( ) ? - " ! @ # % &amp; / \ , &gt; &lt; ' : ; | _ ~ ` + =)</li>
+                      <li>At least 1 letter</li>
                     </ul>
                   </Form.Text>
                 </Container>
@@ -462,9 +460,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   Password must be at least 8 characters long and include:
                   <ul>
                     <li>At least 1 number</li>
-                    <li>At least 1 lowercase letter</li>
-                    <li>At least 1 uppercase letter</li>
-                    <li>At least 1 special character (^ $ * . [ ] &#123; &#125; ( ) ? - " ! @ # % &amp; / \ , &gt; &lt; ' : ; | _ ~ ` + =)</li>
+                    <li>At least 1 letter</li>
                   </ul>
                 </Form.Text>
               </Container>
@@ -569,9 +565,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     Password must be at least 8 characters long and include:
                     <ul>
                       <li>At least 1 number</li>
-                      <li>At least 1 lowercase letter</li>
-                      <li>At least 1 uppercase letter</li>
-                      <li>At least 1 special character (^ $ * . [ ] &#123; &#125; ( ) ? - " ! @ # % &amp; / \ , &gt; &lt; ' : ; | _ ~ ` + =)</li>
+                      <li>At least 1 letter</li>
                     </ul>
                   </Form.Text>
                 </Container>
