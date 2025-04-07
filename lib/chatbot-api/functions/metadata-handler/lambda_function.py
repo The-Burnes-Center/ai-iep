@@ -712,46 +712,45 @@ def iep_processing_pipeline(event):
                     })
                 }
             
-            # Format the result for DynamoDB
+            # Format the result for DynamoDB - convert the raw result into proper DynamoDB format
             formatted_result = {
-                'summaries': {
-                    'M': {
-                        lang: {'S': content} for lang, content in result.get('summaries', {}).items()
-                        if content and isinstance(content, str)
-                    }
-                },
-                'sections': {
-                    'M': {
-                        lang: {
-                            'L': [
-                                {
-                                    'M': {
-                                        'title': {'S': section.get('title', '')},
-                                        'content': {'S': section.get('content', '')},
-                                        'ocr_text_used': {'S': section.get('ocr_text_used', '').replace('<Extracted Page', 'Extracted Page')},
-                                        'page_numbers': {'S': section.get('page_numbers', '')}
-                                    }
-                                } for section in sections
-                                if isinstance(section, dict) and 'title' in section and 'content' in section
-                            ]
-                        } for lang, sections in result.get('sections', {}).items()
-                        if isinstance(sections, list) and sections
-                    }
-                },
-                'document_index': {
-                    'M': {
-                        lang: {'S': content} for lang, content in result.get('document_index', {}).items()
-                        if content and isinstance(content, str)
-                    }
-                }
+                'summaries': {},
+                'sections': {},
+                'document_index': {}
             }
+            
+            # Format summaries for DynamoDB
+            if result.get('summaries'):
+                formatted_result['summaries'] = {
+                    lang: {'S': summary} for lang, summary in result['summaries'].items()
+                }
+            
+            # Format sections for DynamoDB
+            if result.get('sections'):
+                formatted_result['sections'] = {
+                    lang: {'L': [
+                        {
+                            'M': {
+                                'title': {'S': section.get('title', '')},
+                                'content': {'S': section.get('content', '')},
+                                'ocr_text_used': {'S': section.get('ocr_text_used', '')},
+                                'page_numbers': {'S': section.get('page_numbers', '')}
+                            }
+                        } for section in result['sections'][lang]
+                    ]} for lang, sections in result['sections'].items()
+                }
+            
+            # Format document index for DynamoDB
+            if result.get('document_index'):
+                formatted_result['document_index'] = {
+                    lang: {'S': index} for lang, index in result['document_index'].items()
+                }
             
             # Clean up any timestamps or log markers in the data
             def clean_json_values(data):
                 if isinstance(data, dict):
                     for key, value in list(data.items()):
-                        # Handle S type
-                        if key == 'S' and isinstance(value, str):
+                        if isinstance(value, str):
                             # Remove timestamp patterns
                             value = re.sub(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z', '', value)
                             # Remove text indicating missing values or placeholders
@@ -769,45 +768,29 @@ def iep_processing_pipeline(event):
             # Apply cleaning to the formatted result
             formatted_result = clean_json_values(formatted_result)
             
-            # Verify the structure before saving
-            for lang, lang_sections in formatted_result.get('sections', {}).get('M', {}).items():
-                if not lang_sections.get('L'):
-                    print(f"WARNING: Missing sections for language {lang} - creating empty array")
-                    lang_sections['L'] = []
-                elif not isinstance(lang_sections.get('L'), list):
-                    print(f"WARNING: Sections for language {lang} not in list format - fixing")
-                    lang_sections['L'] = []
-            
-            # Verify all required languages are present with at least empty arrays
+            # Verify all required languages are present
             required_languages = LANGUAGE_CODES.values()
             for lang in required_languages:
                 # Check summaries
-                if lang not in formatted_result.get('summaries', {}).get('M', {}):
+                if lang not in formatted_result.get('summaries', {}):
                     print(f"WARNING: Missing summary for language {lang} - using English summary")
-                    # Use English summary as fallback if available
-                    if 'en' in formatted_result.get('summaries', {}).get('M', {}):
-                        formatted_result['summaries']['M'][lang] = formatted_result['summaries']['M']['en']
+                    if 'en' in formatted_result.get('summaries', {}):
+                        formatted_result['summaries'][lang] = formatted_result['summaries']['en']
                     else:
-                        formatted_result['summaries']['M'][lang] = {'S': ''}
+                        formatted_result['summaries'][lang] = ''
                 
                 # Check sections
-                if lang not in formatted_result.get('sections', {}).get('M', {}):
+                if lang not in formatted_result.get('sections', {}):
                     print(f"WARNING: Missing sections for language {lang} - creating empty array")
-                    formatted_result['sections']['M'][lang] = {'L': []}
+                    formatted_result['sections'][lang] = []
                 
                 # Check document index
-                if lang not in formatted_result.get('document_index', {}).get('M', {}):
+                if lang not in formatted_result.get('document_index', {}):
                     print(f"WARNING: Missing document index for language {lang} - using English index")
-                    # Use English index as fallback if available
-                    if 'en' in formatted_result.get('document_index', {}).get('M', {}):
-                        formatted_result['document_index']['M'][lang] = formatted_result['document_index']['M']['en']
+                    if 'en' in formatted_result.get('document_index', {}):
+                        formatted_result['document_index'][lang] = formatted_result['document_index']['en']
                     else:
-                        formatted_result['document_index']['M'][lang] = {'S': ''}
-            
-            # Print the cleaned structure for logging
-            print(f"Formatted summaries languages: {json.dumps(list(formatted_result.get('summaries', {}).get('M', {}).keys()), default=str)}")
-            print(f"Formatted sections languages: {json.dumps(list(formatted_result.get('sections', {}).get('M', {}).keys()), default=str)}")
-            print(f"Formatted document index languages: {json.dumps(list(formatted_result.get('document_index', {}).get('M', {}).keys()), default=str)}")
+                        formatted_result['document_index'][lang] = ''
             
             # Save to DynamoDB
             update_iep_document_status(
