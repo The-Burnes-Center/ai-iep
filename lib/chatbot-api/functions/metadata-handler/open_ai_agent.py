@@ -169,103 +169,20 @@ class OpenAIAgent:
             }
         return get_section_info
 
-    # def _create_validation_tool(self):
-    #     """Create a tool for validating the output JSON structure"""
-    #     @function_tool  # Remove all parameters from decorator
-    #     def validate_output(json_structure: dict) -> dict:
-    #         """Validate output JSON structure completeness and compliance.
-            
-    #         This tool checks that all required sections, translations, and fields 
-    #         are present in the output JSON structure following IEP specifications.
-            
-    #         Args:
-    #             json_structure (dict): The JSON structure to validate. Expected format:
-    #                 {
-    #                     "summaries": { ... },
-    #                     "sections": { ... },
-    #                     "document_index": { ... }
-    #                 }
-                    
-    #         Returns:
-    #             dict: Validation results containing:
-    #                 - is_valid (bool)
-    #                 - missing_items (list)
-    #                 - incomplete_sections (list)
-    #                 - structure_errors (list)
-    #         """
-    #         validation_results = {
-    #             "is_valid": True,
-    #             "missing_items": [],
-    #             "incomplete_sections": [],
-    #             "structure_errors": []
-    #         }
-            
-    #         # Required top-level keys
-    #         required_keys = ["summaries", "sections", "document_index"]
-    #         required_languages = list(LANGUAGE_CODES.values())  # Convert to list for better compatibility
-    #         required_section_fields = ["title", "content", "ocr_text_used", "page_numbers"]
-            
-    #         # Check top-level structure
-    #         for key in required_keys:
-    #             if key not in json_structure:
-    #                 validation_results["is_valid"] = False
-    #                 validation_results["structure_errors"].append(f"Missing top-level key: {key}")
-    #                 continue
-                
-    #             # Check language presence for each top-level key
-    #             for lang in required_languages:
-    #                 if lang not in json_structure[key]:
-    #                     validation_results["is_valid"] = False
-    #                     validation_results["missing_items"].append(f"Missing language {lang} in {key}")
-            
-    #         # Check sections specifically
-    #         if "sections" in json_structure:
-    #             for lang in required_languages:
-    #                 if lang not in json_structure["sections"]:
-    #                     continue
-                        
-    #                 # Get sections for this language
-    #                 sections = json_structure["sections"][lang]
-    #                 if not isinstance(sections, list):
-    #                     validation_results["is_valid"] = False
-    #                     validation_results["structure_errors"].append(f"Sections for {lang} is not a list")
-    #                     continue
-                    
-    #                 # Check each section has all required fields
-    #                 for section in sections:
-    #                     missing_fields = []
-    #                     for field in required_section_fields:
-    #                         if field not in section:
-    #                             missing_fields.append(field)
-    #                         elif not section[field]:  # Check if field is empty
-    #                             missing_fields.append(f"{field} (empty)")
-                        
-    #                     if missing_fields:
-    #                         validation_results["is_valid"] = False
-    #                         validation_results["incomplete_sections"].append({
-    #                             "language": lang,
-    #                             "section_title": section.get("title", "Unknown"),
-    #                             "missing_fields": missing_fields
-    #                         })
-                    
-    #                 # Check all required IEP sections are present
-    #                 found_sections = {s.get("title") for s in sections}
-    #                 missing_sections = set(IEP_SECTIONS.keys()) - found_sections
-    #                 if missing_sections:
-    #                     validation_results["is_valid"] = False
-    #                     validation_results["missing_items"].append(f"Missing sections in {lang}: {', '.join(missing_sections)}")
-            
-    #         return validation_results
-    #     return validate_output
-
     def _create_validation_tool(self):
         """Create a tool for validating the output JSON structure"""
         @function_tool  # Remove all parameters from decorator
         def validate_output(json_structure: dict) -> dict:
-            """Validate output JSON structure completeness and compliance.
-            
-            This tool checks that all required sections, translations, and fields 
-            are present in the output JSON structure following IEP specifications.
+            """Validate the completeness and structure of the output JSON.
+
+            Args:
+                json_structure (dict): The input should have the following in the json_structure:
+                    - summaries
+                    - sections
+                    - document_index
+
+            Returns:
+                dict: Validation results
             """
             validation_results = {
                 "is_valid": True,
@@ -332,9 +249,6 @@ class OpenAIAgent:
             return validation_results
         return validate_output
 
-
-
-
     def analyze_document(self, model="gpt-4o"):
         """
         Analyze an IEP document using OpenAI's Agent architecture.
@@ -359,25 +273,7 @@ class OpenAIAgent:
             # Get the prompt from config.py
             prompt = get_full_prompt("IEP Document")
 
-            # Define the schema for validate_output
-            validation_tool_schema = {
-                "type": "function",
-                "function": {
-                    "name": "validate_output",
-                    "description": "Validate the completeness and structure of the output JSON.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "json_structure": {
-                                "type": "object",
-                                "description": "The JSON structure to validate."
-                            }
-                        },
-                        "required": ["json_structure"]
-                    }
-                }
-            }
-            
+           
             # Create an agent for document analysis using the agents package
             agent = Agent(
                 name="IEP Document Analyzer",
@@ -388,7 +284,7 @@ class OpenAIAgent:
                     self.ocr_page_tool, 
                     self.language_context_tool, 
                     self.section_info_tool,
-                    validation_tool_schema
+                    self.validation_tool
                 ]
             )
             
@@ -469,77 +365,4 @@ class OpenAIAgent:
             logger.error(f"Error analyzing document with OpenAI Agent: {str(e)}")
             return {"error": str(e)}
 
-    # def translate(self, content, target_language, model="gpt-4o"):
-        """
-        Translate content using OpenAI's Agent architecture.
-        
-        Args:
-            content (dict): The content to translate (complete document structure)
-            target_language (str): The target language code
-            model (str): The OpenAI model to use, defaults to gpt-4o
-            
-        Returns:
-            dict: Translated content with the same structure
-        """
-        if not self.api_key:
-            logger.error("OpenAI API key not available, cannot translate content")
-            return {"error": "OpenAI API key not available"}
-        
-        try:
-            logger.info(f"Creating translation agent for {target_language}")
-            
-            # Get the translation prompt from config.py
-            prompt = get_translation_prompt(content, target_language)
-            
-            # Create an agent for translation
-            agent = Agent(
-                name=f"Translation Agent ({target_language})",
-                model=model,
-                instructions=prompt
-            )
-            
-            # Run the agent
-            result = Runner.run_sync(agent, "Please translate the content according to the instructions.")
-            
-            logger.info("Translation agent completed")
-            
-            # Extract the final output
-            translated_text = result.final_output
-            
-            # Try to parse the JSON response
-            try:
-                # Look for JSON within the text
-                json_start = translated_text.find('{')
-                json_end = translated_text.rfind('}') + 1
-                
-                if json_start >= 0 and json_end > json_start:
-                    json_str = translated_text[json_start:json_end]
-                    translated_result = json.loads(json_str)
-                    
-                    # Validate the structure matches the input
-                    if not all(key in translated_result for key in content.keys()):
-                        raise ValueError("Translated result missing required fields")
-                    
-                    # Validate the nested structure
-                    for key, value in content.items():
-                        if isinstance(value, dict):
-                            if not isinstance(translated_result[key], dict):
-                                raise ValueError(f"Invalid structure for {key}")
-                            if 'M' in value and 'M' not in translated_result[key]:
-                                raise ValueError(f"Missing 'M' structure in {key}")
-                    
-                    logger.info(f"Successfully translated content to {target_language}")
-                    return translated_result
-                else:
-                    return {"error": "No valid JSON found in translation response"}
-                    
-            except json.JSONDecodeError:
-                logger.error("Failed to parse translation JSON response")
-                return {"error": "Invalid JSON response"}
-            except ValueError as e:
-                logger.error(f"Invalid translation structure: {str(e)}")
-                return {"error": f"Invalid translation structure: {str(e)}"}
-                
-        except Exception as e:
-            logger.error(f"Error translating content with OpenAI Agent: {str(e)}")
-            return {"error": str(e)}
+    
