@@ -171,7 +171,20 @@ class OpenAIAgent:
 
     def _create_validation_tool(self):
         """Create a tool for validating the output JSON structure"""
-        @function_tool
+        @function_tool(
+        name="validate_output",
+        description="Validate the completeness and structure of the output JSON.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "json_structure": {
+                    "type": "object",
+                    "description": "The JSON structure to validate."
+                }
+            },
+            "required": ["json_structure"]
+        }     
+        )
         def validate_output(json_structure: dict) -> dict:
             """Validate the completeness and structure of the output JSON.
             
