@@ -171,65 +171,27 @@ class OpenAIAgent:
 
     def _create_validation_tool(self):
         """Create a tool for validating the output JSON structure"""
-        @function_tool(
-        name="validate_output",
-        description="Validate the completeness and structure of the output JSON.",
-        parameters={
-            "type": "object",
-            "properties": {
-                "json_structure": {
-                    "type": "object",
-                    "description": "The JSON structure to validate."
-                }
-            },
-            "required": ["json_structure"]
-        }     
-        )
+        @function_tool  # Remove all parameters from decorator
         def validate_output(json_structure: dict) -> dict:
-            """Validate the completeness and structure of the output JSON.
+            """Validate output JSON structure completeness and compliance.
             
             This tool checks that all required sections, translations, and fields 
-            are present in the output JSON structure. 
+            are present in the output JSON structure following IEP specifications.
             
             Args:
-                json_structure (dict): The input should follow this structure:
-
-            sample json input structure:
-            {
-                "summaries": {
-                    "en": "English summary text",
-                    "es": "Spanish summary text",
-                    "vi": "Vietnamese summary text",
-                    "zh": "Chinese summary text"
-                },
-                "sections": {
-                    "en": [
-                        {
-                            "title": "Section Name - one of the IEP sections",
-                            "content": "English section content in markdown format",
-                            "ocr_text_used": "Original text used from IEP document",
-                            "page_numbers": "Page numbers where content was found"
-                        }
-                        ... all sections
-                    ],
-                    "es": [...],  # Same structure for Spanish sections
-                    "vi": [...],  # Same structure for Vietnamese sections
-                    "zh": [...]   # Same structure for Chinese sections
-                },
-                "document_index": {
-                    "en": "English document index with page numbers and content",
-                    "es": "Spanish document index with page numbers and content",
-                    "vi": "Vietnamese document index with page numbers and content",
-                    "zh": "Chinese document index with page numbers and content"
-                }
-            }
-                
+                json_structure (dict): The JSON structure to validate. Expected format:
+                    {
+                        "summaries": { ... },
+                        "sections": { ... },
+                        "document_index": { ... }
+                    }
+                    
             Returns:
                 dict: Validation results containing:
-                    - is_valid (bool): Whether the output is valid
-                    - missing_items (list): Required items that are missing
-                    - incomplete_sections (list): Sections with missing fields
-                    - structure_errors (list): Structural validation errors
+                    - is_valid (bool)
+                    - missing_items (list)
+                    - incomplete_sections (list)
+                    - structure_errors (list)
             """
             validation_results = {
                 "is_valid": True,
