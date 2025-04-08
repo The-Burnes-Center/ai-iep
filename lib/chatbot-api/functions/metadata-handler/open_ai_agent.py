@@ -62,7 +62,14 @@ class OpenAIAgent:
 
     def _create_ocr_text_tool(self):
         """Create a tool for getting all OCR text"""
-        @function_tool
+        @function_tool(
+            description="Extract all OCR text with page numbers from the OCR result. This combines text from all pages with page numbers for reference.",
+            parameters={
+                "type": "object",
+                "properties": {},  # No parameters needed
+                "required": []
+            }
+        )
         def get_all_ocr_text():
             """
             Use this tool to Extract all OCR text with page numbers from the OCR result.
@@ -94,7 +101,19 @@ class OpenAIAgent:
 
     def _create_ocr_page_tool(self):
         """Create a tool for getting OCR text for a specific page"""
-        @function_tool
+        @function_tool(
+            description="Get the markdown text for a specific page from OCR result of the IEP document.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "page_index": {
+                        "type": "integer",
+                        "description": "0-based page index to retrieve, i.e. page 1 is index 0"
+                    }
+                },
+                "required": ["page_index"]
+            }
+        )
         def get_ocr_text_for_page(page_index: int):
             """
             Use this tool to get the markdown text for a specific page from OCR result of the IEP document. Using the index you can get specific information about each section based on the page number of the document. 
@@ -119,7 +138,20 @@ class OpenAIAgent:
 
     def _create_language_context_tool(self):
         """Create a tool for getting language context"""
-        @function_tool
+        @function_tool(
+            description="Get language-specific context, instructions and guidelines for translation.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "target_language": {
+                        "type": "string",
+                        "description": "The target language code, i.e. 'es' for spanish, 'vi' for vietnamese, 'zh' for chinese",
+                        "enum": list(LANGUAGE_CODES.values())
+                    }
+                },
+                "required": ["target_language"]
+            }
+        )
         def get_language_context_for_translation(target_language: str):
             """
             Use this tool to get the language context for translation.
@@ -135,7 +167,20 @@ class OpenAIAgent:
 
     def _create_section_info_tool(self):
         """Create a tool for getting section-specific information"""
-        @function_tool
+        @function_tool(
+            description="Get key points and description for a specific IEP section.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "section_name": {
+                        "type": "string",
+                        "description": "The name of the section to get information for",
+                        "enum": list(IEP_SECTIONS.keys())
+                    }
+                },
+                "required": ["section_name"]
+            }
+        )
         def get_section_info(section_name: str):
             """
             Use this tool to get understand what key points and information are important for a specific section.
@@ -161,7 +206,19 @@ class OpenAIAgent:
 
     def _create_validation_tool(self):
         """Create a tool for validating the output JSON structure"""
-        @function_tool
+        @function_tool(
+            description="Use this tool to validate the completeness and structure of the output JSON. This checks that all required sections, translations, and fields are present.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "output_json": {
+                        "type": "object",
+                        "description": "The JSON output to validate"
+                    }
+                },
+                "required": ["output_json"]
+            }
+        )
         def validate_output(output_json: dict):
             """
             Use this tool to validate the completeness and structure of the output JSON.
@@ -182,7 +239,7 @@ class OpenAIAgent:
             
             # Required top-level keys
             required_keys = ["summaries", "sections", "document_index"]
-            required_languages = LANGUAGE_CODES.values()
+            required_languages = list(LANGUAGE_CODES.values())  # Convert to list for better compatibility
             required_section_fields = ["title", "content", "ocr_text_used", "page_numbers"]
             
             # Check top-level structure
