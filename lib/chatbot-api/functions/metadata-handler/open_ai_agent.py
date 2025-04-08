@@ -63,7 +63,7 @@ class OpenAIAgent:
     def _create_ocr_text_tool(self):
         """Create a tool for getting all OCR text"""
         @function_tool
-        def get_all_ocr_text():
+        def get_all_ocr_text() -> str:
             """Extract all OCR text with page numbers from the OCR result.
             
             This tool combines the text content from all pages in the OCR data,
@@ -132,7 +132,7 @@ class OpenAIAgent:
                     'vi' for Vietnamese, 'zh' for Chinese)
                 
             Returns:
-                str: Language-specific context and guidelines
+                str: Language-specific context and guidelines for the target language
             """
             return get_language_context(target_language)
         return get_language_context_for_translation
@@ -176,10 +176,40 @@ class OpenAIAgent:
             """Validate the completeness and structure of the output JSON.
             
             This tool checks that all required sections, translations, and fields 
-            are present in the output JSON structure.
+            are present in the output JSON structure. The output_json should follow
+            this structure:
+
+            {
+                "summaries": {
+                    "en": "English summary text",
+                    "es": "Spanish summary text",
+                    "vi": "Vietnamese summary text",
+                    "zh": "Chinese summary text"
+                },
+                "sections": {
+                    "en": [
+                        {
+                            "title": "Section Name - one of the IEP sections",
+                            "content": "English section content in markdown format",
+                            "ocr_text_used": "Original text used from IEP document",
+                            "page_numbers": "Page numbers where content was found"
+                        }
+                        ... all sections
+                    ],
+                    "es": [...],  # Same structure for Spanish sections
+                    "vi": [...],  # Same structure for Vietnamese sections
+                    "zh": [...]   # Same structure for Chinese sections
+                },
+                "document_index": {
+                    "en": "English document index with page numbers and content",
+                    "es": "Spanish document index with page numbers and content",
+                    "vi": "Vietnamese document index with page numbers and content",
+                    "zh": "Chinese document index with page numbers and content"
+                }
+            }
             
             Args:
-                output_json (dict): The JSON output to validate
+                output_json (dict): The JSON output to validate, must follow the structure above
                 
             Returns:
                 dict: Validation results containing:
