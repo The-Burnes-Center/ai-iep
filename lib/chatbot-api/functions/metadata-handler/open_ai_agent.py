@@ -6,7 +6,7 @@ from datetime import datetime
 from openai import OpenAI
 # Correct imports for openai-agents package
 from agents import Agent, Runner, function_tool
-from config import get_full_prompt, get_all_tags, IEP_SECTIONS, get_translation_prompt, get_language_context, SECTION_KEY_POINTS
+from config import get_full_prompt, get_all_tags, IEP_SECTIONS, get_translation_prompt, get_language_context, SECTION_KEY_POINTS, LANGUAGE_CODES
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +28,7 @@ class OpenAIAgent:
         self.ocr_page_tool = self._create_ocr_page_tool()
         self.language_context_tool = self._create_language_context_tool()
         self.section_info_tool = self._create_section_info_tool()
+        self.validation_tool = self._create_validation_tool()
         
     def _get_openai_api_key(self):
         """
@@ -62,9 +63,8 @@ class OpenAIAgent:
     def _create_ocr_text_tool(self):
         """Create a tool for getting all OCR text"""
         @function_tool
-        def get_all_ocr_text():
-            """
-            Use this tool to Extract all OCR text with page numbers from the OCR result.
+        def get_all_ocr_text() -> str:
+            """Extract all OCR text with page numbers from the OCR result.
             
             This tool combines the text content from all pages in the OCR data,
             prefixing each page's content with its page number for reference.
@@ -94,12 +94,14 @@ class OpenAIAgent:
     def _create_ocr_page_tool(self):
         """Create a tool for getting OCR text for a specific page"""
         @function_tool
-        def get_ocr_text_for_page(page_index: int):
-            """
-            Use this tool to get the markdown text for a specific page from OCR result of the IEP document. Using the index you can get specific information about each section based on the page number of the document. 
+        def get_ocr_text_for_page(page_index: int) -> str:
+            """Get the markdown text for a specific page from OCR result of the IEP document.
+            
+            Using the index you can get specific information about each section based on 
+            the page number of the document.
             
             Args:
-                page_index (int): 0-based page index to retrieve, i.e. page 1 is index 0
+                page_index (int): 0-based page index to retrieve (page 1 is index 0)
                 
             Returns:
                 str: Markdown content for the specified page or empty string if not found
@@ -119,15 +121,18 @@ class OpenAIAgent:
     def _create_language_context_tool(self):
         """Create a tool for getting language context"""
         @function_tool
-        def get_language_context_for_translation(target_language: str):
-            """
-            Use this tool to get the language context for translation.
+        def get_language_context_for_translation(target_language: str) -> str:
+            """Get language-specific context, instructions and guidelines for translation.
+            
+            This tool provides specific guidelines and context for translating content
+            to the target language, ensuring appropriate reading level and terminology.
             
             Args:
-                target_language (str): The target language code, i.e. 'es' for spanish, 'vi' for vietnamese, 'zh' for chinese
+                target_language (str): Target language code ('es' for Spanish, 
+                    'vi' for Vietnamese, 'zh' for Chinese)
                 
             Returns:
-                str: Language-specific context and guidelines
+                str: Language-specific context and guidelines for the target language
             """
             return get_language_context(target_language)
         return get_language_context_for_translation
@@ -135,15 +140,21 @@ class OpenAIAgent:
     def _create_section_info_tool(self):
         """Create a tool for getting section-specific information"""
         @function_tool
-        def get_section_info(section_name: str):
-            """
-            Use this tool to get understand what key points and information are important for a specific section.
+        def get_section_info(section_name: str) -> dict:
+            """Get key points and description for a specific IEP section.
+            
+            This tool provides information about what content and key points
+            should be extracted for a given IEP section.
             
             Args:
-                section_name (str): The name of the section to get information for, {IEP_SECTIONS.keys()}
+                section_name (str): Name of the section to get information for.
+                    Must be one of: {', '.join(IEP_SECTIONS.keys())}
                 
             Returns:
-                dict: Section information including key points and description
+                dict: Section information including:
+                    - section_name: Name of the section
+                    - description: Detailed description of the section
+                    - key_points: List of important points to extract
             """
             if section_name not in IEP_SECTIONS:
                 return {
@@ -157,6 +168,120 @@ class OpenAIAgent:
                 "key_points": SECTION_KEY_POINTS.get(section_name, [])
             }
         return get_section_info
+
+    def _create_validation_tool(self):
+        """Create a tool for validating the output JSON structure"""
+        @function_tool
+        def validate_output(output_json: dict) -> dict:
+            """Validate the completeness and structure of the output JSON.
+            
+            This tool checks that all required sections, translations, and fields 
+            are present in the output JSON structure. The output_json should follow
+            this structure:
+
+            {
+                "summaries": {
+                    "en": "English summary text",
+                    "es": "Spanish summary text",
+                    "vi": "Vietnamese summary text",
+                    "zh": "Chinese summary text"
+                },
+                "sections": {
+                    "en": [
+                        {
+                            "title": "Section Name - one of the IEP sections",
+                            "content": "English section content in markdown format",
+                            "ocr_text_used": "Original text used from IEP document",
+                            "page_numbers": "Page numbers where content was found"
+                        }
+                        ... all sections
+                    ],
+                    "es": [...],  # Same structure for Spanish sections
+                    "vi": [...],  # Same structure for Vietnamese sections
+                    "zh": [...]   # Same structure for Chinese sections
+                },
+                "document_index": {
+                    "en": "English document index with page numbers and content",
+                    "es": "Spanish document index with page numbers and content",
+                    "vi": "Vietnamese document index with page numbers and content",
+                    "zh": "Chinese document index with page numbers and content"
+                }
+            }
+            
+            Args:
+                output_json (dict): The JSON output to validate, must follow the structure above
+                
+            Returns:
+                dict: Validation results containing:
+                    - is_valid (bool): Whether the output is valid
+                    - missing_items (list): Required items that are missing
+                    - incomplete_sections (list): Sections with missing fields
+                    - structure_errors (list): Structural validation errors
+            """
+            validation_results = {
+                "is_valid": True,
+                "missing_items": [],
+                "incomplete_sections": [],
+                "structure_errors": []
+            }
+            
+            # Required top-level keys
+            required_keys = ["summaries", "sections", "document_index"]
+            required_languages = list(LANGUAGE_CODES.values())  # Convert to list for better compatibility
+            required_section_fields = ["title", "content", "ocr_text_used", "page_numbers"]
+            
+            # Check top-level structure
+            for key in required_keys:
+                if key not in output_json:
+                    validation_results["is_valid"] = False
+                    validation_results["structure_errors"].append(f"Missing top-level key: {key}")
+                    continue
+                
+                # Check language presence for each top-level key
+                for lang in required_languages:
+                    if lang not in output_json[key]:
+                        validation_results["is_valid"] = False
+                        validation_results["missing_items"].append(f"Missing language {lang} in {key}")
+            
+            # Check sections specifically
+            if "sections" in output_json:
+                for lang in required_languages:
+                    if lang not in output_json["sections"]:
+                        continue
+                        
+                    # Get sections for this language
+                    sections = output_json["sections"][lang]
+                    if not isinstance(sections, list):
+                        validation_results["is_valid"] = False
+                        validation_results["structure_errors"].append(f"Sections for {lang} is not a list")
+                        continue
+                    
+                    # Check each section has all required fields
+                    for section in sections:
+                        missing_fields = []
+                        for field in required_section_fields:
+                            if field not in section:
+                                missing_fields.append(field)
+                            elif not section[field]:  # Check if field is empty
+                                missing_fields.append(f"{field} (empty)")
+                        
+                        if missing_fields:
+                            validation_results["is_valid"] = False
+                            validation_results["incomplete_sections"].append({
+                                "language": lang,
+                                "section_title": section.get("title", "Unknown"),
+                                "missing_fields": missing_fields
+                            })
+                    
+                    # Check all required IEP sections are present
+                    found_sections = {s.get("title") for s in sections}
+                    missing_sections = set(IEP_SECTIONS.keys()) - found_sections
+                    if missing_sections:
+                        validation_results["is_valid"] = False
+                        validation_results["missing_items"].append(f"Missing sections in {lang}: {', '.join(missing_sections)}")
+            
+            return validation_results
+        return validate_output
 
     def analyze_document(self, model="gpt-4o"):
         """
@@ -187,10 +312,14 @@ class OpenAIAgent:
                 name="IEP Document Analyzer",
                 model=model,
                 instructions=prompt,
-                tools=[self.ocr_text_tool, self.ocr_page_tool, self.language_context_tool, self.section_info_tool]
+                tools=[
+                    self.ocr_text_tool, 
+                    self.ocr_page_tool, 
+                    self.language_context_tool, 
+                    self.section_info_tool,
+                    self.validation_tool
+                ]
             )
-
-    
             
             # Run the agent
             result = Runner.run_sync(agent, "Please analyze this IEP document according to the instructions.")
@@ -211,37 +340,55 @@ class OpenAIAgent:
                     json_str = analysis_text[json_start:json_end]
                     analysis_result = json.loads(json_str)
                     
+                    # Validate the output structure
+                    validation_result = self.validation_tool(analysis_result)
+                    
+                    if not validation_result["is_valid"]:
+                        logger.warning("Output validation failed:")
+                        logger.warning(f"Structure errors: {validation_result['structure_errors']}")
+                        logger.warning(f"Missing items: {validation_result['missing_items']}")
+                        logger.warning(f"Incomplete sections: {validation_result['incomplete_sections']}")
+                        
+                        # Add validation results to the output
+                        analysis_result["validation_errors"] = validation_result
+                    
                     # Ensure the sections structure matches the expected format
                     if 'sections' in analysis_result:
-                        if not isinstance(analysis_result['sections'], dict):
-                            analysis_result['sections'] = {'en': []}
-                        elif 'en' not in analysis_result['sections']:
-                            analysis_result['sections']['en'] = []
-                            
-                        # Convert sections to array format if needed
-                        if isinstance(analysis_result['sections']['en'], dict):
-                            sections_array = []
-                            for title, content in analysis_result['sections']['en'].items():
-                                sections_array.append({
-                                    'title': title,
-                                    'content': content.get('content', ''),
-                                    'ocr_text_used': content.get('ocr_text_used', ''),
-                                    'page_numbers': content.get('page_numbers', '')
-                                })
-                            analysis_result['sections']['en'] = sections_array
+                        for lang in LANGUAGE_CODES.values():
+                            if lang not in analysis_result['sections']:
+                                analysis_result['sections'][lang] = []
+                            elif isinstance(analysis_result['sections'][lang], dict):
+                                # Convert sections to array format if needed
+                                sections_array = []
+                                for title, content in analysis_result['sections'][lang].items():
+                                    sections_array.append({
+                                        'title': title,
+                                        'content': content.get('content', ''),
+                                        'ocr_text_used': content.get('ocr_text_used', ''),
+                                        'page_numbers': content.get('page_numbers', '')
+                                    })
+                                analysis_result['sections'][lang] = sections_array
                 else:
                     # If no JSON found, use the whole text as a summary
                     analysis_result = {
                         "summary": analysis_text,
-                        "sections": {"en": []},
-                        "document_index": {}
+                        "sections": {lang: [] for lang in LANGUAGE_CODES.values()},
+                        "document_index": {lang: "" for lang in LANGUAGE_CODES.values()},
+                        "validation_errors": {
+                            "is_valid": False,
+                            "structure_errors": ["No valid JSON found in response"]
+                        }
                     }
             except json.JSONDecodeError:
                 # If JSON parsing fails, use the text as a summary
                 analysis_result = {
                     "summary": analysis_text,
-                    "sections": {"en": []},
-                    "document_index": {}
+                    "sections": {lang: [] for lang in LANGUAGE_CODES.values()},
+                    "document_index": {lang: "" for lang in LANGUAGE_CODES.values()},
+                    "validation_errors": {
+                        "is_valid": False,
+                        "structure_errors": ["Failed to parse JSON response"]
+                    }
                 }
             
             logger.info(f"Successfully analyzed document with OpenAI Agent")

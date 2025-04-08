@@ -63,7 +63,7 @@ SECTION_KEY_POINTS = {
         'Testing accommodations',
         'Behavioral supports',
         'Assistive technology needs',
-        'Environmental modifications'
+        'Environmental modifications',
     ]
 }
 
@@ -237,12 +237,14 @@ Tasks:
 5. For EACH language, translate ALL sections with the SAME level of detail as the English version.
 6. Use the tool get_language_context to get the language specific context for translation of each language.
 7. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
+8. Only once you have validated the output using the validate_output tool, return the final output.
 
 Tools:
 - get_all_ocr_text: to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
 - get_ocr_text_for_page: to retrieve specific information about each section based on the page number of the document.
 - get_language_context: to get the language specific context for translation. Use this tool for EACH language before translating.
 - get_section_info: to get the key points and description for each section. Use this tool for each section to understand what information to extract.
+- validate_output: to validate the output structure, use this tool to check if the output is valid and has all the sections, summary and needed translations. Only return the final output after validation.
 
 Important Guidelines:
 - Make sure to include ALL the sections and key points.
@@ -257,15 +259,19 @@ Important Guidelines:
     * In parentheses, include the conversion to hours per week
     * Format as: "X min/week (Y hrs/week)" if the duration is more than 60 minutes
     * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
+- Only once you have validated the output, return the final output.
 
 
 Make sure the output has the following data:
 - summary in all languages
-- all sections - title, content, ocr_text_used, page_numbers in all languages
+- make sure all the section are present in the final list of section, i.e. {', '.join(IEP_SECTIONS.keys())}
+- all sections - title, content, ocr_text_used, page_numbers in all languages, i.e. {', '.join(LANGUAGE_CODES.keys())}
 - document index in all languages
 - all translations are complete and accurate
+- final ouput should be just the JSON object with no other text or comments.
+- make sure the final json contains all languages have all the sections, summary and document index.
 
-Format your response as a JSON object with the following structure: 
+Output Structure: Format your response as a JSON object with the following structure: 
 ```json
 {json.dumps(json_structure, indent=2)}
 ```
