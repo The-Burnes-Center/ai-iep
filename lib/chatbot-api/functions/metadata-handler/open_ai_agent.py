@@ -28,6 +28,7 @@ class OpenAIAgent:
         self.ocr_page_tool = self._create_ocr_page_tool()
         self.language_context_tool = self._create_language_context_tool()
         self.section_info_tool = self._create_section_info_tool()
+        self.validation_tool = self._create_validation_tool()
         
     def _get_openai_api_key(self):
         """
@@ -158,6 +159,85 @@ class OpenAIAgent:
             }
         return get_section_info
 
+    def _create_validation_tool(self):
+        """Create a tool for validating the output JSON structure"""
+        @function_tool
+        def validate_output(output_json: dict):
+            """
+            Use this tool to validate the completeness and structure of the output JSON.
+            This checks that all required sections, translations, and fields are present.
+            
+            Args:
+                output_json (dict): The JSON output to validate
+                
+            Returns:
+                dict: Validation results with any missing or incomplete items
+            """
+            validation_results = {
+                "is_valid": True,
+                "missing_items": [],
+                "incomplete_sections": [],
+                "structure_errors": []
+            }
+            
+            # Required top-level keys
+            required_keys = ["summaries", "sections", "document_index"]
+            required_languages = ["en", "es", "vi", "zh"]
+            required_section_fields = ["title", "content", "ocr_text_used", "page_numbers"]
+            
+            # Check top-level structure
+            for key in required_keys:
+                if key not in output_json:
+                    validation_results["is_valid"] = False
+                    validation_results["structure_errors"].append(f"Missing top-level key: {key}")
+                    continue
+                
+                # Check language presence for each top-level key
+                for lang in required_languages:
+                    if lang not in output_json[key]:
+                        validation_results["is_valid"] = False
+                        validation_results["missing_items"].append(f"Missing language {lang} in {key}")
+            
+            # Check sections specifically
+            if "sections" in output_json:
+                for lang in required_languages:
+                    if lang not in output_json["sections"]:
+                        continue
+                        
+                    # Get sections for this language
+                    sections = output_json["sections"][lang]
+                    if not isinstance(sections, list):
+                        validation_results["is_valid"] = False
+                        validation_results["structure_errors"].append(f"Sections for {lang} is not a list")
+                        continue
+                    
+                    # Check each section has all required fields
+                    for section in sections:
+                        missing_fields = []
+                        for field in required_section_fields:
+                            if field not in section:
+                                missing_fields.append(field)
+                            elif not section[field]:  # Check if field is empty
+                                missing_fields.append(f"{field} (empty)")
+                        
+                        if missing_fields:
+                            validation_results["is_valid"] = False
+                            validation_results["incomplete_sections"].append({
+                                "language": lang,
+                                "section_title": section.get("title", "Unknown"),
+                                "missing_fields": missing_fields
+                            })
+                    
+                    # Check all required IEP sections are present
+                    found_sections = {s.get("title") for s in sections}
+                    missing_sections = set(IEP_SECTIONS.keys()) - found_sections
+                    if missing_sections:
+                        validation_results["is_valid"] = False
+                        validation_results["missing_items"].append(f"Missing sections in {lang}: {', '.join(missing_sections)}")
+            
+            return validation_results
+        return validate_output
+
     def analyze_document(self, model="gpt-4o"):
         """
         Analyze an IEP document using OpenAI's Agent architecture.
@@ -187,10 +267,14 @@ class OpenAIAgent:
                 name="IEP Document Analyzer",
                 model=model,
                 instructions=prompt,
-                tools=[self.ocr_text_tool, self.ocr_page_tool, self.language_context_tool, self.section_info_tool]
+                tools=[
+                    self.ocr_text_tool, 
+                    self.ocr_page_tool, 
+                    self.language_context_tool, 
+                    self.section_info_tool,
+                    self.validation_tool
+                ]
             )
-
-    
             
             # Run the agent
             result = Runner.run_sync(agent, "Please analyze this IEP document according to the instructions.")
@@ -211,37 +295,55 @@ class OpenAIAgent:
                     json_str = analysis_text[json_start:json_end]
                     analysis_result = json.loads(json_str)
                     
+                    # Validate the output structure
+                    validation_result = self.validation_tool(analysis_result)
+                    
+                    if not validation_result["is_valid"]:
+                        logger.warning("Output validation failed:")
+                        logger.warning(f"Structure errors: {validation_result['structure_errors']}")
+                        logger.warning(f"Missing items: {validation_result['missing_items']}")
+                        logger.warning(f"Incomplete sections: {validation_result['incomplete_sections']}")
+                        
+                        # Add validation results to the output
+                        analysis_result["validation_errors"] = validation_result
+                    
                     # Ensure the sections structure matches the expected format
                     if 'sections' in analysis_result:
-                        if not isinstance(analysis_result['sections'], dict):
-                            analysis_result['sections'] = {'en': []}
-                        elif 'en' not in analysis_result['sections']:
-                            analysis_result['sections']['en'] = []
-                            
-                        # Convert sections to array format if needed
-                        if isinstance(analysis_result['sections']['en'], dict):
-                            sections_array = []
-                            for title, content in analysis_result['sections']['en'].items():
-                                sections_array.append({
-                                    'title': title,
-                                    'content': content.get('content', ''),
-                                    'ocr_text_used': content.get('ocr_text_used', ''),
-                                    'page_numbers': content.get('page_numbers', '')
-                                })
-                            analysis_result['sections']['en'] = sections_array
+                        for lang in LANGUAGE_CODES.values():
+                            if lang not in analysis_result['sections']:
+                                analysis_result['sections'][lang] = []
+                            elif isinstance(analysis_result['sections'][lang], dict):
+                                # Convert sections to array format if needed
+                                sections_array = []
+                                for title, content in analysis_result['sections'][lang].items():
+                                    sections_array.append({
+                                        'title': title,
+                                        'content': content.get('content', ''),
+                                        'ocr_text_used': content.get('ocr_text_used', ''),
+                                        'page_numbers': content.get('page_numbers', '')
+                                    })
+                                analysis_result['sections'][lang] = sections_array
                 else:
                     # If no JSON found, use the whole text as a summary
                     analysis_result = {
                         "summary": analysis_text,
-                        "sections": {"en": []},
-                        "document_index": {}
+                        "sections": {lang: [] for lang in LANGUAGE_CODES.values()},
+                        "document_index": {lang: "" for lang in LANGUAGE_CODES.values()},
+                        "validation_errors": {
+                            "is_valid": False,
+                            "structure_errors": ["No valid JSON found in response"]
+                        }
                     }
             except json.JSONDecodeError:
                 # If JSON parsing fails, use the text as a summary
                 analysis_result = {
                     "summary": analysis_text,
-                    "sections": {"en": []},
-                    "document_index": {}
+                    "sections": {lang: [] for lang in LANGUAGE_CODES.values()},
+                    "document_index": {lang: "" for lang in LANGUAGE_CODES.values()},
+                    "validation_errors": {
+                        "is_valid": False,
+                        "structure_errors": ["Failed to parse JSON response"]
+                    }
                 }
             
             logger.info(f"Successfully analyzed document with OpenAI Agent")
