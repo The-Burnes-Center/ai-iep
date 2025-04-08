@@ -220,13 +220,16 @@ class OpenAIAgent:
                     self.section_info_tool,
                     WebSearchTool()
                 ],
-                output_type=IEPData,
-                max_turns=50  # Increased from default 10 to handle complex IEP analysis
+                output_type=IEPData
             )
             
-            # Run the agent
+            # Run the agent with increased max turns for complex IEP analysis
             try:
-                result = Runner.run_sync(agent, "Please analyze this IEP document according to the instructions.")
+                result = Runner.run_sync(
+                    agent, 
+                    "Please analyze this IEP document according to the instructions.",
+                    max_turns=50  # Increased from default 10 to handle complex IEP analysis
+                )
                 logger.info("Agent completed analysis")
             except MaxTurnsExceeded as e:
                 logger.error(f"Max turns exceeded during analysis: {str(e)}")
