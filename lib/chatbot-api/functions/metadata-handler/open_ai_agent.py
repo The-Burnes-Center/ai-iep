@@ -238,21 +238,48 @@ class OpenAIAgent:
                 }
             
             try:
-                # Since we specified output_type=IEPData, result.final_output should be an IEPData instance
-                if isinstance(result.final_output, IEPData):
-                    # Pydantic has already validated the model at this point
-                    logger.info("Successfully validated IEPData output")
+                # Clean and validate the JSON output
+                if isinstance(result.final_output, str):
+                    logger.info("Cleaning and parsing JSON string output")
+                    # Remove any potential markdown code block markers
+                    cleaned_output = result.final_output.replace('```json', '').replace('```', '').strip()
+                    try:
+                        # Parse the cleaned string to ensure valid JSON
+                        parsed_output = json.loads(cleaned_output)
+                        # Create IEPData instance from parsed JSON
+                        iep_data = IEPData.parse_obj(parsed_output)
+                        logger.info("Successfully parsed and validated IEPData")
+                        return iep_data.dict()
+                    except json.JSONDecodeError as je:
+                        logger.error(f"JSON parsing error: {str(je)}")
+                        logger.error(f"Problematic JSON: {cleaned_output[:200]}...")  # Log first 200 chars
+                        return {
+                            "summaries": {lang: "" for lang in LANGUAGE_CODES.values()},
+                            "sections": {lang: [] for lang in LANGUAGE_CODES.values()},
+                            "document_index": {lang: "" for lang in LANGUAGE_CODES.values()},
+                            "validation_errors": {
+                                "is_valid": False,
+                                "errors": [f"Invalid JSON output: {str(je)}"]
+                            }
+                        }
+                elif isinstance(result.final_output, dict):
+                    # If it's already a dict, try to create IEPData instance
+                    iep_data = IEPData.parse_obj(result.final_output)
+                    logger.info("Successfully parsed and validated IEPData from dict")
+                    return iep_data.dict()
+                elif isinstance(result.final_output, IEPData):
+                    # If it's already an IEPData instance, just return it
+                    logger.info("Successfully validated IEPData instance")
                     return result.final_output.dict()
                 else:
-                    # If output is not IEPData instance, create a default error structure
-                    logger.error("Agent output is not an IEPData instance")
+                    logger.error(f"Unexpected output type: {type(result.final_output)}")
                     return {
                         "summaries": {lang: "" for lang in LANGUAGE_CODES.values()},
                         "sections": {lang: [] for lang in LANGUAGE_CODES.values()},
                         "document_index": {lang: "" for lang in LANGUAGE_CODES.values()},
                         "validation_errors": {
                             "is_valid": False,
-                            "errors": ["Agent output is not in the expected IEPData format"]
+                            "errors": [f"Unexpected output type: {type(result.final_output)}"]
                         }
                     }
                     
