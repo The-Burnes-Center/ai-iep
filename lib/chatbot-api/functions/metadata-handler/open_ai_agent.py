@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from openai import OpenAI
 # Correct imports for openai-agents package
-from agents import Agent, Runner, function_tool
+from agents import Agent, Runner, function_tool, WebSearchTool
 from config import get_full_prompt, get_all_tags, IEP_SECTIONS, get_translation_prompt, get_language_context, SECTION_KEY_POINTS, LANGUAGE_CODES
 
 # Configure logging
@@ -192,12 +192,7 @@ class OpenAIAgent:
             are present in the output JSON structure following IEP specifications.
 
             Args:
-                json_structure (dict): The JSON structure to validate. Expected format:
-                    {
-                        "summaries": { ... },
-                        "sections": { ... },
-                        "document_index": { ... }
-                    }
+                json_structure (dict): the input json structure to validate
                     
             Returns:
                 dict: Validation results containing:
@@ -306,7 +301,8 @@ class OpenAIAgent:
                     self.ocr_page_tool, 
                     self.language_context_tool, 
                     self.section_info_tool,
-                    self.validation_tool
+                    self.validation_tool,
+                    WebSearchTool()
                 ]
             )
             
