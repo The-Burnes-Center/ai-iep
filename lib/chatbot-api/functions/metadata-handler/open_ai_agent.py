@@ -62,23 +62,23 @@ class OpenAIAgent:
 
     def _create_ocr_text_tool(self):
         """Create a tool for getting all OCR text"""
-        @function_tool
+        @function_tool()
         def get_all_ocr_text() -> str:
-            """Extract all OCR text with page numbers from the OCR result.
-            
-            This tool combines the text content from all pages in the OCR data,
+            """Extract and combine OCR text from all document pages.
+
+            This tool combines text content from all pages in the OCR data,
             prefixing each page's content with its page number for reference.
-            
+
             Returns:
-                str: Combined text content from all pages with page numbers,
-                     or None if no valid OCR data is available.
-                     Format:
-                     Page 1:
-                     [page 1 content]
-                     
-                     Page 2: 
-                     [page 2 content]
-                     ...
+                str: Combined text content in format:
+                    Page 1:
+                    [page 1 content]
+                    
+                    Page 2: 
+                    [page 2 content]
+                    ...
+                    
+                    Returns None if no valid OCR data available.
             """
             if not self.ocr_data or 'pages' not in self.ocr_data:
                 return None
@@ -93,18 +93,19 @@ class OpenAIAgent:
 
     def _create_ocr_page_tool(self):
         """Create a tool for getting OCR text for a specific page"""
-        @function_tool
+        @function_tool()
         def get_ocr_text_for_page(page_index: int) -> str:
-            """Get the markdown text for a specific page from OCR result of the IEP document.
-            
-            Using the index you can get specific information about each section based on 
-            the page number of the document.
-            
+            """Extract OCR text from a specific page of the IEP document.
+
+            This tool retrieves markdown-formatted text content from a specific page,
+            allowing targeted extraction of section information.
+
             Args:
                 page_index (int): 0-based page index to retrieve (page 1 is index 0)
-                
+
             Returns:
-                str: Markdown content for the specified page or empty string if not found
+                str: Markdown-formatted content for the specified page.
+                    Returns empty string if page not found.
             """
             if not self.ocr_data or not isinstance(self.ocr_data, dict) or 'pages' not in self.ocr_data:
                 print(f"Invalid OCR result format or missing 'pages' field")
@@ -120,41 +121,53 @@ class OpenAIAgent:
 
     def _create_language_context_tool(self):
         """Create a tool for getting language context"""
-        @function_tool
+        @function_tool()
         def get_language_context_for_translation(target_language: str) -> str:
-            """Get language-specific context, instructions and guidelines for translation.
-            
-            This tool provides specific guidelines and context for translating content
-            to the target language, ensuring appropriate reading level and terminology.
-            
+            """Get translation guidelines for a specific target language.
+
+            This tool provides language-specific guidelines and context for translation,
+            ensuring appropriate reading level and terminology for IEP documents.
+
             Args:
-                target_language (str): Target language code ('es' for Spanish, 
-                    'vi' for Vietnamese, 'zh' for Chinese)
-                
+                target_language (str): Target language code:
+                    - 'es' for Spanish
+                    - 'vi' for Vietnamese
+                    - 'zh' for Chinese
+
             Returns:
-                str: Language-specific context and guidelines for the target language
+                str: Language-specific guidelines and context for translation
             """
             return get_language_context(target_language)
         return get_language_context_for_translation
 
     def _create_section_info_tool(self):
         """Create a tool for getting section-specific information"""
-        @function_tool
+        @function_tool()
         def get_section_info(section_name: str) -> dict:
-            """Get key points and description for a specific IEP section.
-            
-            This tool provides information about what content and key points
-            should be extracted for a given IEP section.
-            
+            """Get key points and requirements for an IEP section.
+
+            This tool provides detailed information about what content and key points
+            should be extracted for a specific IEP section.
+
             Args:
-                section_name (str): Name of the section to get information for.
-                    Must be one of: {', '.join(IEP_SECTIONS.keys())}
-                
+                section_name (str): Name of the section. Must be one of:
+                    - Present Levels
+                    - Eligibility
+                    - Placement
+                    - Goals
+                    - Services
+                    - Informed Consent
+                    - Accommodations
+
             Returns:
-                dict: Section information including:
-                    - section_name: Name of the section
-                    - description: Detailed description of the section
-                    - key_points: List of important points to extract
+                dict: Section information containing:
+                    - section_name (str): Name of the section
+                    - description (str): Detailed description
+                    - key_points (list): Important points to extract
+                    
+                    If section not found, returns:
+                    - error (str): Error message
+                    - available_sections (list): Valid section names
             """
             if section_name not in IEP_SECTIONS:
                 return {
@@ -171,17 +184,27 @@ class OpenAIAgent:
 
     def _create_validation_tool(self):
         """Create a tool for validating the output JSON structure"""
-        @function_tool  # Remove all parameters from decorator
+        @function_tool()
         def validate_output(json_structure: dict) -> dict:
-            """Validate the completeness and structure of the output JSON.
+            """Validate output JSON structure completeness and compliance.
+
+            This tool checks that all required sections, translations, and fields 
+            are present in the output JSON structure following IEP specifications.
 
             Args:
-                json_structure (dict): The input should have the following in the json_structure: summaries, sections, document_index
-
-            Required: [json_structure]
-
+                json_structure (dict): The JSON structure to validate. Expected format:
+                    {
+                        "summaries": { ... },
+                        "sections": { ... },
+                        "document_index": { ... }
+                    }
+                    
             Returns:
-                dict: Validation results
+                dict: Validation results containing:
+                    - is_valid (bool)
+                    - missing_items (list)
+                    - incomplete_sections (list)
+                    - structure_errors (list)
             """
             validation_results = {
                 "is_valid": True,
