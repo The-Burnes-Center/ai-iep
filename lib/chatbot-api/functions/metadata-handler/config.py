@@ -137,50 +137,61 @@ def get_full_prompt(key):
     # Build the JSON structure example
     json_structure = {
         "summaries": {
-            "en": "English summary text",
-            "es": "Spanish summary text",
-            "vi": "Vietnamese summary text",
-            "zh": "Chinese summary text"
+            "en": "English summary text - must not be empty",
+            "es": "Spanish summary text - must not be empty",
+            "vi": "Vietnamese summary text - must not be empty",
+            "zh": "Chinese summary text - must not be empty"
         },
         "sections": {
             "en": [
                 {
-                    "title": "Section Name 1 - should be an enum from the list of sections",
-                    "content": "English section content (use the markdown format for better readability)",
-                    "ocr_text_used": "All the original text from the iep document used to extract the section content",
-                    "page_numbers": "Page numbers used to extract the section content"
-                }
+                    "title": "Present Levels",  # Must be one of the IEP_SECTIONS keys
+                    "content": "English section content in markdown format",
+                    "ocr_text_used": "Original text from IEP document used for this section",
+                    "page_numbers": "Page numbers where this section was found"
+                },
+                # All required sections must be present:
+                # - Present Levels
+                # - Eligibility
+                # - Placement
+                # - Goals
+                # - Services
+                # - Informed Consent
+                # - Accommodations
             ],
             "es": [
                 {
-                    "title": "Section Name 1 in spanish",
-                    "content": "Spanish section content (use the markdown format for better readability)",
-                    "ocr_text_used": "All the original text from the iep document used to extract the section content in english",
-                    "page_numbers": "Page numbers used to extract the section content in spanish"
+                    "title": "Present Levels",  # Must match English section names
+                    "content": "Spanish section content in markdown format",
+                    "ocr_text_used": "Original English text used for translation",
+                    "page_numbers": "Page numbers where this section was found"
                 }
+                # All sections must be present in Spanish
             ],
             "vi": [
                 {
-                    "title": "Section Name 1 in vietnamese",
-                    "content": "Vietnamese section content (use the markdown format for better readability)",
-                    "ocr_text_used": "All the original text from the iep document used to extract the section content in english",
-                    "page_numbers": "Page numbers used to extract the section content in vietnamese"
+                    "title": "Present Levels",  # Must match English section names
+                    "content": "Vietnamese section content in markdown format",
+                    "ocr_text_used": "Original English text used for translation",
+                    "page_numbers": "Page numbers where this section was found"
                 }
+                # All sections must be present in Vietnamese
             ],
             "zh": [
                 {
-                    "title": "Section Name 1 in chinese",
-                    "content": "Chinese section content (use the markdown format for better readability)",
-                    "ocr_text_used": "All the original text from the iep document used to extract the section content in english",
-                    "page_numbers": "Page numbers used to extract the section content in chinese"
+                    "title": "Present Levels",  # Must match English section names
+                    "content": "Chinese section content in markdown format",
+                    "ocr_text_used": "Original English text used for translation",
+                    "page_numbers": "Page numbers where this section was found"
                 }
+                # All sections must be present in Chinese
             ]
         },
         "document_index": {
-            "en": "English document index, page numbers and content of the page, break down the content of the document into sections based on the content of the page",
-            "es": "Spanish document index, page numbers and content of the page, break down the content of the document into sections based on the content of the page",
-            "vi": "Vietnamese document index, page numbers and content of the page, break down the content of the document into sections based on the content of the page",
-            "zh": "Chinese document index, page numbers and content of the page, break down the content of the document into sections based on the content of the page"
+            "en": "English document index with page numbers and content breakdown - must not be empty",
+            "es": "Spanish document index with page numbers and content breakdown - must not be empty",
+            "vi": "Vietnamese document index with page numbers and content breakdown - must not be empty",
+            "zh": "Chinese document index with page numbers and content breakdown - must not be empty"
         }
     }
 
@@ -261,15 +272,15 @@ Important Guidelines:
     * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
 - Only once you have validated the output, return the final output.
 
-
-Make sure the output has the following data:
-- summary in all languages
-- make sure all the section are present in the final list of section, i.e. {', '.join(IEP_SECTIONS.keys())}
-- all sections - title, content, ocr_text_used, page_numbers in all languages, i.e. {', '.join(LANGUAGE_CODES.keys())}
-- document index in all languages
-- all translations are complete and accurate
-- final ouput should be just the JSON object with no other text or comments.
-- make sure the final json contains all languages have all the sections, summary and document index.
+Validation Requirements:
+1. All summaries must be non-empty and present in all languages
+2. All sections must:
+   - Have a title that matches one of: {', '.join(IEP_SECTIONS.keys())}
+   - Have non-empty content in markdown format
+   - Include the original OCR text used
+   - Include the page numbers where found
+3. All required sections must be present in all languages
+4. Document index must be non-empty and present in all languages
 
 Output Structure: Format your response as a JSON object with the following structure: 
 ```json
