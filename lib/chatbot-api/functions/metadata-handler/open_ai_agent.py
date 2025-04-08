@@ -172,11 +172,11 @@ class OpenAIAgent:
     def _create_validation_tool(self):
         """Create a tool for validating the output JSON structure"""
         @function_tool
-        def validate_output(output_json: dict) -> dict:
+        def validate_output(output: dict) -> dict:
             """Validate the completeness and structure of the output JSON.
             
             This tool checks that all required sections, translations, and fields 
-            are present in the output JSON structure. The output_json should follow
+            are present in the output JSON structure. The output should follow
             this structure:
 
             {
@@ -209,7 +209,7 @@ class OpenAIAgent:
             }
             
             Args:
-                output_json (dict): The JSON output to validate, must follow the structure above
+                output (dict): The JSON output to validate, must follow the structure above
                 
             Returns:
                 dict: Validation results containing:
@@ -232,25 +232,25 @@ class OpenAIAgent:
             
             # Check top-level structure
             for key in required_keys:
-                if key not in output_json:
+                if key not in output:
                     validation_results["is_valid"] = False
                     validation_results["structure_errors"].append(f"Missing top-level key: {key}")
                     continue
                 
                 # Check language presence for each top-level key
                 for lang in required_languages:
-                    if lang not in output_json[key]:
+                    if lang not in output[key]:
                         validation_results["is_valid"] = False
                         validation_results["missing_items"].append(f"Missing language {lang} in {key}")
             
             # Check sections specifically
-            if "sections" in output_json:
+            if "sections" in output:
                 for lang in required_languages:
-                    if lang not in output_json["sections"]:
+                    if lang not in output["sections"]:
                         continue
                         
                     # Get sections for this language
-                    sections = output_json["sections"][lang]
+                    sections = output["sections"][lang]
                     if not isinstance(sections, list):
                         validation_results["is_valid"] = False
                         validation_results["structure_errors"].append(f"Sections for {lang} is not a list")
@@ -282,6 +282,7 @@ class OpenAIAgent:
             
             return validation_results
         return validate_output
+
 
     def analyze_document(self, model="gpt-4o"):
         """
