@@ -176,10 +176,9 @@ class OpenAIAgent:
             """Validate the completeness and structure of the output JSON.
 
             Args:
-                json_structure (dict): The input should have the following in the json_structure:
-                    - summaries
-                    - sections
-                    - document_index
+                json_structure (dict): The input should have the following in the json_structure: summaries, sections, document_index
+
+            Required: [json_structure]
 
             Returns:
                 dict: Validation results
