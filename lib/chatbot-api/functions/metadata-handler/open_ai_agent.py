@@ -219,7 +219,7 @@ class OpenAIAgent:
                     self.section_info_tool,
                     WebSearchTool()
                 ],
-                output_pydantic=IEPData
+                output_type=IEPData
             )
             
             # Run the agent
@@ -227,7 +227,7 @@ class OpenAIAgent:
             logger.info("Agent completed analysis")
             
             try:
-                # Since we specified output_pydantic=IEPData, result.final_output should be an IEPData instance
+                # Since we specified output_type=IEPData, result.final_output should be an IEPData instance
                 if isinstance(result.final_output, IEPData):
                     # Pydantic has already validated the model at this point
                     logger.info("Successfully validated IEPData output")
