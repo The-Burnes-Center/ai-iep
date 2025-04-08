@@ -6,7 +6,7 @@ from datetime import datetime
 from openai import OpenAI
 # Correct imports for openai-agents package
 from agents import Agent, Runner, function_tool
-from config import get_full_prompt, get_all_tags, IEP_SECTIONS, get_translation_prompt, get_language_context, SECTION_KEY_POINTS
+from config import get_full_prompt, get_all_tags, IEP_SECTIONS, get_translation_prompt, get_language_context, SECTION_KEY_POINTS, LANGUAGE_CODES
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -182,7 +182,7 @@ class OpenAIAgent:
             
             # Required top-level keys
             required_keys = ["summaries", "sections", "document_index"]
-            required_languages = ["en", "es", "vi", "zh"]
+            required_languages = LANGUAGE_CODES.values()
             required_section_fields = ["title", "content", "ocr_text_used", "page_numbers"]
             
             # Check top-level structure
