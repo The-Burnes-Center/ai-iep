@@ -48,6 +48,15 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
 
+  // Maintenance banner
+  const MaintenanceBanner = () => (
+    <Alert variant="warning" className="text-center my-4 mx-2" style={{ padding: '15px', borderRadius: '8px' }}>
+      <i className="bi bi-exclamation-triangle-fill me-2"></i>
+      <strong>Site is under maintenance</strong>
+      <p className="mb-0 mt-1">Some features may be temporarily unavailable. We apologize for any inconvenience.</p>
+    </Alert>
+  );
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -262,6 +271,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
+          <MaintenanceBanner />
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
           <h4 className="text-center mb-4">Set New Password</h4>
   
@@ -334,6 +344,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
+          <MaintenanceBanner />
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
           <h4 className="text-center mb-4">Verify Your Account</h4>
           
@@ -400,6 +411,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
+          <MaintenanceBanner />
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
           <h4 className="text-center mb-4">Create an Account</h4>
           
@@ -492,6 +504,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
+          <MaintenanceBanner />
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
           <h4 className="text-center mb-4">Reset Password</h4>
           
@@ -597,6 +610,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   return (
     <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
       <Col xs={12} md={6} lg={4}>
+        <MaintenanceBanner />
         <h1 className="text-center mb-4 aiep-title">AIEP</h1>
         
         <Form onSubmit={handleSignIn}>
