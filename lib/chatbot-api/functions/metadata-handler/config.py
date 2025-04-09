@@ -14,57 +14,19 @@ IEP_SECTIONS = {
 
 # Section-specific key points to extract
 SECTION_KEY_POINTS = {
-    'Present Levels': [
-        'Current academic performance in each subject',
-        'Social and behavioral skills',
-        'Physical and health status',
-        'Communication skills',
-        'Life and self-help skills',
-        "Teacher observations and input"  # Added to capture teacher feedback
-    ],
-    'Eligibility': [
-        'Primary disability category',
-        'How disability affects learning',
-        'Evaluation results and dates',
-        'Eligibility criteria met',
-        'Team decisions and recommendations'
-    ],
-    'Placement': [
-        'Type of classroom setting',
-        'Percentage of time in regular classes',
-        'Reasons for placement decision',
-        'Transportation needs',
-        'Extended school year services'
-    ],
-    'Goals': [
-        'Academic goals for each subject',
-        'Behavioral/social goals',
-        'Life skills goals',
-        'How progress will be measured',
-        'Timeline for achievement'
-    ],
-    'Services': [
-        'Types of special education services',
-        'Related services (speech, OT, PT, etc.)',
-        'Frequency and duration of services',
-        'Who will provide services',
-        'When services begin and end',
-        'ALWAYS show the original duration in minutes as mentioned in the IEP, In parentheses, include the conversion to hours. Format as: "X min/week (Y hrs/week) if the duration is more than 60 minutes" Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"'
-    ],
-    'Informed Consent': [
-        'Parent rights and responsibilities',
-        'Consent given or refused',
-        'Parent concerns and input',  # Ensures parent concerns are captured
-        'Team meeting participants',
-        'Important dates and deadlines'
-    ],
-    'Accommodations': [
-        'Classroom accommodations',
-        'Testing accommodations',
-        'Behavioral supports',
-        'Assistive technology needs',
-        'Environmental modifications',
-    ]
+    'Present Levels': """Analyze and describe the student's current academic performance across all subjects. Include details about their social and behavioral skills, physical health status, and communication abilities. Document their life and self-help skills. Be sure to incorporate teacher observations and input about the student's performance and behavior in the classroom.""",
+    
+    'Eligibility': """Identify and document the student's primary disability category and explain how this disability affects their learning process. Include all relevant evaluation results with their dates. List the specific eligibility criteria that were met. Document the evaluation team's decisions and recommendations regarding the student's eligibility for special education services.""",
+    
+    'Placement': """Specify the type of classroom setting recommended for the student. Calculate and state the percentage of time the student will spend in regular education classes. Provide a clear explanation of why this placement decision was made. Address any specialized transportation needs. Document whether extended school year services are necessary and why.""",
+    
+    'Goals': """Detail the specific academic goals for each subject area where the student needs support. Include behavioral and social goals that address any identified challenges. Specify life skills goals where applicable. For each goal, explain how progress will be measured and tracked. Provide clear timelines for when each goal should be achieved.""",
+    
+    'Services': """List all types of special education services the student will receive. Include any related services such as speech therapy, occupational therapy, or physical therapy. For each service, specify the frequency and duration using the following format: show the original duration in minutes as mentioned in the IEP, followed by the conversion to hours in parentheses (e.g., "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"). Identify who will provide each service and document when services will begin and end.""",
+    
+    'Informed Consent': """Document all parent rights and responsibilities regarding the IEP process. Note whether consent was given or refused for each aspect of the IEP. Record any concerns or input provided by the parents. List all team meeting participants and their roles. Include all important dates and deadlines related to the IEP process.""",
+    
+    'Accommodations': """Detail all classroom accommodations that will be provided to support the student's learning. Specify any testing accommodations needed for assessments. Document behavioral supports and intervention strategies. List any assistive technology needs and how they will be met. Include all necessary environmental modifications to support the student's learning."""
 }
 
 # (Optional) Document categories if needed for classification
