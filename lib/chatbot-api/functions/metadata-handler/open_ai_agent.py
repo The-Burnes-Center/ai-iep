@@ -144,22 +144,16 @@ class OpenAIAgent:
 
     def _create_section_info_tool(self):
         """Create a tool for getting section-specific information"""
-        @function_tool()
-        def get_section_info(section_name: str) -> dict:
-            """Get key points and requirements for an IEP section.
+        
+        # Generate the docstring dynamically
+        sections_list = ', '.join(list(IEP_SECTIONS.keys()))
+        doc_template = f'''Get key points and requirements for an IEP section.
 
             This tool provides detailed information about what content and key points
             should be extracted for a specific IEP section.
 
             Args:
-                section_name (str): Name of the section. Must be one of:
-                    - Present Levels
-                    - Eligibility
-                    - Placement
-                    - Goals
-                    - Services
-                    - Informed Consent
-                    - Accommodations
+                section_name (str): Name of the section. Must be one of: {sections_list}
 
             Returns:
                 dict: Section information containing:
@@ -170,7 +164,11 @@ class OpenAIAgent:
                     If section not found, returns:
                     - error (str): Error message
                     - available_sections (list): Valid section names
-            """
+            '''
+            
+        @function_tool
+        def get_section_info(section_name: str) -> dict:
+            get_section_info.__doc__ = doc_template
             if section_name not in IEP_SECTIONS:
                 return {
                     "error": f"Section {section_name} not found",
