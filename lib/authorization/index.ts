@@ -25,7 +25,6 @@ export class AuthorizationStack extends Construct {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       selfSignUpEnabled: false,
       mfa: cognito.Mfa.OPTIONAL,
-      advancedSecurityMode: cognito.AdvancedSecurityMode.ENFORCED,
       autoVerify: { email: true, phone: true },
       signInAliases: {
         email: true,

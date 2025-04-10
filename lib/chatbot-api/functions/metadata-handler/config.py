@@ -98,7 +98,7 @@ def get_full_prompt(key):
             ],
             "es": [
                 {
-                    "title": "Section name",  # Must match English section names
+                    "title": "Section name - same as english section names",  # Must match English section names
                     "content": "Spanish section content in markdown format",
                     "ocr_text_used": "Original text of the document used for drafting this section",
                     "page_numbers": "Page numbers where this section was found"
@@ -107,7 +107,7 @@ def get_full_prompt(key):
             ],
             "vi": [
                 {
-                    "title": "Section name",  # Must match English section names
+                    "title": "Section name - same as english section names",  # Must match English section names
                     "content": "Vietnamese section content in markdown format",
                     "ocr_text_used": "Original text of the document used for drafting this section",
                     "page_numbers": "Page numbers where this section was found"
@@ -116,7 +116,7 @@ def get_full_prompt(key):
             ],
             "zh": [
                 {
-                    "title": "Section name",  # Must match English section names
+                    "title": "Section name - same as english section names",  # Must match English section names
                     "content": "Chinese section content in markdown format",
                     "ocr_text_used": "Original text of the document used for drafting this section",
                     "page_numbers": "Page numbers where this section was found"

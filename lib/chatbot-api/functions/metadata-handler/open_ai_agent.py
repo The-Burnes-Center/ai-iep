@@ -242,12 +242,10 @@ class OpenAIAgent:
                     # Remove any potential markdown code block markers
                     cleaned_output = result.final_output.replace('```json', '').replace('```', '').strip()
                     try:
-                        # Parse the cleaned string to ensure valid JSON
-                        parsed_output = json.loads(cleaned_output)
-                        # Create IEPData instance from parsed JSON
-                        iep_data = IEPData.parse_obj(parsed_output)
+                        # Use Pydantic v2's model_validate_json for direct JSON string parsing
+                        iep_data = IEPData.model_validate_json(cleaned_output, strict=False)
                         logger.info("Successfully parsed and validated IEPData")
-                        return iep_data.dict()
+                        return iep_data.model_dump()
                     except json.JSONDecodeError as je:
                         logger.error(f"JSON parsing error: {str(je)}")
                         logger.error(f"Problematic JSON: {cleaned_output[:200]}...")  # Log first 200 chars
@@ -261,14 +259,14 @@ class OpenAIAgent:
                             }
                         }
                 elif isinstance(result.final_output, dict):
-                    # If it's already a dict, try to create IEPData instance
-                    iep_data = IEPData.parse_obj(result.final_output)
+                    # If it's already a dict, use model_validate method instead of parse_obj
+                    iep_data = IEPData.model_validate(result.final_output, strict=False)
                     logger.info("Successfully parsed and validated IEPData from dict")
-                    return iep_data.dict()
+                    return iep_data.model_dump()
                 elif isinstance(result.final_output, IEPData):
                     # If it's already an IEPData instance, just return it
                     logger.info("Successfully validated IEPData instance")
-                    return result.final_output.dict()
+                    return result.final_output.model_dump()
                 else:
                     logger.error(f"Unexpected output type: {type(result.final_output)}")
                     return {

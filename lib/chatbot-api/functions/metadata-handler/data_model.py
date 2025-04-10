@@ -9,36 +9,36 @@ class SectionContent(BaseModel):
     """Content for a single IEP section"""
     title: str = Field(
         ..., 
-        description=f"Section name - must be one of: {', '.join(IEP_SECTIONS.keys())}"
+        description="Section name - should be one of the following: " + ", ".join(IEP_SECTIONS.keys())
     )
     content: str = Field(..., description="Section content in markdown format")
-    ocr_text_used: str = Field(..., description="Original text from IEP document used to extract content")
+    ocr_text_used: str = Field(..., description="Complete Original text from IEP document used to extract content, use available tools to get the original iep text.")
     page_numbers: str = Field(..., description="Page numbers where content was found")
-
-    @validator('title')
-    def validate_section_title(cls, v):
-        """Validate that section title is one of the allowed IEP sections"""
-        if v not in IEP_SECTIONS:
-            raise ValueError(
-                f"Invalid section title: {v}. Must be one of: {', '.join(IEP_SECTIONS.keys())}"
-            )
-        return v
 
 class LanguageSection(BaseModel):
     """Sections for a specific language"""
-    en: List[SectionContent] = Field(..., description="English sections")
-    es: List[SectionContent] = Field(..., description="Spanish sections")
-    vi: List[SectionContent] = Field(..., description="Vietnamese sections")
-    zh: List[SectionContent] = Field(..., description="Chinese sections")
+    en: List[SectionContent] = Field(..., description="All English sections, should include all sections: " + ", ".join(IEP_SECTIONS.keys()))
+    es: List[SectionContent] = Field(..., description="All Spanish sections, should include all sections: " + ", ".join(IEP_SECTIONS.keys()))
+    vi: List[SectionContent] = Field(..., description="All Vietnamese sections, should include all sections: " + ", ".join(IEP_SECTIONS.keys()))
+    zh: List[SectionContent] = Field(..., description="All Chinese sections, should include all sections: " + ", ".join(IEP_SECTIONS.keys()))
 
     @validator('*')
-    def validate_required_sections(cls, sections: List[SectionContent]):
-        """Validate that all required IEP sections are present"""
-        found_sections = {section.title for section in sections}
-        missing_sections = set(IEP_SECTIONS.keys()) - found_sections
-        if missing_sections:
+    def validate_section_titles(cls, sections: List[SectionContent]):
+        """Validate that section titles match the predefined names"""
+        for section in sections:
+            if section.title not in IEP_SECTIONS:
+                raise ValueError(
+                    f"Invalid section title: {section.title}. Section titles must be one of: {', '.join(IEP_SECTIONS.keys())}"
+                )
+        return sections
+
+    @validator('*')
+    def validate_required_sections(cls, sections: List[SectionContent], values, **kwargs):
+        """Validate that all sections have the required number of items"""
+        # Only validate count, not titles (except for English which is validated separately)
+        if len(sections) != len(IEP_SECTIONS):
             raise ValueError(
-                f"Missing required sections: {', '.join(missing_sections)}"
+                f"Expected {len(IEP_SECTIONS)} sections, got {len(sections)}. Each language must have the same number of sections."
             )
         return sections
 
@@ -79,6 +79,5 @@ class IEPData(BaseModel):
     class Config:
         """Pydantic model configuration"""
         validate_assignment = True  # Validate data on assignment, not just on model creation
-        extra = "forbid"  # Forbid extra attributes not defined in the model
-    
-    
+        extra = "forbid" 
+        validate_default = True  # Validate default values during model initialization 
