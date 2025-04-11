@@ -123,16 +123,19 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     if (document.sections) {
       try {
         const extractedSections = [];
-        const sectionsData = document.sections;
+        const sectionsData = document.sections.en.L;
         
         if (sectionsData) {
           for (const [sectionName, sectionContent] of Object.entries(sectionsData)) {
             const sectionContentObj = sectionContent as any;
-            const content = sectionContentObj?.M?.S?.S || '';
+            const content = sectionContentObj?.M?.content?.S || '';
+            const contentTitle = sectionContentObj?.M?.title?.S || '';
+
+            console.log(sectionContentObj);
             
             extractedSections.push({ 
-              name: sectionName,
-              displayName: getDisplayName(sectionName, false), 
+              name: contentTitle,
+              displayName: getDisplayName(contentTitle, false), 
               content: content
             });
           }

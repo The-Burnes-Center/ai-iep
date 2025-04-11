@@ -138,12 +138,12 @@ async getMostRecentDocumentWithSummary() {
       if (mostRecentDoc.summaries) {
         try {
           // Try to extract English summary from M > en > S path
-          summary = mostRecentDoc.summaries.M?.en?.S || null;
+          summary = mostRecentDoc.summaries.en?.S || null;
           
           // Try to extract translated summary (prefer Spanish, then Vietnamese, then Chinese)
-          translatedSummary = mostRecentDoc.summaries.M?.es?.S || 
-                             mostRecentDoc.summaries.M?.vi?.S || 
-                             mostRecentDoc.summaries.M?.zh?.S || null;
+          translatedSummary = mostRecentDoc.summaries.es?.S || 
+                             mostRecentDoc.summaries.vi?.S || 
+                             mostRecentDoc.summaries.zh?.S || null;
         } catch (error) {
           console.error("Error extracting summary from document:", error);
         }
@@ -152,12 +152,8 @@ async getMostRecentDocumentWithSummary() {
       if (mostRecentDoc.sections) {
         try {
           // Get the sections object which should have the M > en > M structure
-          extractedSections = mostRecentDoc.sections.M?.en?.M || null;
+          extractedSections = mostRecentDoc.sections || null;
           
-          // Get translated sections (prefer Spanish, then Vietnamese, then Chinese)
-          extractedSectionsTranslated = mostRecentDoc.sections.M?.es?.M || 
-                                       mostRecentDoc.sections.M?.vi?.M || 
-                                       mostRecentDoc.sections.M?.zh?.M || null;
         } catch (error) {
           console.error("Error extracting sections from document:", error);
         }
@@ -171,7 +167,6 @@ async getMostRecentDocumentWithSummary() {
       ...mostRecentDoc,
       summary: summary,
       sections: extractedSections,
-      translatedSections: extractedSectionsTranslated,
       documentUrl: documentUrl,
       translatedSummary: translatedSummary
     };
