@@ -66,7 +66,7 @@ export default function ConsentForm() {
     // Otherwise update the profile with consent
     try {
       setSaving(true);
-      await apiClient.profile.updateProfile({ ...profile, consentGiven: true });
+      await apiClient.profile.updateProfile({ consentGiven: true });
       addNotification('success', 'Consent saved successfully');
       navigate('/view-update-add-child');
     } catch (err) {

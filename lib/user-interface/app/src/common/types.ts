@@ -52,6 +52,11 @@ export interface UserProfile {
   consentGiven: Boolean;
 }
 
+export interface Language {
+  primaryLanguage: string;
+  secondaryLanguage: string;
+}
+
 export interface ProfileResponse {
   profile: UserProfile;
 }

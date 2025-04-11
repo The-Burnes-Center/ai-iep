@@ -72,8 +72,10 @@ export default function ViewAndAddChild() {
             // Keep the existing childId
             childId: firstChildId
           };
+
+          const updatedChildInfo = {children: [updatedProfile.children[0]]};
           
-          await apiClient.profile.updateProfile(updatedProfile);
+          await apiClient.profile.updateProfile(updatedChildInfo);
           addNotification('success', 'Child information updated successfully');
         }
       } else {

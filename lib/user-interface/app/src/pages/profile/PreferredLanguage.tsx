@@ -3,7 +3,7 @@ import { Container, Row, Col, Alert, Spinner, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
-import { UserProfile } from '../../common/types';
+import { Language } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage, SupportedLanguage } from '../../common/language-context'; // Updated import
 import './ProfileForms.css';
@@ -40,7 +40,7 @@ export default function PreferredLanguage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<Language | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -70,17 +70,16 @@ export default function PreferredLanguage() {
       setLanguage(languageValue as SupportedLanguage);
       
       // Create updated profile with the selected language
-      const updatedProfile = {
-        ...profile,
+      const preferredLanguage = {
         secondaryLanguage: languageValue,
         primaryLanguage: 'en'
       };
       
-      setProfile(updatedProfile);
+      setProfile(preferredLanguage);
       
       // Only update if there are changes to save
       if (profile.secondaryLanguage !== languageValue) {
-        await apiClient.profile.updateProfile(updatedProfile);
+        await apiClient.profile.updateProfile(preferredLanguage);
         addNotification('success', 'Language preference updated successfully');
       }
       
