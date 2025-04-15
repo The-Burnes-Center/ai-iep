@@ -733,8 +733,7 @@ def iep_processing_pipeline(event):
                             'M': {
                                 'title': {'S': section.get('title', '')},
                                 'content': {'S': section.get('content', '')},
-                                'ocr_text_used': {'S': section.get('ocr_text_used', '')},
-                                'page_numbers': {'S': section.get('page_numbers', '')}
+                                'page_numbers': {'L': [{'N': str(num)} for num in (section.get('page_numbers', []) or [])]}
                             }
                         } for section in result['sections'][lang]
                     ]} for lang, sections in result['sections'].items()

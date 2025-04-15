@@ -182,12 +182,12 @@ class OpenAIAgent:
             }
         return get_section_info
 
-    def analyze_document(self, model="gpt-4o"):
+    def analyze_document(self, model="gpt-4.1"):
         """
         Analyze an IEP document using OpenAI's Agent architecture.
         
         Args:
-            model (str): The OpenAI model to use, defaults to gpt-4o
+            model (str): The OpenAI model to use, defaults to gpt-4.1
             
         Returns:
             dict: Analysis results from the agent
@@ -226,7 +226,7 @@ class OpenAIAgent:
                 result = Runner.run_sync(
                     agent, 
                     "Please analyze this IEP document according to the instructions.",
-                    max_turns=50  # Increased from default 10 to handle complex IEP analysis
+                    max_turns= 75  # Increased from default 10 to handle complex IEP analysis
                 )
                 logger.info("Agent completed analysis")
             except MaxTurnsExceeded as e:
@@ -306,6 +306,33 @@ class OpenAIAgent:
                 
         except Exception as e:
             logger.error(f"Error analyzing document with OpenAI Agent: {str(e)}")
+            # add more details to the error message
+            logger.error(traceback.format_exc())
+            
+            # Safely log the result structure if it exists
+            try:
+                if 'result' in locals() and hasattr(result, 'final_output'):
+                    logger.error("Final output structure:")
+                    # Try to identify where the JSON might be truncated
+                    output_str = str(result.final_output)
+                    logger.error(f"Output length: {len(output_str)}")
+                    logger.error(f"First 500 chars: {output_str[:500]}...")
+                    logger.error(f"Last 500 chars: ...{output_str[-500:]}")
+                    
+                    # Try to parse as JSON to get more specific error details
+                    try:
+                        if isinstance(result.final_output, str):
+                            json.loads(result.final_output)
+                        elif isinstance(result.final_output, dict):
+                            json.dumps(result.final_output)
+                    except json.JSONDecodeError as json_err:
+                        logger.error(f"JSON parsing error details: {str(json_err)}")
+                        logger.error(f"Error position: {json_err.pos}")
+                        logger.error(f"Error line and column: {json_err.lineno}:{json_err.colno}")
+                        
+            except Exception as log_error:
+                logger.error(f"Could not log result structure: {str(log_error)}")
+
             return {"error": str(e)}
 
     

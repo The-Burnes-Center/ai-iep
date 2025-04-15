@@ -74,18 +74,17 @@ def get_full_prompt(key):
     # Build the JSON structure example
     json_structure = {
         "summaries": {
-            "en": "English summary text - must not be empty",
-            "es": "Spanish summary text - must not be empty",
-            "vi": "Vietnamese summary text - must not be empty",
-            "zh": "Chinese summary text - must not be empty"
+            "en": "English summary of the entire document - must not be empty",
+            "es": "Translation of the english summary to spanish - must not be empty",
+            "vi": "Translation of the english summary to vietnamese - must not be empty",
+            "zh": "Translation of the english summary to chinese - must not be empty"
         },
         "sections": {
             "en": [
                 {
                     "title": "Section name",  # Must be one of the IEP_SECTIONS keys
                     "content": "English section content in markdown format",
-                    "ocr_text_used": "Original text of the document used for drafting this section",
-                    "page_numbers": "Page numbers where this section was found in the document"
+                    "page_numbers": [1, 2]  # List of page numbers where this section was found in the document
                 },
                 # All required sections must be present:
                 # - Present Levels
@@ -100,8 +99,7 @@ def get_full_prompt(key):
                 {
                     "title": "Section name - same as english section names",  # Must match English section names
                     "content": "Spanish section content in markdown format",
-                    "ocr_text_used": "Original text of the document used for drafting this section",
-                    "page_numbers": "Page numbers where this section was found"
+                    "page_numbers": [1, 2]  # List of page numbers where this section was found
                 }
                 # All sections must be present in Spanish
             ],
@@ -109,8 +107,7 @@ def get_full_prompt(key):
                 {
                     "title": "Section name - same as english section names",  # Must match English section names
                     "content": "Vietnamese section content in markdown format",
-                    "ocr_text_used": "Original text of the document used for drafting this section",
-                    "page_numbers": "Page numbers where this section was found"
+                    "page_numbers": [1, 2]  # List of page numbers where this section was found
                 }
                 # All sections must be present in Vietnamese
             ],
@@ -118,8 +115,7 @@ def get_full_prompt(key):
                 {
                     "title": "Section name - same as english section names",  # Must match English section names
                     "content": "Chinese section content in markdown format",
-                    "ocr_text_used": "Original text of the document used for drafting this section",
-                    "page_numbers": "Page numbers where this section was found"
+                    "page_numbers": [1, 2]  # List of page numbers where this section was found
                 }
                 # All sections must be present in Chinese
             ]
@@ -143,14 +139,12 @@ Tasks:
 5. For EACH language, translate ALL sections with the SAME level of detail as the English version.
 6. Use the tool get_language_context to get the language specific context for translation of each language.
 7. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
-8. Only once you have validated the output using the validate_output tool, return the final output.
 
 Tools:
 - get_all_ocr_text: to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
 - get_ocr_text_for_page: to retrieve specific information about each section based on the page number of the document.
 - get_language_context: to get the language specific context for translation. Use this tool for EACH language before translating.
 - get_section_info: to get the key points and description for each section. Use this tool for each section to understand what information to extract.
-- validate_output: to validate the output structure, use this tool to check if the output is valid and has all the sections, summary and needed translations. Only return the final output after validation.
 
 Important Guidelines:
 - Make sure to include ALL the sections and key points.
@@ -172,8 +166,7 @@ Validation Requirements:
 2. All sections must:
    - Have a title that matches one of: {', '.join(IEP_SECTIONS.keys())}
    - Have non-empty content in markdown format
-   - Include the original OCR text used
-   - Include the page numbers where found
+   - Include the page numbers where found (as a list of integers)
 3. All required sections must be present in all languages
 4. Document index must be non-empty and present in all languages
 

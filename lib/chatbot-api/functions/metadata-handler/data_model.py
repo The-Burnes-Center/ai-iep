@@ -12,8 +12,7 @@ class SectionContent(BaseModel):
         description="Section name - should be one of the following: " + ", ".join(IEP_SECTIONS.keys())
     )
     content: str = Field(..., description="Section content in markdown format")
-    ocr_text_used: str = Field(..., description="Complete Original text from IEP document used to extract content, use available tools to get the original iep text.")
-    page_numbers: str = Field(..., description="Page numbers where content was found")
+    page_numbers: List[int] = Field(..., description="List of Page numbers where content was found")
 
 class LanguageSection(BaseModel):
     """Sections for a specific language"""

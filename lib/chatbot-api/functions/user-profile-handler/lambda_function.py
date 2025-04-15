@@ -311,6 +311,32 @@ def add_child(event: Dict) -> Dict:
     except Exception as e:
         return create_response(event, 500, {'message': f'Error adding child: {str(e)}'})
 
+def clean_dynamodb_json(data):
+    """Recursively convert DynamoDB JSON to plain JSON."""
+    if isinstance(data, dict):
+        # If this is a DynamoDB type wrapper
+        if set(data.keys()) == {'S'}:
+            return data['S']
+        if set(data.keys()) == {'N'}:
+            n = data['N']
+            try:
+                return int(n)
+            except ValueError:
+                try:
+                    return float(n)
+                except ValueError:
+                    return n
+        if set(data.keys()) == {'L'}:
+            return [clean_dynamodb_json(item) for item in data['L']]
+        if set(data.keys()) == {'M'}:
+            return {k: clean_dynamodb_json(v) for k, v in data['M'].items()}
+        # Otherwise, recursively clean all keys
+        return {k: clean_dynamodb_json(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [clean_dynamodb_json(item) for item in data]
+    else:
+        return data
+
 def get_child_documents(event: Dict) -> Dict:
     """
     Get document associated with a specific child.
@@ -366,19 +392,19 @@ def get_child_documents(event: Dict) -> Dict:
                     
                     # Handle summaries with proper structure
                     if 'summaries' in doc:
-                        latest_doc['summaries'] = doc['summaries']
+                        latest_doc['summaries'] = clean_dynamodb_json(doc['summaries'])
                     else:
                         latest_doc['summaries'] = {}
                     
                     # Handle sections with proper structure (array format)
                     if 'sections' in doc:
-                        latest_doc['sections'] = doc['sections']
+                        latest_doc['sections'] = clean_dynamodb_json(doc['sections'])
                     else:
                         latest_doc['sections'] = {}
                     
                     # Handle document index
                     if 'document_index' in doc:
-                        latest_doc['document_index'] = doc['document_index']
+                        latest_doc['document_index'] = clean_dynamodb_json(doc['document_index'])
                     else:
                         latest_doc['document_index'] = {}
                     
