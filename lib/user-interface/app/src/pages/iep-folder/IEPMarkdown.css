@@ -1,0 +1,120 @@
+.markdown-container {
+    width: 90%;
+    margin: 0 auto;
+    padding-bottom: 2rem;
+  }
+  
+  .markdown-card {
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+  
+  .markdown-card .card-header {
+    background-color: #f8f9fa;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 1rem;
+  }
+  
+  .markdown-content {
+    padding: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  
+  .markdown-content h1, 
+  .markdown-content h2, 
+  .markdown-content h3 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  
+  .markdown-content table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+  }
+  
+  .markdown-content table, 
+  .markdown-content th, 
+  .markdown-content td {
+    border: 1px solid #dee2e6;
+  }
+  
+  .markdown-content th, 
+  .markdown-content td {
+    padding: 0.5rem;
+    text-align: left;
+  }
+  
+  .markdown-content blockquote {
+    border-left: 4px solid #0040BA;
+    padding-left: 1rem;
+    margin-left: 0;
+    color: #6c757d;
+  }
+  
+  .markdown-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+  }
+  
+  .page-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+  }
+  
+  .page-navigation .nav-link {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    color: #495057;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+  
+  .page-navigation .nav-link.active {
+    background-color: #0040BA;
+    border-color: #0040BA;
+    color: white;
+  }
+  
+  .image-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  .image-metadata {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+  }
+  
+  @media (max-width: 768px) {
+    .markdown-container {
+      width: 95%;
+    }
+    
+    .page-navigation {
+      justify-content: center;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .markdown-content {
+      padding: 1rem;
+      font-size: 0.875rem;
+    }
+  }

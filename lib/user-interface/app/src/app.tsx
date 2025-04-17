@@ -16,6 +16,7 @@ import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslation
 import ViewAndAddChild from './pages/profile/ViewAndAddChild';
 import RightsAndOnboarding from './pages/RightsAndOnboarding';
 import ConsentForm from './pages/profile/ConsentForm';
+import IEPMarkdown from './pages/iep-folder/IEPMarkdown';
 
 function AppContent() {
   const location = useLocation();
@@ -51,7 +52,8 @@ function AppContent() {
             <Route path="/profile" element={<UserProfileForm />} />
             <Route path="/iep-documents" element={<IEPDocumentView />} />
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
-            <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} />            
+            <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
+            <Route path="/markdown" element={<IEPMarkdown />} />           
         </Routes>
       </div>
     </div>

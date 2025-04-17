@@ -23,17 +23,21 @@ import { useLanguage } from '../../common/language-context';
 const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
   const apiClient = new IEPDocumentClient(appContext);
+  const { t, language, translationsLoaded } = useLanguage();
   
-  // Track whether this is the first load
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [recentDocument, setRecentDocument] = useState<any>(null);
-  const [summary, setSummary] = useState<string>('');
-  const [translatedSummary, setTranslatedSummary] = useState<string>('');
-  const [sections, setSections] = useState<{name: string, displayName: string, content: string}[]>([]);
-  const [translatedSections, setTranslatedSections] = useState<{name: string, displayName: string, content: string}[]>([]);
+  
+  // State for summaries
+  const [englishSummary, setEnglishSummary] = useState<string>('');
+  const [spanishSummary, setSpanishSummary] = useState<string>('');
+  
+  // State for sections
+  const [englishSections, setEnglishSections] = useState<{name: string, displayName: string, content: string, pageNumbers?: number[]}[]>([]);
+  const [spanishSections, setSpanishSections] = useState<{name: string, displayName: string, content: string, pageNumbers?: number[]}[]>([]);
+  
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
-  // Initialize activeTab state - will be set properly in the useEffect below
   const [activeTab, setActiveTab] = useState<string>('english');
   const navigate = useNavigate();
   
@@ -41,40 +45,37 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isFirstRender = useRef<boolean>(true);
 
-  const { t, translationsLoaded } = useLanguage();
-
-  // Move sectionConfig inside the useEffect to rebuild it when translations change
-  // This is a reference to store the section config
+  // Section configuration with translations
   const sectionConfigRef = useRef([
-    { apiName: "Student Information", englishName: "Student Information", displayName: "Student Information" },
-    { apiName: "Accommodations", englishName: "Accommodations", displayName: "Accommodations" },
-    { apiName: "Goals", englishName: "Goals", displayName: "Goals" },
-    { apiName: "Services", englishName: "Services", displayName: "Services" },
-    { apiName: "Placement", englishName: "Placement", displayName: "Placement" },
-    { apiName: "Present Levels", englishName: "Present Levels", displayName: "Present Levels" },
-    { apiName: "Eligibility", englishName: "Eligibility", displayName: "Eligibility" },
-    { apiName: "Informed Consent", englishName: "Informed Consent", displayName: "Informed Consent" },
-    { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: "Assistive Technology" },
-    { apiName: "State Testing", englishName: "State Testing", displayName: "State Testing" },
+    { apiName: "Student Information", englishName: "About Student", displayName: t('sections.studentInfo') },
+    { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
+    { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
+    { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
+    { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
+    { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
+    { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
+    { apiName: "Informed Consent", englishName: "Informed Consent", displayName: t('sections.informedConsent') },
+    { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: t('sections.assistiveTechnology') },
+    { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') }
   ]);
 
-  // Update section config when translations are loaded
+  // Update section config with translations when language changes
   useEffect(() => {
     if (translationsLoaded) {
       sectionConfigRef.current = [
-        { apiName: "Student Information", englishName: "Student Information", displayName: t('sections.studentInfo') },
+        { apiName: "Student Information", englishName: "About Student", displayName: t('sections.studentInfo') },
         { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
         { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
         { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
         { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
-        { apiName: "Present Levels", englishName: "Present Levels", displayName: t('sections.presentLevels') },
+        { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
         { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
         { apiName: "Informed Consent", englishName: "Informed Consent", displayName: t('sections.informedConsent') },
         { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: t('sections.assistiveTechnology') },
-        { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') },
+        { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') }
       ];
       
-      // Re-process sections with new translations if we have a document
+      // Reprocess sections if document is already loaded
       if (recentDocument && recentDocument.status === "PROCESSED") {
         processDocumentSections(recentDocument);
       }
@@ -82,192 +83,178 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   }, [t, translationsLoaded]);
 
   const getDisplayName = (apiName: string, useTranslation: boolean = false): string => {
-    const config = sectionConfigRef.current.find(s => s.apiName === apiName);
-    if (!config) return apiName;
+    const config = sectionConfigRef.current.find(s => 
+      s.apiName === apiName || 
+      s.englishName === apiName || 
+      apiName.toLowerCase().includes(s.apiName.toLowerCase())
+    );
     
-    // Return either the translated name or the English name
+    if (!config) return apiName;
     return useTranslation ? config.displayName : config.englishName;
   };
 
-  // Function to sort sections based on the predefined order
-  const sortSections = (sectionsArray: {name: string, displayName: string, content: string}[]) => {
-    return [...sectionsArray].sort((a, b) => {
-      const indexA = sectionConfigRef.current.findIndex(s => s.apiName === a.name);
-      const indexB = sectionConfigRef.current.findIndex(s => s.apiName === b.name);
+  // Function to sort sections by predefined order
+  const sortSections = (sections: {name: string, displayName: string, content: string}[]) => {
+    return [...sections].sort((a, b) => {
+      const indexA = sectionConfigRef.current.findIndex(s => 
+        s.apiName === a.name || 
+        s.englishName === a.name ||
+        a.name.toLowerCase().includes(s.apiName.toLowerCase())
+      );
+      const indexB = sectionConfigRef.current.findIndex(s => 
+        s.apiName === b.name || 
+        s.englishName === b.name ||
+        b.name.toLowerCase().includes(s.apiName.toLowerCase())
+      );
       
-      // If both sections are in our predefined order list
-      if (indexA !== -1 && indexB !== -1) {
-        return indexA - indexB;
-      }
-      
-      // If only section A is in our list, prioritize it
-      if (indexA !== -1) {
-        return -1;
-      }
-      
-      // If only section B is in our list, prioritize it
-      if (indexB !== -1) {
-        return 1;
-      }
-      
-      // If neither section is in our list, maintain their original order
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
       return 0;
     });
   };
 
-  // Extracted function to process document sections - can be called when translations change
+  // Process document sections
   const processDocumentSections = (document: any) => {
     if (!document || document.status !== "PROCESSED") return;
-
+    
+    console.log("Processing document sections:", document);
+    
     // Process English sections
-    if (document.sections) {
+    if (document.sections && document.sections.en) {
       try {
         const extractedSections = [];
-        const sectionsData = document.sections.en.L;
         
-        if (sectionsData) {
-          for (const [sectionName, sectionContent] of Object.entries(sectionsData)) {
-            const sectionContentObj = sectionContent as any;
-            const content = sectionContentObj?.M?.content?.S || '';
-            const contentTitle = sectionContentObj?.M?.title?.S || '';
-
-            console.log(sectionContentObj);
-            
-            extractedSections.push({ 
-              name: contentTitle,
-              displayName: getDisplayName(contentTitle, false), 
-              content: content
-            });
-          }
+        // Handle array format
+        if (Array.isArray(document.sections.en)) {
+          console.log("Processing English sections as array");
+          document.sections.en.forEach(section => {
+            if (section.title && section.content) {
+              extractedSections.push({
+                name: section.title,
+                displayName: getDisplayName(section.title, false),
+                content: section.content,
+                pageNumbers: section.page_numbers || [] // Extract page numbers
+              });
+            }
+          });
         }
         
         const orderedSections = sortSections(extractedSections);
-        setSections(orderedSections);
+        console.log("Processed English sections:", orderedSections);
+        setEnglishSections(orderedSections);
       } catch (e) {
-        console.error("Error extracting sections:", e);
-        setSections([]);
+        console.error("Error processing English sections:", e);
+        setEnglishSections([]);
       }
+    } else {
+      console.log("No English sections found");
+      setEnglishSections([]);
     }
     
-    // Process translated sections
-    if (document.translatedSections) {
+    // Process Spanish sections
+    if (document.sections && document.sections.es) {
       try {
-        const extractedTranslatedSections = [];
-        const translatedSectionsData = document.translatedSections;
+        const extractedSections = [];
         
-        if (translatedSectionsData) {
-          for (const [sectionName, sectionContent] of Object.entries(translatedSectionsData)) {
-            const sectionContentObj = sectionContent as any;
-            const content = sectionContentObj?.M?.S?.S || '';
-            
-            extractedTranslatedSections.push({ 
-              name: sectionName,
-              displayName: getDisplayName(sectionName, true), 
-              content: content
-            });
-          }
+        // Handle array format
+        if (Array.isArray(document.sections.es)) {
+          console.log("Processing Spanish sections as array");
+          document.sections.es.forEach(section => {
+            if (section.title && section.content) {
+              extractedSections.push({
+                name: section.title,
+                displayName: getDisplayName(section.title, true),
+                content: section.content,
+                pageNumbers: section.page_numbers || [] // Extract page numbers
+              });
+            }
+          });
         }
         
-        const orderedTranslatedSections = sortSections(extractedTranslatedSections);
-        setTranslatedSections(orderedTranslatedSections);
+        const orderedSections = sortSections(extractedSections);
+        console.log("Processed Spanish sections:", orderedSections);
+        setSpanishSections(orderedSections);
       } catch (e) {
-        console.error("Error extracting translated sections:", e);
-        setTranslatedSections([]);
+        console.error("Error processing Spanish sections:", e);
+        setSpanishSections([]);
       }
+    } else {
+      console.log("No Spanish sections found");
+      setSpanishSections([]);
     }
   };
 
   // Function to start polling if document is processing
   const startPollingIfProcessing = (document: any) => {
-    // Clear any existing polling interval
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
     
-    // If the document is processing, start polling every 5 seconds
     if (document && document.status === "PROCESSING") {
       console.log("Document is processing. Starting polling...");
       pollingIntervalRef.current = setInterval(() => {
-        console.log("Polling for document status updates...");
+        console.log("Polling for updates...");
         setRefreshCounter(prev => prev + 1);
-      }, 5000); // Poll every 5 seconds
+      }, 5000);
     }
   };
 
-  // Effect for document fetching - only depends on refreshCounter now
+  // Fetch document data
   useEffect(() => {
-    // Skip fetching if translations aren't loaded yet
     if (!translationsLoaded) return;
     
-    const fetchDocuments = async () => {
-      // Only set loading on initial fetch
+    const fetchDocument = async () => {
       if (isFirstRender.current) {
         isFirstRender.current = false;
       }
       
       try {
-        // Use our combined method to get the most recent document with its summary
-        const mostRecentDocWithSummary = await apiClient.getMostRecentDocumentWithSummary();
+        const document = await apiClient.getMostRecentDocumentWithSummary();
+        console.log("Fetched document data:", document);
         
-        if (mostRecentDocWithSummary) {
-          // Only update the document if there's an actual change
+        if (document) {
           setRecentDocument(prev => {
-            // Only trigger re-render if status or other key properties changed
             if (!prev || 
-                prev.status !== mostRecentDocWithSummary.status || 
-                prev.createdAt !== mostRecentDocWithSummary.createdAt) {
-              return mostRecentDocWithSummary;
+                prev.status !== document.status || 
+                prev.createdAt !== document.createdAt) {
+              return document;
             }
-            return prev; // No change needed
+            return prev;
           });
           
-          // Start or stop polling based on document status
-          startPollingIfProcessing(mostRecentDocWithSummary);
+          startPollingIfProcessing(document);
           
-          // Only update state if document is processed - prevents unnecessary re-renders during polling
-          if (mostRecentDocWithSummary.status === "PROCESSED") {
-            // Set the summary if available
-            if (mostRecentDocWithSummary.summary) {
-              setSummary(mostRecentDocWithSummary.summary);
-            } else {
-              setSummary('');
-            }
+          if (document.status === "PROCESSED") {
+            // Set summaries
+            setEnglishSummary(document.summaries?.en || '');
+            setSpanishSummary(document.summaries?.es || '');
             
-            // Set the translated summary if available
-            if (mostRecentDocWithSummary.translatedSummary) {
-              setTranslatedSummary(mostRecentDocWithSummary.translatedSummary);
-            } else {
-              setTranslatedSummary('');
-            }
-            
-            // Process sections using the extracted function
-            processDocumentSections(mostRecentDocWithSummary);
+            // Process sections
+            processDocumentSections(document);
           }
         } else {
           setRecentDocument(null);
-          setSummary('');
-          setTranslatedSummary('');
-          setSections([]);
-          setTranslatedSections([]);
+          setEnglishSummary('');
+          setSpanishSummary('');
+          setEnglishSections([]);
+          setSpanishSections([]);
         }
         
-        // Clear any errors
         setError(null);
       } catch (err) {
-        console.error('Error fetching documents:', err);
-        // setError('Failed to load documents. Please try again.');
+        console.error('Error fetching document:', err);
       } finally {
-        // Only turn off initial loading after first fetch
         if (initialLoading) {
           setInitialLoading(false);
         }
       }
     };
-
-    fetchDocuments();
-
-    // Cleanup function to clear interval when component unmounts
+    
+    fetchDocument();
+    
+    // Clean up interval
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -275,32 +262,28 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     };
   }, [refreshCounter, translationsLoaded]);
 
-  // Check if translated content exists
-  const hasTranslatedContent = translatedSummary || translatedSections.length > 0;
-
-  // Set the appropriate active tab based on translated content availability
+  // Set active tab based on language preference and content availability
   useEffect(() => {
-    if (hasTranslatedContent) {
-      setActiveTab('translated');
+    const hasSpanishContent = spanishSummary || spanishSections.length > 0;
+    
+    if (language === 'es' && hasSpanishContent) {
+      setActiveTab('spanish');
     } else {
       setActiveTab('english');
     }
-  }, [hasTranslatedContent]);
+  }, [language, spanishSummary, spanishSections]);
 
-  const handleRefresh = () => {
-    setRefreshCounter(prev => prev + 1);
+  const handleBackClick = () => {
+    navigate('/welcome-page');
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // Extract filename from document URL
+  const getFileName = (documentUrl: string) => {
+    if (!documentUrl) return 'Document';
+    return documentUrl.split('/').pop() || 'Document';
   };
 
+  // Render status badge
   const renderStatusBadge = (status: string) => {
     switch(status) {
       case "PROCESSING":
@@ -314,20 +297,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
-  // Extract filename from documentUrl 
-  const getFileName = (documentUrl: string) => {
-    if (!documentUrl) return 'Document';
-    return documentUrl.split('/').pop() || 'Document';
-  };
-
-  // Determine if we're in initial loading or processing state
+  // Check if document is processing
   const isProcessing = recentDocument && recentDocument.status === "PROCESSING";
 
-  const handleBackClick = () => {
-    navigate('/welcome-page');
-  };
-
-  // If translations aren't loaded yet, show a loading state
+  // Loading state while translations are being loaded
   if (!translationsLoaded) {
     return (
       <Container className="summary-container mt-4 mb-5">
@@ -350,10 +323,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       </div>
       <Row>
         <Col>
-        <p></p>          
-          {error && (
-            <Alert variant="danger">{error}</Alert>
-          )}
+          {error && <Alert variant="danger">{error}</Alert>}
           
           {initialLoading ? (
             <div className="text-center my-5">
@@ -404,23 +374,76 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           onSelect={(k) => k && setActiveTab(k)}
                           className="mb-3 mt-4 summary-tabs"
                         >
-                          {/* Only render the Preferred Language tab if translated content exists */}
-                          {hasTranslatedContent && (
+                          {/* Always show English tab */}
+                          <Tab 
+                            eventKey="english" 
+                            title={t('summary.english')}
+                          >
+                            {englishSummary ? (
+                              <>
+                                <h4 className="mt-4">IEP Summary</h4>
+                                <Card className="summary-content mb-4">
+                                  <Card.Body>
+                                    <p className="mb-0">{englishSummary}</p>
+                                  </Card.Body>
+                                </Card>
+                              </>
+                            ) : (
+                              <Alert variant="info">
+                                <h5>{t('summary.noSummary.title')}</h5>
+                                <p>{t('summary.noSummary.message')}</p>
+                              </Alert>
+                            )}
+                            
+                            {englishSections.length > 0 ? (
+                              <>
+                                <h4 className="mt-4">Key Insights</h4>
+                                <Accordion className="mb-3 summary-accordion">
+                                  {englishSections.map((section, index) => (
+                                    <Accordion.Item key={index} eventKey={index.toString()}>
+                                      <Accordion.Header>
+                                        {section.displayName}
+                                      </Accordion.Header>
+                                      <Accordion.Body>
+                                        {section.pageNumbers && section.pageNumbers.length > 0 && (
+                                          <p className="text-muted mb-2">
+                                            <small>Pages: {Array.isArray(section.pageNumbers) ? 
+                                              section.pageNumbers.join(', ') : 
+                                              section.pageNumbers}
+                                            </small>
+                                          </p>
+                                        )}
+                                        {section.content || t('summary.noContent')}
+                                      </Accordion.Body>
+                                    </Accordion.Item>
+                                  ))}
+                                </Accordion>
+                              </>
+                            ) : (
+                              <Alert variant="info">
+                                <h5>{t('summary.noSections.title')}</h5>
+                                <p>{t('summary.noSections.message')}</p>
+                              </Alert>
+                            )}
+                          </Tab>
+                          
+                          {/* Show Spanish tab only if there's content */}
+                          {(spanishSummary || spanishSections.length > 0) && (
                             <Tab 
-                              eventKey="translated" 
+                              eventKey="spanish" 
                               title={
                                 <span>
                                   <FontAwesomeIcon icon={faLanguage} className="me-1" />
-                                  {t('summary.preferredLanguage')}
+                                  Español
                                 </span>
                               }
                             >
-                              {translatedSummary ? (
+                              {spanishSummary ? (
                                 <>
-                                  <h4 className="mt-4">{t('summary.iepSummary')}</h4>
+                                  <h4 className="mt-4">Resumen del IEP</h4>
                                   <Card className="summary-content mb-4">
                                     <Card.Body>
-                                      <p className="mb-0">{translatedSummary}</p>
+                                      <p className="mb-0">{spanishSummary}</p>
                                     </Card.Body>
                                   </Card>
                                 </>
@@ -431,11 +454,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                                 </Alert>
                               )}
                               
-                              {translatedSections.length > 0 ? (
+                              {spanishSections.length > 0 ? (
                                 <>
-                                  <h4 className="mt-4">{t('summary.keyInsights')}</h4>
+                                  <h4 className="mt-4">Información Clave</h4>
                                   <Accordion className="mb-3 summary-accordion">
-                                    {translatedSections.map((section, index) => (
+                                    {spanishSections.map((section, index) => (
                                       <Accordion.Item key={index} eventKey={index.toString()}>
                                         <Accordion.Header>
                                           {section.displayName}
@@ -455,50 +478,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                               )}
                             </Tab>
                           )}
-                          
-                          <Tab eventKey="english" title={t('summary.english')}>
-                            {summary ? (
-                              <>
-                                <h4 className="mt-4">IEP Summary</h4>
-                                <Card className="summary-content mb-4">
-                                  <Card.Body>
-                                    <p className="mb-0">{summary}</p>
-                                  </Card.Body>
-                                </Card>
-                              </>
-                            ) : (
-                              <Alert variant="info">
-                                <h5>{t('summary.noSummary.title')}</h5>
-                                <p>{t('summary.noSummary.message')}</p>
-                              </Alert>
-                            )}
-                            
-                            {sections.length > 0 ? (
-                              <>
-                                <h4 className="mt-4">Key Insights</h4>
-                                <Accordion className="mb-3 summary-accordion">
-                                  {sections.map((section, index) => (
-                                    <Accordion.Item key={index} eventKey={index.toString()}>
-                                      <Accordion.Header>
-                                        {section.displayName}
-                                      </Accordion.Header>
-                                      <Accordion.Body>
-                                        {section.content || t('summary.noContent')}
-                                      </Accordion.Body>
-                                    </Accordion.Item>
-                                  ))}
-                                </Accordion>
-                              </>
-                            ) : (
-                              <Alert variant="info">
-                                <h5>{t('summary.noSections.title')}</h5>
-                                <p>{t('summary.noSections.message')}</p>
-                              </Alert>
-                            )}
-                          </Tab>
                         </Tabs>
                         
-                        {!summary && !translatedSummary && sections.length === 0 && translatedSections.length === 0 && (
+                        {!englishSummary && !spanishSummary && 
+                         englishSections.length === 0 && spanishSections.length === 0 && (
                           <Alert variant="info">
                             <h5>{t('summary.noContentAvailable.title')}</h5>
                             <p>{t('summary.noContentAvailable.message')}</p>
