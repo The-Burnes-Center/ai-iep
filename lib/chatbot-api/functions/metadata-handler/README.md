@@ -37,11 +37,6 @@ This system helps process and understand Individualized Education Program (IEP) 
     * Makes sure we don't miss important details
     * Useful for understanding specific sections
 
-  - **Smart Search Tool**:
-    * Finds related information across the document
-    * Understands the context of what it's looking for
-    * Can find similar topics or related sections
-    * Helps connect information from different parts
 
 ### 2. The Process
 
@@ -59,6 +54,7 @@ This system helps process and understand Individualized Education Program (IEP) 
      - Processing metadata (model used, pages processed)
    - OCR data stored in DynamoDB for future reference
    - Status updated to reflect OCR completion
+   - **After OCR is processed (whether successful or failed), the original S3 document is deleted from the bucket.**
 
 3. **Smart Document Analysis**:
    - **Full Content Understanding**:

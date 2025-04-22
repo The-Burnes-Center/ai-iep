@@ -632,6 +632,14 @@ def lambda_handler(event, context):
     # This is an S3 event
     return iep_processing_pipeline(event)
 
+def delete_s3_object(bucket, key):
+    try:
+        s3 = boto3.client('s3')
+        s3.delete_object(Bucket=bucket, Key=key)
+        print(f"Deleted S3 object: {bucket}/{key}")
+    except Exception as e:
+        print(f"Failed to delete S3 object: {bucket}/{key} - {e}")
+
 def iep_processing_pipeline(event):
     """Handle S3 event for document processing"""
     try:
@@ -667,6 +675,7 @@ def iep_processing_pipeline(event):
                 user_id=user_id,
                 object_key=key
             )
+            delete_s3_object(bucket, key)
             return {
                 'statusCode': 500,
                 'body': json.dumps({
@@ -683,6 +692,7 @@ def iep_processing_pipeline(event):
             object_key=key,
             ocr_data=ocr_result
         )
+        delete_s3_object(bucket, key)
         
         # Get user profile for language preferences
         user_profile = get_user_profile(user_id) if user_id else None
