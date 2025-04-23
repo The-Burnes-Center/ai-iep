@@ -595,34 +595,6 @@ def get_user_profile(user_id):
             if 'Item' in response:
                 user_profile = response['Item']
                 print(f"Found user profile for userId: {user_id}")
-                
-                # Check if languages array already exists in the profile
-                if 'languages' in user_profile:
-                    print(f"User profile already has languages: {user_profile['languages']}")
-                else:
-                    # Only if languages array doesn't exist, create one from primary/secondary languages
-                    languages = []
-                    
-                    # Always include 'en' (English) as a base language
-                    if 'en' not in languages:
-                        languages.append('en')
-                    
-                    # Check for primary language
-                    primary_lang = user_profile.get('primaryLanguage')
-                    if primary_lang and primary_lang not in languages:
-                        languages.append(primary_lang)
-                        print(f"Added primary language: {primary_lang}")
-                    
-                    # Check for secondary language
-                    secondary_lang = user_profile.get('secondaryLanguage')
-                    if secondary_lang and secondary_lang not in languages:
-                        languages.append(secondary_lang)
-                        print(f"Added secondary language: {secondary_lang}")
-                    
-                    # Add languages array to profile
-                    user_profile['languages'] = languages
-                    print(f"Created languages array from profile: {languages}")
-                
                 return user_profile
             else:
                 print(f"No user profile found for userId: {user_id}")
@@ -752,9 +724,6 @@ def iep_processing_pipeline(event):
             ocr_data=ocr_data
         )
         delete_s3_object(bucket, key)
-        
-        # Get user profile for language preferences
-        user_profile = get_user_profile(user_id) if user_id else None
         
         # Create OpenAIAgent instance with redacted OCR data
         agent = OpenAIAgent(ocr_data=ocr_data)
