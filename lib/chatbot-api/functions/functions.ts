@@ -413,12 +413,15 @@ export class LambdaFunctionStack extends cdk.Stack {
             'bedrock:InvokeModel',
             'bedrock:Retrieve',
             'bedrock-agent-runtime:Retrieve',
+            'comprehend:BatchDetectPiiEntities',
+            'comprehend:DetectPiiEntities',
           ],
           resources: [
             props.knowledgeBucket.bucketArn,
             props.knowledgeBucket.bucketArn + "/*",
             'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
             props.knowledgeBase.attrKnowledgeBaseArn,
+            '*', // Comprehend permissions apply to all resources
           ]
         }));
     

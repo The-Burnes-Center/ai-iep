@@ -226,7 +226,7 @@ class OpenAIAgent:
                 result = Runner.run_sync(
                     agent, 
                     "Please analyze this IEP document according to the instructions.",
-                    max_turns= 75  # Increased from default 10 to handle complex IEP analysis
+                    max_turns= 150  # Increased from default 10 to handle complex IEP analysis
                 )
                 logger.info("Agent completed analysis")
             except MaxTurnsExceeded as e:

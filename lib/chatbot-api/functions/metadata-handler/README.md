@@ -52,7 +52,8 @@ This system helps process and understand Individualized Education Program (IEP) 
      - Page-by-page markdown content
      - Document dimensions and DPI information
      - Processing metadata (model used, pages processed)
-   - OCR data stored in DynamoDB for future reference
+   - **PII Redaction:** After OCR, the text of each page is processed using AWS Comprehend to identify and redact all PII except names and date/time information. This is done in parallel using ThreadPoolExecutor (up to 8 workers) for maximum efficiency with large documents. Only names and date/time information are allowed to remain; all other detected PII is replaced with a marker indicating the entity type (e.g., [SSN], [ADDRESS]).
+   - OCR data (with PII redacted) stored in DynamoDB for future reference
    - Status updated to reflect OCR completion
    - **After OCR is processed (whether successful or failed), the original S3 document is deleted from the bucket.**
 

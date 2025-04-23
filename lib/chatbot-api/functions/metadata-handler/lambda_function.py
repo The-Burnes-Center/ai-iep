@@ -16,6 +16,8 @@ import traceback
 import re
 from mistral_ocr import process_document_with_mistral_ocr
 from open_ai_agent import OpenAIAgent
+from comprehend_redactor import redact_pii_from_texts
+from decimal import Decimal
 
 # AWS clients
 s3 = boto3.client('s3')
@@ -86,6 +88,32 @@ def format_data_for_dynamodb(section_data):
         # Convert anything else to string as fallback
         return {"S": str(section_data)}
 
+def convert_dict_floats_to_decimal(d):
+    """
+    Convert all float values in a dictionary to Decimal type for DynamoDB compatibility.
+    This is a simple, non-recursive implementation that just handles top-level floats.
+    
+    Args:
+        d (dict): Dictionary with possible float values
+    
+    Returns:
+        dict: Dictionary with float values converted to Decimal
+    """
+    result = {}
+    for k, v in d.items():
+        if isinstance(v, float):
+            result[k] = Decimal(str(v))
+        elif isinstance(v, dict):
+            result[k] = convert_dict_floats_to_decimal(v)
+        elif isinstance(v, list):
+            result[k] = [
+                convert_dict_floats_to_decimal(item) if isinstance(item, dict) 
+                else (Decimal(str(item)) if isinstance(item, float) else item)
+                for item in v
+            ]
+        else:
+            result[k] = v
+    return result
 
 def update_iep_document_status(iep_id, status, error_message=None, child_id=None, summaries=None, user_id=None, object_key=None, ocr_data=None):
     """
@@ -107,16 +135,19 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
             print(f"Invalid iep_id: {iep_id}. Cannot update document status.")
             return
             
+        # Convert any float values in ocr_data to Decimal for DynamoDB compatibility
+        if ocr_data and isinstance(ocr_data, dict):
+            ocr_data = convert_dict_floats_to_decimal(ocr_data)
+            
         # Print the values we're using for debugging
-        print(f"Updating document status for iep_id: {iep_id}, status: {status}, child_id: {child_id}")
+        print(f"Updating document status for iep_id: {iep_id}, status: {status}")
         
-        # Print summaries structure for debugging
-        if summaries:
-            print(f"Summaries structure keys: {list(summaries.keys())}")
-            if 'summaries' in summaries:
-                print(f"Languages in summaries: {list(summaries['summaries'].get('M', {}).keys())}")
-            if 'sections' in summaries:
-                print(f"Languages in sections: {list(summaries['sections'].get('M', {}).keys())}")
+        # Extract userId from the S3 object path if not provided directly
+        if not user_id and object_key:
+            # Extract userId from path (usually first segment)
+            path_parts = object_key.split('/')
+            if len(path_parts) >= 1:
+                user_id = path_parts[0]
         
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(os.environ['IEP_DOCUMENTS_TABLE'])
@@ -134,10 +165,9 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
         try:
             response = table.get_item(Key=key)
             item_exists = 'Item' in response
-            print(f"Item exists check result: {item_exists}")
         except ClientError as e:
             if 'ValidationException' in str(e):
-                print(f"DynamoDB schema validation error: {e}. The key structure does not match the table schema.")
+                print(f"DynamoDB schema validation error: {str(e)}")
                 item_exists = False
             else:
                 raise
@@ -146,14 +176,6 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
         # Convert ISO string timestamp to datetime object then to epoch timestamp
         dt = datetime.fromisoformat(current_time)
         epoch_time = int(dt.timestamp() * 1000)  # milliseconds since epoch
-        
-        # Extract userId from the S3 object path if not provided directly
-        if not user_id and object_key:
-            # Extract userId from path (usually first segment)
-            path_parts = object_key.split('/')
-            if len(path_parts) >= 1:
-                user_id = path_parts[0]
-                print(f"Extracted userId {user_id} from object key path")
         
         try:
             if item_exists:
@@ -216,10 +238,9 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                 
                 try:
                     response = table.update_item(**update_params)
-                    print(f"Update response: {json.dumps(response, default=str)}")
-                    print(f"Successfully updated existing item for iepId: {iep_id}")
+                    print(f"Successfully updated status for iepId: {iep_id} to {status}")
                 except Exception as update_error:
-                    print(f"Error during update_item operation: {update_error}")
+                    print(f"Error during update_item operation: {str(update_error)}")
                     raise
             else:
                 # Create new item
@@ -264,7 +285,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     print(f"Attempting to create new item for iepId: {iep_id} using PutItem")
                     print(f"Item structure: {json.dumps(item, default=str)}")
                     table.put_item(Item=item)
-                    print(f"Successfully created new item with PutItem")
+                    print(f"Successfully created new item for iepId: {iep_id}")
                 except ClientError as e:
                     if 'AccessDeniedException' in str(e) and 'dynamodb:PutItem' in str(e):
                         # If PutItem permission is denied, try using UpdateItem (conditional create) as fallback
@@ -325,10 +346,9 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                             }
                             
                             response = table.update_item(**update_params)
-                            print(f"Fallback update response: {json.dumps(response, default=str)}")
                             print(f"Successfully created item with UpdateItem fallback for iepId: {iep_id}")
                         except Exception as update_error:
-                            print(f"UpdateItem fallback also failed: {update_error}")
+                            print(f"UpdateItem fallback also failed: {str(update_error)}")
                             raise
                     else:
                         # If it's another type of error, re-raise it
@@ -338,8 +358,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
         except ClientError as e:
             if 'AccessDeniedException' in str(e):
                 # Handle permission errors gracefully
-                print(f"WARNING: DynamoDB permission error: {e}")
-                print(f"Document status update for {iep_id} could not be completed due to permission restrictions")
+                print(f"DynamoDB permission error: {str(e)}")
                 
                 # Continue processing the document even if we can't update the status
                 if status == 'PROCESSING':
@@ -354,13 +373,11 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
             try:
                 update_user_profile_with_summary(child_id, iep_id, summaries, user_id, object_key)
             except Exception as profile_error:
-                print(f"Error updating user profile with summary: {profile_error}")
+                print(f"Error updating user profile with summary: {str(profile_error)}")
                 # Even if profile update fails, document processing is still considered successful
                 
     except Exception as e:
-        print(f"Failed to update document status: {e}")
-        # Don't re-raise the exception here - log it but don't fail completely
-        # This allows processing to continue even if status updates fail
+        print(f"Failed to update document status: {str(e)}")
     
     # Return True or False based on whether the function succeeded
     return True
@@ -683,22 +700,64 @@ def iep_processing_pipeline(event):
                 })
             }
         
-        # Store the OCR results in DynamoDB
+        # Redact PII (except names) from OCR result using AWS Comprehend
+        if ocr_result and 'pages' in ocr_result and isinstance(ocr_result['pages'], list):
+            print(f"Processing OCR result with {len(ocr_result['pages'])} pages")
+            
+            # Get text content from each page (checking for different possible field names)
+            page_contents = []
+            for page in ocr_result['pages']:
+                if 'content' in page and page.get('content'):
+                    page_contents.append(page.get('content', ''))
+                elif 'text' in page and page.get('text'):
+                    page_contents.append(page.get('text', ''))
+                elif 'markdown' in page and page.get('markdown'):
+                    page_contents.append(page.get('markdown', ''))
+                else:
+                    # Try to find any string field that could contain text
+                    text_fields = [v for k, v in page.items() 
+                                  if isinstance(v, str) and len(v) > 20]
+                    if text_fields:
+                        page_contents.append(text_fields[0])
+                    else:
+                        page_contents.append('')
+            
+            print(f"Beginning PII redaction on {sum(1 for c in page_contents if c)} non-empty pages")
+            
+            redacted_pages, pii_stats = redact_pii_from_texts(page_contents)
+            
+            # Update the content in the original structure
+            for i, page in enumerate(ocr_result['pages']):
+                if 'content' in page:
+                    page['content'] = redacted_pages[i]
+                elif 'text' in page:
+                    page['text'] = redacted_pages[i]
+                elif 'markdown' in page:
+                    page['markdown'] = redacted_pages[i]
+            
+            # Add PII redaction stats to OCR result for tracking
+            ocr_result['pii_redaction_stats'] = pii_stats
+            print(f"PII redaction complete - redacted {pii_stats.get('redacted_entities', 0)} entities")
+            
+            # Convert any floats to Decimal to avoid DynamoDB errors
+            ocr_data = convert_dict_floats_to_decimal(ocr_result)
+        
+        # Store the redacted OCR results in DynamoDB
         update_iep_document_status(
             iep_id=iep_id,
             status="PROCESSING",
             child_id=child_id,
             user_id=user_id,
             object_key=key,
-            ocr_data=ocr_result
+            ocr_data=ocr_data
         )
         delete_s3_object(bucket, key)
         
         # Get user profile for language preferences
         user_profile = get_user_profile(user_id) if user_id else None
         
-        # Create OpenAIAgent instance with OCR data
-        agent = OpenAIAgent(ocr_data=ocr_result)
+        # Create OpenAIAgent instance with redacted OCR data
+        agent = OpenAIAgent(ocr_data=ocr_data)
         
         try:
             # Analyze the document - this now includes translations
@@ -809,7 +868,7 @@ def iep_processing_pipeline(event):
                 summaries=formatted_result,
                 user_id=user_id,
                 object_key=key,
-                ocr_data=ocr_result
+                ocr_data=ocr_data
             )
             
             print(f"Document processed successfully: {iep_id}")
