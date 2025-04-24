@@ -226,7 +226,7 @@ class OpenAIAgent:
                     self.section_info_tool,
                     translation_agent.as_tool(
                         tool_name="translate_text",
-                        tool_description="Use this tool for all translations related jobs. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the text in the target language."
+                        tool_description="Use this tool for all translations related jobs. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language."
                     )
                 ],
                 output_type=IEPData
