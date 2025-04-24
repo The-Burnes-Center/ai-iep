@@ -224,7 +224,6 @@ class OpenAIAgent:
                     self.ocr_text_tool, 
                     self.ocr_page_tool, 
                     self.section_info_tool,
-                    WebSearchTool(),
                     translation_agent.as_tool(
                         tool_name="translate_text",
                         tool_description="Use this tool for all translations related jobs. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the text in the target language."
