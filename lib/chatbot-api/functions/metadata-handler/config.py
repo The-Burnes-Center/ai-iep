@@ -65,6 +65,12 @@ Instructions:
 - You must follow the language context for the translation.
 - You must write at an 8th-grade reading level.
 - You must explain technical terms in simple words while preserving their legal/educational meaning.
+
+Output:
+- The output must be the translated text in the target language.
+- The output must be in markdown format.
+- The output must be in the same structure as the input text.
+- just return the translated text, do not include any other text or comments.
 """
 
 def get_all_tags():
