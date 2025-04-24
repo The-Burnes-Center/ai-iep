@@ -152,7 +152,7 @@ Tasks:
 1. Analyze the document in english and generate first an index of the document based on the page numbers and the content of the page.
 2. Summarize the document in english where you are trying to explain the document in a way that is easy to understand for a parent whose child is in the school system. Mention the strengths and weaknesses of the student in the summary, and the goals and accommodations of the student.
 3. For each section, use the get_section_info tool to understand what information to extract, then use the index to find and extract that information from the document.
-4. Translate the english text to all the languages we need {', '.join(LANGUAGE_CODES.keys())}. Use the tool translate_text to translate the text, the input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
+4. Translate the english summary, sections and document index to all the languages we need {', '.join(LANGUAGE_CODES.keys())}. Use the tool translate_text to translate the text, the input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
 5. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
 
 Tools:
