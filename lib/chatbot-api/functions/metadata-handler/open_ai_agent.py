@@ -205,6 +205,15 @@ class OpenAIAgent:
             
             # Get the prompt from config.py
             prompt = get_full_prompt("IEP Document")
+            translation_prompt = get_translation_prompt()
+
+            translation_agent = Agent(
+                name="Translation Agent",
+                model=model,
+                instructions=translation_prompt,
+                tools=[self.language_context_tool],
+                output_type=str
+            )
            
             # Create an agent for document analysis using the agents package
             agent = Agent(
@@ -214,9 +223,12 @@ class OpenAIAgent:
                 tools=[
                     self.ocr_text_tool, 
                     self.ocr_page_tool, 
-                    self.language_context_tool, 
                     self.section_info_tool,
-                    WebSearchTool()
+                    WebSearchTool(),
+                    translation_agent.as_tool(
+                        tool_name="translate_text",
+                        tool_description="Use this tool for all translations related jobs. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the text in the target language."
+                    )
                 ],
                 output_type=IEPData
             )

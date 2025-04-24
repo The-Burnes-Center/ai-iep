@@ -53,7 +53,18 @@ def get_translation_prompt():
 
     return f"""
 
-After processing the document in english, please use the translation tool to translate each part of the final output in all the languages we need. use the tool get_language_context to get the language context for translation.
+You will be given a piece of text in english along with a language code from {', '.join(LANGUAGE_CODES.values())}.
+
+Your task is to translate the text to the target language.
+
+Use the tool get_language_context to get the language context for translation. This will include specific guidelines for the translation.
+
+Instructions:
+- This will also have a json list of key words and their translations in the target language.
+- You must use the key words and their translations to translate the text.
+- You must follow the language context for the translation.
+- You must write at an 8th-grade reading level.
+- You must explain technical terms in simple words while preserving their legal/educational meaning.
 """
 
 def get_all_tags():
@@ -135,15 +146,14 @@ Tasks:
 1. Analyze the document in english and generate first an index of the document based on the page numbers and the content of the page.
 2. Summarize the document in english where you are trying to explain the document in a way that is easy to understand for a parent whose child is in the school system. Mention the strengths and weaknesses of the student in the summary, and the goals and accommodations of the student.
 3. For each section, use the get_section_info tool to understand what information to extract, then use the index to find and extract that information from the document.
-4. Translate ALL extracted information to ALL the languages we need {', '.join(LANGUAGE_CODES.keys())}. DO NOT use placeholders like "..." or "Translated sections" - you must provide COMPLETE translations for every field.
+4. Translate ALL extracted information to ALL the languages we need {', '.join(LANGUAGE_CODES.keys())}. DO NOT use placeholders like "..." or "Translated sections" - you must provide COMPLETE translations for every field - only use the tool translate_text to translate the text.
 5. For EACH language, translate ALL sections with the SAME level of detail as the English version.
-6. Use the tool get_language_context to get the language specific context for translation of each language.
-7. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
+6. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
 
 Tools:
 - get_all_ocr_text: to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
 - get_ocr_text_for_page: to retrieve specific information about each section based on the page number of the document.
-- get_language_context: to get the language specific context for translation. Use this tool for EACH language before translating.
+- translate_text: to translate the text to the target language. Use this tool for all parts and all languages.
 - get_section_info: to get the key points and description for each section. Use this tool for each section to understand what information to extract.
 
 Important Guidelines:
