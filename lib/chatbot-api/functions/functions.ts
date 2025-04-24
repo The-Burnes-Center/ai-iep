@@ -398,8 +398,8 @@ export class LambdaFunctionStack extends cdk.Stack {
             "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
             "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
           },
-          timeout: cdk.Duration.seconds(600),
-          memorySize: 1024
+          timeout: cdk.Duration.seconds(900),
+          memorySize: 2048
         });
         
         metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({

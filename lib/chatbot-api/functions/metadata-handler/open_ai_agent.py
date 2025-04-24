@@ -182,7 +182,7 @@ class OpenAIAgent:
             }
         return get_section_info
 
-    def analyze_document(self, model="gpt-4.1"):
+    def analyze_document(self, model="gpt-4.1-nano"):
         """
         Analyze an IEP document using OpenAI's Agent architecture.
         
