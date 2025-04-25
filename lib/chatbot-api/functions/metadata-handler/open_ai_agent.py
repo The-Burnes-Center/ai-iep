@@ -6,7 +6,7 @@ from datetime import datetime
 from data_model import IEPData
 from openai import OpenAI
 # Correct imports for openai-agents package
-from agents import Agent, Runner, function_tool, WebSearchTool
+from agents import Agent, Runner, function_tool, ModelSettings
 from config import get_full_prompt, get_all_tags, IEP_SECTIONS, get_translation_prompt, get_language_context, SECTION_KEY_POINTS, LANGUAGE_CODES
 import traceback
 from agents.exceptions import MaxTurnsExceeded
@@ -220,6 +220,7 @@ class OpenAIAgent:
                 name="IEP Document Analyzer",
                 model=model,
                 instructions=prompt,
+                model_settings=ModelSettings(parallel_tool_calls=True),
                 tools=[
                     self.ocr_text_tool, 
                     self.ocr_page_tool, 
