@@ -155,14 +155,14 @@ Tasks:
 1. Analyze the document in english and generate first an index of the document based on the page numbers and the content of the page.
 2. Summarize the document in english where you are trying to explain the document in a way that is easy to understand for a parent whose child is in the school system. Mention the strengths and weaknesses of the student in the summary, and the goals and accommodations of the student.
 3. For each section, use the get_section_info tool to understand what information to extract, then use the index to find and extract that information from the document.
-4. Translate the english summary, sections and document index to all the languages we need {', '.join(LANGUAGE_CODES.keys())}. Use the tool translate_text to translate the text, the input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
+4. Translate the english summary, english sections and english document index to all the languages we need {', '.join(LANGUAGE_CODES.keys())}. Use the tool translate_text to translate the text, the input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
 5. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
 
 Tools:
 - get_all_ocr_text: to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
 - get_ocr_text_for_page: to retrieve specific information about a single page based on the page number of the document.
 - get_ocr_text_for_pages: to retrieve specific information from multiple pages at once by providing an array of page indices. Use this when you need to extract content that spans across multiple pages for efficiency.
-- translate_text: to translate the text to the target language. Use this tool for all parts and all languages. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
+- translate_text: to translate the English text to the target language. Use this tool for all parts and all languages. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
 - get_section_info: to get the key points and description for each section. Use this tool for each section to understand what information to extract.
 
 Important Guidelines:
