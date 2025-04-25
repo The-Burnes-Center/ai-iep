@@ -15,7 +15,7 @@ IEP_SECTIONS = {
 
 # Section-specific key points to extract
 SECTION_KEY_POINTS = {
-    'Present Levels': """Analyze and describe the student's current academic performance across all subjects. Include details about their social and behavioral skills, physical health status, and communication abilities. Document their life and self-help skills. Be sure to incorporate teacher observations and input about the student's performance and behavior in the classroom.  Also include parent concerns. Make sure to include the student’s strengths, preferences, and interests. Include a summary of where the student is at in terms of reading skills, math skills, and so on. Clearly separate information coming from teachers, parents, and the student where possible. Include any observable trends over time. If possible, note changes since the previous IEP.""",
+    'Present Levels': """Analyze and describe the student's current academic performance across all subjects. Include details about their social and behavioral skills, physical health status, and communication abilities. Document their life and self-help skills. Be sure to incorporate teacher observations and input about the student's performance and behavior in the classroom.  Also include parent concerns. Make sure to include the student's strengths, preferences, and interests. Include a summary of where the student is at in terms of reading skills, math skills, and so on. Clearly separate information coming from teachers, parents, and the student where possible. Include any observable trends over time. If possible, note changes since the previous IEP.""",
     
     'Eligibility': """Identify and document the student's primary as well as secondary disability category and explain how this disability affects their learning process. Include all relevant evaluation results with their dates. List the specific eligibility criteria that were met. Document the evaluation team's decisions and recommendations regarding the student's eligibility for special education services.""",
     
@@ -160,7 +160,8 @@ Tasks:
 
 Tools:
 - get_all_ocr_text: to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
-- get_ocr_text_for_page: to retrieve specific information about each section based on the page number of the document.
+- get_ocr_text_for_page: to retrieve specific information about a single page based on the page number of the document.
+- get_ocr_text_for_pages: to retrieve specific information from multiple pages at once by providing an array of page indices. Use this when you need to extract content that spans across multiple pages for efficiency.
 - translate_text: to translate the text to the target language. Use this tool for all parts and all languages. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
 - get_section_info: to get the key points and description for each section. Use this tool for each section to understand what information to extract.
 
@@ -172,6 +173,7 @@ Important Guidelines:
 - NEVER use placeholder text like "..." or "// Translated sections" - all sections must be fully translated.
 - The content in all languages should have the SAME level of detail.
 - For each section, use get_section_info to understand what information to look for.
+- When content for a section spans multiple pages, use get_ocr_text_for_pages with an array of relevant page indices for more efficient extraction.
 - For the 'services' section specifically:
     * ALWAYS show the original duration in minutes as mentioned in the IEP
     * In parentheses, include the conversion to hours per week

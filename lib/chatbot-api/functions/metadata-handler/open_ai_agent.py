@@ -29,6 +29,7 @@ class OpenAIAgent:
         # Create tool instances that have access to self
         self.ocr_text_tool = self._create_ocr_text_tool()
         self.ocr_page_tool = self._create_ocr_page_tool()
+        self.ocr_multiple_pages_tool = self._create_ocr_multiple_pages_tool()
         self.language_context_tool = self._create_language_context_tool()
         self.section_info_tool = self._create_section_info_tool()
 
@@ -120,6 +121,52 @@ class OpenAIAgent:
             print(f"Page index {page_index} not found in OCR result. Max index is {len(self.ocr_data['pages'])}")
             return ""
         return get_ocr_text_for_page
+        
+    def _create_ocr_multiple_pages_tool(self):
+        """Create a tool for getting OCR text for multiple specific pages"""
+        @function_tool()
+        def get_ocr_text_for_pages(page_indices: list) -> str:
+            """Extract OCR text from multiple specific pages of the IEP document.
+
+            This tool retrieves and combines markdown-formatted text content from 
+            multiple specified pages, allowing targeted extraction of section information
+            that may span across several pages.
+
+            Args:
+                page_indices (list): List of 0-based page indices to retrieve 
+                                    (e.g., [0, 1, 2] for pages 1, 2, and 3)
+
+            Returns:
+                str: Combined markdown-formatted content for the specified pages with page delimiters.
+                    Returns empty string if no pages are found or OCR data is invalid.
+            """
+            if not self.ocr_data or not isinstance(self.ocr_data, dict) or 'pages' not in self.ocr_data:
+                logger.error("Invalid OCR result format or missing 'pages' field")
+                return ""
+                
+            if not page_indices or not isinstance(page_indices, list):
+                logger.error(f"Invalid page_indices format: {page_indices}")
+                return ""
+                
+            text_content = []
+            for page_idx in page_indices:
+                found = False
+                for page in self.ocr_data['pages']:
+                    if isinstance(page, dict) and 'index' in page and page['index'] == page_idx:
+                        # Add 1 to the index for human-readable page numbers (1-indexed)
+                        text_content.append(f"Page {page_idx + 1}:\n{page.get('markdown', '')}")
+                        found = True
+                        break
+                
+                if not found:
+                    logger.warning(f"Page index {page_idx} not found in OCR result")
+            
+            if not text_content:
+                logger.warning(f"None of the requested pages {page_indices} were found in OCR data")
+                return ""
+                
+            return "\n\n".join(text_content)
+        return get_ocr_text_for_pages
 
     def _create_language_context_tool(self):
         """Create a tool for getting language context"""
@@ -223,7 +270,8 @@ class OpenAIAgent:
                 model_settings=ModelSettings(parallel_tool_calls=True),
                 tools=[
                     self.ocr_text_tool, 
-                    self.ocr_page_tool, 
+                    self.ocr_page_tool,
+                    self.ocr_multiple_pages_tool,
                     self.section_info_tool,
                     translation_agent.as_tool(
                         tool_name="translate_text",
