@@ -624,8 +624,16 @@ def lambda_handler(event, context):
 def delete_s3_object(bucket, key):
     try:
         s3 = boto3.client('s3')
-        s3.delete_object(Bucket=bucket, Key=key)
-        print(f"Deleted S3 object: {bucket}/{key}")
+        # Check if object exists before deleting
+        try:
+            s3.head_object(Bucket=bucket, Key=key)
+            s3.delete_object(Bucket=bucket, Key=key)
+            print(f"Deleted S3 object: {bucket}/{key}")
+        except s3.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                print(f"S3 object does not exist, no need to delete: {bucket}/{key}")
+            else:
+                raise
     except Exception as e:
         print(f"Failed to delete S3 object: {bucket}/{key} - {e}")
 
@@ -635,6 +643,7 @@ def iep_processing_pipeline(event):
         record = event['Records'][0]
         bucket = record['s3']['bucket']['name']
         key = record['s3']['object']['key']
+        # URL decode the key to handle URL encoded characters
         key = urllib.parse.unquote_plus(key)
         
         print(f"Processing document: {key}")
@@ -664,7 +673,9 @@ def iep_processing_pipeline(event):
                 user_id=user_id,
                 object_key=key
             )
-            delete_s3_object(bucket, key)
+            # Only delete the original file if OCR was attempted (not if file wasn't found)
+            if "Error downloading file from S3" not in ocr_result["error"]:
+                delete_s3_object(bucket, key)
             return {
                 'statusCode': 500,
                 'body': json.dumps({
@@ -723,7 +734,11 @@ def iep_processing_pipeline(event):
             object_key=key,
             ocr_data=ocr_data
         )
-        delete_s3_object(bucket, key)
+        
+        # Delete the original file from S3 after successful processing
+        # Only delete if OCR was successful, meaning we were able to find and process the file
+        if ocr_data and "error" not in ocr_data:
+            delete_s3_object(bucket, key)
         
         # Create OpenAIAgent instance with redacted OCR data
         agent = OpenAIAgent(ocr_data=ocr_data)

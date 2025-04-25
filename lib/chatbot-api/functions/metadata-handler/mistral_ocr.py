@@ -56,12 +56,46 @@ def process_document_with_mistral_ocr(bucket, key):
         logger.error("Mistral API key not available, cannot process document")
         return {"error": "Mistral API key not available"}
     
-    # Download the S3 file to memory
+    # Ensure the key is properly URL decoded
     try:
+        # The key might already be decoded from the lambda_function.py
+        # Let's make sure it's encoded properly for S3 access
+        decoded_key = urllib.parse.unquote_plus(key)
+        
+        # Check if the key and decoded key are different
+        if key != decoded_key:
+            logger.info(f"Key was URL encoded. Original: {key}, Decoded: {decoded_key}")
+            key = decoded_key
+            
         logger.info(f"Downloading document from S3: s3://{bucket}/{key}")
         s3_client = boto3.client('s3')
-        response = s3_client.get_object(Bucket=bucket, Key=key)
-        file_content = response['Body'].read()
+        
+        # Try with the key as is
+        try:
+            response = s3_client.get_object(Bucket=bucket, Key=key)
+            file_content = response['Body'].read()
+        except s3_client.exceptions.NoSuchKey:
+            # If original key fails, try with the encoded version
+            logger.info(f"Key not found, trying with URL encoded version")
+            encoded_key = urllib.parse.quote_plus(key)
+            logger.info(f"Trying encoded key: {encoded_key}")
+            try:
+                response = s3_client.get_object(Bucket=bucket, Key=encoded_key)
+                file_content = response['Body'].read()
+                # If this works, update the key for later use
+                key = encoded_key
+            except s3_client.exceptions.NoSuchKey:
+                # If that fails too, try with just the filename
+                logger.info(f"Encoded key not found, trying just with filename")
+                filename = key.split('/')[-1]
+                try:
+                    response = s3_client.get_object(Bucket=bucket, Key=filename)
+                    file_content = response['Body'].read()
+                    # If this works, update the key for later use
+                    key = filename
+                except:
+                    # If all attempts fail, raise the original error
+                    raise
         
         # Get the file name from the key
         filename = key.split('/')[-1]
