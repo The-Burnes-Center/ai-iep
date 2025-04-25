@@ -91,7 +91,9 @@ class OpenAIAgent:
                 if 'markdown' in page:
                     text_content.append(f"Page {i}:\n{page['markdown']}")
             
-            return "\n\n".join(text_content)
+            combined_text = "\n\n".join(text_content)
+            total_pages = len(self.ocr_data['pages'])
+            return f"{combined_text}\n\nTotal pages in document: {total_pages}"
         return get_all_ocr_text
 
     def _create_ocr_page_tool(self):
@@ -108,18 +110,23 @@ class OpenAIAgent:
 
             Returns:
                 str: Markdown-formatted content for the specified page.
-                    Returns empty string if page not found.
+                    Returns error message if page not found.
             """
             if not self.ocr_data or not isinstance(self.ocr_data, dict) or 'pages' not in self.ocr_data:
-                print(f"Invalid OCR result format or missing 'pages' field")
-                return ""
+                error_msg = "Invalid OCR result format or missing 'pages' field"
+                print(error_msg)
+                return f"ERROR: {error_msg}"
+            
+            total_pages = len(self.ocr_data['pages'])
             
             for page in self.ocr_data['pages']:
                 if isinstance(page, dict) and 'index' in page and page['index'] == page_index:
-                    return page.get('markdown', '')
+                    content = page.get('markdown', '')
+                    return f"{content}\n\nTotal pages in document: {total_pages} (Valid page indices: 0-{total_pages-1})"
                     
-            print(f"Page index {page_index} not found in OCR result. Max index is {len(self.ocr_data['pages'])}")
-            return ""
+            error_msg = f"Page index {page_index} not found in OCR result. Max index is {len(self.ocr_data['pages']) - 1}"
+            print(error_msg)
+            return f"ERROR: {error_msg}\n\nTotal pages in document: {total_pages} (Valid page indices: 0-{total_pages-1})"
         return get_ocr_text_for_page
         
     def _create_ocr_multiple_pages_tool(self):
@@ -148,7 +155,10 @@ class OpenAIAgent:
                 logger.error(f"Invalid page_indices format: {page_indices}")
                 return ""
                 
+            total_pages = len(self.ocr_data['pages'])
+            
             text_content = []
+            missing_pages = []
             for page_idx in page_indices:
                 found = False
                 try:
@@ -165,12 +175,21 @@ class OpenAIAgent:
                 
                 if not found:
                     logger.warning(f"Page index {page_idx} not found in OCR result")
+                    missing_pages.append(page_idx)
             
+            # If none of the requested pages were found, return an error
             if not text_content:
-                logger.warning(f"None of the requested pages {page_indices} were found in OCR data")
-                return ""
+                error_msg = f"None of the requested pages {page_indices} were found in OCR data"
+                logger.error(error_msg)
+                return f"ERROR: {error_msg}\n\nTotal pages in document: {total_pages} (Valid page indices: 0-{total_pages-1})"
                 
-            return "\n\n".join(text_content)
+            # If some pages were missing but at least one was found, include a warning
+            if missing_pages:
+                warning = f"WARNING: The following pages were not found: {missing_pages}"
+                text_content.insert(0, warning)
+                
+            combined_text = "\n\n".join(text_content)
+            return f"{combined_text}\n\nTotal pages in document: {total_pages} (Valid page indices: 0-{total_pages-1})"
         return get_ocr_text_for_pages
 
     def _create_language_context_tool(self):
@@ -294,6 +313,16 @@ class OpenAIAgent:
                     max_turns= 150  # Increased from default 10 to handle complex IEP analysis
                 )
                 logger.info("Agent completed analysis")
+                
+                # Check if any tool responses contain error messages
+                if hasattr(result, 'trace') and result.trace:
+                    for turn in result.trace:
+                        if hasattr(turn, 'tool_calls') and turn.tool_calls:
+                            for tool_call in turn.tool_calls:
+                                if hasattr(tool_call, 'output') and isinstance(tool_call.output, str) and tool_call.output.startswith('ERROR:'):
+                                    error_msg = tool_call.output.replace('ERROR:', '').strip()
+                                    logger.error(f"Tool execution error: {error_msg}")
+                                    return {"error": f"Tool execution error: {error_msg}"}
             except MaxTurnsExceeded as e:
                 logger.error(f"Max turns exceeded during analysis: {str(e)}")
                 return {

@@ -747,8 +747,28 @@ def iep_processing_pipeline(event):
             # Analyze the document - this now includes translations
             result = agent.analyze_document()
             
+            # Check for error in the result
             if "error" in result:
                 error_message = f"Document analysis failed: {result.get('error')}"
+                print(error_message)
+                update_iep_document_status(
+                    iep_id=iep_id,
+                    status="FAILED",
+                    error_message=error_message,
+                    child_id=child_id,
+                    user_id=user_id,
+                    object_key=key
+                )
+                return {
+                    'statusCode': 500,
+                    'body': json.dumps({
+                        'message': error_message
+                    })
+                }
+                
+            # Check for validation errors in the result
+            if result.get('validation_errors') and not result.get('validation_errors', {}).get('is_valid', True):
+                error_message = f"Document validation failed: {result.get('validation_errors', {}).get('errors', ['Unknown validation error'])}"
                 print(error_message)
                 update_iep_document_status(
                     iep_id=iep_id,
