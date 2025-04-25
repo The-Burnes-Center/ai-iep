@@ -125,7 +125,7 @@ class OpenAIAgent:
     def _create_ocr_multiple_pages_tool(self):
         """Create a tool for getting OCR text for multiple specific pages"""
         @function_tool()
-        def get_ocr_text_for_pages(page_indices: list) -> str:
+        def get_ocr_text_for_pages(page_indices: list[int]) -> str:
             """Extract OCR text from multiple specific pages of the IEP document.
 
             This tool retrieves and combines markdown-formatted text content from 
@@ -133,7 +133,7 @@ class OpenAIAgent:
             that may span across several pages.
 
             Args:
-                page_indices (list): List of 0-based page indices to retrieve 
+                page_indices (list[int]): List of 0-based page indices to retrieve 
                                     (e.g., [0, 1, 2] for pages 1, 2, and 3)
 
             Returns:
@@ -151,12 +151,17 @@ class OpenAIAgent:
             text_content = []
             for page_idx in page_indices:
                 found = False
-                for page in self.ocr_data['pages']:
-                    if isinstance(page, dict) and 'index' in page and page['index'] == page_idx:
-                        # Add 1 to the index for human-readable page numbers (1-indexed)
-                        text_content.append(f"Page {page_idx + 1}:\n{page.get('markdown', '')}")
-                        found = True
-                        break
+                try:
+                    page_idx = int(page_idx)  # Ensure page_idx is an integer
+                    for page in self.ocr_data['pages']:
+                        if isinstance(page, dict) and 'index' in page and page['index'] == page_idx:
+                            # Add 1 to the index for human-readable page numbers (1-indexed)
+                            text_content.append(f"Page {page_idx + 1}:\n{page.get('markdown', '')}")
+                            found = True
+                            break
+                except (ValueError, TypeError):
+                    logger.warning(f"Invalid page index: {page_idx} - must be an integer")
+                    continue
                 
                 if not found:
                     logger.warning(f"Page index {page_idx} not found in OCR result")
