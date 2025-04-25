@@ -260,7 +260,8 @@ class OpenAIAgent:
                         return iep_data.model_dump()
                     except json.JSONDecodeError as je:
                         logger.error(f"JSON parsing error: {str(je)}")
-                        logger.error(f"Problematic JSON: {cleaned_output[:200]}...")  # Log first 200 chars
+                        # Truncate problematic JSON to avoid large error payloads
+                        logger.error(f"Problematic JSON preview: {cleaned_output[:100]}...")
                         return {
                             "summaries": {lang: "" for lang in LANGUAGE_CODES.values()},
                             "sections": {lang: [] for lang in LANGUAGE_CODES.values()},
@@ -305,7 +306,8 @@ class OpenAIAgent:
                 }
             except Exception as e:
                 logger.error(f"Error processing agent output: {str(e)}")
-                logger.error(traceback.format_exc())
+                # Only log a short trace to avoid large error data
+                logger.error(traceback.format_exc(limit=5))
                 return {
                     "summaries": {lang: "" for lang in LANGUAGE_CODES.values()},
                     "sections": {lang: [] for lang in LANGUAGE_CODES.values()},
@@ -318,30 +320,24 @@ class OpenAIAgent:
                 
         except Exception as e:
             logger.error(f"Error analyzing document with OpenAI Agent: {str(e)}")
-            # add more details to the error message
-            logger.error(traceback.format_exc())
+            # Limit traceback size to avoid large error payloads
+            logger.error(traceback.format_exc(limit=5))
             
-            # Safely log the result structure if it exists
+            # Safely log minimal result structure if it exists
             try:
                 if 'result' in locals() and hasattr(result, 'final_output'):
                     logger.error("Final output structure:")
-                    # Try to identify where the JSON might be truncated
-                    output_str = str(result.final_output)
-                    logger.error(f"Output length: {len(output_str)}")
-                    logger.error(f"First 500 chars: {output_str[:500]}...")
-                    logger.error(f"Last 500 chars: ...{output_str[-500:]}")
+                    # Get output type and length but avoid logging entire content
+                    output_type = type(result.final_output).__name__
+                    output_len = len(str(result.final_output))
+                    logger.error(f"Output type: {output_type}, Length: {output_len}")
                     
-                    # Try to parse as JSON to get more specific error details
-                    try:
-                        if isinstance(result.final_output, str):
-                            json.loads(result.final_output)
-                        elif isinstance(result.final_output, dict):
-                            json.dumps(result.final_output)
-                    except json.JSONDecodeError as json_err:
-                        logger.error(f"JSON parsing error details: {str(json_err)}")
-                        logger.error(f"Error position: {json_err.pos}")
-                        logger.error(f"Error line and column: {json_err.lineno}:{json_err.colno}")
-                        
+                    # Log small sample of the output instead of the entire content
+                    if isinstance(result.final_output, str) and len(result.final_output) > 0:
+                        logger.error(f"Output preview: {result.final_output[:100]}...")
+                    elif isinstance(result.final_output, dict) and result.final_output:
+                        # Log only the keys, not the values
+                        logger.error(f"Output keys: {list(result.final_output.keys())}")
             except Exception as log_error:
                 logger.error(f"Could not log result structure: {str(log_error)}")
 
