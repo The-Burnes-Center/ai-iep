@@ -7,7 +7,7 @@ import json
 import urllib.parse
 import boto3
 from botocore.exceptions import ClientError
-from config import get_full_prompt, IEP_SECTIONS, LANGUAGE_CODES
+from config import LANGUAGE_CODES
 import io
 import base64
 import logging

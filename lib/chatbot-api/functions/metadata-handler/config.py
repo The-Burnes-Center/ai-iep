@@ -45,36 +45,78 @@ LANGUAGE_CODES = {
 
 def get_language_context(target_language):
     """Get the language context for the target language."""
-    return {
-        'es' or 'spanish': 'Use Latin American Spanish. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.',
-        'vi' or 'vietnamese': 'Use standard Vietnamese. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.',
-        'zh' or 'chinese': 'Use Simplified Chinese (Mandarin). Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
-    }.get(target_language, '')
+    if target_language in ['es', 'spanish']:
+        return 'Use Latin American Spanish. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
+    elif target_language in ['vi', 'vietnamese']:
+        return 'Use standard Vietnamese. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
+    elif target_language in ['zh', 'chinese']:
+        return 'Use Simplified Chinese (Mandarin). Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
+    else:
+        return ''
 
-def get_translation_prompt():
-    """Generate a prompt for translating content to the target language in a parent-friendly manner."""
 
-    return f"""
+def get_translation_prompt() -> str:
+    """
+    Generate the instruction prompt for multi-language translation using GPT-4.1.
+    Takes an English-structured JSON and outputs translations for es, vi, zh in one call.
+    Uses the `get_language_context_for_translation` tool to fetch language-specific guidelines.
+    """
+    return '''
+You are a multi-language translation agent using GPT-4.1.
+Your input is a JSON object with English content under keys:
+- `summaries.en`
+- `sections.en`
+- `document_index.en`
 
-You will be given a piece of text in english along with a language code from {', '.join(LANGUAGE_CODES.values())}.
+Translation Workflow:
+1. For each target language code (`es`, `vi`, `zh`):
+   a. Invoke the `get_language_context_for_translation` tool with the language code to retrieve guidelines (reading level, tone, terminology rules).
+   b. Apply those guidelines when translating the English content.
+2. Translate **all** English fields into Spanish (`es`), Vietnamese (`vi`), and Simplified Chinese (`zh`), preserving the overall JSON structure. Do not translate the keys in the JSON. i.e. the keys should be the same as the original English keys. Section titles should not be translated.
+3. Organize your translation output in this exact JSON format:
+```
+{
+  "summaries": { "es": "<Spanish summary>", "vi": "<Vietnamese summary>", "zh": "<Chinese summary>" },
+  "sections": {
+    "es": [ { "title": "<Section name>", "content": "<Spanish content>", "page_numbers": [...] }, ... ],
+    "vi": [ ... ],
+    "zh": [ ... ]
+  },
+  "document_index": { "es": "<Spanish index>", "vi": "<Vietnamese index>", "zh": "<Chinese index>" }
+}
+```
+Guidelines:
+- Use the language-specific context from the tool for tone and clarity.
+- When calling guidelines, use the tool named `get_language_context_for_translation(language_code)`.
+- Maintain an 8th-grade reading level.
+- Do not include extra keys or commentary—output only the valid JSON.
+'''
 
-Your task is to translate the text to the target language.
 
-Use the tool get_language_context to get the language context for translation. This will include specific guidelines for the translation.
+# def get_translation_prompt():
+#     """Generate a prompt for translating content to the target language in a parent-friendly manner."""
 
-Instructions:
-- This will also have a json list of key words and their translations in the target language.
-- You must use the key words and their translations to translate the text.
-- You must follow the language context for the translation.
-- You must write at an 8th-grade reading level.
-- You must explain technical terms in simple words while preserving their legal/educational meaning.
+#     return f"""
 
-Output:
-- The output must be the translated text in the target language.
-- The output must be in markdown format.
-- The output must be in the same structure as the input text.
-- just return the translated text, do not include any other text or comments.
-"""
+# You will be given a piece of text in english along with a language code from {', '.join(LANGUAGE_CODES.values())}.
+
+# Your task is to translate the text to the target language.
+
+# Use the tool get_language_context to get the language context for translation. This will include specific guidelines for the translation.
+
+# Instructions:
+# - This will also have a json list of key words and their translations in the target language.
+# - You must use the key words and their translations to translate the text.
+# - You must follow the language context for the translation.
+# - You must write at an 8th-grade reading level.
+# - You must explain technical terms in simple words while preserving their legal/educational meaning.
+
+# Output:
+# - The output must be the translated text in the target language.
+# - The output must be in markdown format.
+# - The output must be in the same structure as the input text.
+# - just return the translated text, do not include any other text or comments.
+# """
 
 def get_all_tags():
     """Compile all sections into a single list for reference."""
@@ -82,125 +124,177 @@ def get_all_tags():
         'sections': list(IEP_SECTIONS.keys())
     }
 
-def get_full_prompt(key):
+def get_full_prompt() -> str:
     """
-    Generate a prompt for document analysis.
-    
-    Args:
-        key (str): Document type key
+    Generate the main instruction prompt for IEP analysis and translation.
+    This prompt directs the agent to perform English-only analysis first,
+    then invoke the translate_text tool once to translate all content into multiple languages.
     """
-    section_points = {section: points for section, points in SECTION_KEY_POINTS.items()}
-    
-    # Build the JSON structure example
-    json_structure = {
-        "summaries": {
-            "en": "English summary of the entire document - must not be empty",
-            "es": "Translation of the english summary to spanish - must not be empty",
-            "vi": "Translation of the english summary to vietnamese - must not be empty",
-            "zh": "Translation of the english summary to chinese - must not be empty"
-        },
-        "sections": {
-            "en": [
-                {
-                    "title": "Section name",  # Must be one of the IEP_SECTIONS keys
-                    "content": "English section content in markdown format",
-                    "page_numbers": [1, 2]  # List of page numbers where this section was found in the document
-                },
-                # All required sections must be present:
-                # - Present Levels
-                # - Eligibility
-                # - Placement
-                # - Goals
-                # - Services
-                # - Informed Consent
-                # - Accommodations
-            ],
-            "es": [
-                {
-                    "title": "Section name - same as english section names",  # Must match English section names
-                    "content": "Spanish section content in markdown format",
-                    "page_numbers": [1, 2]  # List of page numbers where this section was found
-                }
-                # All sections must be present in Spanish
-            ],
-            "vi": [
-                {
-                    "title": "Section name - same as english section names",  # Must match English section names
-                    "content": "Vietnamese section content in markdown format",
-                    "page_numbers": [1, 2]  # List of page numbers where this section was found
-                }
-                # All sections must be present in Vietnamese
-            ],
-            "zh": [
-                {
-                    "title": "Section name - same as english section names",  # Must match English section names
-                    "content": "Chinese section content in markdown format",
-                    "page_numbers": [1, 2]  # List of page numbers where this section was found
-                }
-                # All sections must be present in Chinese
-            ]
-        },
-        "document_index": {
-            "en": "English document index with page numbers and content breakdown - must not be empty",
-            "es": "Spanish document index with page numbers and content breakdown - must not be empty",
-            "vi": "Vietnamese document index with page numbers and content breakdown - must not be empty",
-            "zh": "Chinese document index with page numbers and content breakdown - must not be empty"
-        }
-    }
-    
-    prompt = f"""
-You are an expert IEP document analyzer and translator. Analyze the following student IEP document and extract the key information.
-
-Tasks:
-1. Analyze the document in english and generate first an index of the document based on the page numbers and the content of the page.
-2. Summarize the document in english where you are trying to explain the document in a way that is easy to understand for a parent whose child is in the school system. Mention the strengths and weaknesses of the student in the summary, and the goals and accommodations of the student.
-3. For each section, use the get_section_info tool to understand what information to extract, then use the index to find and extract that information from the document.
-4. Translate the english summary, english sections and english document index to all the languages we need {', '.join(LANGUAGE_CODES.keys())}. Use the tool translate_text to translate the text, the input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
-5. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
-
-Tools:
-- get_all_ocr_text: to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
-- get_ocr_text_for_page: to retrieve specific information about a single page based on the page number of the document.
-- get_ocr_text_for_pages: to retrieve specific information from multiple pages at once by providing an array of page indices. Use this when you need to extract content that spans across multiple pages for efficiency.
-- translate_text: to translate the English text to the target language. Use this tool for all parts and all languages. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
-- get_section_info: to get the key points and description for each section. Use this tool for each section to understand what information to extract.
-
-Important Guidelines:
-- Make sure to include ALL the sections and key points.
-- Keep the section titles consistent.
-- Ensure all sections are present in all languages.
-- Keep the reading level at 8th grade.
-- NEVER use placeholder text like "..." or "// Translated sections" - all sections must be fully translated.
-- The content in all languages should have the SAME level of detail.
-- For each section, use get_section_info to understand what information to look for.
-- When content for a section spans multiple pages, use get_ocr_text_for_pages with an array of relevant page indices for more efficient extraction.
-- For the 'services' section specifically:
-    * ALWAYS show the original duration in minutes as mentioned in the IEP
-    * In parentheses, include the conversion to hours per week
-    * Format as: "X min/week (Y hrs/week)" if the duration is more than 60 minutes
-    * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
-- Only once you have validated the output, return the final output.
-- Format all the output in markdown format, break down big paragraphs into smaller ones.
-- use bullet points when possible.
-- use lists when possible.
-- use tables when possible.
-- use bold when possible.
-- use italic when possible.
-- use underline when possible.
-
-
-Validation Requirements:
-1. All summaries must be non-empty and present in all languages
-2. All sections must:
-   - Have a title that matches one of: {', '.join(IEP_SECTIONS.keys())}
-   - Have non-empty content in markdown format
-   - Include the page numbers where found (as a list of integers)
-3. All required sections must be present in all languages
-4. Document index must be non-empty and present in all languages
-
-Output Structure: Format your response as a JSON object with the following structure: 
-```json
-{json.dumps(json_structure, indent=2)}
+    return f'''
+You are an expert IEP document analyzer using GPT-4.1.
+Your goal is to produce a complete, valid JSON output with this structure:
 ```
-"""
-    return prompt
+{{
+  "summaries": {{ "en": "<English summary>" }},
+  "sections": {{ "en": [{{ "title": "<Section name>", "content": "<Markdown content>", "page_numbers": [<list of pages> ] }} ... ] }},
+  "document_index": {{ "en": "<English index with pages>" }}
+}}
+```
+
+Steps:
+1. Use `get_all_ocr_text` to retrieve and index the full OCR text by page.
+2. Extract and summarize the IEP in English only, filling `summaries.en`, `sections.en`, and `document_index.en`.
+   - For section extraction, use `get_section_info` to get the description and key_points for each section.
+   - Use `get_ocr_text_for_page` or `get_ocr_text_for_pages` as needed to locate exact content.
+3. Validate that the English JSON matches the required schema (no missing keys, correct types).
+4. Call the `translate_text` tool, passing the entire English JSON as input.
+   The tool will return a JSON object containing translations into Spanish (`es`), Vietnamese (`vi`), and Chinese (`zh`), preserving the same structure:
+```
+{{
+  "summaries": {{ "es": ..., "vi": ..., "zh": ... }},
+  "sections": {{ "es": [...], "vi": [...], "zh": [...] }},
+  "document_index": {{ "es": ..., "vi": ..., "zh": ... }}
+}}
+```
+5. Merge the returned translations into your final output, resulting in:
+```
+{{
+  "summaries": {{ "en": ..., "es": ..., "vi": ..., "zh": ... }},
+  "sections": {{ "en": [...], "es": [...], "vi": [...], "zh": [...] }},
+  "document_index": {{ "en": ..., "es": ..., "vi": ..., "zh": ... }}
+}}
+```
+6. Return only the completed JSON with all the sections, summaries, document index in all languages, with no additional commentary.
+
+Tools available:
+- `get_all_ocr_text`
+- `get_ocr_text_for_page`
+- `get_ocr_text_for_pages`
+- `get_section_info`
+- `translate_text` (for multi-language translation)
+'''
+
+
+# def get_full_prompt(key):
+#     """
+#     Generate a prompt for document analysis.
+    
+#     Args:
+#         key (str): Document type key
+#     """
+#     section_points = {section: points for section, points in SECTION_KEY_POINTS.items()}
+    
+#     # Build the JSON structure example
+#     json_structure = {
+#         "summaries": {
+#             "en": "English summary of the entire document - must not be empty",
+#             "es": "Translation of the english summary to spanish - must not be empty",
+#             "vi": "Translation of the english summary to vietnamese - must not be empty",
+#             "zh": "Translation of the english summary to chinese - must not be empty"
+#         },
+#         "sections": {
+#             "en": [
+#                 {
+#                     "title": "Section name",  # Must be one of the IEP_SECTIONS keys
+#                     "content": "English section content in markdown format",
+#                     "page_numbers": [1, 2]  # List of page numbers where this section was found in the document
+#                 },
+#                 # All required sections must be present:
+#                 # - Present Levels
+#                 # - Eligibility
+#                 # - Placement
+#                 # - Goals
+#                 # - Services
+#                 # - Informed Consent
+#                 # - Accommodations
+#             ],
+#             "es": [
+#                 {
+#                     "title": "Section name - same as english section names",  # Must match English section names
+#                     "content": "Spanish section content in markdown format",
+#                     "page_numbers": [1, 2]  # List of page numbers where this section was found
+#                 }
+#                 # All sections must be present in Spanish
+#             ],
+#             "vi": [
+#                 {
+#                     "title": "Section name - same as english section names",  # Must match English section names
+#                     "content": "Vietnamese section content in markdown format",
+#                     "page_numbers": [1, 2]  # List of page numbers where this section was found
+#                 }
+#                 # All sections must be present in Vietnamese
+#             ],
+#             "zh": [
+#                 {
+#                     "title": "Section name - same as english section names",  # Must match English section names
+#                     "content": "Chinese section content in markdown format",
+#                     "page_numbers": [1, 2]  # List of page numbers where this section was found
+#                 }
+#                 # All sections must be present in Chinese
+#             ]
+#         },
+#         "document_index": {
+#             "en": "English document index with page numbers and content breakdown - must not be empty",
+#             "es": "Spanish document index with page numbers and content breakdown - must not be empty",
+#             "vi": "Vietnamese document index with page numbers and content breakdown - must not be empty",
+#             "zh": "Chinese document index with page numbers and content breakdown - must not be empty"
+#         }
+#     }
+    
+#     prompt = f"""
+# You are an expert IEP document analyzer and translator. Analyze the following student IEP document and extract the key information.
+
+# Tasks:
+# 1. Analyze the document in english and generate first an index of the document based on the page numbers and the content of the page.
+# 2. Summarize the document in english where you are trying to explain the document in a way that is easy to understand for a parent whose child is in the school system. Mention the strengths and weaknesses of the student in the summary, and the goals and accommodations of the student.
+# 3. For each section, use the get_section_info tool to understand what information to extract, then use the index to find and extract that information from the document.
+# 4. Translate the english summary to all the languages we need {', '.join(LANGUAGE_CODES.keys())}. Use the tool translate_text to translate the text, the input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
+# 5. Use the translate_text tool to translate the english sections and english document index to the target language.
+# 6. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
+
+# Tools:
+# - get_all_ocr_text: to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
+# - get_ocr_text_for_page: to retrieve specific information about a single page based on the page number of the document.
+# - get_ocr_text_for_pages: to retrieve specific information from multiple pages at once by providing an array of page indices. Use this when you need to extract content that spans across multiple pages for efficiency.
+# - translate_text: to translate the English text to the target language. Use this tool for all parts and all languages. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
+# - get_section_info: to get the key points and description for each section. Use this tool for each section to understand what information to extract.
+
+# Important Guidelines:
+# - Make sure to include ALL the sections and key points.
+# - Keep the section titles consistent.
+# - Ensure all sections are present in all languages.
+# - Keep the reading level at 8th grade.
+# - NEVER use placeholder text like "..." or "// Translated sections" - all sections must be fully translated.
+# - The content in all languages should have the SAME level of detail.
+# - For each section, use get_section_info to understand what information to look for.
+# - When content for a section spans multiple pages, use get_ocr_text_for_pages with an array of relevant page indices for more efficient extraction.
+# - For the 'services' section specifically:
+#     * ALWAYS show the original duration in minutes as mentioned in the IEP
+#     * In parentheses, include the conversion to hours per week
+#     * Format as: "X min/week (Y hrs/week)" if the duration is more than 60 minutes
+#     * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
+# - Only once you have validated the output, return the final output.
+# - Format all the output in markdown format, break down big paragraphs into smaller ones.
+# - use bullet points when possible.
+# - use lists when possible.
+# - use tables when possible.
+# - use bold when possible.
+# - use italic when possible.
+# - use underline when possible.
+
+
+# Validation Requirements:
+# 1. All summaries must be non-empty and present in all languages
+# 2. All sections must:
+#    - Have a title that matches one of: {', '.join(IEP_SECTIONS.keys())}
+#    - Have non-empty content in markdown format
+#    - Include the page numbers where found (as a list of integers)
+# 3. All required sections must be present in all languages
+# 4. Document index must be non-empty and present in all languages
+
+# Output Structure: Format your response as a JSON object with the following structure: 
+# ```json
+# {json.dumps(json_structure, indent=2)}
+# ```
+# """
+#     return prompt

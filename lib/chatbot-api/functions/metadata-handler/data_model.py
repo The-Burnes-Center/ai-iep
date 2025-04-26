@@ -1,82 +1,116 @@
-from typing import List, Literal
-from pydantic import BaseModel, Field, validator
+from typing import List, Optional
+from pydantic import BaseModel, Field, model_validator, field_validator
 from config import IEP_SECTIONS
-
-# Create a literal type for section names
-SectionName = Literal[tuple(IEP_SECTIONS.keys())]  # type: ignore
 
 class SectionContent(BaseModel):
     """Content for a single IEP section"""
     title: str = Field(
         ..., 
-        description="Section name - should be one of the following: " + ", ".join(IEP_SECTIONS.keys())
+        description="Section name - must match one of: " + ", ".join(IEP_SECTIONS.keys())
     )
     content: str = Field(..., description="Section content in markdown format")
-    page_numbers: List[int] = Field(..., description="List of Page numbers where content was found")
+    page_numbers: List[int] = Field(..., description="List of page numbers where content was found")
+    
+    @field_validator('title')
+    @classmethod
+    def validate_title(cls, v):
+        if v not in IEP_SECTIONS:
+            raise ValueError(f"Invalid section name: {v}. Must be one of: {', '.join(IEP_SECTIONS.keys())}")
+        return v
 
 class LanguageSection(BaseModel):
-    """Sections for a specific language"""
-    en: List[SectionContent] = Field(..., description="All English sections, should include all sections: " + ", ".join(IEP_SECTIONS.keys()))
-    es: List[SectionContent] = Field(..., description="All Spanish sections, should include all sections: " + ", ".join(IEP_SECTIONS.keys()))
-    vi: List[SectionContent] = Field(..., description="All Vietnamese sections, should include all sections: " + ", ".join(IEP_SECTIONS.keys()))
-    zh: List[SectionContent] = Field(..., description="All Chinese sections, should include all sections: " + ", ".join(IEP_SECTIONS.keys()))
+    """Sections for each language"""
+    en: List[SectionContent]
+    es: List[SectionContent]
+    vi: List[SectionContent]
+    zh: List[SectionContent]
 
-    @validator('*')
-    def validate_section_titles(cls, sections: List[SectionContent]):
-        """Validate that section titles match the predefined names"""
-        for section in sections:
-            if section.title not in IEP_SECTIONS:
-                raise ValueError(
-                    f"Invalid section title: {section.title}. Section titles must be one of: {', '.join(IEP_SECTIONS.keys())}"
-                )
-        return sections
-
-    @validator('*')
-    def validate_required_sections(cls, sections: List[SectionContent], values, **kwargs):
-        """Validate that all sections have the required number of items"""
-        # Only validate count, not titles (except for English which is validated separately)
-        if len(sections) != len(IEP_SECTIONS):
-            raise ValueError(
-                f"Expected {len(IEP_SECTIONS)} sections, got {len(sections)}. Each language must have the same number of sections."
-            )
-        return sections
+    @model_validator(mode='before')
+    @classmethod
+    def validate_sections(cls, values):
+        for lang, sections in values.items():
+            if not isinstance(sections, list):
+                raise ValueError(f"{lang} sections must be a list")
+            titles = [section['title'] if isinstance(section, dict) else section.title for section in sections]
+            missing_titles = set(IEP_SECTIONS.keys()) - set(titles)
+            extra_titles = set(titles) - set(IEP_SECTIONS.keys())
+            if missing_titles:
+                raise ValueError(f"Missing sections in {lang}: {missing_titles}")
+            if extra_titles:
+                raise ValueError(f"Unknown sections in {lang}: {extra_titles}")
+        return values
 
 class LanguageSummary(BaseModel):
-    """Summaries in all supported languages"""
-    en: str = Field(..., description="English summary text")
-    es: str = Field(..., description="Spanish summary text")
-    vi: str = Field(..., description="Vietnamese summary text")
-    zh: str = Field(..., description="Chinese summary text")
+    """Summaries in all languages"""
+    en: str
+    es: str
+    vi: str
+    zh: str
 
-    @validator('*')
-    def validate_summary_not_empty(cls, v):
-        """Validate that summaries are not empty"""
-        if not v.strip():
-            raise ValueError("Summary cannot be empty")
-        return v
+    @model_validator(mode='after')
+    @classmethod
+    def check_not_empty(cls, model):
+        for lang, summary in model.__dict__.items():
+            if not summary or not summary.strip():
+                raise ValueError(f"Summary for {lang} cannot be empty")
+        return model
 
 class LanguageDocumentIndex(BaseModel):
-    """Document index in all supported languages"""
-    en: str = Field(..., description="English document index with page numbers and content")
-    es: str = Field(..., description="Spanish document index with page numbers and content")
-    vi: str = Field(..., description="Vietnamese document index with page numbers and content")
-    zh: str = Field(..., description="Chinese document index with page numbers and content")
+    """Document indexes in all languages"""
+    en: str
+    es: str
+    vi: str
+    zh: str
 
-    @validator('*')
-    def validate_index_not_empty(cls, v):
-        """Validate that document indices are not empty"""
-        if not v.strip():
-            raise ValueError("Document index cannot be empty")
-        return v
+    @model_validator(mode='after')
+    @classmethod
+    def check_not_empty(cls, model):
+        for lang, index in model.__dict__.items():
+            if not index or not index.strip():
+                raise ValueError(f"Document index for {lang} cannot be empty")
+        return model
 
 class IEPData(BaseModel):
-    """Complete IEP document data structure"""
-    summaries: LanguageSummary = Field(..., description="Document summaries in all languages")
-    sections: LanguageSection = Field(..., description="Document sections in all languages")
-    document_index: LanguageDocumentIndex = Field(..., description="Document index in all languages")
+    """Complete IEP Document Data Structure"""
+    summaries: LanguageSummary
+    sections: LanguageSection
+    document_index: LanguageDocumentIndex
 
     class Config:
-        """Pydantic model configuration"""
-        validate_assignment = True  # Validate data on assignment, not just on model creation
-        extra = "forbid" 
-        validate_default = True  # Validate default values during model initialization 
+        validate_assignment = True
+        validate_default = True
+        extra = "forbid"
+
+# --- Translation-only models ---
+class TranslationSummaries(BaseModel):
+    """Summaries for translations (no English)"""
+    es: str
+    vi: str
+    zh: str
+
+class TranslationSectionContent(BaseModel):
+    """Section content for translations"""
+    title: str
+    content: str
+    page_numbers: List[int]
+
+class TranslationSections(BaseModel):
+    """Sections for each translated language"""
+    es: List[TranslationSectionContent]
+    vi: List[TranslationSectionContent]
+    zh: List[TranslationSectionContent]
+
+class TranslationDocumentIndex(BaseModel):
+    """Document index for translations"""
+    es: str
+    vi: str
+    zh: str
+
+class TranslationOutput(BaseModel):
+    """Batched translation output schema"""
+    summaries: TranslationSummaries
+    sections: TranslationSections
+    document_index: TranslationDocumentIndex
+
+    class Config:
+        extra = "forbid"
