@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
 import { useLanguage } from '../../common/language-context';
+import ReactMarkdown from 'react-markdown';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
@@ -413,7 +414,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                                             </small>
                                           </p>
                                         )}
-                                        {section.content || t('summary.noContent')}
+                                        <div className="markdown-content">
+                                          <ReactMarkdown>
+                                            {section.content || t('summary.noContent')}
+                                          </ReactMarkdown>
+                                        </div>
                                       </Accordion.Body>
                                     </Accordion.Item>
                                   ))}
@@ -464,7 +469,19 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                                           {section.displayName}
                                         </Accordion.Header>
                                         <Accordion.Body>
-                                          {section.content || t('summary.noContent')}
+                                          {section.pageNumbers && section.pageNumbers.length > 0 && (
+                                            <p className="text-muted mb-2">
+                                              <small>Páginas: {Array.isArray(section.pageNumbers) ? 
+                                                section.pageNumbers.join(', ') : 
+                                                section.pageNumbers}
+                                              </small>
+                                            </p>
+                                          )}
+                                          <div className="markdown-content">
+                                            <ReactMarkdown>
+                                              {section.content || t('summary.noContent')}
+                                            </ReactMarkdown>
+                                          </div>
                                         </Accordion.Body>
                                       </Accordion.Item>
                                     ))}
