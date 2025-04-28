@@ -43,16 +43,31 @@ LANGUAGE_CODES = {
     'vietnamese': 'vi'
 }
 
+def get_en_to_es_translations():
+    with open('en_es_translations.json', 'r') as f:
+        return json.load(f)
+
+def get_english_to_spanish_context():
+    translations = get_en_to_es_translations()
+    return f'Use Latin American Spanish. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning. Use the following json of english to spanish translations: {translations}'
+
+def get_english_to_vietnamese_context():
+    return 'Use standard Vietnamese. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'    
+
+def get_english_to_chinese_context():
+    return 'Use Simplified Chinese (Mandarin). Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
+
+
 def get_language_context(target_language):
     """Get the language context for the target language."""
     if target_language in ['es', 'spanish']:
-        return 'Use Latin American Spanish. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
+        return get_english_to_spanish_context()
     elif target_language in ['vi', 'vietnamese']:
-        return 'Use standard Vietnamese. Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
+        return get_english_to_vietnamese_context()
     elif target_language in ['zh', 'chinese']:
-        return 'Use Simplified Chinese (Mandarin). Write at an 8th-grade reading level. Explain technical terms in simple words while preserving their legal/educational meaning.'
+        return get_english_to_chinese_context()
     else:
-        return ''
+        return f'target language {target_language} not supported. Please use one of the following: "es", "vi", "zh"'
 
 
 def get_translation_prompt() -> str:
