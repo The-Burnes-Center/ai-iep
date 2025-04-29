@@ -6,7 +6,6 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { getTagProps, tagResource } from '../../tags';
 
 export class TableStack extends Stack {
-  public readonly historyTable : Table;
   public readonly activeSystemPromptsTable : Table;
   public readonly stagedSystemPromptsTable : Table;
   public readonly userProfilesTable: dynamodb.Table;
@@ -22,25 +21,6 @@ export class TableStack extends Stack {
         'Purpose': 'ApplicationData'
       });
     };
-
-    // Define the table
-    const chatHistoryTable = new Table(scope, 'ChatHistoryTable', {
-      partitionKey: { name: 'user_id', type: AttributeType.STRING },
-      sortKey: { name: 'session_id', type: AttributeType.STRING },
-    });
-    
-    // Tag the chat history table
-    tagTable(chatHistoryTable, 'ChatHistoryTable');
-
-    // Add a global secondary index to sort ChatHistoryTable by time_stamp
-    chatHistoryTable.addGlobalSecondaryIndex({
-      indexName: 'TimeIndex',
-      partitionKey: { name: 'user_id', type: AttributeType.STRING },
-      sortKey: { name: 'time_stamp', type: AttributeType.STRING },
-      projectionType: ProjectionType.ALL,
-    });
-
-    this.historyTable = chatHistoryTable;
 
     const activeSystemPromptsTable = new Table(scope, 'ActiveSystemPromptsTable', {
       partitionKey: { name: 'PartitionKey', type: AttributeType.STRING },

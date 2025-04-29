@@ -49,7 +49,6 @@ export class ChatBotApi extends Construct {
     const lambdaFunctions = new LambdaFunctionStack(this, "LambdaFunctions",
       {
         wsApiEndpoint: websocketBackend.wsAPIStage.url,
-        sessionTable: tables.historyTable,        
         knowledgeBucket: buckets.knowledgeBucket,
         knowledgeBase: knowledgeBase.knowledgeBase,
         knowledgeBaseSource : knowledgeBase.dataSource,
@@ -84,22 +83,8 @@ export class ChatBotApi extends Construct {
     
     const httpAuthorizer = new HttpJwtAuthorizer('HTTPAuthorizer', props.authentication.userPool.userPoolProviderUrl,{
       jwtAudience: [props.authentication.userPoolClient.userPoolClientId],
-    })
+    });
 
-    const sessionAPIIntegration = new HttpLambdaIntegration('SessionAPIIntegration', lambdaFunctions.sessionFunction);
-    restBackend.restAPI.addRoutes({
-      path: "/user-session",
-      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST, apigwv2.HttpMethod.DELETE],
-      integration: sessionAPIIntegration,
-      authorizer: httpAuthorizer,
-    })
-
-    // SESSION_HANDLER
-    // lambdaFunctions.chatFunction.addEnvironment(
-    //   "mvp_user_session_handler_api_gateway_endpoint", restBackend.restAPI.apiEndpoint + "/user-session")
-    lambdaFunctions.chatFunction.addEnvironment(
-      "SESSION_HANDLER", lambdaFunctions.sessionFunction.functionName)
-    
     const s3GetKnowledgeAPIIntegration = new HttpLambdaIntegration('S3GetKnowledgeAPIIntegration', lambdaFunctions.getS3KnowledgeFunction);
     restBackend.restAPI.addRoutes({
       path: "/s3-knowledge-bucket-data",

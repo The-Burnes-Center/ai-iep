@@ -9,7 +9,6 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as bedrock from "aws-cdk-lib/aws-bedrock";
-import { StepFunctionsStack } from './step-functions/step-functions';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { getTagProps, tagResource } from '../../tags';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
@@ -17,7 +16,6 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 interface LambdaFunctionStackProps {  
   readonly wsApiEndpoint : string;  
-  readonly sessionTable : Table;  
   readonly knowledgeBucket : s3.Bucket;
   readonly knowledgeBase : bedrock.CfnKnowledgeBase;
   readonly knowledgeBaseSource: bedrock.CfnDataSource;
@@ -30,13 +28,11 @@ interface LambdaFunctionStackProps {
 
 export class LambdaFunctionStack extends cdk.Stack {  
   public readonly chatFunction : lambda.Function;
-  public readonly sessionFunction : lambda.Function;
   public readonly deleteS3Function : lambda.Function;
   public readonly getS3KnowledgeFunction : lambda.Function;
   public readonly uploadS3KnowledgeFunction : lambda.Function;
   public readonly syncKBFunction : lambda.Function;
   public readonly metadataHandlerFunction : lambda.Function;
-  public readonly stepFunctionsStack : StepFunctionsStack;
   public readonly systemPromptsFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
   public readonly cognitoTriggerFunction : lambda.Function;
@@ -60,30 +56,6 @@ export class LambdaFunctionStack extends cdk.Stack {
       return func;
     };
     
-    const sessionAPIHandlerFunction = new lambda.Function(scope, 'SessionHandlerFunction', {
-      runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
-      code: lambda.Code.fromAsset(path.join(__dirname, 'session-handler')), // Points to the lambda directory
-      handler: 'lambda_function.lambda_handler', // Points to the 'hello' file in the lambda directory
-      environment: {
-        "DDB_TABLE_NAME" : props.sessionTable.tableName
-      },
-      timeout: cdk.Duration.seconds(30)
-    });
-    
-    sessionAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'dynamodb:GetItem',
-        'dynamodb:PutItem',
-        'dynamodb:UpdateItem',
-        'dynamodb:DeleteItem',
-        'dynamodb:Query',
-        'dynamodb:Scan'
-      ],
-      resources: [props.sessionTable.tableArn, props.sessionTable.tableArn + "/index/*"]
-    }));
-    this.sessionFunction = sessionAPIHandlerFunction;
-
     const systemPromptsAPIHandlerFunction = new lambda.Function(scope, 'SystemPromptsHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
       code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/system-prompt-handler')), // Points to the lambda directory
@@ -119,9 +91,6 @@ export class LambdaFunctionStack extends cdk.Stack {
           handler: 'index.handler', // Points to the 'hello' file in the lambda directory
           environment : {
             "WEBSOCKET_API_ENDPOINT" : props.wsApiEndpoint.replace("wss","https"),            
-            // "PROMPT" : `You are a helpful AI chatbot that will answer questions based on your knowledge. 
-            // You have access to a search tool that you will use to look up answers to questions.`,
-            'SESSION_HANDLER' : sessionAPIHandlerFunction.functionName,
             'SYSTEM_PROMPTS_HANDLER' : systemPromptsAPIHandlerFunction.functionName,
             'KB_ID' : props.knowledgeBase.attrKnowledgeBaseId,
             'CONFL_PROMPT': `You are a knowledge expert looking to either identify conflicts among the 
@@ -177,14 +146,6 @@ export class LambdaFunctionStack extends cdk.Stack {
           resources: [props.knowledgeBase.attrKnowledgeBaseArn]
         }));
 
-        websocketAPIFunction.addToRolePolicy(new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            'lambda:InvokeFunction'
-          ],
-          resources: [this.sessionFunction.functionArn]
-        }));
-        
         this.chatFunction = websocketAPIFunction;
 
     const deleteS3APIHandlerFunction = new lambda.Function(scope, 'DeleteS3FilesHandlerFunction', {
@@ -385,11 +346,6 @@ export class LambdaFunctionStack extends cdk.Stack {
     metadataHandlerFunction.addEventSource(new S3EventSource(props.knowledgeBucket, {
       events: [s3.EventType.OBJECT_CREATED],
     }));
-
-    this.stepFunctionsStack = new StepFunctionsStack(scope, 'StepFunctionsStack', {
-      knowledgeBase: props.knowledgeBase,
-      systemPromptsHandlerName: systemPromptsAPIHandlerFunction.functionName
-    });
 
     const userProfileHandlerFunction = new lambda.Function(scope, 'UserProfileHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
