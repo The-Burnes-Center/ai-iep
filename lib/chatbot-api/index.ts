@@ -127,14 +127,6 @@ export class ChatBotApi extends Construct {
       authorizer: httpAuthorizer,
     })
 
-    const s3GetTestCasesAPIIntegration = new HttpLambdaIntegration('S3GetTestCasesAPIIntegration', lambdaFunctions.getS3TestCasesFunction);
-    restBackend.restAPI.addRoutes({
-      path: "/s3-test-cases-bucket-data",
-      methods: [apigwv2.HttpMethod.POST],
-      integration: s3GetTestCasesAPIIntegration,
-      authorizer: httpAuthorizer,
-    })
-
     const s3DeleteAPIIntegration = new HttpLambdaIntegration('S3DeleteAPIIntegration', lambdaFunctions.deleteS3Function);
     restBackend.restAPI.addRoutes({
       path: "/delete-s3-file",
@@ -172,36 +164,6 @@ export class ChatBotApi extends Construct {
       path: "/kb-sync/get-last-sync",
       methods: [apigwv2.HttpMethod.GET],
       integration: kbLastSyncAPIIntegration,
-      authorizer: httpAuthorizer,
-    })
-
-    const evalResultsHandlerIntegration = new HttpLambdaIntegration(
-      'EvalResultsHandlerIntegration',
-      lambdaFunctions.handleEvalResultsFunction
-    );
-    restBackend.restAPI.addRoutes({
-      path: "/eval-results-handler",
-      methods: [apigwv2.HttpMethod.POST],
-      integration: evalResultsHandlerIntegration,
-      authorizer: httpAuthorizer,
-    });
-
-    const evalRunHandlerIntegration = new HttpLambdaIntegration(
-      'EvalRunHandlerIntegration',
-      lambdaFunctions.stepFunctionsStack.startLlmEvalStateMachineFunction
-    );
-    restBackend.restAPI.addRoutes({
-      path: "/eval-run-handler",
-      methods: [apigwv2.HttpMethod.POST],
-      integration: evalRunHandlerIntegration,
-      authorizer: httpAuthorizer,
-    }); 
-
-    const s3UploadTestCasesAPIIntegration = new HttpLambdaIntegration('S3UploadTestCasesAPIIntegration', lambdaFunctions.uploadS3TestCasesFunction);
-    restBackend.restAPI.addRoutes({
-      path: "/signed-url-test-cases",
-      methods: [apigwv2.HttpMethod.POST],
-      integration: s3UploadTestCasesAPIIntegration,
       authorizer: httpAuthorizer,
     })
 
@@ -257,87 +219,12 @@ export class ChatBotApi extends Construct {
       authorizer: httpAuthorizer,
     });
 
-      // this.wsAPI = websocketBackend.wsAPI;
-
-
-
-
-    // const api = new appsync.GraphqlApi(this, "ChatbotApi", {
-    //   name: "ChatbotGraphqlApi",
-    //   definition: appsync.Definition.fromFile(
-    //     path.join(__dirname, "schema/schema.graphql")
-    //   ),
-    //   authorizationConfig: {
-    //     additionalAuthorizationModes: [
-    //       {
-    //         authorizationType: appsync.AuthorizationType.IAM,
-    //       },
-    //       {
-    //         authorizationType: appsync.AuthorizationType.USER_POOL,
-    //         userPoolConfig: {
-    //           userPool: props.userPool,
-    //         },
-    //       },
-    //     ],
-    //   },
-    //   logConfig: {
-    //     fieldLogLevel: appsync.FieldLogLevel.ALL,
-    //     retention: RetentionDays.ONE_WEEK,
-    //     role: loggingRole,
-    //   },
-    //   xrayEnabled: true,
-    //   visibility: props.config.privateWebsite ? appsync.Visibility.PRIVATE : appsync.Visibility.GLOBAL
-    // });
-
-    // new ApiResolvers(this, "RestApi", {
-    //   ...props,
-    //   sessionsTable: chatTables.sessionsTable,
-    //   byUserIdIndex: chatTables.byUserIdIndex,
-    //   api,
-    //   userFeedbackBucket: chatBuckets.userFeedbackBucket,
-    // });
-
-    // const realtimeBackend = new RealtimeGraphqlApiBackend(this, "Realtime", {
-    //   ...props,
-    //   api,
-    // });
-
-    // realtimeBackend.resolvers.outgoingMessageHandler.addEnvironment(
-    //   "GRAPHQL_ENDPOINT",
-    //   api.graphqlUrl
-    // );
-
-    // api.grantMutation(realtimeBackend.resolvers.outgoingMessageHandler);
-
-    // // Prints out URL
-    // new cdk.CfnOutput(this, "GraphqlAPIURL", {
-    //   value: api.graphqlUrl,
-    // });
-
-    // // Prints out the AppSync GraphQL API key to the terminal
+    // Prints out the AppSync GraphQL API key to the terminal
     new cdk.CfnOutput(this, "WS-API - apiEndpoint", {
       value: websocketBackend.wsAPI.apiEndpoint || "",
     });
     new cdk.CfnOutput(this, "HTTP-API - apiEndpoint", {
       value: restBackend.restAPI.apiEndpoint || "",
     });
-
-    // this.messagesTopic = realtimeBackend.messagesTopic;
-    // this.sessionsTable = chatTables.sessionsTable;
-    // this.byUserIdIndex = chatTables.byUserIdIndex;
-    // this.userFeedbackBucket = chatBuckets.userFeedbackBucket;
-    // this.filesBucket = chatBuckets.filesBucket;
-    // this.graphqlApi = api;
-
-    /**
-     * CDK NAG suppression
-     */
-    // NagSuppressions.addResourceSuppressions(loggingRole, [
-    //   {
-    //     id: "AwsSolutions-IAM5",
-    //     reason:
-    //       "Access to all log groups required for CloudWatch log group creation.",
-    //   },
-    // ]);
   }
 }
