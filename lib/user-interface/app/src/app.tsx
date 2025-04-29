@@ -13,6 +13,7 @@ import PreferredLanguage  from './pages/profile/PreferredLanguage';
 import UserProfileForm from './pages/profile/UserProfileForm';
 import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
 import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslationsPage';
+import SectionsTooltip from './pages/iep-folder/SectionsTooltip';
 import ViewAndAddChild from './pages/profile/ViewAndAddChild';
 import RightsAndOnboarding from './pages/RightsAndOnboarding';
 import ConsentForm from './pages/profile/ConsentForm';
@@ -53,7 +54,8 @@ function AppContent() {
             <Route path="/iep-documents" element={<IEPDocumentView />} />
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
-            <Route path="/markdown" element={<IEPMarkdown />} />           
+            <Route path="/markdown" element={<IEPMarkdown />} />    
+            <Route path="/jargon" element={<SectionsTooltip />} />    
         </Routes>
       </div>
     </div>

@@ -1,0 +1,63 @@
+.summary-container {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .summary-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    text-align: justify;
+  }
+  
+  .jargon-term {
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: #0040BA;
+    cursor: help;
+    color: #0040BA;
+    font-weight: 500;
+    position: relative;
+  }
+  
+  .jargon-term:hover {
+    background-color: rgba(0, 64, 186, 0.1);
+  }
+  
+  /* Tooltip styling */
+  .tooltip {
+    position: absolute;
+    z-index: 1070;
+    display: block;
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    text-decoration: none;
+    text-shadow: none;
+    text-transform: none;
+    letter-spacing: normal;
+    word-break: normal;
+    word-spacing: normal;
+    white-space: normal;
+    line-break: auto;
+    font-size: 0.875rem;
+    word-wrap: break-word;
+    opacity: 0;
+    max-width: 300px;
+  }
+  
+  .tooltip.show {
+    opacity: 0.9;
+  }
+  
+  .tooltip .tooltip-inner {
+    max-width: 300px;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    text-align: left;
+    background-color: #0040BA;
+    border-radius: 0.25rem;
+  }
