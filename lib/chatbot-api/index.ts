@@ -50,8 +50,6 @@ export class ChatBotApi extends Construct {
       {
         wsApiEndpoint: websocketBackend.wsAPIStage.url,
         sessionTable: tables.historyTable,        
-        feedbackTable: tables.feedbackTable,
-        feedbackBucket: buckets.feedbackBucket,
         knowledgeBucket: buckets.knowledgeBucket,
         knowledgeBase: knowledgeBase.knowledgeBase,
         knowledgeBaseSource : knowledgeBase.dataSource,
@@ -102,23 +100,6 @@ export class ChatBotApi extends Construct {
     lambdaFunctions.chatFunction.addEnvironment(
       "SESSION_HANDLER", lambdaFunctions.sessionFunction.functionName)
     
-
-    const feedbackAPIIntegration = new HttpLambdaIntegration('FeedbackAPIIntegration', lambdaFunctions.feedbackFunction);
-    restBackend.restAPI.addRoutes({
-      path: "/user-feedback",
-      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST, apigwv2.HttpMethod.DELETE],
-      integration: feedbackAPIIntegration,
-      authorizer: httpAuthorizer,
-    })
-
-    const feedbackAPIDownloadIntegration = new HttpLambdaIntegration('FeedbackDownloadAPIIntegration', lambdaFunctions.feedbackFunction);
-    restBackend.restAPI.addRoutes({
-      path: "/user-feedback/download-feedback",
-      methods: [apigwv2.HttpMethod.POST],
-      integration: feedbackAPIDownloadIntegration,
-      authorizer: httpAuthorizer,
-    })
-
     const s3GetKnowledgeAPIIntegration = new HttpLambdaIntegration('S3GetKnowledgeAPIIntegration', lambdaFunctions.getS3KnowledgeFunction);
     restBackend.restAPI.addRoutes({
       path: "/s3-knowledge-bucket-data",

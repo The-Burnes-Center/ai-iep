@@ -18,8 +18,6 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 interface LambdaFunctionStackProps {  
   readonly wsApiEndpoint : string;  
   readonly sessionTable : Table;  
-  readonly feedbackTable : Table;
-  readonly feedbackBucket : s3.Bucket;
   readonly knowledgeBucket : s3.Bucket;
   readonly knowledgeBase : bedrock.CfnKnowledgeBase;
   readonly knowledgeBaseSource: bedrock.CfnDataSource;
@@ -33,7 +31,6 @@ interface LambdaFunctionStackProps {
 export class LambdaFunctionStack extends cdk.Stack {  
   public readonly chatFunction : lambda.Function;
   public readonly sessionFunction : lambda.Function;
-  public readonly feedbackFunction : lambda.Function;
   public readonly deleteS3Function : lambda.Function;
   public readonly getS3KnowledgeFunction : lambda.Function;
   public readonly uploadS3KnowledgeFunction : lambda.Function;
@@ -190,40 +187,6 @@ export class LambdaFunctionStack extends cdk.Stack {
         
         this.chatFunction = websocketAPIFunction;
 
-    const feedbackAPIHandlerFunction = new lambda.Function(scope, 'FeedbackHandlerFunction', {
-      runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
-      code: lambda.Code.fromAsset(path.join(__dirname, 'feedback-handler')), // Points to the lambda directory
-      handler: 'lambda_function.lambda_handler', // Points to the 'hello' file in the lambda directory
-      environment: {
-        "FEEDBACK_TABLE" : props.feedbackTable.tableName,
-        "FEEDBACK_S3_DOWNLOAD" : props.feedbackBucket.bucketName
-      },
-      timeout: cdk.Duration.seconds(30)
-    });
-    
-    feedbackAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'dynamodb:GetItem',
-        'dynamodb:PutItem',
-        'dynamodb:UpdateItem',
-        'dynamodb:DeleteItem',
-        'dynamodb:Query',
-        'dynamodb:Scan'
-      ],
-      resources: [props.feedbackTable.tableArn, props.feedbackTable.tableArn + "/index/*"]
-    }));
-
-    feedbackAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        's3:*'
-      ],
-      resources: [props.feedbackBucket.bucketArn,props.feedbackBucket.bucketArn+"/*"]
-    }));
-
-    this.feedbackFunction = feedbackAPIHandlerFunction;
-    
     const deleteS3APIHandlerFunction = new lambda.Function(scope, 'DeleteS3FilesHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
       code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/delete-s3')), // Points to the lambda directory
