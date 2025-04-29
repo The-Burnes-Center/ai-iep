@@ -7,7 +7,6 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 export class S3BucketStack extends cdk.Stack {
   public readonly knowledgeBucket: s3.Bucket;
   public readonly feedbackBucket: s3.Bucket;
-  public readonly evalTestCasesBucket: s3.Bucket;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -84,20 +83,6 @@ export class S3BucketStack extends cdk.Stack {
 
     this.feedbackBucket = new s3.Bucket(scope, 'FeedbackDownloadBucket', {
       // bucketName: 'feedback-download',
-      versioned: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      enforceSSL: true,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      cors: [{
-        allowedMethods: [s3.HttpMethods.GET,s3.HttpMethods.POST,s3.HttpMethods.PUT,s3.HttpMethods.DELETE],
-        allowedOrigins: ['*'], 
-        allowedHeaders: ["*"]     
-      }]
-    });
-
-    this.evalTestCasesBucket = new s3.Bucket(scope, 'EvalTestCasesBucket', {
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,

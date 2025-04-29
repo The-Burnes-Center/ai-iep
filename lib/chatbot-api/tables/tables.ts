@@ -8,8 +8,6 @@ import { getTagProps, tagResource } from '../../tags';
 export class TableStack extends Stack {
   public readonly historyTable : Table;
   public readonly feedbackTable : Table;
-  public readonly evalResultsTable : Table;
-  public readonly evalSummaryTable : Table;
   public readonly activeSystemPromptsTable : Table;
   public readonly stagedSystemPromptsTable : Table;
   public readonly userProfilesTable: dynamodb.Table;
@@ -68,30 +66,6 @@ export class TableStack extends Stack {
       projectionType: ProjectionType.ALL,
     });
     this.feedbackTable = userFeedbackTable; 
-    
-    const evalSummariesTable = new Table(scope, 'EvaluationSummariesTable', {
-      partitionKey: { name: 'PartitionKey', type: AttributeType.STRING },
-      sortKey: { name: 'Timestamp', type: AttributeType.STRING },
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
-    tagTable(evalSummariesTable, 'EvaluationSummariesTable');
-    this.evalSummaryTable = evalSummariesTable;
-
-    const evalResultsTable = new Table(scope, 'EvaluationResultsTable', {
-      partitionKey: { name: 'EvaluationId', type: AttributeType.STRING },
-      sortKey: { name: 'QuestionId', type: AttributeType.STRING },
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
-    tagTable(evalResultsTable, 'EvaluationResultsTable');
-    
-    // add secondary index to sort EvaluationResultsTable by Question ID
-    evalResultsTable.addGlobalSecondaryIndex({
-      indexName: 'QuestionIndex',
-      partitionKey: { name: 'EvaluationId', type: AttributeType.STRING },
-      sortKey: { name: 'QuestionId', type: AttributeType.STRING },
-      projectionType: ProjectionType.ALL,
-    });
-    this.evalResultsTable = evalResultsTable;
 
     const activeSystemPromptsTable = new Table(scope, 'ActiveSystemPromptsTable', {
       partitionKey: { name: 'PartitionKey', type: AttributeType.STRING },

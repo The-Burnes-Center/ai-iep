@@ -23,11 +23,8 @@ interface LambdaFunctionStackProps {
   readonly knowledgeBucket : s3.Bucket;
   readonly knowledgeBase : bedrock.CfnKnowledgeBase;
   readonly knowledgeBaseSource: bedrock.CfnDataSource;
-  readonly evalTestCasesBucket : s3.Bucket;
   readonly stagedSystemPromptsTable : Table;
   readonly activeSystemPromptsTable : Table;
-  readonly evalSummariesTable : Table;
-  readonly evalResutlsTable : Table;
   readonly userProfilesTable : Table;
   readonly iepDocumentsTable : Table;
   readonly userPool: cognito.UserPool;
@@ -39,12 +36,9 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly feedbackFunction : lambda.Function;
   public readonly deleteS3Function : lambda.Function;
   public readonly getS3KnowledgeFunction : lambda.Function;
-  public readonly getS3TestCasesFunction : lambda.Function;
   public readonly uploadS3KnowledgeFunction : lambda.Function;
-  public readonly uploadS3TestCasesFunction : lambda.Function;
   public readonly syncKBFunction : lambda.Function;
   public readonly metadataHandlerFunction : lambda.Function;
-  public readonly handleEvalResultsFunction : lambda.Function;
   public readonly stepFunctionsStack : StepFunctionsStack;
   public readonly systemPromptsFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
@@ -268,26 +262,6 @@ export class LambdaFunctionStack extends cdk.Stack {
     }));
     this.getS3KnowledgeFunction = getS3KnowledgeAPIHandlerFunction;
 
-    const getS3TestCasesAPIHandlerFunction = new lambda.Function(scope, 'GetS3TestCasesFilesHandlerFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X, // Choose any supported Node.js runtime
-      code: lambda.Code.fromAsset(path.join(__dirname, 'llm-eval/S3-get-test-cases')), // Points to the lambda directory
-      handler: 'index.handler', // Points to the 'hello' file in the lambda directory
-      environment: {
-        "BUCKET" : props.evalTestCasesBucket.bucketName,        
-      },
-      timeout: cdk.Duration.seconds(30)
-    });
-
-    getS3TestCasesAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        's3:*'
-      ],
-      resources: [props.evalTestCasesBucket.bucketArn,props.evalTestCasesBucket.bucketArn+"/*"]
-    }));
-    this.getS3TestCasesFunction = getS3TestCasesAPIHandlerFunction;
-
-
     const kbSyncAPIHandlerFunction = new lambda.Function(scope, 'SyncKBHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
       code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/kb-sync')), // Points to the lambda directory
@@ -357,149 +331,103 @@ export class LambdaFunctionStack extends cdk.Stack {
     
     this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
 
-    const uploadS3TestCasesFunction = new lambda.Function(scope, 'UploadS3TestCasesFilesHandlerFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X, // Choose any supported Node.js runtime
-      code: lambda.Code.fromAsset(path.join(__dirname, 'llm-eval/S3-upload')), // Points to the lambda directory
-      handler: 'index.handler', // Points to the 'hello' file in the lambda directory
+    // Define the Lambda function for metadata
+    const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
+      }),
+      handler: 'lambda_function.lambda_handler',
       environment: {
-        "BUCKET" : props.evalTestCasesBucket.bucketName,        
+        "BUCKET": props.knowledgeBucket.bucketName,
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
+        "KNOWLEDGE_BASE_ID": props.knowledgeBase.ref,
+        "ANTHROPIC_MODEL": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
       },
-      timeout: cdk.Duration.seconds(30)
+      timeout: cdk.Duration.seconds(900),
+      memorySize: 2048
     });
-
-    uploadS3TestCasesFunction.addToRolePolicy(new iam.PolicyStatement({
+    
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
-        's3:*'
+        's3:GetObject',
+        's3:PutObject',
+        's3:DeleteObject',
+        's3:ListBucket',
+        's3:GetBucketLocation',
+        'bedrock:InvokeModel',
+        'bedrock:Retrieve',
+        'bedrock-agent-runtime:Retrieve',
+        'comprehend:BatchDetectPiiEntities',
+        'comprehend:DetectPiiEntities',
       ],
-      resources: [props.evalTestCasesBucket.bucketArn,props.evalTestCasesBucket.bucketArn+"/*"]
+      resources: [
+        props.knowledgeBucket.bucketArn,
+        props.knowledgeBucket.bucketArn + "/*",
+        'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
+        props.knowledgeBase.attrKnowledgeBaseArn,
+        '*', // Comprehend permissions apply to all resources
+      ]
     }));
-    this.uploadS3TestCasesFunction = uploadS3TestCasesFunction;
 
-        // Define the Lambda function for metadata
-        const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
-          runtime: lambda.Runtime.PYTHON_3_12,
-          code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
-            bundling: {
-              image: lambda.Runtime.PYTHON_3_12.bundlingImage,
-              command: [
-                'bash', '-c',
-                'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
-              ],
-            },
-          }),
-          handler: 'lambda_function.lambda_handler',
-          environment: {
-            "BUCKET": props.knowledgeBucket.bucketName,
-            "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-            "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
-            "KNOWLEDGE_BASE_ID": props.knowledgeBase.ref,
-            "ANTHROPIC_MODEL": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-            "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
-            "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
-          },
-          timeout: cdk.Duration.seconds(900),
-          memorySize: 2048
-        });
-        
-        metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            's3:GetObject',
-            's3:PutObject',
-            's3:DeleteObject',
-            's3:ListBucket',
-            's3:GetBucketLocation',
-            'bedrock:InvokeModel',
-            'bedrock:Retrieve',
-            'bedrock-agent-runtime:Retrieve',
-            'comprehend:BatchDetectPiiEntities',
-            'comprehend:DetectPiiEntities',
-          ],
-          resources: [
-            props.knowledgeBucket.bucketArn,
-            props.knowledgeBucket.bucketArn + "/*",
-            'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
-            props.knowledgeBase.attrKnowledgeBaseArn,
-            '*', // Comprehend permissions apply to all resources
-          ]
-        }));
-    
-        // Add DynamoDB permissions for updating document status and user profiles
-        metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            'dynamodb:GetItem',
-            'dynamodb:PutItem',
-            'dynamodb:UpdateItem',
-            'dynamodb:Query',
-            'dynamodb:Scan'
-          ],
-          resources: [
-            props.iepDocumentsTable.tableArn,
-            props.userProfilesTable.tableArn
-          ]
-        }));
-    
-        // Add permission to invoke KB sync function
-        metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            'bedrock:StartIngestionJob'
-          ],
-          resources: [props.knowledgeBase.attrKnowledgeBaseArn]
-        }));
-    
-        // Add SSM permission to access the parameter
-        metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            'ssm:GetParameter'
-          ],
-          resources: [
-            `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`,
-            `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
-          ]
-        }));
-    
-        this.metadataHandlerFunction = metadataHandlerFunction;
-    
-          metadataHandlerFunction.addEventSource(new S3EventSource(props.knowledgeBucket, {
-            events: [s3.EventType.OBJECT_CREATED],
-          }));
-          const evalResultsAPIHandlerFunction = new lambda.Function(scope, 'EvalResultsHandlerFunction', {
-            runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
-            code: lambda.Code.fromAsset(path.join(__dirname, 'llm-eval/eval-results-handler')), // Points to the lambda directory
-            handler: 'lambda_function.lambda_handler', // Points to the 'hello' file in the lambda directory
-            environment: {
-              "EVALUATION_RESULTS_TABLE" : props.evalResutlsTable.tableName,
-              "EVALUATION_SUMMARIES_TABLE" : props.evalSummariesTable.tableName
-            }
-          });
-          evalResultsAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({ 
-            effect: iam.Effect.ALLOW,
-            actions: [
-              'dynamodb:GetItem',
-              'dynamodb:PutItem',
-              'dynamodb:UpdateItem',
-              'dynamodb:DeleteItem',
-              'dynamodb:Query',
-              'dynamodb:Scan'
-            ],
-            resources: [props.evalResutlsTable.tableArn, props.evalResutlsTable.tableArn + "/index/*", props.evalSummariesTable.tableArn, props.evalSummariesTable.tableArn + "/index/*"]
-          }));
-          this.handleEvalResultsFunction = evalResultsAPIHandlerFunction;
-          props.evalResutlsTable.grantReadWriteData(evalResultsAPIHandlerFunction);
-          props.evalSummariesTable.grantReadWriteData(evalResultsAPIHandlerFunction);
-      
-          this.stepFunctionsStack = new StepFunctionsStack(scope, 'StepFunctionsStack', {
-            knowledgeBase: props.knowledgeBase,
-            evalSummariesTable: props.evalSummariesTable,
-            evalResutlsTable: props.evalResutlsTable,
-            evalTestCasesBucket: props.evalTestCasesBucket,
-            systemPromptsHandlerName: systemPromptsAPIHandlerFunction.functionName
-          });
-    
+    // Add DynamoDB permissions for updating document status and user profiles
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:PutItem',
+        'dynamodb:UpdateItem',
+        'dynamodb:Query',
+        'dynamodb:Scan'
+      ],
+      resources: [
+        props.iepDocumentsTable.tableArn,
+        props.userProfilesTable.tableArn
+      ]
+    }));
+
+    // Add permission to invoke KB sync function
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'bedrock:StartIngestionJob'
+      ],
+      resources: [props.knowledgeBase.attrKnowledgeBaseArn]
+    }));
+
+    // Add SSM permission to access the parameter
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'ssm:GetParameter'
+      ],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
+      ]
+    }));
+
+    this.metadataHandlerFunction = metadataHandlerFunction;
+
+    metadataHandlerFunction.addEventSource(new S3EventSource(props.knowledgeBucket, {
+      events: [s3.EventType.OBJECT_CREATED],
+    }));
+
+    this.stepFunctionsStack = new StepFunctionsStack(scope, 'StepFunctionsStack', {
+      knowledgeBase: props.knowledgeBase,
+      systemPromptsHandlerName: systemPromptsAPIHandlerFunction.functionName
+    });
+
     const userProfileHandlerFunction = new lambda.Function(scope, 'UserProfileHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
       code: lambda.Code.fromAsset(path.join(__dirname, 'user-profile-handler')),
