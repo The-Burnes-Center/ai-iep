@@ -72,6 +72,7 @@ export class TableStack extends Stack {
     const evalSummariesTable = new Table(scope, 'EvaluationSummariesTable', {
       partitionKey: { name: 'PartitionKey', type: AttributeType.STRING },
       sortKey: { name: 'Timestamp', type: AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
     tagTable(evalSummariesTable, 'EvaluationSummariesTable');
     this.evalSummaryTable = evalSummariesTable;
@@ -79,6 +80,7 @@ export class TableStack extends Stack {
     const evalResultsTable = new Table(scope, 'EvaluationResultsTable', {
       partitionKey: { name: 'EvaluationId', type: AttributeType.STRING },
       sortKey: { name: 'QuestionId', type: AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
     tagTable(evalResultsTable, 'EvaluationResultsTable');
     

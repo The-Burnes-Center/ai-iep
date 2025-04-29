@@ -290,6 +290,7 @@ export class StepFunctionsStack extends Construct {
         const llmEvalStateMachine = new stepfunctions.StateMachine(this, 'EvaluationStateMachine', {
             definitionBody: stepfunctions.DefinitionBody.fromChainable(definition),
             timeout: cdk.Duration.hours(1),
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
         this.llmEvalStateMachine = llmEvalStateMachine;
 
