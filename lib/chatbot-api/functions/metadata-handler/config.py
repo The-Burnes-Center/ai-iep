@@ -108,31 +108,6 @@ Guidelines:
 '''
 
 
-# def get_translation_prompt():
-#     """Generate a prompt for translating content to the target language in a parent-friendly manner."""
-
-#     return f"""
-
-# You will be given a piece of text in english along with a language code from {', '.join(LANGUAGE_CODES.values())}.
-
-# Your task is to translate the text to the target language.
-
-# Use the tool get_language_context to get the language context for translation. This will include specific guidelines for the translation.
-
-# Instructions:
-# - This will also have a json list of key words and their translations in the target language.
-# - You must use the key words and their translations to translate the text.
-# - You must follow the language context for the translation.
-# - You must write at an 8th-grade reading level.
-# - You must explain technical terms in simple words while preserving their legal/educational meaning.
-
-# Output:
-# - The output must be the translated text in the target language.
-# - The output must be in markdown format.
-# - The output must be in the same structure as the input text.
-# - just return the translated text, do not include any other text or comments.
-# """
-
 def get_all_tags():
     """Compile all sections into a single list for reference."""
     return {

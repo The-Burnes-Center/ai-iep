@@ -6,8 +6,6 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { getTagProps, tagResource } from '../../tags';
 
 export class TableStack extends Stack {
-  public readonly activeSystemPromptsTable : Table;
-  public readonly stagedSystemPromptsTable : Table;
   public readonly userProfilesTable: dynamodb.Table;
   public readonly iepDocumentsTable: dynamodb.Table;
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -21,20 +19,6 @@ export class TableStack extends Stack {
         'Purpose': 'ApplicationData'
       });
     };
-
-    const activeSystemPromptsTable = new Table(scope, 'ActiveSystemPromptsTable', {
-      partitionKey: { name: 'PartitionKey', type: AttributeType.STRING },
-      sortKey: { name: 'Timestamp', type: AttributeType.STRING }, 
-    });
-    tagTable(activeSystemPromptsTable, 'ActiveSystemPromptsTable');
-    this.activeSystemPromptsTable = activeSystemPromptsTable;
-
-    const stagedSystemPromptsTable = new Table(scope, 'StagedSystemPromptsTable', {
-      partitionKey: { name: 'PartitionKey', type: AttributeType.STRING },
-      sortKey: { name: 'Timestamp', type: AttributeType.STRING }, 
-    });
-    tagTable(stagedSystemPromptsTable, 'StagedSystemPromptsTable');
-    this.stagedSystemPromptsTable = stagedSystemPromptsTable;
 
     // Create User Profiles Table
     this.userProfilesTable = new dynamodb.Table(scope, 'UserProfilesTable', {

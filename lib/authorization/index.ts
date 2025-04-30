@@ -3,12 +3,10 @@ import { Construct } from 'constructs';
 import { cognitoDomainName } from '../constants' 
 import { UserPool, UserPoolIdentityProviderOidc,UserPoolClient, UserPoolClientIdentityProvider, ProviderAttribute } from 'aws-cdk-lib/aws-cognito';
 import * as cognito from "aws-cdk-lib/aws-cognito";
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
 import { getTagProps, tagResource } from '../tags';
 
 export class AuthorizationStack extends Construct {
-  public readonly lambdaAuthorizer : lambda.Function;
   public readonly userPool : UserPool;
   public readonly userPoolClient : UserPoolClient;
 
@@ -75,19 +73,6 @@ export class AuthorizationStack extends Construct {
     });
 
     this.userPoolClient = userPoolClient;
-
-    const authorizerHandlerFunction = new lambda.Function(this, 'AuthorizationFunction', {
-      runtime: lambda.Runtime.PYTHON_3_12, // Choose any supported Node.js runtime
-      code: lambda.Code.fromAsset(path.join(__dirname, 'websocket-api-authorizer')), // Points to the lambda directory
-      handler: 'lambda_function.lambda_handler', // Points to the 'hello' file in the lambda directory
-      environment: {
-        "USER_POOL_ID" : userPool.userPoolId,
-        "APP_CLIENT_ID" : userPoolClient.userPoolClientId
-      },
-      timeout: cdk.Duration.seconds(30)
-    });
-
-    this.lambdaAuthorizer = authorizerHandlerFunction;
     
     new cdk.CfnOutput(this, "UserPool ID", {
       value: userPool.userPoolId || "",
@@ -100,8 +85,5 @@ export class AuthorizationStack extends Construct {
     // new cdk.CfnOutput(this, "UserPool Client Name", {
     //   value: userPoolClient.userPoolClientName || "",
     // });
-
-
-    
   }
 }
