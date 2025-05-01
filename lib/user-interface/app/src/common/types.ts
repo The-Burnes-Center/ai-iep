@@ -86,13 +86,17 @@ export interface IEPDocument {
   // Document content by language
   summaries: {
     en?: string;
+    vi?:string;
     es?: string;
+    zh?: string;
     // Add other languages as needed
   };
   
   sections: {
     en: IEPSection[];
+    vi: IEPSection[];
     es: IEPSection[];
+    zh: IEPSection[];
     // Add other languages as needed
   };
   

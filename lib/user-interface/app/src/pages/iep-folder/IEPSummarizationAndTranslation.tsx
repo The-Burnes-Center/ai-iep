@@ -18,9 +18,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
+import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage } from '../../common/language-context';
 import ReactMarkdown from 'react-markdown';
-import { IEPDocument } from '../../common/types';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
@@ -31,20 +31,32 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [document, setDocument] = useState<IEPDocument>({
-    summaries: {},
+    documentId: undefined,
+    documentUrl: undefined,
+    status: undefined,
+    summaries: {
+      en: '',
+      es: '',
+      vi: '',
+      zh: ''
+    },
     sections: {
       en: [],
-      es: []
+      es: [],
+      vi: [],
+      zh: []
     }
   });
   
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<string>('english');
+  const [activeTab, setActiveTab] = useState<string>('en');
   const navigate = useNavigate();
   
   // Reference to store the polling interval
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isFirstRender = useRef<boolean>(true);
+
+  const preferredLanguage = language || 'en';
 
   // Section configuration with translations
   const sectionConfigRef = useRef([
@@ -95,7 +107,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   };
 
   // Function to sort sections by predefined order
-  const sortSections = (sections: {name: string, displayName: string, content: string}[]) => {
+  const sortSections = (sections: IEPSection[]) => {
     return [...sections].sort((a, b) => {
       const indexA = sectionConfigRef.current.findIndex(s => 
         s.apiName === a.name || 
@@ -115,85 +127,79 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     });
   };
 
-  // Process document sections
-  const processDocumentSections = (document: any) => {
-    if (!document || document.status !== "PROCESSED") return;
+  // Process document sections for a specific language
+  const processLanguageSections = (doc: any, lang: string) => {
+    if (!doc || doc.status !== "PROCESSED") return;
     
-    console.log("Processing document sections:", document);
-    
-    // Process English sections
-    if (document.sections && document.sections.en) {
+    if (doc.sections && doc.sections[lang]) {
       try {
         const extractedSections = [];
         
-        // Handle array format
-        if (Array.isArray(document.sections.en)) {
-          console.log("Processing English sections as array");
-          document.sections.en.forEach(section => {
+        if (Array.isArray(doc.sections[lang])) {
+          console.log(`Processing ${lang} sections as array`);
+          doc.sections[lang].forEach(section => {
             if (section.title && section.content) {
               extractedSections.push({
                 name: section.title,
-                displayName: getDisplayName(section.title, false),
+                displayName: getDisplayName(section.title, lang !== 'en'),
                 content: section.content,
-                pageNumbers: section.page_numbers || [] // Extract page numbers
+                pageNumbers: section.page_numbers || []
               });
             }
           });
         }
         
         const orderedSections = sortSections(extractedSections);
-        console.log("Processed English sections:", orderedSections);
-        setDocument(prev => ({...prev, sections: { ...prev.sections,en: orderedSections} }))
+        console.log(`Processed ${lang} sections:`, orderedSections);
+        
+        setDocument(prev => ({
+          ...prev, 
+          sections: { 
+            ...prev.sections,
+            [lang]: orderedSections
+          }
+        }));
       } catch (e) {
-        console.error("Error processing English sections:", e);
-        setDocument(prev => ({...prev, sections: { ...prev.sections, en: []} }))
+        console.error(`Error processing ${lang} sections:`, e);
+        setDocument(prev => ({
+          ...prev, 
+          sections: { 
+            ...prev.sections,
+            [lang]: []
+          }
+        }));
       }
     } else {
-      console.log("No English sections found");
-      setDocument(prev => ({...prev, sections: { ...prev.sections, en: []} }))
+      console.log(`No ${lang} sections found`);
+      setDocument(prev => ({
+        ...prev, 
+        sections: { 
+          ...prev.sections,
+          [lang]: []
+        }
+      }));
     }
+  };
+
+  // Process all document sections
+  const processDocumentSections = (doc: any) => {
+    // Process English sections first
+    processLanguageSections(doc, 'en');
     
-    // Process Spanish sections
-    if (document.sections && document.sections.es) {
-      try {
-        const extractedSections = [];
-        
-        // Handle array format
-        if (Array.isArray(document.sections.es)) {
-          console.log("Processing Spanish sections as array");
-          document.sections.es.forEach(section => {
-            if (section.title && section.content) {
-              extractedSections.push({
-                name: section.title,
-                displayName: getDisplayName(section.title, true),
-                content: section.content,
-                pageNumbers: section.page_numbers || [] // Extract page numbers
-              });
-            }
-          });
-        }
-        
-        const orderedSections = sortSections(extractedSections);
-        console.log("Processed Spanish sections:", orderedSections);
-        setDocument(prev => ({ ...prev, sections: { ...prev.sections, es:  orderedSections}}));
-      } catch (e) {
-        console.error("Error processing Spanish sections:", e);
-        setDocument(prev => ({ ...prev, sections: { ...prev.sections, es:  []}}));
-      }
-    } else {
-      console.log("No Spanish sections found");
-      setDocument(prev => ({ ...prev, sections: { ...prev.sections, es:  []}}));
+    // Process preferred language if it's not English
+    if (preferredLanguage !== 'en') {
+      processLanguageSections(doc, preferredLanguage);
     }
   };
 
   // Function to start polling if document is processing
-  const startPollingIfProcessing = (document: any) => {
+  const startPollingIfProcessing = (doc: any) => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
     
-    if (document && document.status === "PROCESSING") {
+    if (doc && doc.status === "PROCESSING") {
       console.log("Document is processing. Starting polling...");
       pollingIntervalRef.current = setInterval(() => {
         console.log("Polling for updates...");
@@ -220,7 +226,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             if (!prev || 
                 prev.status !== retrievedDocument.status || 
                 prev.createdAt !== retrievedDocument.createdAt) {
-              return retrievedDocument;
+              return {
+                ...retrievedDocument,
+                sections: {
+                  ...prev.sections, // Keep existing processed sections
+                  ...(retrievedDocument.sections || {}) // Add new sections if available
+                }
+              };
             }
             return prev;
           });
@@ -229,13 +241,45 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           
           if (retrievedDocument.status === "PROCESSED") {
             // Set summaries
-            setDocument(prev => ({...prev, summaries: { en: retrievedDocument.summaries?.en || '', es: retrievedDocument.summaries?.es || ''}  }));
+            const newSummaries = { ...document.summaries };
+            
+            // Update each available language summary
+            if (retrievedDocument.summaries) {
+              Object.keys(retrievedDocument.summaries).forEach(lang => {
+                if (retrievedDocument.summaries[lang]) {
+                  newSummaries[lang] = retrievedDocument.summaries[lang];
+                }
+              });
+            }
+            
+            setDocument(prev => ({
+              ...prev, 
+              summaries: newSummaries
+            }));
             
             // Process sections
             processDocumentSections(retrievedDocument);
           }
         } else {
-          setDocument(prev => ({...prev, summaries: { en: '', es: ''}, sections: { en: [], es: []}  }));
+          // Clear document data if no document found
+          setDocument(prev => ({
+            ...prev,
+            documentId: undefined,
+            documentUrl: undefined,
+            status: undefined,
+            summaries: {
+              en: '',
+              es: '',
+              vi: '',
+              zh: ''
+            },
+            sections: {
+              en: [],
+              es: [],
+              vi: [],
+              zh: []
+            }
+          }));
         }
         
         setError(null);
@@ -258,16 +302,29 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     };
   }, [refreshCounter, translationsLoaded]);
 
+  // Safe check for content availability
+  const hasContent = (lang: string) => {
+    const hasSummary = Boolean(document.summaries && document.summaries[lang]);
+    const hasSections = Boolean(
+      document.sections && 
+      document.sections[lang] && 
+      document.sections[lang].length > 0
+    );
+    return hasSummary || hasSections;
+  };
+
   // Set active tab based on language preference and content availability
   useEffect(() => {
-    const hasSpanishContent = document.summaries.es || document.sections.es.length > 0;
+    // Default to English tab
+    let tabToShow = 'en';
     
-    if (language === 'es' && hasSpanishContent) {
-      setActiveTab('spanish');
-    } else {
-      setActiveTab('english');
+    // If user prefers another language and content exists for that language, show it
+    if (preferredLanguage !== 'en' && hasContent(preferredLanguage)) {
+      tabToShow = preferredLanguage;
     }
-  }, [language, document.summaries.es, document.sections.es]);
+    
+    setActiveTab(tabToShow);
+  }, [language, document.summaries, document.sections, preferredLanguage]);
 
   const handleBackClick = () => {
     navigate('/welcome-page');
@@ -293,8 +350,108 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
+  // Render tab content for a specific language
+  const renderTabContent = (lang: string) => {
+    const hasSummary = Boolean(document.summaries && document.summaries[lang]);
+    const hasSections = Boolean(
+      document.sections && 
+      document.sections[lang] && 
+      document.sections[lang].length > 0
+    );
+
+    return (
+      <>
+        {/* Summary Section */}
+        {hasSummary ? (
+          <>
+            <h4 className="mt-4">
+              {lang === 'en' ? 'IEP Summary' : t('summary.iepSummary')}
+            </h4>
+            <Card className="summary-content mb-4">
+              <Card.Body>
+                <p className="mb-0">{document.summaries[lang]}</p>
+              </Card.Body>
+            </Card>
+          </>
+        ) : (
+          <Alert variant="info">
+            <h5>
+              {lang === 'en' 
+                ? t('summary.noSummary.title')
+                : t('summary.noTranslatedSummary.title')}
+            </h5>
+            <p>
+              {lang === 'en'
+                ? t('summary.noSummary.message')
+                : t('summary.noTranslatedSummary.message')}
+            </p>
+          </Alert>
+        )}
+        
+        {/* Sections Accordion */}
+        {hasSections ? (
+          <>
+            <h4 className="mt-4">
+              {lang === 'en' ? 'Key Insights' : t('summary.keyInsights')}
+            </h4>
+            <Accordion className="mb-3 summary-accordion">
+              {document.sections[lang].map((section, index) => (
+                <Accordion.Item key={index} eventKey={index.toString()}>
+                  <Accordion.Header>
+                    {section.displayName}
+                  </Accordion.Header>
+                  <Accordion.Body>
+                    {section.pageNumbers && section.pageNumbers.length > 0 && (
+                      <p className="text-muted mb-2">
+                        <small>
+                          {lang === 'en' ? 'Pages: ' : 'Páginas: '}
+                          {Array.isArray(section.pageNumbers) 
+                            ? section.pageNumbers.join(', ') 
+                            : section.pageNumbers}
+                        </small>
+                      </p>
+                    )}
+                    <div className="markdown-content">
+                      <ReactMarkdown>
+                        {section.content || t('summary.noContent')}
+                      </ReactMarkdown>
+                    </div>
+                  </Accordion.Body>
+                </Accordion.Item>
+              ))}
+            </Accordion>
+          </>
+        ) : (
+          <Alert variant="info">
+            <h5>
+              {lang === 'en'
+                ? t('summary.noSections.title')
+                : t('summary.noTranslatedSections.title')}
+            </h5>
+            <p>
+              {lang === 'en'
+                ? t('summary.noSections.message')
+                : t('summary.noTranslatedSections.message')}
+            </p>
+          </Alert>
+        )}
+      </>
+    );
+  };
+
   // Check if document is processing
   const isProcessing = document && document.status === "PROCESSING";
+
+  // Get tab title based on language code
+  const getTabTitle = (languageCode: string) => {
+    switch(languageCode) {
+      case 'en': return t('summary.english');
+      case 'es': return 'Español';
+      case 'vi': return 'Tiếng Việt';
+      case 'zh': return '中文';
+      default: return languageCode.toUpperCase();
+    }
+  };
 
   // Loading state while translations are being loaded
   if (!translationsLoaded) {
@@ -372,128 +529,29 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         >
                           {/* Always show English tab */}
                           <Tab 
-                            eventKey="english" 
+                            eventKey="en" 
                             title={t('summary.english')}
                           >
-                            {document.summaries.en ? (
-                              <>
-                                <h4 className="mt-4">IEP Summary</h4>
-                                <Card className="summary-content mb-4">
-                                  <Card.Body>
-                                    <p className="mb-0">{document.summaries.en}</p>
-                                  </Card.Body>
-                                </Card>
-                              </>
-                            ) : (
-                              <Alert variant="info">
-                                <h5>{t('summary.noSummary.title')}</h5>
-                                <p>{t('summary.noSummary.message')}</p>
-                              </Alert>
-                            )}
-                            
-                            {document.sections.en.length > 0 ? (
-                              <>
-                                <h4 className="mt-4">Key Insights</h4>
-                                <Accordion className="mb-3 summary-accordion">
-                                  {document.sections.en.map((section, index) => (
-                                    <Accordion.Item key={index} eventKey={index.toString()}>
-                                      <Accordion.Header>
-                                        {section.displayName}
-                                      </Accordion.Header>
-                                      <Accordion.Body>
-                                        {section.pageNumbers && section.pageNumbers.length > 0 && (
-                                          <p className="text-muted mb-2">
-                                            <small>Pages: {Array.isArray(section.pageNumbers) ? 
-                                              section.pageNumbers.join(', ') : 
-                                              section.pageNumbers}
-                                            </small>
-                                          </p>
-                                        )}
-                                        <div className="markdown-content">
-                                          <ReactMarkdown>
-                                            {section.content || t('summary.noContent')}
-                                          </ReactMarkdown>
-                                        </div>
-                                      </Accordion.Body>
-                                    </Accordion.Item>
-                                  ))}
-                                </Accordion>
-                              </>
-                            ) : (
-                              <Alert variant="info">
-                                <h5>{t('summary.noSections.title')}</h5>
-                                <p>{t('summary.noSections.message')}</p>
-                              </Alert>
-                            )}
+                            {renderTabContent('en')}
                           </Tab>
                           
-                          {/* Show Spanish tab only if there's content */}
-                          {(document.summaries.es || document.sections.es.length > 0) && (
+                          {/* Show preferred language tab if content exists */}
+                          {preferredLanguage !== 'en' && hasContent(preferredLanguage) && (
                             <Tab 
-                              eventKey="spanish" 
+                              eventKey={preferredLanguage} 
                               title={
                                 <span>
                                   <FontAwesomeIcon icon={faLanguage} className="me-1" />
-                                  Español
+                                  {getTabTitle(preferredLanguage)}
                                 </span>
                               }
                             >
-                              {document.summaries.es ? (
-                                <>
-                                  <h4 className="mt-4">Resumen del IEP</h4>
-                                  <Card className="summary-content mb-4">
-                                    <Card.Body>
-                                      <p className="mb-0">{document.summaries.es}</p>
-                                    </Card.Body>
-                                  </Card>
-                                </>
-                              ) : (
-                                <Alert variant="info">
-                                  <h5>{t('summary.noTranslatedSummary.title')}</h5>
-                                  <p>{t('summary.noTranslatedSummary.message')}</p>
-                                </Alert>
-                              )}
-                              
-                              {document.sections.es.length > 0 ? (
-                                <>
-                                  <h4 className="mt-4">Información Clave</h4>
-                                  <Accordion className="mb-3 summary-accordion">
-                                    {document.sections.es.map((section, index) => (
-                                      <Accordion.Item key={index} eventKey={index.toString()}>
-                                        <Accordion.Header>
-                                          {section.displayName}
-                                        </Accordion.Header>
-                                        <Accordion.Body>
-                                          {section.pageNumbers && section.pageNumbers.length > 0 && (
-                                            <p className="text-muted mb-2">
-                                              <small>Páginas: {Array.isArray(section.pageNumbers) ? 
-                                                section.pageNumbers.join(', ') : 
-                                                section.pageNumbers}
-                                              </small>
-                                            </p>
-                                          )}
-                                          <div className="markdown-content">
-                                            <ReactMarkdown>
-                                              {section.content || t('summary.noContent')}
-                                            </ReactMarkdown>
-                                          </div>
-                                        </Accordion.Body>
-                                      </Accordion.Item>
-                                    ))}
-                                  </Accordion>
-                                </>
-                              ) : (
-                                <Alert variant="info">
-                                  <h5>{t('summary.noTranslatedSections.title')}</h5>
-                                  <p>{t('summary.noTranslatedSections.message')}</p>
-                                </Alert>
-                              )}
+                              {renderTabContent(preferredLanguage)}
                             </Tab>
                           )}
                         </Tabs>
                         
-                        {!document.summaries.en && !document.summaries.es && 
-                         document.sections.en.length === 0 && document.sections.es.length === 0 && (
+                        {!hasContent('en') && !hasContent(preferredLanguage) && (
                           <Alert variant="info">
                             <h5>{t('summary.noContentAvailable.title')}</h5>
                             <p>{t('summary.noContentAvailable.message')}</p>
