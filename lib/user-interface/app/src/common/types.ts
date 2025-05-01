@@ -67,3 +67,35 @@ export interface ChildResponse {
   createdAt: number;
   updatedAt: number;
 }
+
+// Add to types.ts
+export interface IEPSection {
+  name: string;
+  displayName: string;
+  content: string;
+  pageNumbers?: number[];
+}
+
+export interface IEPDocument {
+  // Basic document info
+  documentId?: string;
+  documentUrl?: string;
+  status?: "PROCESSING" | "PROCESSED" | "FAILED";
+  createdAt?: string;
+  
+  // Document content by language
+  summaries: {
+    en?: string;
+    es?: string;
+    // Add other languages as needed
+  };
+  
+  sections: {
+    en: IEPSection[];
+    es: IEPSection[];
+    // Add other languages as needed
+  };
+  
+  // Raw data
+  ocrData?: any;
+}

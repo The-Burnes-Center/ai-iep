@@ -20,6 +20,7 @@ import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } 
 import './IEPSummarizationAndTranslation.css';
 import { useLanguage } from '../../common/language-context';
 import ReactMarkdown from 'react-markdown';
+import { IEPDocument } from '../../common/types';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
@@ -28,15 +29,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [recentDocument, setRecentDocument] = useState<any>(null);
-  
-  // State for summaries
-  const [englishSummary, setEnglishSummary] = useState<string>('');
-  const [spanishSummary, setSpanishSummary] = useState<string>('');
-  
-  // State for sections
-  const [englishSections, setEnglishSections] = useState<{name: string, displayName: string, content: string, pageNumbers?: number[]}[]>([]);
-  const [spanishSections, setSpanishSections] = useState<{name: string, displayName: string, content: string, pageNumbers?: number[]}[]>([]);
+
+  const [document, setDocument] = useState<IEPDocument>({
+    summaries: {},
+    sections: {
+      en: [],
+      es: []
+    }
+  });
   
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>('english');
@@ -77,8 +77,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       ];
       
       // Reprocess sections if document is already loaded
-      if (recentDocument && recentDocument.status === "PROCESSED") {
-        processDocumentSections(recentDocument);
+      if (document && document.status === "PROCESSED") {
+        processDocumentSections(document);
       }
     }
   }, [t, translationsLoaded]);
@@ -143,14 +143,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         
         const orderedSections = sortSections(extractedSections);
         console.log("Processed English sections:", orderedSections);
-        setEnglishSections(orderedSections);
+        setDocument(prev => ({...prev, sections: { ...prev.sections,en: orderedSections} }))
       } catch (e) {
         console.error("Error processing English sections:", e);
-        setEnglishSections([]);
+        setDocument(prev => ({...prev, sections: { ...prev.sections, en: []} }))
       }
     } else {
       console.log("No English sections found");
-      setEnglishSections([]);
+      setDocument(prev => ({...prev, sections: { ...prev.sections, en: []} }))
     }
     
     // Process Spanish sections
@@ -175,14 +175,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         
         const orderedSections = sortSections(extractedSections);
         console.log("Processed Spanish sections:", orderedSections);
-        setSpanishSections(orderedSections);
+        setDocument(prev => ({ ...prev, sections: { ...prev.sections, es:  orderedSections}}));
       } catch (e) {
         console.error("Error processing Spanish sections:", e);
-        setSpanishSections([]);
+        setDocument(prev => ({ ...prev, sections: { ...prev.sections, es:  []}}));
       }
     } else {
       console.log("No Spanish sections found");
-      setSpanishSections([]);
+      setDocument(prev => ({ ...prev, sections: { ...prev.sections, es:  []}}));
     }
   };
 
@@ -212,35 +212,30 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       }
       
       try {
-        const document = await apiClient.getMostRecentDocumentWithSummary();
-        console.log("Fetched document data:", document);
+        const retrievedDocument = await apiClient.getMostRecentDocumentWithSummary();
+        console.log("Fetched document data:", retrievedDocument);
         
-        if (document) {
-          setRecentDocument(prev => {
+        if (retrievedDocument) {
+          setDocument(prev => {
             if (!prev || 
-                prev.status !== document.status || 
-                prev.createdAt !== document.createdAt) {
-              return document;
+                prev.status !== retrievedDocument.status || 
+                prev.createdAt !== retrievedDocument.createdAt) {
+              return retrievedDocument;
             }
             return prev;
           });
           
-          startPollingIfProcessing(document);
+          startPollingIfProcessing(retrievedDocument);
           
-          if (document.status === "PROCESSED") {
+          if (retrievedDocument.status === "PROCESSED") {
             // Set summaries
-            setEnglishSummary(document.summaries?.en || '');
-            setSpanishSummary(document.summaries?.es || '');
+            setDocument(prev => ({...prev, summaries: { en: retrievedDocument.summaries?.en || '', es: retrievedDocument.summaries?.es || ''}  }));
             
             // Process sections
-            processDocumentSections(document);
+            processDocumentSections(retrievedDocument);
           }
         } else {
-          setRecentDocument(null);
-          setEnglishSummary('');
-          setSpanishSummary('');
-          setEnglishSections([]);
-          setSpanishSections([]);
+          setDocument(prev => ({...prev, summaries: { en: '', es: ''}, sections: { en: [], es: []}  }));
         }
         
         setError(null);
@@ -265,14 +260,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Set active tab based on language preference and content availability
   useEffect(() => {
-    const hasSpanishContent = spanishSummary || spanishSections.length > 0;
+    const hasSpanishContent = document.summaries.es || document.sections.es.length > 0;
     
     if (language === 'es' && hasSpanishContent) {
       setActiveTab('spanish');
     } else {
       setActiveTab('english');
     }
-  }, [language, spanishSummary, spanishSections]);
+  }, [language, document.summaries.es, document.sections.es]);
 
   const handleBackClick = () => {
     navigate('/welcome-page');
@@ -299,7 +294,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   };
 
   // Check if document is processing
-  const isProcessing = recentDocument && recentDocument.status === "PROCESSING";
+  const isProcessing = document && document.status === "PROCESSING";
 
   // Loading state while translations are being loaded
   if (!translationsLoaded) {
@@ -333,7 +328,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               </Spinner>
               <p className="mt-3">{t('summary.loading')}</p>
             </div>
-          ) : !recentDocument ? (
+          ) : !document ? (
             <Alert variant="info">
               {t('summary.noDocuments')}
             </Alert>
@@ -363,7 +358,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           </div>
                         </Alert>
                       </div>
-                    ) : recentDocument.status === "FAILED" ? (
+                    ) : document.status === "FAILED" ? (
                       <Alert variant="danger">
                         <h5>{t('summary.failed.title')}</h5>
                         <p>{t('summary.failed.message')}</p>
@@ -380,12 +375,12 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                             eventKey="english" 
                             title={t('summary.english')}
                           >
-                            {englishSummary ? (
+                            {document.summaries.en ? (
                               <>
                                 <h4 className="mt-4">IEP Summary</h4>
                                 <Card className="summary-content mb-4">
                                   <Card.Body>
-                                    <p className="mb-0">{englishSummary}</p>
+                                    <p className="mb-0">{document.summaries.en}</p>
                                   </Card.Body>
                                 </Card>
                               </>
@@ -396,11 +391,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                               </Alert>
                             )}
                             
-                            {englishSections.length > 0 ? (
+                            {document.sections.en.length > 0 ? (
                               <>
                                 <h4 className="mt-4">Key Insights</h4>
                                 <Accordion className="mb-3 summary-accordion">
-                                  {englishSections.map((section, index) => (
+                                  {document.sections.en.map((section, index) => (
                                     <Accordion.Item key={index} eventKey={index.toString()}>
                                       <Accordion.Header>
                                         {section.displayName}
@@ -433,7 +428,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           </Tab>
                           
                           {/* Show Spanish tab only if there's content */}
-                          {(spanishSummary || spanishSections.length > 0) && (
+                          {(document.summaries.es || document.sections.es.length > 0) && (
                             <Tab 
                               eventKey="spanish" 
                               title={
@@ -443,12 +438,12 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                                 </span>
                               }
                             >
-                              {spanishSummary ? (
+                              {document.summaries.es ? (
                                 <>
                                   <h4 className="mt-4">Resumen del IEP</h4>
                                   <Card className="summary-content mb-4">
                                     <Card.Body>
-                                      <p className="mb-0">{spanishSummary}</p>
+                                      <p className="mb-0">{document.summaries.es}</p>
                                     </Card.Body>
                                   </Card>
                                 </>
@@ -459,11 +454,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                                 </Alert>
                               )}
                               
-                              {spanishSections.length > 0 ? (
+                              {document.sections.es.length > 0 ? (
                                 <>
                                   <h4 className="mt-4">Información Clave</h4>
                                   <Accordion className="mb-3 summary-accordion">
-                                    {spanishSections.map((section, index) => (
+                                    {document.sections.es.map((section, index) => (
                                       <Accordion.Item key={index} eventKey={index.toString()}>
                                         <Accordion.Header>
                                           {section.displayName}
@@ -497,8 +492,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           )}
                         </Tabs>
                         
-                        {!englishSummary && !spanishSummary && 
-                         englishSections.length === 0 && spanishSections.length === 0 && (
+                        {!document.summaries.en && !document.summaries.es && 
+                         document.sections.en.length === 0 && document.sections.es.length === 0 && (
                           <Alert variant="info">
                             <h5>{t('summary.noContentAvailable.title')}</h5>
                             <p>{t('summary.noContentAvailable.message')}</p>
@@ -512,9 +507,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               <Card.Header className="summary-card-header d-flex justify-content-between align-items-center">
                 <div>
                   <FontAwesomeIcon icon={faFileAlt} className="me-2" />
-                  {recentDocument.documentUrl ? getFileName(recentDocument.documentUrl) : 'Document'}
+                  {document.documentUrl ? getFileName(document.documentUrl) : 'Document'}
                 </div>
-                {recentDocument.status && renderStatusBadge(recentDocument.status)}
+                {document.status && renderStatusBadge(document.status)}
               </Card.Header>
             </Card>
           )}
