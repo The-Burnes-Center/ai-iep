@@ -107,7 +107,7 @@ class OpenAIAgent:
         get_section_info.__doc__ = doc
         return get_section_info
 
-    def analyze_document(self, model="gpt-4o"):
+    def analyze_document(self, model="gpt-4.1"):
         """
         Analyze and translate an IEP document in one Agent run using GPT-4.1.
         Returns a dict matching IEPData schema.
