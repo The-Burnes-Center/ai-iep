@@ -110,3 +110,56 @@
     border-radius: 4px;
     font-size: 0.875rem;
   }
+
+  /* Jargon term styling */
+.jargon-term {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: #0040BA;
+  cursor: help;
+  color: #0040BA;
+  font-weight: 500;
+  position: relative;
+}
+
+.jargon-term:hover {
+  background-color: rgba(0, 64, 186, 0.1);
+}
+
+/* Tooltip styling */
+.jargon-term::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 250px;
+  padding: 10px;
+  border-radius: 6px;
+  background-color: #0040BA;
+  color: white;
+  text-align: left;
+  font-weight: normal;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.jargon-term:hover::after {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Responsive tooltip positioning */
+@media (max-width: 768px) {
+  .jargon-term::after {
+    width: 200px;
+    left: 0;
+    transform: none;
+  }
+}
