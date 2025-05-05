@@ -1,25 +1,184 @@
-# User Profile Management System
+# User Profile Handler
 
-This system manages user profiles, their children's information, and associated IEP documents in the AI-IEP platform.
+This Lambda function handles user profile management, child information management, and document association for the AI-IEP system. It provides RESTful API endpoints through API Gateway for managing user data and related IEP documents.
 
-## Profile Creation
+## Overview
 
-User profiles are automatically created in two ways:
+The User Profile Handler manages the following core functionality:
 
-1. **Primary Method - Cognito Post Confirmation Trigger**:
-   - A profile is automatically created when a user confirms their account
-   - The trigger creates a basic profile with:
-     - User ID (from Cognito)
-     - Creation timestamp
-     - Empty children array
-     - consentGiven set to false by default
+1. **User Profile Management**: Create, retrieve, and update user profiles
+2. **Child Management**: Add and manage children associated with user accounts
+3. **Document Management**: Associate IEP documents with children and users
+4. **Document Status**: Retrieve document processing status
+5. **Profile Creation**: Automatically create profiles for new Cognito users
 
-2. **Fallback Method - API Endpoint**:
-   - If a profile doesn't exist when accessing `/profile` endpoint
-   - Handles cases where:
-     - The Cognito trigger failed
-     - Legacy users from before trigger implementation
-     - Profile was accidentally deleted
+## Architecture
+
+```
+API Gateway → Lambda Function → DynamoDB
+   ↓
+Cognito User Pool → Trigger → Lambda Function → DynamoDB
+```
+
+## Components
+
+### Main Handler (lambda_function.py)
+
+The main Lambda handler implements a REST API with the following endpoints:
+
+- **GET /profile**: Retrieves a user's profile
+- **PUT /profile**: Updates a user's profile information
+- **POST /profile/children**: Adds a child to a user's profile
+- **GET /profile/children/{childId}/documents**: Gets documents for a specific child
+- **DELETE /profile/children/{childId}/documents/{documentId}**: Deletes a document
+- **GET /documents/{iepId}/status**: Retrieves the processing status of a document
+- **POST /summary**: Generates or retrieves a document summary
+
+### Cognito Trigger (cognito_trigger.py)
+
+This module is triggered when a new user completes registration in Cognito. It:
+
+1. Creates an initial user profile in DynamoDB
+2. Associates Cognito user attributes with the profile
+3. Sets up default preferences
+
+### Router (router.py)
+
+A custom routing module that:
+
+1. Maps HTTP methods and paths to handler functions
+2. Provides consistent error handling
+3. Manages request parsing and response formatting
+
+## Implementation Details
+
+### User Profile Management
+
+User profiles are created and managed through the following process:
+
+1. **Profile Creation**:
+   - Automatically created on Cognito user confirmation
+   - Contains basic user information
+   - Initialized with empty children array
+
+2. **Profile Retrieval**:
+   - Uses `userId` from Cognito JWT token
+   - Returns complete profile with children information
+   - Creates default profile if none exists
+
+3. **Profile Updates**:
+   - Supports partial updates (only specified fields)
+   - Updates timestamps automatically
+   - Validates field values (e.g., language codes)
+
+### Child Management
+
+Children are managed as nested objects within user profiles:
+
+1. **Adding Children**:
+   - Generates unique `childId`
+   - Validates required fields (name, date of birth)
+   - Updates user profile atomically
+
+2. **Child Documents**:
+   - Retrieved using GSI on IEP documents table
+   - Filtered by `childId`
+   - Returns document metadata (not content)
+
+### Document Management
+
+IEP documents are managed through:
+
+1. **Document Retrieval**:
+   - Queries the `byChildId` GSI
+   - Returns document metadata sorted by creation date
+   - Handles pagination for multiple documents
+
+2. **Document Deletion**:
+   - Removes document from S3 bucket
+   - Deletes metadata from DynamoDB
+   - Updates associated tables
+
+## Error Handling
+
+The function implements robust error handling:
+
+1. **Input Validation**:
+   - Validates required fields
+   - Checks field formats and values
+   - Returns appropriate error messages
+
+2. **Authentication Errors**:
+   - Validates JWT tokens
+   - Ensures user can only access their own data
+   - Handles expired or invalid tokens
+
+3. **Database Errors**:
+   - Graceful handling of DynamoDB errors
+   - Retries for transient issues
+   - Consistent error responses
+
+4. **Logging**:
+   - Detailed error logging to CloudWatch
+   - Includes request context for debugging
+   - Masks sensitive information
+
+## Configuration
+
+### Environment Variables
+
+- `USER_PROFILES_TABLE`: DynamoDB table for user profiles
+- `IEP_DOCUMENTS_TABLE`: DynamoDB table for IEP document metadata
+- `BUCKET`: S3 bucket for IEP documents
+
+### Permissions
+
+The Lambda function requires:
+
+- DynamoDB read/write access to user profiles table
+- DynamoDB read/write access to IEP documents table
+- S3 read/delete access to documents bucket
+
+## Development Guidelines
+
+When modifying this component:
+
+1. **Adding New Endpoints**:
+   - Update the router in `router.py`
+   - Implement handler function in `lambda_function.py`
+   - Add appropriate error handling
+
+2. **Modifying Data Model**:
+   - Update validation logic for new fields
+   - Ensure backward compatibility
+   - Update access patterns if needed
+
+3. **Performance Optimization**:
+   - Use appropriate DynamoDB query patterns
+   - Limit response sizes as needed
+   - Consider pagination for large responses
+
+## Testing
+
+For testing this component:
+
+1. **API Testing**:
+   - Test each endpoint with valid inputs
+   - Test error cases and edge conditions
+   - Verify authorization controls
+
+2. **Integration Testing**:
+   - Test interactions with Cognito
+   - Test interactions with document processing
+   - Verify end-to-end workflows
+
+## Security Considerations
+
+- All requests require JWT authorization
+- Users can only access their own profiles and documents
+- Data is validated before storage
+- No sensitive information is logged
+- CORS is configured for frontend access
 
 ## User Identity Management
 

@@ -1,182 +1,156 @@
-# IEP Document Processing System
+# Metadata Handler
 
-This system helps process and understand Individualized Education Program (IEP) documents. Think of it as a smart assistant that reads IEP documents and helps organize their information in a way that's easy to understand and access.
+The Metadata Handler is a core component in the AI-IEP backend that processes uploaded IEP documents, extracts information, and generates summaries using AI technologies. This documentation provides details about its implementation, configuration, and usage.
 
-## What This System Does
+## Overview
 
-- **Document Reading**: Automatically reads and extracts text from IEP documents
-- **Smart Analysis**: 
-  - Understands the content of the IEP
-  - Identifies different sections (like Goals, Services, etc.)
-  - Creates summaries in multiple languages
-- **Information Storage**: Safely stores all the information in a database
-- **Easy Access**: Makes the information available through a simple interface
+This Lambda function is triggered whenever a document is uploaded to the knowledge S3 bucket. It performs the following key operations:
 
-## How It Works
+1. **Document Retrieval**: Downloads the document from S3
+2. **OCR Processing**: Uses Mistral AI to extract text from documents
+3. **PII Redaction**: Uses AWS Comprehend to detect and redact Personally Identifiable Information
+4. **Content Analysis**: Processes the extracted text using OpenAI or AWS Bedrock to generate structured metadata
+5. **Summary Generation**: Creates summaries of different IEP sections
+6. **Status Updates**: Updates document status in DynamoDB 
+7. **User Profile Updates**: Associates document metadata with user profiles
 
-### 1. Main Parts of the System
+## Architecture
 
-#### A. Storage and Security
-- **Document Storage**: Safely stores IEP documents in S3
-- **Information Database**: Keeps track of all processed information
-- **Knowledge Base**: Stores helpful information about IEPs
-- **Secure Key Storage**: Safely manages access keys
+```
+Document Upload → S3 Event → Lambda Trigger → OCR Processing → Content Analysis → DynamoDB Updates
+```
 
-#### B. Smart Tools
-- **Document Reader**: Reads and extracts text from IEP documents
-- **AI Agent's Smart Tools**:
-  - **Full Document Understanding Tool**:
-    * Reads and understands the entire IEP document
-    * Creates a smart index of all pages and sections
-    * Helps find where important information lives
-    * Makes connections between different parts of the document
+## Dependencies
 
-  - **Page-Specific Tool**:
-    * Can look at any specific page in detail
-    * Helps find exact information when needed
-    * Makes sure we don't miss important details
-    * Useful for understanding specific sections
+The function requires the following components:
 
+- **AWS Services**:
+  - S3: For document storage and retrieval
+  - DynamoDB: For storing document metadata and processing status
+  - Comprehend: For PII detection and redaction
+  - Systems Manager Parameter Store: For accessing API keys
+  - Bedrock: For AI model access (optional)
 
-### 2. The Process
+- **External APIs**:
+  - Mistral AI: For OCR processing
+  - OpenAI: For document analysis and summarization
 
-1. **Document Upload and Initial Processing**:
-   - The IEP document is first uploaded to an S3 bucket
-   - An S3 event triggers the Lambda function that starts the processing workflow
-   - Document metadata extracted and initial status set to "PROCESSING"
-   - Document URL and basic information stored in DynamoDB
+## Configuration
 
-2. **OCR Processing Pipeline**:
-   - Document sent to Mistral OCR API
-   - OCR results processed into structured format:
-     - Page-by-page markdown content
-     - Document dimensions and DPI information
-     - Processing metadata (model used, pages processed)
-   - **PII Redaction:** After OCR, the text of each page is processed using AWS Comprehend to identify and redact all PII except names and date/time information. This is done in parallel using ThreadPoolExecutor (up to 8 workers) for maximum efficiency with large documents. Only names and date/time information are allowed to remain; all other detected PII is replaced with a marker indicating the entity type (e.g., [SSN], [ADDRESS]).
-   - OCR data (with PII redacted) stored in DynamoDB for future reference
-   - Status updated to reflect OCR completion
-   - **After OCR is processed (whether successful or failed), the original S3 document is deleted from the bucket.**
+### Environment Variables
 
-3. **Smart Document Analysis**:
-   - **Full Content Understanding**:
-     - OpenAI agent receives complete OCR output with page numbers
-     - Builds an index mapping pages to content
-     - Creates a guide to where each section lives in the document
-   
-   - **Initial Summary Creation**:
-     - Agent reads the entire document
-     - Creates an overall summary
-     - Identifies key points and main sections
-   
-   - **Section-by-Section Processing**:
-     - Looks at each important section: (defined in config.py)
-       * Present Levels (student's current performance)
-       * Eligibility (why they need special education)
-       * Placement (where they'll learn)
-       * Goals (what they'll achieve)
-       * Services (what help they'll get)
-       * Informed Consent (parent's agreement)
-       * Accommodations (special help they need)
-     
-     - For each section:
-       * Gets specific instructions from our guide (config.py)
-       * Uses smart tools to find relevant information
-       * Creates clear summaries
-       * Organizes information neatly
+- `BUCKET`: Name of the S3 bucket containing IEP documents
+- `IEP_DOCUMENTS_TABLE`: Name of the DynamoDB table for document metadata
+- `USER_PROFILES_TABLE`: Name of the DynamoDB table for user profiles
+- `MISTRAL_API_KEY_PARAMETER_NAME`: SSM parameter name for Mistral API key
+- `OPENAI_API_KEY_PARAMETER_NAME`: SSM parameter name for OpenAI API key
 
-4. **Smart Tools for Understanding**:
-   - **Content Finding Tool**:
-     - Helps find related information across the document
-     - Uses smart search to understand context
-     - Finds specific pages when needed
-   
-   - **Page-Specific Tool**:
-     - Gets exact content from specific pages
-     - Helps understand detailed sections
-     - Makes sure we don't miss anything
+### Required Permissions
 
-5. **Translation Process**:
-   - **Getting Ready**:
-     - Organizes content for translation
-     - Gets language-specific rules from our guide (config.py)
-     - Makes sure it's easy to understand
-   
-   - **Translation**:
-     - Translates to different languages:
-       * Spanish (Latin American style)
-       * Vietnamese
-       * Chinese
-     - Makes sure it's easy to read (8th-grade level)
-     - Explains technical terms simply
-     - Considers cultural differences
-   
-   - **Quality Checks**:
-     - Makes sure translations are accurate
-     - Checks that everything makes sense
-     - Ensures it's easy to understand
-     - Verifies cultural appropriateness
+The Lambda function requires permissions to:
 
-6. **Saving Everything**:
-   - **Storing Information**:
-     - Saves all summaries and sections
-     - Stores translations in different languages
-     - Keeps track of document status
-     - Makes sure everything is organized
-   
-   - **Connecting to User**:
-     - Links document to the right user
-     - Sets up proper access
-     - Tracks usage
+- Read from and write to S3 buckets
+- Read from and write to DynamoDB tables
+- Access AWS Comprehend for PII detection
+- Access AWS Bedrock models (if used)
+- Retrieve parameters from SSM Parameter Store
 
-### 3. How We Guide the Process
+## Implementation Details
 
-All the instructions and rules for how the system should work are stored in `config.py`. This includes:
+### Main Processing Pipeline
 
-1. **Section Definitions**:
-   - Clear descriptions of each IEP section
-   - What information to look for
-   - How to organize the information
+The document processing pipeline is implemented in `lambda_function.py` and follows these steps:
 
-2. **Key Points to Find**:
-   - Important details for each section
-   - What questions to answer
-   - What information to include
+1. **Event Processing**: Extract S3 object information from the event
+2. **Document Retrieval**: Download the document from S3
+3. **Format Detection**: Identify document format (PDF, image, etc.)
+4. **OCR Processing**: Send document to Mistral AI for text extraction
+5. **PII Redaction**: Use AWS Comprehend to detect and redact personal information
+6. **Content Analysis**: Process extracted text with LLMs to identify key sections
+7. **Summary Generation**: Create concise summaries of each section
+8. **Metadata Storage**: Update document status and metadata in DynamoDB
+9. **User Profile Update**: Associate document with user profile
 
-3. **Language Rules**:
-   - How to write in each language
-   - Reading level requirements
-   - Cultural considerations
-   - How to explain technical terms
+### OCR Processing (mistral_ocr.py)
 
-4. **Processing Instructions**:
-   - How to analyze documents
-   - How to create summaries
-   - How to format information
-   - How to handle special cases
+The OCR module uses Mistral AI's capabilities to:
 
-## Important Settings
+1. Extract text from documents while preserving layout information
+2. Handle various document formats including PDFs and images
+3. Process multiple pages with efficient batching
+4. Return extracted text with positional data
 
-The system needs these important settings to work:
-- Where to store documents
-- Where to keep user information
-- Where to store documents
-- How to access important keys
+### Content Analysis (open_ai_agent.py)
 
-## Keeping Things Safe and Working Well
+The OpenAI Agent module:
 
-- Careful error checking
-- Tracking document status
-- Safe key management
-- Regular maintenance
-- Keeping things running smoothly
+1. Processes extracted text to identify IEP sections
+2. Uses prompt engineering to extract structured data
+3. Generates summaries of key sections
+4. Formats data for storage in DynamoDB
 
-## Making Things Fast and Efficient
+### PII Redaction (comprehend_redactor.py)
 
-- Quick processing
-- Handling many documents
-- Efficient storage
-- Fast retrieval
+The PII redaction module:
 
-## Getting Started
+1. Uses AWS Comprehend to detect various types of PII
+2. Redacts sensitive information from extracted text
+3. Maintains context while protecting privacy
+4. Supports multiple types of PII entities
 
-The system is set up through our main project setup, which includes all the necessary permissions and settings to make everything work together smoothly. 
+## Workflow
+
+1. User uploads an IEP document through the frontend
+2. Upload is stored in S3 bucket
+3. S3 event triggers the metadata handler Lambda
+4. Lambda updates document status to "PROCESSING"
+5. Document is sent to Mistral AI for OCR processing
+6. Extracted text is processed to redact PII
+7. Content is analyzed and structured data is extracted
+8. Document status is updated to "PROCESSED" with metadata
+9. If any errors occur, status is set to "FAILED" with error information
+
+## Error Handling
+
+The Lambda function implements comprehensive error handling:
+
+- Each processing step is wrapped in try/except blocks
+- Detailed error information is logged to CloudWatch
+- Document status is updated with error information if processing fails
+- S3 objects are retained even if processing fails
+- Retry mechanism for transient errors
+
+## Development Guidelines
+
+When modifying this component:
+
+1. Update the OCR prompt in `mistral_ocr.py` to improve extraction quality
+2. Modify prompts in `open_ai_agent.py` to enhance analysis
+3. Adjust error handling logic in `lambda_function.py` as needed
+4. Update the data model in `data_model.py` if new fields are required
+
+## Performance Considerations
+
+- The function has a timeout of 900 seconds (15 minutes) to handle large documents
+- Memory is set to 2048MB to provide sufficient resources for AI processing
+- Large documents may take longer to process
+- Consider cost implications of API calls to external services
+
+## Testing
+
+When testing changes:
+
+1. Use sample documents of various formats and sizes
+2. Validate OCR quality with different document layouts
+3. Test error handling by introducing failures at different stages
+4. Verify DynamoDB updates are correct after processing
+5. Check CloudWatch logs for any warnings or errors
+
+## Monitoring
+
+The function is monitored via:
+
+- CloudWatch Logs for detailed execution information
+- DynamoDB table metrics for document status updates
+- S3 event notifications for upload tracking
+- Lambda execution metrics for performance analysis 
