@@ -1,7 +1,7 @@
 .summary-container {
-    background-color: #f8f9fa;
+    background-color: #FFFFFF;
     border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
   }
   
   .summary-text {
@@ -61,3 +61,12 @@
     background-color: #0040BA;
     border-radius: 0.25rem;
   }
+
+.section-tooltip {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}

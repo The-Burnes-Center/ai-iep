@@ -434,13 +434,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Table of Contents Section */}
         {hasDocumentIndex ? (
           <>
-            <h4 className="mt-4">
+            <h4 className="mt-4 mb-3">
               {lang === 'en' ? 'Table of Contents' : t('summary.tableOfContents')}
             </h4>
-            <Card className="summary-content mb-4">
-              <Card.Body>
+            <Card className="summary-content mb-3">
+              <Card.Body className="p-2">
                 {/* Process the text to ensure newlines are properly rendered */}
-                <div className="markdown-content">
+                <div className="markdown-content table-of-contents-content">
                   <ReactMarkdown>
                     {document.document_index[lang]
                       ? document.document_index[lang]
@@ -459,11 +459,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Summary Section */}
         {hasSummary ? (
           <>
-            <h4 className="mt-4">
+            <h4 className="mt-4 mb-3">
               {lang === 'en' ? 'IEP Summary' : t('summary.iepSummary')}
             </h4>
-            <Card className="summary-content mb-4">
-              <Card.Body>
+            <Card className="summary-content mb-3">
+              <Card.Body className="py-3">
                 {/* Use processJargonInText for English summaries, regular text for other languages */}
                 {lang === 'en' ? (
                   processJargonInText(document.summaries[lang])
@@ -491,7 +491,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Sections Accordion */}
         {hasSections ? (
           <>
-            <h4 className="mt-4">
+            <h4 className="mt-4 mb-3">
               {lang === 'en' ? 'Key Insights' : t('summary.keyInsights')}
             </h4>
             <Accordion className="mb-3 summary-accordion">
@@ -568,13 +568,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   }
 
   return (
-    <Container className="summary-container mt-4 mb-5">
-      <div className="mt-3 text-start">
+    <Container className="summary-container mt-3 mb-3">
+      <div className="mt-2 text-start">
         <Button variant="outline-secondary" onClick={handleBackClick}>
           {t('summary.back')}
         </Button>
       </div>
-      <Row>
+      <Row className="mt-2">
         <Col>
           {error && <Alert variant="danger">{error}</Alert>}
           
@@ -591,7 +591,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             </Alert>
           ) : (
             <Card className="summary-card">
-              <Card.Body className="summary-card-body">
+              <Card.Body className="summary-card-body pt-2 pb-0">
                 <Row>
                   <Col md={12}>
                     {isProcessing ? (
@@ -625,7 +625,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         <Tabs
                           activeKey={activeTab}
                           onSelect={(k) => k && setActiveTab(k)}
-                          className="mb-3 mt-4 summary-tabs"
+                          className="mb-2 mt-2 summary-tabs"
                         >
                           {/* Always show English tab */}
                           <Tab 

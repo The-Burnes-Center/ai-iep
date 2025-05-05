@@ -6,19 +6,18 @@
   
   .markdown-card {
     border: none;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
     border-radius: 8px;
   }
   
   .markdown-card .card-header {
-    background-color: #f8f9fa;
+    background-color: #FFFFFF;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     padding: 1rem;
   }
   
   .markdown-content {
-    padding: 1.5rem;
     font-size: 1rem;
     line-height: 1.6;
   }
@@ -71,7 +70,7 @@
   }
   
   .page-navigation .nav-link {
-    background-color: #f8f9fa;
+    background-color: #FFFFFF;
     border: 1px solid #dee2e6;
     padding: 0.5rem 1rem;
     border-radius: 4px;
@@ -98,7 +97,7 @@
     align-items: center;
     gap: 1rem;
     padding: 0.5rem;
-    background-color: #f8f9fa;
+    background-color: #FFFFFF;
     border-radius: 4px;
   }
   

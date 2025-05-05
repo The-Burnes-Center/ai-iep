@@ -42,10 +42,10 @@ class LanguageSection(BaseModel):
 
 class LanguageSummary(BaseModel):
     """Summaries in all languages"""
-    en: str
-    es: str
-    vi: str
-    zh: str
+    en: str = Field(..., description="Detailed English summary of the IEP")
+    es: str = Field(..., description="Detailed Spanish summary of the IEP")
+    vi: str = Field(..., description="Detailed Vietnamese summary of the IEP")
+    zh: str = Field(..., description="Detailed Chinese summary of the IEP")
 
     @model_validator(mode='after')
     @classmethod
@@ -57,10 +57,10 @@ class LanguageSummary(BaseModel):
 
 class LanguageDocumentIndex(BaseModel):
     """Document indexes in all languages"""
-    en: str
-    es: str
-    vi: str
-    zh: str
+    en: str = Field(..., description="Detailed English document index (Table of Contents) of the IEP, eg: Page 1: Title 1, Page 2-5: Title 2, etc.")
+    es: str = Field(..., description="Detailed Spanish document index (Table of Contents) of the IEP")
+    vi: str = Field(..., description="Detailed Vietnamese document index (Table of Contents) of the IEP")
+    zh: str = Field(..., description="Detailed Chinese document index (Table of Contents) of the IEP")
 
     @model_validator(mode='after')
     @classmethod
