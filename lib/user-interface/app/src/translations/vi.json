@@ -45,6 +45,7 @@
     "summary.preferredLanguage": "Tiếng Việt",
     "summary.english": "Tiếng Anh",
     "summary.iepSummary": "Tóm tắt IEP",
+    "summary.tableOfContents": "Mục Lục",
     "summary.noTranslatedSummary.title": "Không có bản tóm tắt đã dịch",
     "summary.noTranslatedSummary.message": "Không tìm thấy bản tóm tắt bằng ngôn ngữ ưa thích của bạn cho tài liệu này.",
     "summary.keyInsights": "Thông tin chính",

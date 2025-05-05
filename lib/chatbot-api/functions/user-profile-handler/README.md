@@ -413,6 +413,12 @@ Query Parameters:
     "zh": "string",
     "vi": "string"
   },
+  "document_index": {
+    "en": "string",
+    "es": "string",
+    "zh": "string",
+    "vi": "string"
+  },
   "sections": {
     "en": {
       "section1": "string",

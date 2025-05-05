@@ -87,7 +87,8 @@ The OpenAI Agent module:
 1. Processes extracted text to identify IEP sections
 2. Uses prompt engineering to extract structured data
 3. Generates summaries of key sections
-4. Formats data for storage in DynamoDB
+4. Creates a document index (table of contents) for easy navigation
+5. Formats data for storage in DynamoDB
 
 ### PII Redaction (comprehend_redactor.py)
 

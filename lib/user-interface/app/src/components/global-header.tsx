@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useContext } from "react";
-import { Navbar, Container, Nav, Button } from 'react-bootstrap';
+import { Navbar, Container, Nav, Button, Dropdown } from 'react-bootstrap';
 import { Auth } from "aws-amplify";
 import { AuthContext } from "../common/auth-context"; 
 import { CHATBOT_NAME } from "../common/constants";
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage, SupportedLanguage } from '../common/language-context';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './global-header.css';
 
 export default function GlobalHeader() {
   const [userName, setUserName] = useState<string | null>(null);
   const { setAuthenticated } = useContext(AuthContext); 
+  const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
 
@@ -66,6 +68,19 @@ export default function GlobalHeader() {
     setShowMenu(!showMenu);
   };
 
+  // Handle language change
+  const handleLanguageChange = (lang: SupportedLanguage) => {
+    setLanguage(lang);
+  };
+
+  // Language options with labels
+  const languageOptions = [
+    { value: 'en', label: 'English' },
+    { value: 'es', label: 'Español' },
+    { value: 'zh', label: '中文' },
+    { value: 'vi', label: 'Tiếng Việt' }
+  ];
+
   return (
     <Navbar 
       variant="dark" 
@@ -82,6 +97,26 @@ export default function GlobalHeader() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         
         <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
+          <Nav className="me-3">
+            {/* Language Dropdown */}
+            <Dropdown>
+              <Dropdown.Toggle variant="outline-light" id="language-dropdown" size="sm">
+                {languageOptions.find(option => option.value === language)?.label || 'English'}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                {languageOptions.map(option => (
+                  <Dropdown.Item 
+                    key={option.value} 
+                    onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
+                    active={language === option.value}
+                  >
+                    {option.label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+          </Nav>
+          
           <Nav>
             {/* For mobile view - appears when navbar is expanded */}
             <Nav.Link 

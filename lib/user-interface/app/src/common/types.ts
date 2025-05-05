@@ -92,6 +92,15 @@ export interface IEPDocument {
     // Add other languages as needed
   };
   
+  // Document index (Table of Contents)
+  document_index: {
+    en?: string;
+    vi?: string;
+    es?: string;
+    zh?: string;
+    // Add other languages as needed
+  };
+  
   sections: {
     en: IEPSection[];
     vi: IEPSection[];

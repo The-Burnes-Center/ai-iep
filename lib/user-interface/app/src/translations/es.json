@@ -45,6 +45,7 @@
     "summary.preferredLanguage": "Español",
     "summary.english": "Inglés",
     "summary.iepSummary": "Resumen del IEP",
+    "summary.tableOfContents": "Tabla de Contenido",
     "summary.noTranslatedSummary.title": "No Hay Resumen Traducido Disponible",
     "summary.noTranslatedSummary.message": "No se encontró ningún resumen en su idioma preferido para este documento.",
     "summary.keyInsights": "Información Clave",

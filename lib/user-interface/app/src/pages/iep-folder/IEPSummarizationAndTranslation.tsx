@@ -40,6 +40,12 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       vi: '',
       zh: ''
     },
+    document_index: {
+      en: '',
+      es: '',
+      vi: '',
+      zh: ''
+    },
     sections: {
       en: [],
       es: [],
@@ -295,9 +301,22 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               });
             }
             
+            // Set document index
+            const newDocumentIndex = { ...document.document_index };
+            
+            // Update each available language document index
+            if (retrievedDocument.document_index) {
+              Object.keys(retrievedDocument.document_index).forEach(lang => {
+                if (retrievedDocument.document_index[lang]) {
+                  newDocumentIndex[lang] = retrievedDocument.document_index[lang];
+                }
+              });
+            }
+            
             setDocument(prev => ({
               ...prev, 
-              summaries: newSummaries
+              summaries: newSummaries,
+              document_index: newDocumentIndex
             }));
             
             // Process sections
@@ -311,6 +330,12 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             documentUrl: undefined,
             status: undefined,
             summaries: {
+              en: '',
+              es: '',
+              vi: '',
+              zh: ''
+            },
+            document_index: {
               en: '',
               es: '',
               vi: '',
@@ -348,12 +373,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Safe check for content availability
   const hasContent = (lang: string) => {
     const hasSummary = Boolean(document.summaries && document.summaries[lang]);
+    const hasDocumentIndex = Boolean(document.document_index && document.document_index[lang]);
     const hasSections = Boolean(
       document.sections && 
       document.sections[lang] && 
       document.sections[lang].length > 0
     );
-    return hasSummary || hasSections;
+    return hasSummary || hasSections || hasDocumentIndex;
   };
 
   // Set active tab based on language preference and content availability
@@ -395,8 +421,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Render tab content for a specific language
   const renderTabContent = (lang: string) => {
-    const hasSummary = Boolean(document.summaries && document.summaries[lang]);
-    const hasSections = Boolean(
+    const hasSummary = document.summaries && document.summaries[lang];
+    const hasDocumentIndex = document.document_index && document.document_index[lang];
+    const hasSections = (
       document.sections && 
       document.sections[lang] && 
       document.sections[lang].length > 0
@@ -404,6 +431,31 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
     return (
       <>
+        {/* Table of Contents Section */}
+        {hasDocumentIndex ? (
+          <>
+            <h4 className="mt-4">
+              {lang === 'en' ? 'Table of Contents' : t('summary.tableOfContents')}
+            </h4>
+            <Card className="summary-content mb-4">
+              <Card.Body>
+                {/* Process the text to ensure newlines are properly rendered */}
+                <div className="markdown-content">
+                  <ReactMarkdown>
+                    {document.document_index[lang]
+                      ? document.document_index[lang]
+                          // Add two spaces at the end of each line to create a line break in markdown
+                          .split('\n')
+                          .join('  \n')
+                      : ''
+                    }
+                  </ReactMarkdown>
+                </div>
+              </Card.Body>
+            </Card>
+          </>
+        ) : null}
+        
         {/* Summary Section */}
         {hasSummary ? (
           <>

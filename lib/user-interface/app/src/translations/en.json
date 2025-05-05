@@ -45,6 +45,7 @@
     "summary.preferredLanguage": "English",
     "summary.english": "English",
     "summary.iepSummary": "IEP Summary",
+    "summary.tableOfContents": "Table of Contents",
     "summary.noTranslatedSummary.title": "No Translated Summary Available",
     "summary.noTranslatedSummary.message": "No summary in your preferred language was found for this document.",
     "summary.keyInsights": "Key Insights",

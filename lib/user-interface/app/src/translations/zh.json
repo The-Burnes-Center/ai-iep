@@ -45,6 +45,7 @@
     "summary.preferredLanguage": "中文",
     "summary.english": "英文",
     "summary.iepSummary": "IEP摘要",
+    "summary.tableOfContents": "目录",
     "summary.noTranslatedSummary.title": "没有可用的翻译摘要",
     "summary.noTranslatedSummary.message": "未找到此文档的首选语言摘要。",
     "summary.keyInsights": "关键信息",
