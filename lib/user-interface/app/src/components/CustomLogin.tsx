@@ -271,10 +271,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
-          <MaintenanceBanner />
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
           <h4 className="text-center mb-4">Set New Password</h4>
-  
           <Form onSubmit={handleCompleteNewPassword}>
             <div className="mobile-form-container">
               <Form.Group className="mb-3">
@@ -344,7 +342,6 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
-          <MaintenanceBanner />
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
           <h4 className="text-center mb-4">Verify Your Account</h4>
           
@@ -411,10 +408,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
-          <MaintenanceBanner />
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
-          <h4 className="text-center mb-4">Create an Account</h4>
-          
+          <h4 className="text-center mb-4">Create an Account</h4>          
           <Form onSubmit={handleSignUp}>
             <div className="mobile-form-container">
               <Form.Group className="mb-3">
@@ -504,10 +499,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
-          <MaintenanceBanner />
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
           <h4 className="text-center mb-4">Reset Password</h4>
-          
           {!resetSent ? (
             <Form onSubmit={handleForgotPassword}>
               <div className="mobile-form-container">
@@ -610,9 +603,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   return (
     <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
       <Col xs={12} md={6} lg={4}>
-        <MaintenanceBanner />
-        <h1 className="text-center mb-4 aiep-title">AIEP</h1>
-        
+        <h1 className="text-center mb-4 aiep-title">AIEP</h1>        
         <Form onSubmit={handleSignIn}>
           <div className="mobile-form-container">
             <Form.Group className="mb-3">
