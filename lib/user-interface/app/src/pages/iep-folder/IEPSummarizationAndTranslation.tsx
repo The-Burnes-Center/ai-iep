@@ -694,7 +694,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   return (
     <Container className="summary-container mt-3 mb-3">
-      <div className="mt-2 text-start">
+      <div className="mt-2 text-start button-container">
         <Button variant="outline-secondary" onClick={handleBackClick}>
           {t('summary.back')}
         </Button>

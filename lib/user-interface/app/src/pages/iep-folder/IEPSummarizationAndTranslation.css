@@ -237,3 +237,7 @@
   padding-bottom: 0;
   line-height: 1.2;
 }
+
+.button-container {
+  padding: 1rem;
+}
