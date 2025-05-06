@@ -78,6 +78,132 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     "Accessibility": "The ability to access the functionality and benefit of a system or entity; describes how accessible a product or environment is to as many people as possible."
   };
 
+  // Custom function to process content with markdown and jargon terms
+  const processContent = (content: string, isEnglish: boolean): React.ReactNode => {
+    if (!content) return '';
+    
+    // Only process jargon terms in English content
+    if (!isEnglish) return <div dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(content) }} />;
+    
+    // Handle different markdown patterns
+    const processedContent: React.ReactNode[] = [];
+    
+    // Split content by lines to handle paragraphs
+    const lines = content.split('\n');
+    
+    lines.forEach((line, lineIndex) => {
+      // Skip empty lines
+      if (!line.trim()) {
+        processedContent.push(<br key={`br-${lineIndex}`} />);
+        return;
+      }
+      
+      // Handle headers (# Header)
+      if (line.startsWith('# ')) {
+        const headerText = line.substring(2);
+        processedContent.push(
+          <h1 key={`h1-${lineIndex}`}>
+            {processJargonInLine(headerText)}
+          </h1>
+        );
+        return;
+      }
+      
+      if (line.startsWith('## ')) {
+        const headerText = line.substring(3);
+        processedContent.push(
+          <h2 key={`h2-${lineIndex}`}>
+            {processJargonInLine(headerText)}
+          </h2>
+        );
+        return;
+      }
+      
+      if (line.startsWith('### ')) {
+        const headerText = line.substring(4);
+        processedContent.push(
+          <h3 key={`h3-${lineIndex}`}>
+            {processJargonInLine(headerText)}
+          </h3>
+        );
+        return;
+      }
+      
+      // Handle lists (- item)
+      if (line.startsWith('- ')) {
+        const listItemText = line.substring(2);
+        processedContent.push(
+          <div key={`li-${lineIndex}`} style={{ display: 'flex', marginBottom: '0.5rem' }}>
+            <span style={{ marginRight: '0.5rem' }}>•</span>
+            <span>{processJargonInLine(listItemText)}</span>
+          </div>
+        );
+        return;
+      }
+      
+      // Handle normal paragraphs
+      processedContent.push(
+        <p key={`p-${lineIndex}`} style={{ marginBottom: '0.5rem' }}>
+          {processJargonInLine(line)}
+        </p>
+      );
+    });
+    
+    return <>{processedContent}</>;
+  };
+
+  // Helper function to convert markdown to HTML
+  const convertMarkdownToHtml = (markdown: string): string => {
+    let html = markdown;
+    
+    // Convert headers
+    html = html.replace(/^# (.*?)$/gm, '<h1 style="margin-top: 0.3rem; margin-bottom: 0.3rem;">$1</h1>');
+    html = html.replace(/^## (.*?)$/gm, '<h2 style="margin-top: 0.3rem; margin-bottom: 0.3rem;">$2</h2>');
+    html = html.replace(/^### (.*?)$/gm, '<h3 style="margin-top: 0.3rem; margin-bottom: 0.3rem;">$1</h3>');
+    
+    // Convert bold text
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Convert list items with minimal spacing
+    html = html.replace(/^- (.*?)$/gm, '<div style="display: flex; margin: 0; padding: 0; line-height: 1.1;"><span style="margin-right: 0.2rem;">•</span><span>$1</span></div>');
+    
+    // Convert paragraphs and line breaks with minimal spacing
+    html = html.replace(/\n\n/g, '</p><p style="margin: 0 0 0.1rem 0; padding: 0; line-height: 1.1;">');
+    html = html.replace(/\n/g, '<br style="margin: 0; padding: 0;" />');
+    
+    return '<div style="margin: 0; padding: 0;"><p style="margin: 0 0 0.1rem 0; padding: 0; line-height: 1.1;">' + html + '</p></div>';
+  };
+
+  // Helper function to process jargon terms in a single line
+  const processJargonInLine = (text: string): React.ReactNode => {
+    // Handle bold text (**text**)
+    const boldPattern = /\*\*(.*?)\*\*/g;
+    const parts: React.ReactNode[] = [];
+    
+    let lastIndex = 0;
+    let match;
+    
+    // Process bold patterns first
+    while ((match = boldPattern.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        parts.push(processJargonInText(text.substring(lastIndex, match.index)));
+      }
+      
+      // Add the bold text
+      parts.push(<strong key={`bold-${match.index}`}>{processJargonInText(match[1])}</strong>);
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add any remaining text
+    if (lastIndex < text.length) {
+      parts.push(processJargonInText(text.substring(lastIndex)));
+    }
+    
+    return <>{parts.length > 0 ? parts : processJargonInText(text)}</>;
+  };
+
   // Process summary text with tooltips for jargon terms
   const processJargonInText = (text: string): React.ReactNode => {
     if (!text) return '';
@@ -512,9 +638,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                       </p>
                     )}
                     <div className="markdown-content">
-                      <ReactMarkdown>
-                        {section.content || t('summary.noContent')}
-                      </ReactMarkdown>
+                      {/* Replace ReactMarkdown with our custom processing */}
+                      {processContent(section.content || t('summary.noContent'), lang === 'en')}
                     </div>
                   </Accordion.Body>
                 </Accordion.Item>
