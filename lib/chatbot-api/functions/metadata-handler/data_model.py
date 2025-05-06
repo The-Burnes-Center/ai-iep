@@ -42,10 +42,10 @@ class LanguageSection(BaseModel):
 
 class LanguageSummary(BaseModel):
     """Summaries in all languages"""
-    en: str = Field(..., description="Detailed English summary of the IEP")
-    es: str = Field(..., description="Detailed Spanish summary of the IEP")
-    vi: str = Field(..., description="Detailed Vietnamese summary of the IEP")
-    zh: str = Field(..., description="Detailed Chinese summary of the IEP")
+    en: str = Field(..., description="Detailed English summary of the IEP, this will be read by the parent whose child's IEP is being summarized. Explain the IEP to the parent.")
+    es: str = Field(..., description="Translated Spanish summary of the IEP, this will be read by the parent whose child's IEP is being summarized. Explain the IEP to the parent.")
+    vi: str = Field(..., description="Translated Vietnamese summary of the IEP, this will be read by the parent whose child's IEP is being summarized. Explain the IEP to the parent.")
+    zh: str = Field(..., description="Translated Chinese summary of the IEP, this will be read by the parent whose child's IEP is being summarized. Explain the IEP to the parent.")
 
     @model_validator(mode='after')
     @classmethod
@@ -58,9 +58,9 @@ class LanguageSummary(BaseModel):
 class LanguageDocumentIndex(BaseModel):
     """Document indexes in all languages"""
     en: str = Field(..., description="Detailed English document index (Table of Contents) of the IEP, eg: Page 1: Title 1, Page 2-5: Title 2, etc.")
-    es: str = Field(..., description="Detailed Spanish document index (Table of Contents) of the IEP")
-    vi: str = Field(..., description="Detailed Vietnamese document index (Table of Contents) of the IEP")
-    zh: str = Field(..., description="Detailed Chinese document index (Table of Contents) of the IEP")
+    es: str = Field(..., description="Translated Spanish document index (Table of Contents) of the IEP")
+    vi: str = Field(..., description="Translated Vietnamese document index (Table of Contents) of the IEP")
+    zh: str = Field(..., description="Translated Chinese document index (Table of Contents) of the IEP")
 
     @model_validator(mode='after')
     @classmethod
