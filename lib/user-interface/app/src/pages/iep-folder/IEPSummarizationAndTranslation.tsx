@@ -168,10 +168,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     html = html.replace(/^- (.*?)$/gm, '<div style="display: flex; margin: 0; padding: 0; line-height: 1.1;"><span style="margin-right: 0.2rem;">•</span><span>$1</span></div>');
     
     // Convert paragraphs and line breaks with minimal spacing
-    html = html.replace(/\n\n/g, '</p><p style="margin: 0 0 0.1rem 0; padding: 0; line-height: 1.1;">');
+    html = html.replace(/\n\n/g, '</p><p style="margin: 0 0 0.5rem 0; padding: 0; line-height: 1.5;">');
     html = html.replace(/\n/g, '<br style="margin: 0; padding: 0;" />');
     
-    return '<div style="margin: 0; padding: 0;"><p style="margin: 0 0 0.1rem 0; padding: 0; line-height: 1.1;">' + html + '</p></div>';
+    return '<div style="margin: 0; padding: 0;"><p style="margin: 0 0 0.5rem 0; padding: 0; line-height: 1.5;">' + html + '</p></div>';
   };
 
   // Helper function to process jargon terms in a single line
