@@ -8,16 +8,21 @@ import {
   Button, 
   Alert, 
   Spinner,
-  InputGroup
+  InputGroup,
+  Dropdown
 } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './CustomLogin.css'; // Import the custom CSS file
+import { useLanguage, SupportedLanguage } from '../common/language-context';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
 }
 
 const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
+  // Get translation function and language setter from context
+  const { t, language, setLanguage } = useLanguage();
+  
   // Existing state variables
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +37,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [passwordChangeRequired, setPasswordChangeRequired] = useState(false);
   const [cognitoUser, setCognitoUser] = useState<any>(null);
   
-  // New state variables for sign up
+  // Sign up state variables
   const [showSignUp, setShowSignUp] = useState(false);
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
@@ -48,14 +53,18 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
 
-  // Maintenance banner
-  const MaintenanceBanner = () => (
-    <Alert variant="warning" className="text-center my-4 mx-2" style={{ padding: '15px', borderRadius: '8px' }}>
-      <i className="bi bi-exclamation-triangle-fill me-2"></i>
-      <strong>Site is under maintenance</strong>
-      <p className="mb-0 mt-1">Some features may be temporarily unavailable. We apologize for any inconvenience.</p>
-    </Alert>
-  );
+  // Language options with labels
+  const languageOptions = [
+    { value: 'en', label: 'English' },
+    { value: 'es', label: 'Español' },
+    { value: 'zh', label: '中文' },
+    { value: 'vi', label: 'Tiếng Việt' }
+  ];
+
+  // Handle language change
+  const handleLanguageChange = (lang: SupportedLanguage) => {
+    setLanguage(lang);
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,13 +93,13 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     } catch (err) {
       console.error('Login error', err);
       if (err.code === 'UserNotConfirmedException') {
-        setError('Please confirm your account through the link sent to your email');
+        setError(t('auth.errorUserNotConfirmed'));
       } else if (err.code === 'NotAuthorizedException') {
-        setError('Incorrect email or password');
+        setError(t('auth.errorIncorrectCredentials'));
       } else if (err.code === 'UserNotFoundException') {
-        setError('User does not exist');
+        setError(t('auth.errorUserNotFound'));
       } else {
-        setError(err.message || 'An error occurred during sign in');
+        setError(err.message || t('auth.errorGeneric'));
       }
     } finally {
       setLoading(false);
@@ -101,7 +110,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.errorPasswordsNotMatch'));
       return;
     }
     
@@ -119,7 +128,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       onLoginSuccess();
     } catch (err) {
       console.error('Error changing password:', err);
-      setError(err.message || 'Error changing password');
+      setError(err.message || t('auth.errorPasswordChange'));
       // If there's a specific error, reset the password change flow
       setPasswordChangeRequired(false);
       setCognitoUser(null);
@@ -143,7 +152,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       setResetSent(true);
     } catch (err) {
       console.error('Error requesting password reset', err);
-      setError(err.message || 'Error requesting password reset');
+      setError(err.message || t('auth.errorRequestPasswordReset'));
     } finally {
       setLoading(false);
     }
@@ -158,22 +167,22 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       await Auth.forgotPasswordSubmit(resetEmail, resetCode, newPassword);
       setShowForgotPassword(false);
       setResetSent(false);
-      setSuccessMessage('Password reset successful. Please sign in with your new password.');
+      setSuccessMessage(t('auth.successPasswordReset'));
     } catch (err) {
       console.error('Error resetting password', err);
-      setError(err.message || 'Error resetting password');
+      setError(err.message || t('auth.errorResetPassword'));
     } finally {
       setLoading(false);
     }
   };
 
-  // New handler for Sign Up
+  // Handler for Sign Up
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
     if (signUpPassword !== signUpConfirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.errorPasswordsNotMatch'));
       return;
     }
     
@@ -202,20 +211,20 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       
       // Handle specific Cognito errors
       if (err.code === 'UsernameExistsException') {
-        setError('An account with this email already exists');
+        setError(t('auth.errorUsernameExists'));
       } else if (err.code === 'InvalidPasswordException') {
-        setError(err.message || 'Password does not meet requirements');
+        setError(err.message || t('auth.errorInvalidPassword'));
       } else if (err.code === 'InvalidParameterException') {
-        setError(err.message || 'Invalid parameter provided');
+        setError(err.message || t('auth.errorInvalidParameter'));
       } else {
-        setError(err.message || 'An error occurred during sign up');
+        setError(err.message || t('auth.errorSignUp'));
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // New handler for verification code
+  // Handler for verification code
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -234,17 +243,17 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       setVerificationCode('');
       setShowSignUp(false);
       setIsSignUpComplete(false);
-      setSuccessMessage('Account created successfully! Please sign in with your credentials.');
+      setSuccessMessage(t('auth.successAccountCreated'));
     } catch (err) {
       console.error('Error verifying code:', err);
       
       // Handle specific Cognito errors
       if (err.code === 'CodeMismatchException') {
-        setError('Invalid verification code');
+        setError(t('auth.errorInvalidCode'));
       } else if (err.code === 'ExpiredCodeException') {
-        setError('Verification code has expired. Please request a new one.');
+        setError(t('auth.errorExpiredCode'));
       } else {
-        setError(err.message || 'Error verifying your account');
+        setError(err.message || t('auth.errorVerification'));
       }
     } finally {
       setLoading(false);
@@ -258,39 +267,62 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     
     try {
       await Auth.resendSignUp(signUpEmail);
-      setSuccessMessage('Verification code has been resent to your email');
+      setSuccessMessage(t('auth.successCodeResent'));
     } catch (err) {
       console.error('Error resending code:', err);
-      setError(err.message || 'Error resending verification code');
+      setError(err.message || t('auth.errorResendCode'));
     } finally {
       setLoading(false);
     }
   };
+
+  // Render the language dropdown
+  const renderLanguageDropdown = () => (
+    <Dropdown className="mb-4">
+      <Dropdown.Toggle variant="outline-secondary" id="language-dropdown">
+        {languageOptions.find(option => option.value === language)?.label || 'English'}
+      </Dropdown.Toggle>
+      <Dropdown.Menu>
+        {languageOptions.map(option => (
+          <Dropdown.Item 
+            key={option.value} 
+            onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
+            active={language === option.value}
+          >
+            {option.label}
+          </Dropdown.Item>
+        ))}
+      </Dropdown.Menu>
+    </Dropdown>
+  );
 
   if (passwordChangeRequired) {
     return (
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
-          <h4 className="text-center mb-4">Set New Password</h4>
+          <div className="text-end">
+            {renderLanguageDropdown()}
+          </div>
+          <h4 className="text-center mb-4">{t('auth.setNewPassword')}</h4>
           <Form onSubmit={handleCompleteNewPassword}>
             <div className="mobile-form-container">
               <Form.Group className="mb-3">
                 <Container className="mt-3 mb-3 p-3 border rounded bg-light">
                   <Form.Text className="text-muted">
-                    Password must be at least 8 characters long and include:
+                    {t('auth.passwordRequirements')}
                     <ul>
-                      <li>At least 1 number</li>
-                      <li>At least 1 letter</li>
+                      <li>{t('auth.passwordRequirement1')}</li>
+                      <li>{t('auth.passwordRequirement2')}</li>
                     </ul>
                   </Form.Text>
                 </Container>
 
-                <Form.Label className="form-label-bold">New Password</Form.Label>
+                <Form.Label className="form-label-bold">{t('auth.newPassword')}</Form.Label>
                 <InputGroup>
                   <Form.Control
                     type={showNewPassword ? "text" : "password"}
-                    placeholder="Enter new password"
+                    placeholder={t('auth.newPassword')}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
@@ -305,11 +337,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               </Form.Group>
   
               <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">Confirm Password</Form.Label>
+                <Form.Label className="form-label-bold">{t('auth.passwordConfirm')}</Form.Label>
                 <InputGroup>
                   <Form.Control
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm new password"
+                    placeholder={t('auth.passwordConfirm')}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
@@ -327,7 +359,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   
               <div className="d-grid gap-2">
                 <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : 'Set New Password'}
+                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.setNewPassword')}
                 </Button>
               </div>
             </div>
@@ -343,27 +375,30 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
-          <h4 className="text-center mb-4">Verify Your Account</h4>
+          <div className="text-end">
+            {renderLanguageDropdown()}
+          </div>
+          <h4 className="text-center mb-4">{t('auth.verifyAccount')}</h4>
           
           <Form onSubmit={handleVerifyCode}>
             <div className="mobile-form-container">
               <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">Email</Form.Label>
+                <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
                 <Form.Control
                   type="email"
                   value={signUpEmail}
                   readOnly
                 />
                 <Form.Text className="text-muted">
-                  We've sent a verification code to this email address.
+                  {t('auth.verificationCodeSent')}
                 </Form.Text>
               </Form.Group>
               
               <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">Verification Code</Form.Label>
+                <Form.Label className="form-label-bold">{t('auth.verificationCode')}</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="Enter the code from your email"
+                  placeholder={t('auth.enterVerificationCode')}
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
                   required
@@ -375,14 +410,14 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               
               <div className="d-grid gap-2">
                 <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : 'Verify Account'}
+                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.verifyAccount')}
                 </Button>
                 <Button 
                   variant="outline-secondary"
                   onClick={handleResendCode}
                   disabled={loading}
                 >
-                  Resend Verification Code
+                  {t('auth.resendCode')}
                 </Button>
                 <Button 
                   variant="link" 
@@ -393,7 +428,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   disabled={loading}
                   className="forgot-password-link"
                 >
-                  Back to Sign In
+                  {t('auth.backToSignIn')}
                 </Button>
               </div>
             </div>
@@ -409,14 +444,17 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
-          <h4 className="text-center mb-4">Create an Account</h4>          
+          <div className="text-end">
+            {renderLanguageDropdown()}
+          </div>
+          <h4 className="text-center mb-4">{t('auth.signUp')}</h4>          
           <Form onSubmit={handleSignUp}>
             <div className="mobile-form-container">
               <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">Email</Form.Label>
+                <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
                 <Form.Control
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('auth.enterEmail')}
                   value={signUpEmail}
                   onChange={(e) => setSignUpEmail(e.target.value.toLowerCase())}
                   required
@@ -424,11 +462,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               </Form.Group>
               
               <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">Password</Form.Label>
+                <Form.Label className="form-label-bold">{t('auth.password')}</Form.Label>
                 <InputGroup>
                   <Form.Control
                     type={showSignUpPassword ? "text" : "password"}
-                    placeholder="Create a password"
+                    placeholder={t('auth.createPassword')}
                     value={signUpPassword}
                     onChange={(e) => setSignUpPassword(e.target.value)}
                     required
@@ -443,11 +481,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">Confirm Password</Form.Label>
+                <Form.Label className="form-label-bold">{t('auth.passwordConfirm')}</Form.Label>
                 <InputGroup>
                   <Form.Control
                     type={showSignUpConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
+                    placeholder={t('auth.confirmPassword')}
                     value={signUpConfirmPassword}
                     onChange={(e) => setSignUpConfirmPassword(e.target.value)}
                     required
@@ -464,10 +502,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               {/* Password requirements container */}
               <Container className="mt-3 mb-3 p-3 border rounded bg-light">
                 <Form.Text className="text-muted">
-                  Password must be at least 8 characters long and include:
+                  {t('auth.passwordRequirements')}
                   <ul>
-                    <li>At least 1 number</li>
-                    <li>At least 1 letter</li>
+                    <li>{t('auth.passwordRequirement1')}</li>
+                    <li>{t('auth.passwordRequirement2')}</li>
                   </ul>
                 </Form.Text>
               </Container>
@@ -477,7 +515,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               
               <div className="d-grid gap-2">
                 <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : 'Sign Up'}
+                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.signUp')}
                 </Button>
                 <Button 
                   variant="link" 
@@ -485,7 +523,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   disabled={loading}
                   className="forgot-password-link"
                 >
-                  Already have an account? Sign In
+                  {t('auth.signInPrompt')}
                 </Button>
               </div>
             </div>
@@ -500,15 +538,18 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
         <Col xs={12} md={6} lg={4}>
           <h1 className="text-center mb-4 aiep-title">AIEP</h1>
-          <h4 className="text-center mb-4">Reset Password</h4>
+          <div className="text-end">
+            {renderLanguageDropdown()}
+          </div>
+          <h4 className="text-center mb-4">{t('auth.resetPassword')}</h4>
           {!resetSent ? (
             <Form onSubmit={handleForgotPassword}>
               <div className="mobile-form-container">
                 <Form.Group className="mb-3">
-                  <Form.Label className="form-label-bold">Email</Form.Label>
+                  <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
                   <Form.Control
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t('auth.enterEmail')}
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value.toLowerCase())}
                     required
@@ -519,7 +560,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 
                 <div className="d-grid gap-2">
                   <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                    {loading ? <Spinner animation="border" size="sm" /> : 'Send Reset Code'}
+                    {loading ? <Spinner animation="border" size="sm" /> : t('auth.sendResetCode')}
                   </Button>
                   <Button 
                     variant="link" 
@@ -527,7 +568,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     disabled={loading}
                     className="forgot-password-link"
                   >
-                    Back to Sign In
+                    {t('auth.backToSignIn')}
                   </Button>
                 </div>
               </div>
@@ -536,10 +577,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             <Form onSubmit={handleResetPassword}>
               <div className="mobile-form-container">
                 <Form.Group className="mb-3">
-                  <Form.Label className="form-label-bold">Verification Code</Form.Label>
+                  <Form.Label className="form-label-bold">{t('auth.verificationCode')}</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Enter verification code"
+                    placeholder={t('auth.enterVerificationCode')}
                     value={resetCode}
                     onChange={(e) => setResetCode(e.target.value)}
                     required
@@ -547,11 +588,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 </Form.Group>
                 
                 <Form.Group className="mb-3">
-                  <Form.Label className="form-label-bold">New Password</Form.Label>
+                  <Form.Label className="form-label-bold">{t('auth.newPassword')}</Form.Label>
                   <InputGroup>
                     <Form.Control
                       type={showNewPassword ? "text" : "password"}
-                      placeholder="Enter new password"
+                      placeholder={t('auth.enterNewPassword')}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
@@ -568,10 +609,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 {/* Password requirements container */}
                 <Container className="mt-3 mb-3 p-3 border rounded bg-light">
                   <Form.Text className="text-muted">
-                    Password must be at least 8 characters long and include:
+                    {t('auth.passwordRequirements')}
                     <ul>
-                      <li>At least 1 number</li>
-                      <li>At least 1 letter</li>
+                      <li>{t('auth.passwordRequirement1')}</li>
+                      <li>{t('auth.passwordRequirement2')}</li>
                     </ul>
                   </Form.Text>
                 </Container>
@@ -580,7 +621,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 
                 <div className="d-grid gap-2">
                   <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                    {loading ? <Spinner animation="border" size="sm" /> : 'Reset Password'}
+                    {loading ? <Spinner animation="border" size="sm" /> : t('auth.resetPassword')}
                   </Button>
                   <Button 
                     variant="link" 
@@ -588,7 +629,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     disabled={loading}
                     className="forgot-password-link"
                   >
-                    Back to Sign In
+                    {t('auth.backToSignIn')}
                   </Button>
                 </div>
               </div>
@@ -603,14 +644,17 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   return (
     <Container fluid className="d-flex justify-content-center align-items-center login-container" style={{ minHeight: '100vh' }}>
       <Col xs={12} md={6} lg={4}>
-        <h1 className="text-center mb-4 aiep-title">AIEP</h1>        
+        <h1 className="text-center mb-4 aiep-title">AIEP</h1>
+        <div className="text-end">
+          {renderLanguageDropdown()}
+        </div>
         <Form onSubmit={handleSignIn}>
           <div className="mobile-form-container">
             <Form.Group className="mb-3">
-              <Form.Label className="form-label-bold">Email</Form.Label>
+              <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
               <Form.Control
                 type="email"
-                placeholder="Enter email"
+                placeholder={t('auth.enterEmail')}
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase())}
                 required
@@ -618,11 +662,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label className="form-label-bold">Password</Form.Label>
+              <Form.Label className="form-label-bold">{t('auth.password')}</Form.Label>
               <InputGroup>
                 <Form.Control
                   type={showMainPassword ? "text" : "password"}
-                  placeholder="Enter password"
+                  placeholder={t('auth.enterPassword')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -641,7 +685,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             
             <div className="d-grid gap-2">
               <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                {loading ? <Spinner animation="border" size="sm" /> : 'Sign In'}
+                {loading ? <Spinner animation="border" size="sm" /> : t('auth.signIn')}
               </Button>
               <div className="d-flex justify-content-between">
                 <Button 
@@ -650,7 +694,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   disabled={loading}
                   className="forgot-password-link"
                 >
-                  Forgot Password?
+                  {t('auth.forgotPassword')}
                 </Button>
                 <Button 
                   variant="link" 
@@ -662,7 +706,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   disabled={loading}
                   className="forgot-password-link"
                 >
-                  Sign Up
+                  {t('auth.signUp')}
                 </Button>
               </div>
             </div>
