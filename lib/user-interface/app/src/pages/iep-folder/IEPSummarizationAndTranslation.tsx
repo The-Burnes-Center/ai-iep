@@ -75,162 +75,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     "Speech Therapy": "A related service involving therapy to improve verbal communication abilities.",
     "Resiliency": "Ability to pursue personal goals and bounce back from challenges.",
     "Transition": "Process of preparing kids to function in future environments and emphasizing movement from one educational program to another.",
-    "Accessibility": "The ability to access the functionality and benefit of a system or entity; describes how accessible a product or environment is to as many people as possible."
-  };
-
-  // Custom function to process content with markdown and jargon terms
-  const processContent = (content: string, isEnglish: boolean): React.ReactNode => {
-    if (!content) return '';
-    
-    // Only process jargon terms in English content
-    if (!isEnglish) return <div dangerouslySetInnerHTML={{ __html: convertMarkdownToHtml(content) }} />;
-    
-    // Handle different markdown patterns
-    const processedContent: React.ReactNode[] = [];
-    
-    // Split content by lines to handle paragraphs
-    const lines = content.split('\n');
-    
-    lines.forEach((line, lineIndex) => {
-      // Skip empty lines
-      if (!line.trim()) {
-        processedContent.push(<br key={`br-${lineIndex}`} />);
-        return;
-      }
-      
-      // Handle headers (# Header)
-      if (line.startsWith('# ')) {
-        const headerText = line.substring(2);
-        processedContent.push(
-          <h1 key={`h1-${lineIndex}`}>
-            {processJargonInLine(headerText)}
-          </h1>
-        );
-        return;
-      }
-      
-      if (line.startsWith('## ')) {
-        const headerText = line.substring(3);
-        processedContent.push(
-          <h2 key={`h2-${lineIndex}`}>
-            {processJargonInLine(headerText)}
-          </h2>
-        );
-        return;
-      }
-      
-      if (line.startsWith('### ')) {
-        const headerText = line.substring(4);
-        processedContent.push(
-          <h3 key={`h3-${lineIndex}`}>
-            {processJargonInLine(headerText)}
-          </h3>
-        );
-        return;
-      }
-      
-      // Handle lists (- item)
-      if (line.startsWith('- ')) {
-        const listItemText = line.substring(2);
-        processedContent.push(
-          <div key={`li-${lineIndex}`} style={{ display: 'flex', marginBottom: '0.5rem' }}>
-            <span style={{ marginRight: '0.5rem' }}>•</span>
-            <span>{processJargonInLine(listItemText)}</span>
-          </div>
-        );
-        return;
-      }
-      
-      // Handle normal paragraphs
-      processedContent.push(
-        <p key={`p-${lineIndex}`} style={{ marginBottom: '0.5rem' }}>
-          {processJargonInLine(line)}
-        </p>
-      );
-    });
-    
-    return <>{processedContent}</>;
-  };
-
-  // Helper function to convert markdown to HTML
-  const convertMarkdownToHtml = (markdown: string): string => {
-    let html = markdown;
-    
-    // Convert headers
-    html = html.replace(/^# (.*?)$/gm, '<h1 style="margin-top: 0.3rem; margin-bottom: 0.3rem;">$1</h1>');
-    html = html.replace(/^## (.*?)$/gm, '<h2 style="margin-top: 0.3rem; margin-bottom: 0.3rem;">$2</h2>');
-    html = html.replace(/^### (.*?)$/gm, '<h3 style="margin-top: 0.3rem; margin-bottom: 0.3rem;">$1</h3>');
-    
-    // Convert bold text
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
-    // Convert list items with minimal spacing
-    html = html.replace(/^- (.*?)$/gm, '<div style="display: flex; margin: 0; padding: 0; line-height: 1.1;"><span style="margin-right: 0.2rem;">•</span><span>$1</span></div>');
-    
-    // Convert paragraphs and line breaks with minimal spacing
-    html = html.replace(/\n\n/g, '</p><p style="margin: 0 0 0.5rem 0; padding: 0; line-height: 1.5;">');
-    html = html.replace(/\n/g, '<br style="margin: 0; padding: 0;" />');
-    
-    return '<div style="margin: 0; padding: 0;"><p style="margin: 0 0 0.5rem 0; padding: 0; line-height: 1.5;">' + html + '</p></div>';
-  };
-
-  // Helper function to process jargon terms in a single line
-  const processJargonInLine = (text: string): React.ReactNode => {
-    // Handle bold text (**text**)
-    const boldPattern = /\*\*(.*?)\*\*/g;
-    const parts: React.ReactNode[] = [];
-    
-    let lastIndex = 0;
-    let match;
-    
-    // Process bold patterns first
-    while ((match = boldPattern.exec(text)) !== null) {
-      // Add text before the match
-      if (match.index > lastIndex) {
-        parts.push(processJargonInText(text.substring(lastIndex, match.index)));
-      }
-      
-      // Add the bold text
-      parts.push(<strong key={`bold-${match.index}`}>{processJargonInText(match[1])}</strong>);
-      
-      lastIndex = match.index + match[0].length;
-    }
-    
-    // Add any remaining text
-    if (lastIndex < text.length) {
-      parts.push(processJargonInText(text.substring(lastIndex)));
-    }
-    
-    return <>{parts.length > 0 ? parts : processJargonInText(text)}</>;
-  };
-
-  // Process summary text with tooltips for jargon terms
-  const processJargonInText = (text: string): React.ReactNode => {
-    if (!text) return '';
-    
-    // Split the text into words/tokens while preserving punctuation and spacing
-    const tokens = text.split(/(\s+|[.,!?;:()])/g);
-    
-    // Process each token to check if it's a jargon term
-    return tokens.map((token, index) => {
-      // Check for jargon terms (case-insensitive)
-      const cleanToken = token.trim().replace(/[.,!?;:()]$/g, '');
-      const matchedTerm = Object.keys(jargonDictionary).find(
-        term => term.toLowerCase() === cleanToken.toLowerCase()
-      );
-      
-      if (matchedTerm && cleanToken.length > 0) {
-        // Return tooltipped span for jargon terms
-        return (
-          <span key={index} className="jargon-term" data-tooltip={jargonDictionary[matchedTerm]}>
-            {token}
-          </span>
-        );
-      }
-      
-      // Return regular text for non-jargon terms
-      return <React.Fragment key={index}>{token}</React.Fragment>;
-    });
+    "Accessibility": "The ability to access the functionality and benefit of a system or entity; describes how accessible a product or environment is to as many people as possible.",
   };
 
   // Section configuration with translations
@@ -247,6 +92,43 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') }
   ]);
 
+  // Helper function to find jargon terms in text
+  const checkForJargonTerms = (text: string) => {
+    if (!text) return null;
+    
+    // Process each word in the text
+    const words = text.split(/\b/); // Split by word boundaries
+    const result: React.ReactNode[] = [];
+    
+    words.forEach((word, index) => {
+      // Clean the word for matching but keep original for display
+      const cleanWord = word.trim().replace(/[.,!?;:()]/g, '');
+      
+      // Check if word matches any jargon term (case-insensitive)
+      const matchedTerm = Object.keys(jargonDictionary).find(
+        term => term.toLowerCase() === cleanWord.toLowerCase()
+      );
+      
+      if (matchedTerm && cleanWord.length > 0) {
+        // Add the jargon term with tooltip
+        result.push(
+          <span 
+            key={index} 
+            className="jargon-term" 
+            data-tooltip={jargonDictionary[matchedTerm]}
+          >
+            {word}
+          </span>
+        );
+      } else {
+        // Add normal word
+        result.push(<React.Fragment key={index}>{word}</React.Fragment>);
+      }
+    });
+    
+    return <>{result}</>;
+  };
+  
   // Update section config with translations when language changes
   useEffect(() => {
     if (translationsLoaded) {
@@ -544,6 +426,142 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         return <Badge bg="secondary">{status}</Badge>;
     }
   };
+  
+  // Direct display of summary with jargon term processing
+  const SummaryWithJargon = ({ content, isEnglish = false }) => {
+    if (!content) return null;
+    
+    if (!isEnglish) {
+      return <p className="mb-0">{content}</p>;
+    }
+    
+    return (
+      <div className="summary-content-wrapper">
+        {checkForJargonTerms(content)}
+      </div>
+    );
+  };
+  
+  // Custom renderer for markdown section content
+  const renderSectionContent = (content: string, isEnglish: boolean) => {
+    if (!isEnglish) {
+      // For non-English content, just use standard ReactMarkdown
+      return (
+        <ReactMarkdown>
+          {content}
+        </ReactMarkdown>
+      );
+    }
+    
+    // For English content, manually parse markdown and apply jargon highlighting
+    
+    // Handle ** for bold text
+    const processBoldText = (text: string): React.ReactNode[] => {
+      const parts: React.ReactNode[] = [];
+      let currentText = '';
+      let inBold = false;
+      let boldContent = '';
+      
+      for (let i = 0; i < text.length; i++) {
+        if (i < text.length - 1 && text.substr(i, 2) === '**') {
+          if (inBold) {
+            // End bold section
+            if (currentText) {
+              parts.push(checkForJargonTerms(currentText));
+              currentText = '';
+            }
+            parts.push(<strong key={`bold-${i}`}>{checkForJargonTerms(boldContent)}</strong>);
+            boldContent = '';
+            inBold = false;
+            i++; // Skip the second *
+          } else {
+            // Start bold section
+            if (currentText) {
+              parts.push(checkForJargonTerms(currentText));
+              currentText = '';
+            }
+            inBold = true;
+            i++; // Skip the second *
+          }
+        } else if (inBold) {
+          boldContent += text[i];
+        } else {
+          currentText += text[i];
+        }
+      }
+      
+      // Add any remaining text
+      if (currentText) {
+        parts.push(checkForJargonTerms(currentText));
+      }
+      
+      return parts;
+    };
+    
+    // Split content by line breaks
+    const lines = content.split('\n');
+    const result: React.ReactNode[] = [];
+    
+    lines.forEach((line, lineIndex) => {
+      // Skip empty lines
+      if (!line.trim()) {
+        result.push(<br key={`br-${lineIndex}`} />);
+        return;
+      }
+      
+      // Handle headers (# Header)
+      if (line.startsWith('# ')) {
+        const headerText = line.substring(2);
+        result.push(
+          <h1 key={`h1-${lineIndex}`} style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
+            {processBoldText(headerText)}
+          </h1>
+        );
+        return;
+      }
+      
+      if (line.startsWith('## ')) {
+        const headerText = line.substring(3);
+        result.push(
+          <h2 key={`h2-${lineIndex}`} style={{ marginTop: '0.8rem', marginBottom: '0.4rem' }}>
+            {processBoldText(headerText)}
+          </h2>
+        );
+        return;
+      }
+      
+      if (line.startsWith('### ')) {
+        const headerText = line.substring(4);
+        result.push(
+          <h3 key={`h3-${lineIndex}`} style={{ marginTop: '0.6rem', marginBottom: '0.3rem' }}>
+            {processBoldText(headerText)}
+          </h3>
+        );
+        return;
+      }
+      
+      // Handle lists (- item)
+      if (line.startsWith('- ')) {
+        const listItemText = line.substring(2);
+        result.push(
+          <div key={`li-${lineIndex}`} style={{ display: 'flex', marginBottom: '0.5rem' }}>
+            <span style={{ marginRight: '0.5rem' }}>•</span>
+            <div>{processBoldText(listItemText)}</div>
+          </div>
+        );
+        return;
+      }
+      
+      // Handle normal paragraphs
+      result.push(
+        <p key={`p-${lineIndex}`} style={{ marginBottom: '0.5rem' }}>
+          {processBoldText(line)}
+        </p>
+      );
+    });
+    
+    return <div>{result}</div>;
+  };
 
   // Render tab content for a specific language
   const renderTabContent = (lang: string) => {
@@ -554,6 +572,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       document.sections[lang] && 
       document.sections[lang].length > 0
     );
+    
+    const isEnglishTab = lang === 'en';
 
     return (
       <>
@@ -561,11 +581,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {hasDocumentIndex ? (
           <>
             <h4 className="mt-4 mb-3">
-              {lang === 'en' ? 'Table of Contents' : t('summary.tableOfContents')}
+              {isEnglishTab ? 'Table of Contents' : t('summary.tableOfContents')}
             </h4>
             <Card className="summary-content mb-3">
               <Card.Body className="p-2">
-                {/* Process the text to ensure newlines are properly rendered */}
                 <div className="markdown-content table-of-contents-content">
                   <ReactMarkdown>
                     {document.document_index[lang]
@@ -586,14 +605,15 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {hasSummary ? (
           <>
             <h4 className="mt-4 mb-3">
-              {lang === 'en' ? 'IEP Summary' : t('summary.iepSummary')}
+              {isEnglishTab ? 'IEP Summary' : t('summary.iepSummary')}
             </h4>
             <Card className="summary-content mb-3">
               <Card.Body className="py-3">
-                {/* Use processJargonInText for English summaries, regular text for other languages */}
-                {lang === 'en' ? (
-                  processJargonInText(document.summaries[lang])
+                {isEnglishTab ? (
+                  // For English content, use SummaryWithJargon
+                  <SummaryWithJargon content={document.summaries[lang]} isEnglish={true} />
                 ) : (
+                  // For non-English content, just display the text
                   <p className="mb-0">{document.summaries[lang]}</p>
                 )}
               </Card.Body>
@@ -602,12 +622,12 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         ) : (
           <Alert variant="info">
             <h5>
-              {lang === 'en' 
+              {isEnglishTab 
                 ? t('summary.noSummary.title')
                 : t('summary.noTranslatedSummary.title')}
             </h5>
             <p>
-              {lang === 'en'
+              {isEnglishTab
                 ? t('summary.noSummary.message')
                 : t('summary.noTranslatedSummary.message')}
             </p>
@@ -618,7 +638,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {hasSections ? (
           <>
             <h4 className="mt-4 mb-3">
-              {lang === 'en' ? 'Key Insights' : t('summary.keyInsights')}
+              {isEnglishTab ? 'Key Insights' : t('summary.keyInsights')}
             </h4>
             <Accordion className="mb-3 summary-accordion">
               {document.sections[lang].map((section, index) => (
@@ -630,7 +650,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     {section.pageNumbers && section.pageNumbers.length > 0 && (
                       <p className="text-muted mb-2">
                         <small>
-                          {lang === 'en' ? 'Pages: ' : 'Páginas: '}
+                          {isEnglishTab ? 'Pages: ' : 'Páginas: '}
                           {Array.isArray(section.pageNumbers) 
                             ? section.pageNumbers.join(', ') 
                             : section.pageNumbers}
@@ -638,8 +658,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                       </p>
                     )}
                     <div className="markdown-content">
-                      {/* Replace ReactMarkdown with our custom processing */}
-                      {processContent(section.content || t('summary.noContent'), lang === 'en')}
+                      {renderSectionContent(
+                        section.content || t('summary.noContent'), 
+                        isEnglishTab
+                      )}
                     </div>
                   </Accordion.Body>
                 </Accordion.Item>
@@ -649,12 +671,12 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         ) : (
           <Alert variant="info">
             <h5>
-              {lang === 'en'
+              {isEnglishTab
                 ? t('summary.noSections.title')
                 : t('summary.noTranslatedSections.title')}
             </h5>
             <p>
-              {lang === 'en'
+              {isEnglishTab
                 ? t('summary.noSections.message')
                 : t('summary.noTranslatedSections.message')}
             </p>
