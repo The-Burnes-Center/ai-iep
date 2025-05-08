@@ -83,7 +83,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   marked.setOptions({
     gfm: true,
     breaks: true,
-    headerIds: true,
     smartLists: true
   });
 
@@ -102,23 +101,28 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   ]);
 
   // Process markdown content and add jargon tooltips
-  const processContent = (content: string, processJargon: boolean = true) => {
+  const processContent = async (content: string, processJargon: boolean = true) => {
     if (!content) return '';
     
-    // Convert markdown to HTML
-    let htmlContent = marked(content);
-    
-    // Process jargon terms if needed
-    if (processJargon) {
-      Object.keys(jargonDictionary).forEach(term => {
-        const regex = new RegExp(`\\b${term}\\b`, 'gi');
-        htmlContent = htmlContent.replace(regex, 
-          `<span class="jargon-term" data-tooltip="${jargonDictionary[term]}">$&</span>`);
-      });
+    try {
+      // Convert markdown to HTML (handle potential Promise)
+      let htmlContent = await Promise.resolve(marked(content));
+      
+      // Process jargon terms if needed
+      if (processJargon) {
+        Object.keys(jargonDictionary).forEach(term => {
+          const regex = new RegExp(`\\b${term}\\b`, 'gi');
+          htmlContent = htmlContent.replace(regex, 
+            `<span class="jargon-term" data-tooltip="${jargonDictionary[term]}">$&</span>`);
+        });
+      }
+      
+      // Return sanitized HTML
+      return DOMPurify.sanitize(htmlContent);
+    } catch (error) {
+      console.error('Error processing markdown:', error);
+      return '';
     }
-    
-    // Return sanitized HTML
-    return DOMPurify.sanitize(htmlContent);
   };
   
   // Update section config with translations when language changes
