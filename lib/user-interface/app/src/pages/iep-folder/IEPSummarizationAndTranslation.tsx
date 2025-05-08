@@ -20,7 +20,8 @@ import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } 
 import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage } from '../../common/language-context';
-import ReactMarkdown from 'react-markdown';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
@@ -75,8 +76,16 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     "Speech Therapy": "A related service involving therapy to improve verbal communication abilities.",
     "Resiliency": "Ability to pursue personal goals and bounce back from challenges.",
     "Transition": "Process of preparing kids to function in future environments and emphasizing movement from one educational program to another.",
-    "Accessibility": "The ability to access the functionality and benefit of a system or entity; describes how accessible a product or environment is to as many people as possible.",
+    "Accessibility": "The ability to access the functionality and benefit of a system or entity; describes how accessible a product or environment is to as many people as possible."
   };
+
+  // Configure marked options
+  marked.setOptions({
+    gfm: true,
+    breaks: true,
+    headerIds: true,
+    smartLists: true
+  });
 
   // Section configuration with translations
   const sectionConfigRef = useRef([
@@ -92,41 +101,24 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') }
   ]);
 
-  // Helper function to find jargon terms in text
-  const checkForJargonTerms = (text: string) => {
-    if (!text) return null;
+  // Process markdown content and add jargon tooltips
+  const processContent = (content: string, processJargon: boolean = true) => {
+    if (!content) return '';
     
-    // Process each word in the text
-    const words = text.split(/\b/); // Split by word boundaries
-    const result: React.ReactNode[] = [];
+    // Convert markdown to HTML
+    let htmlContent = marked(content);
     
-    words.forEach((word, index) => {
-      // Clean the word for matching but keep original for display
-      const cleanWord = word.trim().replace(/[.,!?;:()]/g, '');
-      
-      // Check if word matches any jargon term (case-insensitive)
-      const matchedTerm = Object.keys(jargonDictionary).find(
-        term => term.toLowerCase() === cleanWord.toLowerCase()
-      );
-      
-      if (matchedTerm && cleanWord.length > 0) {
-        // Add the jargon term with tooltip
-        result.push(
-          <span 
-            key={index} 
-            className="jargon-term" 
-            data-tooltip={jargonDictionary[matchedTerm]}
-          >
-            {word}
-          </span>
-        );
-      } else {
-        // Add normal word
-        result.push(<React.Fragment key={index}>{word}</React.Fragment>);
-      }
-    });
+    // Process jargon terms if needed
+    if (processJargon) {
+      Object.keys(jargonDictionary).forEach(term => {
+        const regex = new RegExp(`\\b${term}\\b`, 'gi');
+        htmlContent = htmlContent.replace(regex, 
+          `<span class="jargon-term" data-tooltip="${jargonDictionary[term]}">$&</span>`);
+      });
+    }
     
-    return <>{result}</>;
+    // Return sanitized HTML
+    return DOMPurify.sanitize(htmlContent);
   };
   
   // Update section config with translations when language changes
@@ -426,142 +418,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         return <Badge bg="secondary">{status}</Badge>;
     }
   };
-  
-  // Direct display of summary with jargon term processing
-  const SummaryWithJargon = ({ content, isEnglish = false }) => {
-    if (!content) return null;
-    
-    if (!isEnglish) {
-      return <p className="mb-0">{content}</p>;
-    }
-    
-    return (
-      <div className="summary-content-wrapper">
-        {checkForJargonTerms(content)}
-      </div>
-    );
-  };
-  
-  // Custom renderer for markdown section content
-  const renderSectionContent = (content: string, isEnglish: boolean) => {
-    if (!isEnglish) {
-      // For non-English content, just use standard ReactMarkdown
-      return (
-        <ReactMarkdown>
-          {content}
-        </ReactMarkdown>
-      );
-    }
-    
-    // For English content, manually parse markdown and apply jargon highlighting
-    
-    // Handle ** for bold text
-    const processBoldText = (text: string): React.ReactNode[] => {
-      const parts: React.ReactNode[] = [];
-      let currentText = '';
-      let inBold = false;
-      let boldContent = '';
-      
-      for (let i = 0; i < text.length; i++) {
-        if (i < text.length - 1 && text.substr(i, 2) === '**') {
-          if (inBold) {
-            // End bold section
-            if (currentText) {
-              parts.push(checkForJargonTerms(currentText));
-              currentText = '';
-            }
-            parts.push(<strong key={`bold-${i}`}>{checkForJargonTerms(boldContent)}</strong>);
-            boldContent = '';
-            inBold = false;
-            i++; // Skip the second *
-          } else {
-            // Start bold section
-            if (currentText) {
-              parts.push(checkForJargonTerms(currentText));
-              currentText = '';
-            }
-            inBold = true;
-            i++; // Skip the second *
-          }
-        } else if (inBold) {
-          boldContent += text[i];
-        } else {
-          currentText += text[i];
-        }
-      }
-      
-      // Add any remaining text
-      if (currentText) {
-        parts.push(checkForJargonTerms(currentText));
-      }
-      
-      return parts;
-    };
-    
-    // Split content by line breaks
-    const lines = content.split('\n');
-    const result: React.ReactNode[] = [];
-    
-    lines.forEach((line, lineIndex) => {
-      // Skip empty lines
-      if (!line.trim()) {
-        result.push(<br key={`br-${lineIndex}`} />);
-        return;
-      }
-      
-      // Handle headers (# Header)
-      if (line.startsWith('# ')) {
-        const headerText = line.substring(2);
-        result.push(
-          <h1 key={`h1-${lineIndex}`} style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
-            {processBoldText(headerText)}
-          </h1>
-        );
-        return;
-      }
-      
-      if (line.startsWith('## ')) {
-        const headerText = line.substring(3);
-        result.push(
-          <h2 key={`h2-${lineIndex}`} style={{ marginTop: '0.8rem', marginBottom: '0.4rem' }}>
-            {processBoldText(headerText)}
-          </h2>
-        );
-        return;
-      }
-      
-      if (line.startsWith('### ')) {
-        const headerText = line.substring(4);
-        result.push(
-          <h3 key={`h3-${lineIndex}`} style={{ marginTop: '0.6rem', marginBottom: '0.3rem' }}>
-            {processBoldText(headerText)}
-          </h3>
-        );
-        return;
-      }
-      
-      // Handle lists (- item)
-      if (line.startsWith('- ')) {
-        const listItemText = line.substring(2);
-        result.push(
-          <div key={`li-${lineIndex}`} style={{ display: 'flex', marginBottom: '0.5rem' }}>
-            <span style={{ marginRight: '0.5rem' }}>•</span>
-            <div>{processBoldText(listItemText)}</div>
-          </div>
-        );
-        return;
-      }
-      
-      // Handle normal paragraphs
-      result.push(
-        <p key={`p-${lineIndex}`} style={{ marginBottom: '0.5rem' }}>
-          {processBoldText(line)}
-        </p>
-      );
-    });
-    
-    return <div>{result}</div>;
-  };
 
   // Render tab content for a specific language
   const renderTabContent = (lang: string) => {
@@ -585,17 +441,20 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             </h4>
             <Card className="summary-content mb-3">
               <Card.Body className="p-2">
-                <div className="markdown-content table-of-contents-content">
-                  <ReactMarkdown>
-                    {document.document_index[lang]
-                      ? document.document_index[lang]
-                          // Add two spaces at the end of each line to create a line break in markdown
-                          .split('\n')
-                          .join('  \n')
-                      : ''
-                    }
-                  </ReactMarkdown>
-                </div>
+                <div 
+                  className="markdown-content table-of-contents-content"
+                  dangerouslySetInnerHTML={{ 
+                    __html: processContent(
+                      document.document_index[lang]
+                        ? document.document_index[lang]
+                            // Add two spaces at the end of each line to create a line break in markdown
+                            .split('\n')
+                            .join('  \n')
+                        : '',
+                      isEnglishTab // Only process jargon in English
+                    )
+                  }}
+                />
               </Card.Body>
             </Card>
           </>
@@ -609,13 +468,15 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             </h4>
             <Card className="summary-content mb-3">
               <Card.Body className="py-3">
-                {isEnglishTab ? (
-                  // For English content, use SummaryWithJargon
-                  <SummaryWithJargon content={document.summaries[lang]} isEnglish={true} />
-                ) : (
-                  // For non-English content, just display the text
-                  <p className="mb-0">{document.summaries[lang]}</p>
-                )}
+                <div 
+                  className="markdown-content"
+                  dangerouslySetInnerHTML={{ 
+                    __html: processContent(
+                      document.summaries[lang], 
+                      isEnglishTab // Only process jargon in English
+                    )
+                  }}
+                />
               </Card.Body>
             </Card>
           </>
@@ -657,12 +518,15 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         </small>
                       </p>
                     )}
-                    <div className="markdown-content">
-                      {renderSectionContent(
-                        section.content || t('summary.noContent'), 
-                        isEnglishTab
-                      )}
-                    </div>
+                    <div 
+                      className="markdown-content"
+                      dangerouslySetInnerHTML={{ 
+                        __html: processContent(
+                          section.content || t('summary.noContent'), 
+                          isEnglishTab // Only process jargon in English
+                        )
+                      }}
+                    />
                   </Accordion.Body>
                 </Accordion.Item>
               ))}
