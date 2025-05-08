@@ -79,11 +79,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     "Accessibility": "The ability to access the functionality and benefit of a system or entity; describes how accessible a product or environment is to as many people as possible."
   };
 
-  // Configure marked options
+  // Configure minimal marked options that are type-safe
   marked.setOptions({
     gfm: true,
-    breaks: true,
-    smartLists: true
+    breaks: true
   });
 
   // Section configuration with translations
