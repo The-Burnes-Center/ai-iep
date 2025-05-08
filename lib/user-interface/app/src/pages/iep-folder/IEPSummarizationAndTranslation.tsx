@@ -101,28 +101,30 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   ]);
 
   // Process markdown content and add jargon tooltips
-  const processContent = async (content: string, processJargon: boolean = true) => {
+  const processContent = (content: string, processJargon: boolean = true): string => {
     if (!content) return '';
     
-    try {
-      // Convert markdown to HTML (handle potential Promise)
-      let htmlContent = await Promise.resolve(marked(content));
+    // Convert markdown to HTML - ensure we get a string, not a Promise
+    const htmlContent = marked.parse(content);
+    
+    // Process jargon terms if needed and ensure htmlContent is a string
+    if (processJargon && typeof htmlContent === 'string') {
+      // Create a safe copy of the content to process
+      let processedContent = htmlContent;
       
-      // Process jargon terms if needed
-      if (processJargon) {
-        Object.keys(jargonDictionary).forEach(term => {
-          const regex = new RegExp(`\\b${term}\\b`, 'gi');
-          htmlContent = htmlContent.replace(regex, 
-            `<span class="jargon-term" data-tooltip="${jargonDictionary[term]}">$&</span>`);
-        });
-      }
+      // Process each jargon term
+      Object.keys(jargonDictionary).forEach(term => {
+        const regex = new RegExp(`\\b${term}\\b`, 'gi');
+        processedContent = processedContent.replace(regex, 
+          `<span class="jargon-term" data-tooltip="${jargonDictionary[term]}">$&</span>`);
+      });
       
       // Return sanitized HTML
-      return DOMPurify.sanitize(htmlContent);
-    } catch (error) {
-      console.error('Error processing markdown:', error);
-      return '';
+      return DOMPurify.sanitize(processedContent);
     }
+    
+    // If htmlContent is a Promise or processJargon is false, just sanitize and return
+    return DOMPurify.sanitize(typeof htmlContent === 'string' ? htmlContent : '');
   };
   
   // Update section config with translations when language changes
