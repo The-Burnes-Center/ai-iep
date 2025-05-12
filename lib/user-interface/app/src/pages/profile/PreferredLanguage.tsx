@@ -52,6 +52,15 @@ export default function PreferredLanguage() {
       setLoading(true);
       const data = await apiClient.profile.getProfile();
       setProfile(data);
+
+      // Check if the user has already completed all required fields
+      if (data && data.secondaryLanguage && data.consentGiven === true && 
+        data.children && data.children.length > 0) {
+        // User has already completed onboarding, redirect to welcome page
+        navigate('/welcome-page');
+        return;
+      }
+
       setError(null);
     } catch (err) {
       setError('Service unavailable');
