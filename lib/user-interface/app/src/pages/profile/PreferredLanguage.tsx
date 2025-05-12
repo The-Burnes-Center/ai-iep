@@ -55,7 +55,7 @@ export default function PreferredLanguage() {
 
       // Check if the user has already completed all required fields
       if (data && data.secondaryLanguage && data.consentGiven === true && 
-        data.children && data.children.length > 0) {
+        data.children && data.children.length > 0 && data.children[0].name && data.children[0].schoolCity) {
         // User has already completed onboarding, redirect to welcome page
         navigate('/welcome-page');
         return;
