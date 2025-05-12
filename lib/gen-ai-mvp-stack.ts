@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import { ChatBotApi } from "./chatbot-api";
 import { cognitoDomainName } from "./constants"
 import { AuthorizationStack } from "./authorization"
+import { NewAuthorizationStack } from "./authorization/new-auth"
 import { UserInterface } from "./user-interface"
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
@@ -24,16 +25,35 @@ export class GenAiMvpStack extends cdk.Stack {
     // if (AUTHENTICATION) {
     //   authentication = new AuthorizationStack(this, "Authorization")
     // }
-    const authentication = new AuthorizationStack(this, "Authorization")
+    
+    // Keep the existing UserPool for backward compatibility
+    const oldAuthentication = new AuthorizationStack(this, "Authorization");
+    
+    // Create the new UserPool with self sign-up and email/phone support
+    const authentication = new NewAuthorizationStack(this, "NewAuthorization");
+    
+    // Use the new UserPool for all resources
     const chatbotAPI = new ChatBotApi(this, "ChatbotAPI", {
       authentication
     });
+    
     const userInterface = new UserInterface(this, "UserInterface",
      {userPoolId : authentication.userPool.userPoolId,
       userPoolClientId : authentication.userPoolClient.userPoolClientId,
-      cognitoDomain : cognitoDomainName,
+      cognitoDomain : cognitoDomainName + '-new',
       api : chatbotAPI
-    })
+    });
+    
+    // Update callback URLs for Cognito User Pool Client after CloudFront distribution is created
+    const cfnUserPoolClient = authentication.userPoolClient.node.defaultChild as cdk.aws_cognito.CfnUserPoolClient;
+    cfnUserPoolClient.callbackUrLs = [
+      ...cfnUserPoolClient.callbackUrLs || [],
+      `https://${userInterface.websiteDistribution.distributionDomainName}`
+    ];
+    cfnUserPoolClient.logoutUrLs = [
+      ...cfnUserPoolClient.logoutUrLs || [],
+      `https://${userInterface.websiteDistribution.distributionDomainName}`
+    ];
     
     // Apply tags to all resources in the stack
     applyTags(this, {

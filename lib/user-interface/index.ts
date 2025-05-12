@@ -23,6 +23,8 @@ export interface UserInterfaceProps {
 }
 
 export class UserInterface extends Construct {
+  public readonly websiteDistribution: cf.CloudFrontWebDistribution;
+
   constructor(scope: Construct, id: string, props: UserInterfaceProps) {
     super(scope, id);
 
@@ -54,8 +56,7 @@ export class UserInterface extends Construct {
 
     const publicWebsite = new Website(this, "Website", { ...props, websiteBucket: websiteBucket });
     distribution = publicWebsite.distribution
-
-
+    this.websiteDistribution = distribution;
 
     const exportsAsset = s3deploy.Source.jsonData("aws-exports.json", {
       Auth: {
