@@ -1,9 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { 
-  Alert, 
-  Card,
-  Spinner
-} from 'react-bootstrap';
+import { Alert, Card, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
