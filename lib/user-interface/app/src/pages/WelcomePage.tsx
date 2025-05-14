@@ -1,10 +1,11 @@
 import React, { useEffect, useContext, useState } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Auth } from 'aws-amplify';
 import { AuthContext } from '../common/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../common/language-context'; // Updated import
 import './WelcomePage.css';
+import { Link } from 'react-router-dom';
 
 export default function WelcomePage() {
   const { setAuthenticated } = useContext(AuthContext);
@@ -112,7 +113,18 @@ export default function WelcomePage() {
             </Card.Body>
           </Card>
         </Col>
+        <Col xs={12} className="text-center mb-4">
+          <Button 
+            as={Link} 
+            to="/profile" 
+            variant="link" 
+            className="text-decoration-none"
+          >
+            Update Profile <i className="bi bi-arrow-right"></i>
+          </Button>
+        </Col>
       </Row>
+
     </Container>
   );
 }
