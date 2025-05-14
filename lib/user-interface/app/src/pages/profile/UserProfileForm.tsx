@@ -4,6 +4,8 @@ import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile, Child } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
+import { useLanguage } from '../../common/language-context';
+import { useNavigate } from 'react-router-dom';
 
 const LANGUAGE_OPTIONS = [
   { value: 'en', label: 'English' },
@@ -22,6 +24,8 @@ export default function UserProfileForm() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [newChild, setNewChild] = useState<Child | null>(null);
   const [saving, setSaving] = useState(false);
+  const { t } = useLanguage();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadProfile();
@@ -73,10 +77,19 @@ export default function UserProfileForm() {
     );
   }
 
+    const handleBackClick = () => {
+    navigate('/welcome-page');
+  };
+
   return (
     <Container className="mt-4">
-      <Form onSubmit={handleSubmit}>
-        <h3 className="mb-3">Children</h3>
+            <div className="mt-3 text-start">
+              <Button variant="outline-secondary" onClick={handleBackClick}>
+                {t('common.back')}
+              </Button>
+            </div>
+      <Form onSubmit={handleSubmit} className="mt-4">
+        <h3 className="mb-3">Child</h3>
         {profile?.children && profile.children.length > 0 ? (
           <>
             {profile.children.map((child, index) => (
