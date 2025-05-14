@@ -55,25 +55,6 @@ export default function UserProfileForm() {
     }
   };
 
-  const handleAddChild = async () => {
-    if (!newChild?.name || !newChild?.schoolCity) {
-      addNotification('error', 'Please fill in all fields for the child');
-      return;
-    }
-    
-    try {
-      setSaving(true);
-      await apiClient.profile.addChild(newChild.name, newChild.schoolCity);
-      await loadProfile();
-      setNewChild(null);
-      addNotification('success', 'Child added successfully');
-    } catch (err) {
-      addNotification('error', 'Failed to add child');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading) {
     return (
       <Container className="mt-4 text-center">
@@ -94,55 +75,7 @@ export default function UserProfileForm() {
 
   return (
     <Container className="mt-4">
-      <h2 className="mb-4">User Profile</h2>
       <Form onSubmit={handleSubmit}>
-        <Row className="mb-3">
-          <Col md={6}>
-            <Form.Group controlId="formPhone">
-              <Form.Label>Phone</Form.Label>
-              <Form.Control 
-                type="tel" 
-                placeholder="Enter phone number"
-                value={profile?.phone || ''} 
-                onChange={e => setProfile(prev => prev ? {...prev, phone: e.target.value} : null)}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-
-        <Row className="mb-3">
-          <Col md={6}>
-            <Form.Group controlId="formSecondaryLanguage">
-              <Form.Label>Secondary Language</Form.Label>
-              <Form.Select
-                value={profile?.secondaryLanguage || ''}
-                onChange={e => setProfile(prev => prev ? {...prev, secondaryLanguage: e.target.value} : null)}
-              >
-                <option value="">None</option>
-                {LANGUAGE_OPTIONS.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-        </Row>
-
-        <Row className="mb-4">
-          <Col md={6}>
-            <Form.Group controlId="formCity">
-              <Form.Label>City</Form.Label>
-              <Form.Control 
-                type="text" 
-                placeholder="Enter city"
-                value={profile?.city || ''} 
-                onChange={e => setProfile(prev => prev ? {...prev, city: e.target.value} : null)}
-              />
-            </Form.Group>
-          </Col>
-        </Row>
-
         <h3 className="mb-3">Children</h3>
         {profile?.children && profile.children.length > 0 ? (
           <>
@@ -207,16 +140,6 @@ export default function UserProfileForm() {
                 />
               </Form.Group>
             </Col>
-            <Col md={2} className="d-flex align-items-end">
-              <Button 
-                variant="success" 
-                onClick={handleAddChild}
-                disabled={saving}
-                className="mb-3"
-              >
-                {saving ? 'Adding...' : 'Add Child'}
-              </Button>
-            </Col>
           </Row>
         )}
 
@@ -227,13 +150,6 @@ export default function UserProfileForm() {
             disabled={saving}
           >
             {saving ? 'Updating...' : 'Update Profile'}
-          </Button>
-          <Button 
-            variant="secondary" 
-            onClick={() => setNewChild({name: '', schoolCity: ''})}
-            disabled={!!newChild || saving}
-          >
-            Add Child
           </Button>
         </div>
       </Form>

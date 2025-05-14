@@ -1,10 +1,10 @@
 {
     "Auth": {
         "region": "us-east-1",
-        "userPoolId": "us-east-1_RDbKXQN7y",
-        "userPoolWebClientId": "s8n36k7egnkn0fje15canjbl6",
+        "userPoolId": "us-east-1_xhit0fN1J",
+        "userPoolWebClientId": "501q23l273pje6crh8nn376311",
         "oauth": {
-            "domain": "a-iep.auth.us-east-1.amazoncognito.com",
+            "domain": "a-iep-new.auth.us-east-1.amazoncognito.com",
             "scope": [
                 "aws.cognito.signin.user.admin",
                 "email",
