@@ -7,7 +7,7 @@ import { NewAuthorizationStack } from "./authorization/new-auth"
 import { UserInterface } from "./user-interface"
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
-import { applyTags } from './tags';
+import { applyTags, getResourceName } from './tags';
 
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
@@ -27,20 +27,20 @@ export class GenAiMvpStack extends cdk.Stack {
     // }
     
     // Keep the existing UserPool for backward compatibility
-    const oldAuthentication = new AuthorizationStack(this, "Authorization");
+    const oldAuthentication = new AuthorizationStack(this, getResourceName("Authorization"));
     
     // Create the new UserPool with self sign-up and email/phone support
-    const authentication = new NewAuthorizationStack(this, "NewAuthorization");
+    const authentication = new NewAuthorizationStack(this, getResourceName("NewAuthorization"));
     
     // Use the new UserPool for all resources
-    const chatbotAPI = new ChatBotApi(this, "ChatbotAPI", {
+    const chatbotAPI = new ChatBotApi(this, getResourceName("ChatbotAPI"), {
       authentication
     });
     
-    const userInterface = new UserInterface(this, "UserInterface",
+    const userInterface = new UserInterface(this, getResourceName("UserInterface"),
      {userPoolId : authentication.userPool.userPoolId,
       userPoolClientId : authentication.userPoolClient.userPoolClientId,
-      cognitoDomain : cognitoDomainName + '-new',
+      cognitoDomain : getResourceName(cognitoDomainName) + '-new',
       api : chatbotAPI
     });
     
