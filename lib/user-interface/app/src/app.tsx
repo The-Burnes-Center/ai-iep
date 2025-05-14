@@ -14,6 +14,7 @@ import UserProfileForm from './pages/profile/UserProfileForm';
 import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
 import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslationsPage';
 import ViewAndAddChild from './pages/profile/ViewAndAddChild';
+import RevokeConsent from './pages/profile/RevokeConsent';
 import RightsAndOnboarding from './pages/RightsAndOnboarding';
 import ConsentForm from './pages/profile/ConsentForm';
 
@@ -52,6 +53,7 @@ function AppContent() {
             <Route path="/iep-documents" element={<IEPDocumentView />} />
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
+            <Route path="/revoke-consent" element={<RevokeConsent />} />
         </Routes>
       </div>
     </div>

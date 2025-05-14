@@ -155,7 +155,6 @@ export default function UserProfileForm() {
             </Col>
           </Row>
         )}
-
         <div className="mt-4 d-flex gap-2">
           <Button 
             variant="primary" 
@@ -163,6 +162,13 @@ export default function UserProfileForm() {
             disabled={saving}
           >
             {saving ? 'Updating...' : 'Update Profile'}
+          </Button>
+          <Button 
+            variant="outline-danger" 
+            onClick={() => navigate('/revoke-consent')}
+            className="button-text"
+          >
+          Revoke Consent
           </Button>
         </div>
       </Form>
