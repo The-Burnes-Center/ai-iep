@@ -13,7 +13,6 @@ import { Construct } from "constructs";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { NewAuthorizationStack } from "../authorization/new-auth";
 
-// import { NagSuppressions } from "cdk-nag";
 
 export interface ChatBotApiProps {
   readonly authentication: NewAuthorizationStack;
