@@ -1,7 +1,5 @@
 import * as cdk from "aws-cdk-lib";
 
-import { AuthorizationStack } from '../authorization'
-
 import { RestBackendAPI } from "./gateway/rest-api"
 import { LambdaFunctionStack } from "./functions/functions"
 import { TableStack } from "./tables/tables"
@@ -13,11 +11,12 @@ import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { aws_apigatewayv2 as apigwv2 } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { NewAuthorizationStack } from "../authorization/new-auth";
 
 // import { NagSuppressions } from "cdk-nag";
 
 export interface ChatBotApiProps {
-  readonly authentication: AuthorizationStack;
+  readonly authentication: NewAuthorizationStack;
 }
 
 export class ChatBotApi extends Construct {
