@@ -5,7 +5,6 @@ import { AuthContext } from '../common/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../common/language-context'; // Updated import
 import './WelcomePage.css';
-import { Link } from 'react-router-dom';
 
 export default function WelcomePage() {
   const { setAuthenticated } = useContext(AuthContext);
@@ -115,10 +114,9 @@ export default function WelcomePage() {
         </Col>
         <Col xs={12} className="text-center mb-4">
           <Button 
-            as={Link} 
-            to="/profile" 
             variant="link" 
-            className="text-decoration-none"
+            className='text-decoration-none'
+            onClick={() => navigate('/profile')}
           >
             Update Profile <i className="bi bi-arrow-right"></i>
           </Button>
