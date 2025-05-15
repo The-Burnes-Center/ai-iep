@@ -11,13 +11,17 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import { getTagProps, tagResource } from '../../tags';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import { UserPool } from 'aws-cdk-lib/aws-cognito';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
 
-
-interface LambdaFunctionStackProps {
+export interface LambdaFunctionStackProps {
   readonly knowledgeBucket : s3.Bucket;
   readonly userProfilesTable : Table;
   readonly iepDocumentsTable : Table;
   readonly userPool: cognito.UserPool;
+  readonly logGroup: logs.LogGroup;
+  readonly logRole: iam.Role;
 }
 
 export class LambdaFunctionStack extends cdk.Stack {  
@@ -54,7 +58,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       environment: {
         "BUCKET" : props.knowledgeBucket.bucketName,        
       },
-      timeout: cdk.Duration.seconds(30)
+      timeout: cdk.Duration.seconds(30),
+      logRetention: logs.RetentionDays.ONE_YEAR
     });
 
     deleteS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -73,7 +78,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       environment: {
         "BUCKET" : props.knowledgeBucket.bucketName,        
       },
-      timeout: cdk.Duration.seconds(30)
+      timeout: cdk.Duration.seconds(30),
+      logRetention: logs.RetentionDays.ONE_YEAR
     });
 
     getS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -94,7 +100,8 @@ export class LambdaFunctionStack extends cdk.Stack {
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName
       },
-      timeout: cdk.Duration.seconds(300)
+      timeout: cdk.Duration.seconds(300),
+      logRetention: logs.RetentionDays.ONE_YEAR
     });
 
     uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -155,7 +162,8 @@ export class LambdaFunctionStack extends cdk.Stack {
         "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
       },
       timeout: cdk.Duration.seconds(900),
-      memorySize: 2048
+      memorySize: 2048,
+      logRetention: logs.RetentionDays.ONE_YEAR
     });
     
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -223,7 +231,8 @@ export class LambdaFunctionStack extends cdk.Stack {
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "BUCKET": props.knowledgeBucket.bucketName
       },
-      timeout: cdk.Duration.seconds(300)
+      timeout: cdk.Duration.seconds(300),
+      logRetention: logs.RetentionDays.ONE_YEAR
     });
 
     // Add permissions for DynamoDB tables
@@ -269,7 +278,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       environment: {
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName
       },
-      timeout: cdk.Duration.seconds(30)
+      timeout: cdk.Duration.seconds(30),
+      logRetention: logs.RetentionDays.ONE_YEAR
     });
 
     // Grant DynamoDB permissions to Cognito trigger
@@ -295,5 +305,31 @@ export class LambdaFunctionStack extends cdk.Stack {
     );
 
     this.cognitoTriggerFunction = cognitoTriggerFunction;
+
+    // Create a layer for logging
+    const loggingLayer = new lambda.LayerVersion(this, 'LoggingLayer', {
+      code: lambda.Code.fromAsset('lib/chatbot-api/logging'),
+      compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
+      description: 'Layer for logging functionality',
+    });
+
+    // Common environment variables for all functions
+    const commonEnvVars = {
+      LOG_GROUP_NAME: props.logGroup.logGroupName,
+      ENVIRONMENT: process.env.ENVIRONMENT || 'development',
+    };
+
+    // Common IAM permissions for logging
+    const loggingPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'logs:CreateLogStream',
+        'logs:PutLogEvents',
+      ],
+      resources: [props.logGroup.logGroupArn],
+    });
+
+    // Add logging permissions to each function
+    this.userProfileFunction.addToRolePolicy(loggingPolicy);
   }
 }
