@@ -2,7 +2,6 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { ChatBotApi } from "./chatbot-api";
 import { cognitoDomainName } from "./constants"
-import { AuthorizationStack } from "./authorization"
 import { NewAuthorizationStack } from "./authorization/new-auth"
 import { UserInterface } from "./user-interface"
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -25,9 +24,6 @@ export class GenAiMvpStack extends cdk.Stack {
     // if (AUTHENTICATION) {
     //   authentication = new AuthorizationStack(this, "Authorization")
     // }
-    
-    // Keep the existing UserPool for backward compatibility
-    const oldAuthentication = new AuthorizationStack(this, getResourceName("Authorization"));
     
     // Create the new UserPool with self sign-up and email/phone support
     const authentication = new NewAuthorizationStack(this, getResourceName("NewAuthorization"));

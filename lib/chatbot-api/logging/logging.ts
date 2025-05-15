@@ -35,13 +35,28 @@ export class LoggingStack extends Construct {
       description: 'Role for logging in AI-IEP application',
     });
 
+    // Get current environment
+    const environment = getEnvironment();
+    
     // Create CloudWatch Log Group with compliance-focused settings
-    this.logGroup = new logs.LogGroup(this, 'LogGroup', {
-      logGroupName: `/ai-iep/${getEnvironment()}/logs`,
+    // Base properties for all environments
+    const baseProps = {
+      logGroupName: `/ai-iep/${environment}/logs`,
       retention: logs.RetentionDays.ONE_YEAR, // Adjust based on compliance requirements
       removalPolicy: cdk.RemovalPolicy.RETAIN, // Retain logs even if stack is destroyed
-      encryptionKey: cdk.aws_kms.Alias.fromAliasName(this, 'LogsKmsKey', 'alias/aws/logs'), // Use AWS managed KMS key for logs
-    });
+    };
+    
+    // Create log group with or without KMS key based on environment
+    if (environment === 'production') {
+      // For production, use the specified KMS key
+      this.logGroup = new logs.LogGroup(this, 'LogGroup', {
+        ...baseProps,
+        encryptionKey: cdk.aws_kms.Alias.fromAliasName(this, 'LogsKmsKey', 'alias/aws/logs'),
+      });
+    } else {
+      // For staging and development, don't specify a KMS key (use default encryption)
+      this.logGroup = new logs.LogGroup(this, 'LogGroup', baseProps);
+    }
 
     // Add permissions to the role
     this.logRole.addToPolicy(
