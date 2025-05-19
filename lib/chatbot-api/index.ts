@@ -1,29 +1,32 @@
 import * as cdk from "aws-cdk-lib";
 
-import { AuthorizationStack } from '../authorization'
-
 import { RestBackendAPI } from "./gateway/rest-api"
 import { LambdaFunctionStack } from "./functions/functions"
 import { TableStack } from "./tables/tables"
 import { S3BucketStack } from "./buckets/buckets"
+import { LoggingStack } from "./logging/logging"
 
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { aws_apigatewayv2 as apigwv2 } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { NewAuthorizationStack } from "../authorization/new-auth";
 
-// import { NagSuppressions } from "cdk-nag";
 
 export interface ChatBotApiProps {
-  readonly authentication: AuthorizationStack;
+  readonly authentication: NewAuthorizationStack;
 }
 
 export class ChatBotApi extends Construct {
   public readonly httpAPI: RestBackendAPI;
+  public readonly logging: LoggingStack;
 
   constructor(scope: Construct, id: string, props: ChatBotApiProps) {
     super(scope, id);
+
+    // Initialize logging
+    this.logging = new LoggingStack(this, "Logging");
 
     const tables = new TableStack(this, "TableStack");
     const buckets = new S3BucketStack(this, "BucketStack");
@@ -36,7 +39,9 @@ export class ChatBotApi extends Construct {
         knowledgeBucket: buckets.knowledgeBucket,
         userProfilesTable: tables.userProfilesTable,
         iepDocumentsTable: tables.iepDocumentsTable,
-        userPool: props.authentication.userPool
+        userPool: props.authentication.userPool,
+        logGroup: this.logging.logGroup,
+        logRole: this.logging.logRole
       })
 
     const httpAuthorizer = new HttpJwtAuthorizer('HTTPAuthorizer', props.authentication.userPool.userPoolProviderUrl,{

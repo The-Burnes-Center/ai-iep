@@ -1,15 +1,15 @@
-name: Deploy A-IEP Tool to AWS Prod
+name: Deploy A-IEP Tool to AWS Staging Env
 
 on:
   push:
     branches:
-      - main  # or 'master' if you're using the master branch
+      - staging  
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      ENVIRONMENT: production
+      ENVIRONMENT: staging
 
     steps:
     # Step 1: Check out the repository's code
@@ -46,14 +46,14 @@ jobs:
 
     # Step 7: Deploy the CDK stack (from the root folder)
     - name: Deploy CDK stack
-      run: npx cdk deploy AIEPStack --require-approval never
+      run: npx cdk deploy AIEPStagingStack --require-approval never
       env:
-        ENVIRONMENT: production
+        ENVIRONMENT: staging
 
     # Step 8: Fetch CloudFormation outputs and save to a file
     - name: Fetch CloudFormation Outputs
       run: |
-        aws cloudformation describe-stacks --stack-name AIEPStack --query "Stacks[0].Outputs" > stack-outputs.json
+        aws cloudformation describe-stacks --stack-name AIEPStagingStack --query "Stacks[0].Outputs" > stack-outputs.json
         cat stack-outputs.json  # Just to verify in logs if needed
 
     # Step 9: Upload the output file as an artifact (optional)
