@@ -29,19 +29,20 @@ export function getEnvironment(): Environment {
 /**
  * Get environment-specific resource name
  * @param baseName The base name of the resource
+ * @param resourceType Optional resource type for specific naming patterns
  * @returns The environment-specific resource name
  */
-export function getResourceName(baseName: string): string {
+export function getResourceName(baseName: string, resourceType?: 'stack' | 'cognito'): string {
   const env = getEnvironment();
   
-  // Only append environment suffix for staging
   if (env === 'staging') {
+    // Special handling for stack names
+    if (resourceType === 'stack' && baseName.endsWith('Stack')) {
+      const baseWithoutStack = baseName.replace('Stack', '');
+      return `${baseWithoutStack}StagingStack`;
+    }
+    // Default behavior for other resources
     return `${baseName}-staging`;
-  }
-  
-  // For development, append -dev
-  if (env === 'development') {
-    return `${baseName}-dev`;
   }
   
   // Production remains unchanged
