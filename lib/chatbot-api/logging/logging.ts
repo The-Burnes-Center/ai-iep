@@ -46,17 +46,8 @@ export class LoggingStack extends Construct {
       removalPolicy: cdk.RemovalPolicy.RETAIN, // Retain logs even if stack is destroyed
     };
     
-    // Create log group with or without KMS key based on environment
-    if (environment === 'production') {
-      // For production, use the specified KMS key
-      this.logGroup = new logs.LogGroup(this, 'LogGroup', {
-        ...baseProps,
-        encryptionKey: cdk.aws_kms.Alias.fromAliasName(this, 'LogsKmsKey', 'alias/aws/logs'),
-      });
-    } else {
-      // For staging and development, don't specify a KMS key (use default encryption)
-      this.logGroup = new logs.LogGroup(this, 'LogGroup', baseProps);
-    }
+    // Create log group with default encryption for all environments
+    this.logGroup = new logs.LogGroup(this, 'LogGroup', baseProps);
 
     // Add permissions to the role
     this.logRole.addToPolicy(
