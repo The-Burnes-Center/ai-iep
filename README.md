@@ -1,4 +1,4 @@
-# A-IEP Project
+# A-IEP Project 
 
 This is a CDK TypeScript project that implements an AI-powered IEP (Individualized Education Program) system using AWS services. The system helps manage and analyze IEP documents, providing summaries and insights for parents and educators.
 
