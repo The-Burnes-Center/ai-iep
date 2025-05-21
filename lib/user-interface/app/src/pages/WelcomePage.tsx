@@ -1,5 +1,5 @@
 import React, { useEffect, useContext, useState } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Auth } from 'aws-amplify';
 import { AuthContext } from '../common/auth-context';
 import { useNavigate } from 'react-router-dom';
@@ -112,7 +112,17 @@ export default function WelcomePage() {
             </Card.Body>
           </Card>
         </Col>
+        <Col xs={12} className="text-center mb-4">
+          <Button 
+            variant="link" 
+            className='text-decoration-none'
+            onClick={() => navigate('/profile')}
+          >
+            Update Profile <i className="bi bi-arrow-right"></i>
+          </Button>
+        </Col>
       </Row>
+
     </Container>
   );
 }

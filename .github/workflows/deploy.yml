@@ -1,4 +1,4 @@
-name: Deploy AI-IEP Tool to AWS
+name: Deploy A-IEP Tool to AWS Prod
 
 on:
   push:
