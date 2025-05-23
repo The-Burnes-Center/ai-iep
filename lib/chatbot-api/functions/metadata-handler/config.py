@@ -21,7 +21,8 @@ SECTION_KEY_POINTS = {
     
     'Placement': """Specify the type of classroom setting recommended for the student. Calculate and state the percentage of time the student will spend in regular education classes. Provide a clear explanation of why this placement decision was made. Address any specialized transportation needs. Document whether extended school year services are necessary and why. Extract the rationale for placement decisions, particularly in terms of the Least Restrictive Environment (LRE). List any supplementary supports or participation in non-academic activities if mentioned.""",
     
-    'Goals': """Detail the specific academic goals for each subject area where the student needs support.  For each goal, explain how progress will be measured and tracked. Provide clear dates and timelines for when each goal should be achieved. Include the objectives listed for each goal. For each goal, if progress reports are available, include the summary of progress as well as any additional comments listed in that section. Include behavioral and social goals that address any identified challenges. Specify life skills goals where applicable. Break out short-term objectives from annual goals. Specify who is responsible for monitoring each goal and how frequently progress is reported.""",
+    'Goals': """Detail the specific academic goals for each subject area where the student needs support. For each goal, explain how progress will be measured and tracked. Provide clear dates and timelines for when each goal should be achieved. Include the objectives listed for each goal. For each goal, if progress reports are available, include the summary of progress as well as any additional comments listed in that section. Include behavioral and social goals that address any identified challenges. Specify life skills goals where applicable. Break out short-term objectives from annual goals. Specify who is responsible for monitoring each goal and how frequently progress is reported.
+    For goals: Ensure that every sentence is clear and complete. For example, instead of saying "baseline: 50% accuracy," provide a complete sentence, such as "Student X is responding to literal questions about an independent level text with 50% accuracy.""",
     
     'Services': """List all types of special education services the student will receive. Include any related services such as speech therapy, occupational therapy, or physical therapy. For each service, specify the frequency and duration using the following format: show the original duration in minutes as mentioned in the IEP, followed by the conversion to hours in parentheses (e.g., "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"). Identify who will provide each service and document the specific dates when each services will begin and end. Indicate whether services are delivered in a group or 1:1, and whether they are direct or consultative. Include the setting of service delivery. If available, note whether the provider is school-based or external.""",
     
@@ -142,11 +143,22 @@ Your goal is to produce a complete, valid JSON output with the following structu
      - Add a **short introductory paragraph** summarizing the content of the section.
      - Use **bullet points**, **lists**, **tables**, **bold**, **italic**, and **underline** where appropriate to enhance readability.
      - Maintain a **friendly and warm tone** throughout.
+     - If abbreviations are used in the section, provide a **table of legends** at the end of the section. The table should include:
+       - Abbreviation: The abbreviation or acronym used in the section.
+       - Full Form: The full form or meaning of the abbreviation.
+     - The table should only be displayed if abbreviations are present in the section. If no abbreviations are used, skip the table.
+     - The table should be formatted in **Markdown** as follows:
+
+Abbreviation\tFull Form
+IEP\tIndividualized Education Program
+OCR\tOptical Character Recognition
+...\t...
+
 3. **Validation**:
-   - Ensure that the English JSON matches the required schema (no missing keys, correct types).
+- Ensure that the English JSON matches the required schema (no missing keys, correct types).
 4. **Translation**: 
-   - Call the `translate_text` tool, passing the entire English JSON as input.
-   - The tool will return a **JSON object containing translations** into **Spanish (es)**, **Vietnamese (vi)**, and **Chinese (zh)**, preserving the same structure:
+- Call the `translate_text` tool, passing the entire English JSON as input.
+- The tool will return a **JSON object containing translations** into **Spanish (es)**, **Vietnamese (vi)**, and **Chinese (zh)**, preserving the same structure:
 
 {{
 "summaries": {{ "es": ..., "vi": ..., "zh": ... }},
@@ -155,7 +167,7 @@ Your goal is to produce a complete, valid JSON output with the following structu
 }}
 
 5. **Merging Translations**:
-   - Merge the returned translations into your final output, resulting in:
+- Merge the returned translations into your final output, resulting in:
 
 {{
 "summaries": {{ "en": ..., "es": ..., "vi": ..., "zh": ... }},
@@ -181,128 +193,3 @@ Your goal is to produce a complete, valid JSON output with the following structu
 - Always begin each section with a short **introductory paragraph** that summarizes what the section contains.
 - Keep the tone **friendly and warm**, and ensure that the language is accessible and easy to understand.
 '''
-
-
-# def get_full_prompt(key):
-#     """
-#     Generate a prompt for document analysis.
-    
-#     Args:
-#         key (str): Document type key
-#     """
-#     section_points = {section: points for section, points in SECTION_KEY_POINTS.items()}
-    
-#     # Build the JSON structure example
-#     json_structure = {
-#         "summaries": {
-#             "en": "English summary of the entire document - must not be empty",
-#             "es": "Translation of the english summary to spanish - must not be empty",
-#             "vi": "Translation of the english summary to vietnamese - must not be empty",
-#             "zh": "Translation of the english summary to chinese - must not be empty"
-#         },
-#         "sections": {
-#             "en": [
-#                 {
-#                     "title": "Section name",  # Must be one of the IEP_SECTIONS keys
-#                     "content": "English section content in markdown format",
-#                     "page_numbers": [1, 2]  # List of page numbers where this section was found in the document
-#                 },
-#                 # All required sections must be present:
-#                 # - Present Levels
-#                 # - Eligibility
-#                 # - Placement
-#                 # - Goals
-#                 # - Services
-#                 # - Informed Consent
-#                 # - Accommodations
-#             ],
-#             "es": [
-#                 {
-#                     "title": "Section name - same as english section names",  # Must match English section names
-#                     "content": "Spanish section content in markdown format",
-#                     "page_numbers": [1, 2]  # List of page numbers where this section was found
-#                 }
-#                 # All sections must be present in Spanish
-#             ],
-#             "vi": [
-#                 {
-#                     "title": "Section name - same as english section names",  # Must match English section names
-#                     "content": "Vietnamese section content in markdown format",
-#                     "page_numbers": [1, 2]  # List of page numbers where this section was found
-#                 }
-#                 # All sections must be present in Vietnamese
-#             ],
-#             "zh": [
-#                 {
-#                     "title": "Section name - same as english section names",  # Must match English section names
-#                     "content": "Chinese section content in markdown format",
-#                     "page_numbers": [1, 2]  # List of page numbers where this section was found
-#                 }
-#                 # All sections must be present in Chinese
-#             ]
-#         },
-#         "document_index": {
-#             "en": "English document index with page numbers and content breakdown - must not be empty",
-#             "es": "Spanish document index with page numbers and content breakdown - must not be empty",
-#             "vi": "Vietnamese document index with page numbers and content breakdown - must not be empty",
-#             "zh": "Chinese document index with page numbers and content breakdown - must not be empty"
-#         }
-#     }
-    
-#     prompt = f"""
-# You are an expert IEP document analyzer and translator. Analyze the following student IEP document and extract the key information.
-
-# Tasks:
-# 1. Analyze the document in english and generate first an index of the document based on the page numbers and the content of the page.
-# 2. Summarize the document in english where you are trying to explain the document in a way that is easy to understand for a parent whose child is in the school system. Mention the strengths and weaknesses of the student in the summary, and the goals and accommodations of the student.
-# 3. For each section, use the get_section_info tool to understand what information to extract, then use the index to find and extract that information from the document.
-# 4. Translate the english summary to all the languages we need {', '.join(LANGUAGE_CODES.keys())}. Use the tool translate_text to translate the text, the input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
-# 5. Use the translate_text tool to translate the english sections and english document index to the target language.
-# 6. Make sure the final output has the same structure as the example format below and has the same section titles and keys, and make sure we have all the sections, summary and needed translations.
-
-# Tools:
-# - get_all_ocr_text: to extract the text from the document and prepare an index of the document based on the page numbers and the content of the page.
-# - get_ocr_text_for_page: to retrieve specific information about a single page based on the page number of the document.
-# - get_ocr_text_for_pages: to retrieve specific information from multiple pages at once by providing an array of page indices. Use this when you need to extract content that spans across multiple pages for efficiency.
-# - translate_text: to translate the English text to the target language. Use this tool for all parts and all languages. The input will be text in english with a language code from {'es', 'vi', 'zh'}. The output will be the translated text in the target language.
-# - get_section_info: to get the key points and description for each section. Use this tool for each section to understand what information to extract.
-
-# Important Guidelines:
-# - Make sure to include ALL the sections and key points.
-# - Keep the section titles consistent.
-# - Ensure all sections are present in all languages.
-# - Keep the reading level at 8th grade.
-# - NEVER use placeholder text like "..." or "// Translated sections" - all sections must be fully translated.
-# - The content in all languages should have the SAME level of detail.
-# - For each section, use get_section_info to understand what information to look for.
-# - When content for a section spans multiple pages, use get_ocr_text_for_pages with an array of relevant page indices for more efficient extraction.
-# - For the 'services' section specifically:
-#     * ALWAYS show the original duration in minutes as mentioned in the IEP
-#     * In parentheses, include the conversion to hours per week
-#     * Format as: "X min/week (Y hrs/week)" if the duration is more than 60 minutes
-#     * Example: "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"
-# - Only once you have validated the output, return the final output.
-# - Format all the output in markdown format, break down big paragraphs into smaller ones.
-# - use bullet points when possible.
-# - use lists when possible.
-# - use tables when possible.
-# - use bold when possible.
-# - use italic when possible.
-# - use underline when possible.
-
-
-# Validation Requirements:
-# 1. All summaries must be non-empty and present in all languages
-# 2. All sections must:
-#    - Have a title that matches one of: {', '.join(IEP_SECTIONS.keys())}
-#    - Have non-empty content in markdown format
-#    - Include the page numbers where found (as a list of integers)
-# 3. All required sections must be present in all languages
-# 4. Document index must be non-empty and present in all languages
-
-# Output Structure: Format your response as a JSON object with the following structure: 
-# ```json
-# {json.dumps(json_structure, indent=2)}
-# ```
-# """
-#     return prompt
