@@ -9,7 +9,7 @@ class SectionContent(BaseModel):
         description="Section name - must match one of: " + ", ".join(IEP_SECTIONS.keys())
     )
     content: str = Field(..., description="Section content in markdown format")
-    page_numbers: List[int] = Field(..., description="List of page numbers where content was found")
+    page_numbers: List[int] = Field(..., description="List of page numbers where content was found, make sure to include all the pages where the section content was found.")
     
     @field_validator('title')
     @classmethod
