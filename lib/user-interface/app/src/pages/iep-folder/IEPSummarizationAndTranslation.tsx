@@ -516,7 +516,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     {section.pageNumbers && section.pageNumbers.length > 0 && (
                       <p className="text-muted mb-2">
                         <small>
-                          {isEnglishTab ? 'Pages: ' : 'Páginas: '}
+                          {isEnglishTab ? 'The original content for this section can be found in your IEP document on Pages: ' : 'Páginas: '}
                           {Array.isArray(section.pageNumbers) 
                             ? section.pageNumbers.join(', ') 
                             : section.pageNumbers}
