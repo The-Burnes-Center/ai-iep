@@ -384,33 +384,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
     return (
       <>
-        {/* Table of Contents Section */}
-        {hasDocumentIndex ? (
-          <>
-            <h4 className="mt-4 mb-3">
-              {isEnglishTab ? 'Table of Contents' : t('summary.tableOfContents')}
-            </h4>
-            <Card className="summary-content mb-3">
-              <Card.Body className="p-2">
-                <div 
-                  className="markdown-content table-of-contents-content"
-                  dangerouslySetInnerHTML={{ 
-                    __html: processContent(
-                      document.document_index[lang]
-                        ? document.document_index[lang]
-                            // Add two spaces at the end of each line to create a line break in markdown
-                            .split('\n')
-                            .join('  \n')
-                        : '',
-                      isEnglishTab // Only process jargon in English
-                    )
-                  }}
-                />
-              </Card.Body>
-            </Card>
-          </>
-        ) : null}
-        
         {/* Summary Section */}
         {hasSummary ? (
           <>
