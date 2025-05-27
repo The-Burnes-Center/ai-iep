@@ -10,7 +10,8 @@ import {
   Badge,
   Accordion,
   Tabs,
-  Tab
+  Tab,
+  Offcanvas
 } from 'react-bootstrap';
 import { AppContext } from '../../common/app-context';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
@@ -21,8 +22,7 @@ import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage } from '../../common/language-context';
 import { marked } from 'marked';
-import processContent from '../utils/processContent';
-import { startPollingIfProcessing } from '../utils/polling';
+import DOMPurify from 'dompurify';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const appContext = useContext(AppContext);
@@ -31,6 +31,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [showJargonDrawer, setShowJargonDrawer] = useState(false);
+  const [selectedJargon, setSelectedJargon] = useState<{term: string, definition: string} | null>(null);
 
   const [document, setDocument] = useState<IEPDocument>({
     documentId: undefined,
@@ -66,6 +68,19 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   const preferredLanguage = language || 'en';
 
+  // Jargon terms dictionary
+  const jargonDictionary = {
+    "Accommodations": "Adaptations made for specific individuals with disabilities when a product or service isn't accessible. These techniques and materials don't change the basic curriculum but do make learning a little easier and help students communicate what they know.",
+    "Assessment": "Process of identifying strengths and needs to assist in educational planning; includes observation, record review, interviews, and tests to develop appropriate educational programs, and to monitor progress",
+    "Assistive Technology": "Any item, piece of equipment, product or system used to increase, maintain, or improve the functional capabilities of a child with a disability.",
+    "IEP": "An IEP is a plan developed to ensure that a child who has a disability identified under the law receives specialized instruction and related services.",
+    "Informed Consent": "Agreement in writing from parents that they have been informed and understand implications of special education evaluation and program decisions; permission is voluntary and may be withdrawn.",
+    "Occupational Therapy": "A related service that helps students improve fine motor skills and perform tasks needed for daily living and school activities.",
+    "Speech Therapy": "A related service involving therapy to improve verbal communication abilities.",
+    "Resiliency": "Ability to pursue personal goals and bounce back from challenges.",
+    "Transition": "Process of preparing kids to function in future environments and emphasizing movement from one educational program to another.",
+    "Accessibility": "The ability to access the functionality and benefit of a system or entity; describes how accessible a product or environment is to as many people as possible."
+  };
 
   // Configure minimal marked options that are type-safe
   marked.setOptions({
@@ -87,6 +102,44 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') }
   ]);
 
+  // Handle jargon click
+  const handleContentClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('jargon-term')) {
+      e.preventDefault();
+      const term = target.textContent || '';
+      const definition = target.getAttribute('data-tooltip') || '';
+      setSelectedJargon({ term, definition });
+      setShowJargonDrawer(true);
+    }
+  };
+
+  // Process markdown content and add jargon tooltips
+  const processContent = (content: string, processJargon: boolean = true): string => {
+    if (!content) return '';
+    
+    // Convert markdown to HTML - ensure we get a string, not a Promise
+    const htmlContent = marked.parse(content);
+    
+    // Process jargon terms if needed and ensure htmlContent is a string
+    if (processJargon && typeof htmlContent === 'string') {
+      // Create a safe copy of the content to process
+      let processedContent = htmlContent;
+      
+      // Process each jargon term
+      Object.keys(jargonDictionary).forEach(term => {
+        const regex = new RegExp(`\\b${term}\\b`, 'gi');
+        processedContent = processedContent.replace(regex, 
+          `<span class="jargon-term" data-tooltip="${jargonDictionary[term]}">$&</span>`);
+      });
+      
+      // Return sanitized HTML
+      return DOMPurify.sanitize(processedContent);
+    }
+    
+    // If htmlContent is a Promise or processJargon is false, just sanitize and return
+    return DOMPurify.sanitize(typeof htmlContent === 'string' ? htmlContent : '');
+  };
   
   // Update section config with translations when language changes
   useEffect(() => {
@@ -208,6 +261,22 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
+  // Function to start polling if document is processing
+  const startPollingIfProcessing = (doc: any) => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    
+    if (doc && doc.status === "PROCESSING") {
+      console.log("Document is processing. Starting polling...");
+      pollingIntervalRef.current = setInterval(() => {
+        console.log("Polling for updates...");
+        setRefreshCounter(prev => prev + 1);
+      }, 5000);
+    }
+  };
+
   // Fetch document data
   useEffect(() => {
     if (!translationsLoaded) return;
@@ -237,7 +306,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             return prev;
           });
           
-          startPollingIfProcessing(retrievedDocument, setRefreshCounter, pollingIntervalRef);
+          startPollingIfProcessing(retrievedDocument);
           
           if (retrievedDocument.status === "PROCESSED") {
             // Set summaries
@@ -383,7 +452,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     const isEnglishTab = lang === 'en';
 
     return (
-      <>
+      <>        
         {/* Summary Section */}
         {hasSummary ? (
           <>
@@ -394,6 +463,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               <Card.Body className="py-3">
                 <div 
                   className="markdown-content"
+                  onClick={handleContentClick}
                   dangerouslySetInnerHTML={{ 
                     __html: processContent(
                       document.summaries[lang], 
@@ -444,6 +514,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     )}
                     <div 
                       className="markdown-content"
+                      onClick={handleContentClick}
                       dangerouslySetInnerHTML={{ 
                         __html: processContent(
                           section.content || t('summary.noContent'), 
@@ -608,6 +679,21 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           )}
         </Col>
       </Row>
+      
+      {/* Jargon Drawer */}
+      <Offcanvas 
+        show={showJargonDrawer} 
+        onHide={() => setShowJargonDrawer(false)}
+        placement="end"
+        className="jargon-drawer"
+      >
+        <Offcanvas.Header closeButton>
+          <Offcanvas.Title>{selectedJargon?.term}</Offcanvas.Title>
+        </Offcanvas.Header>
+        <Offcanvas.Body>
+          <p>{selectedJargon?.definition}</p>
+        </Offcanvas.Body>
+      </Offcanvas>
     </Container>
   );
 };
