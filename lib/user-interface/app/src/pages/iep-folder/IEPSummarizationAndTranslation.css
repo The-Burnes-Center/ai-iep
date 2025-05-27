@@ -140,19 +140,40 @@
     margin-bottom: 0.5rem;
   }
 
-  /* Updated Jargon term styling - removed hover tooltip */
+/* More prominent with animated underline */
 .jargon-term {
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-decoration-color: #0040BA;
-  cursor: pointer;
   color: #0040BA;
   font-weight: 500;
   position: relative;
+  cursor: pointer;
+  text-decoration: none;
+  background: linear-gradient(to bottom, transparent 60%, rgba(0, 64, 186, 0.1) 60%);
+  transition: all 0.3s ease;
+  padding: 0 2px;
 }
 
 .jargon-term:hover {
-  background-color: rgba(0, 64, 186, 0.1);
+  background: linear-gradient(to bottom, transparent 60%, rgba(0, 64, 186, 0.2) 60%);
+  color: #003399;
+}
+
+/* Animated underline effect */
+.jargon-term::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #0040BA;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+}
+
+.jargon-term:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
 /* Jargon drawer styling */
