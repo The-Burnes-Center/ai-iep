@@ -59,7 +59,7 @@ export default function ConsentForm() {
     
     // If consent was already given, just navigate
     if (profile?.consentGiven) {
-      navigate('/view-update-add-child');
+      navigate('/welcome-page');
       return;
     }
     
@@ -68,7 +68,7 @@ export default function ConsentForm() {
       setSaving(true);
       await apiClient.profile.updateProfile({ consentGiven: true });
       addNotification('success', 'Consent saved successfully');
-      navigate('/view-update-add-child');
+      navigate('/welcome-page');
     } catch (err) {
       addNotification('error', 'Failed to save consent');
       setError('Failed to save consent. Please try again.');
