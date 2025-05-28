@@ -140,56 +140,70 @@
     margin-bottom: 0.5rem;
   }
 
-  /* Jargon term styling */
+/* More prominent with animated underline */
 .jargon-term {
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-decoration-color: #0040BA;
-  cursor: help;
   color: #0040BA;
   font-weight: 500;
   position: relative;
+  cursor: pointer;
+  text-decoration: none;
+  background: linear-gradient(to bottom, transparent 60%, rgba(0, 64, 186, 0.1) 60%);
+  transition: all 0.3s ease;
+  padding: 0 2px;
 }
 
 .jargon-term:hover {
-  background-color: rgba(0, 64, 186, 0.1);
+  background: linear-gradient(to bottom, transparent 60%, rgba(0, 64, 186, 0.2) 60%);
+  color: #003399;
 }
 
-/* Tooltip styling */
+/* Animated underline effect */
 .jargon-term::after {
-  content: attr(data-tooltip);
+  content: '';
   position: absolute;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 250px;
-  padding: 10px;
-  border-radius: 6px;
-  background-color: #0040BA;
-  color: white;
-  text-align: left;
-  font-weight: normal;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s, visibility 0.3s;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #0040BA;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
 }
 
 .jargon-term:hover::after {
-  visibility: visible;
-  opacity: 1;
+  transform: scaleX(1);
+  transform-origin: left;
 }
 
-/* Responsive tooltip positioning */
+/* Jargon drawer styling */
+.jargon-drawer {
+  max-width: 400px;
+}
+
+.jargon-drawer .offcanvas-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.jargon-drawer .offcanvas-title {
+  color: #0040BA;
+  font-weight: 600;
+}
+
+.jargon-drawer .offcanvas-body {
+  padding: 1.5rem;
+}
+
+.jargon-drawer .offcanvas-body p {
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Mobile responsive drawer */
 @media (max-width: 768px) {
-  .jargon-term::after {
-    width: 200px;
-    left: 0;
-    transform: none;
+  .jargon-drawer {
+    max-width: 85%;
   }
 }
 
