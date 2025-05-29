@@ -10,12 +10,13 @@ IEP_SECTIONS = {
     'Services': 'Special education and related services to be provided',
     'Informed Consent': 'Parent/Guardian informed consent and participation',
     'Accommodations': 'Accommodations and modifications',
-    'Key People': 'Key people involved in the IEP process'
+    'Key People': 'Key people involved in the IEP process',
+    'Strengths': 'Summary of students academic, social, emotional, and physical strengths based on teacher, therapist, and parent observations.',
 }
 
 # Section-specific key points to extract
 SECTION_KEY_POINTS = {
-    'Present Levels': """Analyze and describe the student's current academic performance across all subjects. Include details about their social and behavioral skills, physical health status, and communication abilities. Document their life and self-help skills. Be sure to incorporate teacher observations and input about the student's performance and behavior in the classroom.  Also include parent concerns. Make sure to include the student's strengths, preferences, and interests. Include a summary of where the student is at in terms of reading skills, math skills, and so on. Clearly separate information coming from teachers, parents, and the student where possible. Include any observable trends over time. If possible, note changes since the previous IEP.""",
+    'Present Levels': """Analyze and describe the student's current academic performance across all subjects. Include details about their social and behavioral skills, physical health status, and communication abilities. Document their life and self-help skills. Be sure to incorporate teacher observations and input about the student's performance and behavior in the classroom.  Also include parent concerns. Make sure to include the student's preferences, and interests. Include a summary of where the student is at in terms of reading skills, math skills, and so on. Clearly separate information coming from teachers, parents, and the student where possible. Include any observable trends over time. If possible, note changes since the previous IEP.""",
     
     'Eligibility': """Identify and document the student's primary as well as secondary disability category and explain how this disability affects their learning process. Include all relevant evaluation results with their dates. List the specific eligibility criteria that were met. Document the evaluation team's decisions and recommendations regarding the student's eligibility for special education services.""",
     
@@ -30,7 +31,9 @@ SECTION_KEY_POINTS = {
     
     'Accommodations': """Detail all classroom accommodations that will be provided to support the student's learning. Specify any testing accommodations needed for assessments. Document behavioral supports and intervention strategies. List any assistive technology needs and how they will be met. Include all necessary environmental modifications to support the student's learning. Differentiate between testing and instructional accommodations. Include frequency or situations in which each accommodation should be applied. Specify whether accommodations are to be used in all or only certain subjects.""",
 
-    'Key People': """List all key people involved in the IEP process. Include the names of the parents, teachers, and other professionals who are involved in the IEP process. Note their roles and responsibilities. Where available, extract the names of the Administrator, General Education Teacher, Special Education Teacher, Speech or language Therapist, Occupational Therapist, School Psychologist and Physical therapist. Mention which page number the contact information for the key people is located."""
+    'Key People': """List all key people involved in the IEP process. Include the names of the parents, teachers, and other professionals who are involved in the IEP process. Note their roles and responsibilities. Where available, extract the names of the Administrator, General Education Teacher, Special Education Teacher, Speech or language Therapist, Occupational Therapist, School Psychologist and Physical therapist. Mention which page number the contact information for the key people is located.""",
+
+    'Strengths': """Provide a comprehensive overview of the student's strengths across multiple domains, including academic, social-emotional, communication, physical, and daily living skills. Incorporate observations and input from teachers, therapists, parents, and the student to create a holistic picture. Highlight positive attributes such as persistence, creativity, empathy, motor skills, and effective use of communication tools like AAC devices. Emphasize areas where the student excels, such as problem-solving abilities, cooperative behavior, adaptability, and specific academic subjects. This section should serve as a foundation for a strengths-based approach to the IEP, ensuring that the student's abilities are recognized and leveraged to support their educational growth."""
 }
 
 # (Optional) Document categories if needed for classification
