@@ -71,10 +71,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Jargon terms dictionary
   const jargonDictionary = {
     "Abeyance": "An abeyance is a temporary halt to something, with the emphasis on \"temporary.\"",
-    "Accessibility": "Accessibility is the “ability to access” the functionality and benefit of some system or entity. This term is used to describe the degree to which a product (such as a device, a service, or an environment) is accessible by as many people as possible.",
-    "Accommodations": "Accommodations are adaptations made for specific individuals with disabilities (as defined by law) when a product or service isn’t accessible. These techniques and materials don’t change the basic curriculum but do make learning a little easier and help students communicate what they know.",
+    "Accessibility": "Accessibility is the \"ability to access\" the functionality and benefit of some system or entity. This term is used to describe the degree to which a product (such as a device, a service, or an environment) is accessible by as many people as possible.",
+    "Accommodations": "Accommodations are adaptations made for specific individuals with disabilities (as defined by law) when a product or service isn't accessible. These techniques and materials don't change the basic curriculum but do make learning a little easier and help students communicate what they know.",
     "Achievement Tests": "Measures of acquired knowledge in academic skills, such as reading, math, writing, and science.",
-    "Adaptive Software": "Adaptive software is any software or program that builds a model of the preferences, goals, and knowledge of each individual student and uses that model throughout the interaction with the student in order to adapt to that student’s assessed needs.",
+    "Adaptive Software": "Adaptive software is any software or program that builds a model of the preferences, goals, and knowledge of each individual student and uses that model throughout the interaction with the student in order to adapt to that student's assessed needs.",
     "Advocacy": "Recognizing and communicating needs, rights, and interests on behalf of a child; making informed choices.",
     "Alternative Dispute Resolution": "Alternative Dispute Resolution (ADR) is a mediation for the resolution of complaints between parents and school district personnel in a cooperative forum of problem-solving conducted by skilled neutral facilitators who are not SFUSD employees.",
     "Americans with Disabilities Act": "The ADA is a federal civil rights law that provides legal protections for individuals with disabilities from discrimination in employment, state and local government, public accommodations, commercial facilities, telecommunications, and transportation. Title II of the ADA requires schools to make educational opportunities, extracurricular activities, and facilities open and accessible to all students. These provisions apply to brick-and-mortar and online schooling.",
@@ -84,8 +84,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     "Auditory Discrimination": "Ability to identify differences between words and sounds that are similar.",
     "Collaboration": "Working in partnership on behalf of a child, e.g., parent and teacher, or special education teacher and general education teacher.",
     "Compliance Complaint": "Complaint filed with the state department of education or local school district by a person who feels that an educational law has been broken.",
-    "Discrepancy": "Difference between two tests, such as between measures of a child’s intellectual ability and their academic achievement",
-    "Distance Learning": "Distance learning involves how students engage in learning and make academic progress when they are not physically present in schools. This is accomplished using a variety of digital and print resources, and differentiated modes of interaction with teachers and peers, when possible. How teachers engage students in distance learning is informed by the student’s access to technology and the internet.",
+    "Discrepancy": "Difference between two tests, such as between measures of a child's intellectual ability and their academic achievement",
+    "Distance Learning": "Distance learning involves how students engage in learning and make academic progress when they are not physically present in schools. This is accomplished using a variety of digital and print resources, and differentiated modes of interaction with teachers and peers, when possible. How teachers engage students in distance learning is informed by the student's access to technology and the internet.",
     "Due Process": "Procedural safeguards to protect the rights of the parent/guardian and the child under federal and state laws and regulations for special education; includes voluntary mediation or a due process hearing to resolve differences with the school.",
     "Dysarthria": "Difficult or unclear articulation of speech usually occurs when the muscles you use for speech are weak or you have difficulty controlling them; affects ability to pronounce sounds correctly.",
     "Dyscalculia": "Difficulty in understanding numbers which can impact basic math skills; trouble calculating.",
@@ -98,10 +98,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     "Least restrictive environment": "A term meaning that children with disabilities must be educated (to the maximum extent appropriate) with children without disabilities.",
     "Modification": "Modifications are changes in the delivery, content, or instructional level of a subject or test. They result in changed or lowered expectations and create a different standard for kids with disabilities than for those without disabilities.",
     "Multidisciplinary Team": "Professionals with different training and expertise; may include, but is not limited to, any combination of the following public school personnel — general education teacher, special education teacher, administrator, school psychologist, speech and language therapist, counselor — and the parent.",
-        "Occupational Therapy": "A related service that helps students improve fine motor skills and perform tasks needed for daily living and school activities.",
-
-    "Primary Language": "Language that the child first learned, or the language that’s spoken in the home.",
-    "Prior Written Notice": "A Prior Written Notice (PWN) is a document that informs (provides notice to) a parent/guardian/education rights holder of actions that the school intends to take in regard to their child’s Individualized Education Program. It is important that parents understand what the school plans to do (or not do) for their child.",
+    "Occupational Therapy": "A related service that helps students improve fine motor skills and perform tasks needed for daily living and school activities.",
+    "Primary Language": "Language that the child first learned, or the language that's spoken in the home.",
+    "Prior Written Notice": "A Prior Written Notice (PWN) is a document that informs (provides notice to) a parent/guardian/education rights holder of actions that the school intends to take in regard to their child's Individualized Education Program. It is important that parents understand what the school plans to do (or not do) for their child.",
     "Procedural Safeguards": "Legal requirements that ensure parents and kids will be treated fairly and equally in the decision-making process about special education.",
     "Progress Reports": "Progress Reports must, at a minimum: inform parents of their child's progress toward each annual goal; determine whether progress is sufficient for their child to achieve the goals by the annual IEP due date; must be reported on when report cards are sent out ( a copy must be sent home to parent/guardian)",
     "Pupil Records": "Personal information about the child that is kept by the school system and is available for review by legal guardians and others directly involved in their education.",
@@ -110,10 +109,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     "Retention": "The practice of having a student repeat a certain grade-level (year) in school; also called grade retention.",
     "SB 117": "SB-117 is emergency legislation signed by Governor Newsom on March 17, 2020. SB-117 waived certain special education timelines in California, such as sending an assessment plan or responding to records requests.",
     "Section 504 of the Rehabilitation Act": "Section 504 of the Rehabilitation Act prohibits discrimination in the education of children and youth with disabilities; vocational education; college and other post-secondary programs; employment; health, welfare and other social programs; and other programs and activities that receive federal funds.",
-    "Self-Advocacy": "Child’s ability to explain specific learning needs and seek necessary assistance or accommodations.",
+    "Self-Advocacy": "Child's ability to explain specific learning needs and seek necessary assistance or accommodations.",
     "SOAR Academy": "SOAR is a special education setting that is designed to support students whose disabilities significantly impact their emotional regulation, social skills, and behaviors. SOAR stands for Success, Opportunity, Achievement and Resilience.",
     "Special Day Class": "Students in Special Day Classes (SDC) are enrolled in self-contained special education classes. They are assigned to these classes by their IEP eligibility and receive support from the Special Day Class teacher and the support staff.",
-    "Special Education": "Specially designed instruction to meet the unique needs of eligible kids whose educational needs can’t be met through modification of the regular instructional program; provides for a range of options for services, such as pull out programs, special day classes; available to kids enrolled in public schools.",
+    "Special Education": "Specially designed instruction to meet the unique needs of eligible kids whose educational needs can't be met through modification of the regular instructional program; provides for a range of options for services, such as pull out programs, special day classes; available to kids enrolled in public schools.",
     "Special Education Local Plan Area ": "The county office from which some special education services are funded; SFUSD is both a local school district and the county office for San Francisco.",
     "Specialized Academic Instruction": "Specialized academic instruction (SAI) is determined by the IEP team and is derived from assessment information, data collected, and goals/objectives developed in the student's area(s) of need. Each student's educational needs are unique; thus, SAI and services may vary greatly between students.",
     "Speech Therapy": "A related service involving therapy to improve verbal communication abilities.",
@@ -161,17 +160,56 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     
     // Convert markdown to HTML - ensure we get a string, not a Promise
     const htmlContent = marked.parse(content);
+    const htmlString = typeof htmlContent === 'string' ? htmlContent : '';
     
     // Process jargon terms if needed and ensure htmlContent is a string
     if (processJargon && typeof htmlContent === 'string') {
       // Create a safe copy of the content to process
       let processedContent = htmlContent;
       
+      // Sort jargon terms by length (longest first) to avoid conflicts
+      const sortedTerms = Object.keys(jargonDictionary).sort((a, b) => b.length - a.length);
+      
       // Process each jargon term
-      Object.keys(jargonDictionary).forEach(term => {
-        const regex = new RegExp(`\\b${term}\\b`, 'gi');
-        processedContent = processedContent.replace(regex, 
-          `<span class="jargon-term" data-tooltip="${jargonDictionary[term]}">$&</span>`);
+      sortedTerms.forEach(term => {
+        // Escape special regex characters in the term
+        const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escapedTerm}\\b`, 'gi');
+        
+        // Check if this term exists in the content
+        const matches = processedContent.match(regex);
+        if (matches) {
+          // Properly escape the definition for HTML attribute
+          const escapedDefinition = jargonDictionary[term]
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+          
+          // Replace only if the term is not already inside a data-tooltip attribute or jargon span
+          processedContent = processedContent.replace(regex, (match, offset, string) => {
+            // Get the text before this match
+            const beforeMatch = string.substring(0, offset);
+            
+            // Check if we're already inside a jargon span
+            const lastSpanStart = beforeMatch.lastIndexOf('<span class="jargon-term"');
+            const lastSpanEnd = beforeMatch.lastIndexOf('</span>');
+            
+            if (lastSpanStart > lastSpanEnd) {
+              return match; // We're inside a jargon span, don't replace
+            }
+            
+            // Simple check for data-tooltip attributes
+            // Look for data-tooltip=" that's not closed before our position
+            const tooltipMatches = beforeMatch.match(/data-tooltip="[^"]*$/);
+            if (tooltipMatches) {
+              return match; // We're inside an unclosed tooltip attribute
+            }
+            
+            return `<span class="jargon-term" data-tooltip="${escapedDefinition}">${match}</span>`;
+          });
+        }
       });
       
       // Return sanitized HTML
@@ -179,7 +217,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
     
     // If htmlContent is a Promise or processJargon is false, just sanitize and return
-    return DOMPurify.sanitize(typeof htmlContent === 'string' ? htmlContent : '');
+    return DOMPurify.sanitize(htmlString);
   };
   
   // Update section config with translations when language changes
