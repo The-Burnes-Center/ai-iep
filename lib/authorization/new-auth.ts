@@ -136,7 +136,7 @@ export class NewAuthorizationStack extends Construct {
       supportedIdentityProviders: [
         UserPoolClientIdentityProvider.COGNITO
       ],
-      preventUserExistenceErrors: true,
+      preventUserExistenceErrors: false,
     });
 
     this.userPoolClient = userPoolClient;
