@@ -54,13 +54,26 @@ export default function PreferredLanguage() {
       setProfile(data);
 
       // Check if the user has already completed all required fields
-      if (data && data.secondaryLanguage && data.consentGiven === true && 
-        data.children && data.children.length > 0 && data.children[0].name && data.children[0].schoolCity) {
-        // User has already completed onboarding, redirect to welcome page
+      const hasLanguage = data && data.secondaryLanguage;
+      const hasConsent = data && data.consentGiven === true;
+      const hasCompleteChildData = data && data.children && 
+                                   data.children.length > 0 && 
+                                   data.children[0].name && 
+                                   data.children[0].schoolCity;
+
+      // If everything is complete, go to welcome page
+      if (hasLanguage && hasConsent && hasCompleteChildData) {
         navigate('/welcome-page');
         return;
       }
 
+      // If user has language but missing consent or child data, go to consent form
+      if (hasLanguage) {
+        navigate('/consent-form');
+        return;
+      }
+
+      // Otherwise, stay on language selection (current screen)
       setError(null);
     } catch (err) {
       setError('Service unavailable');
