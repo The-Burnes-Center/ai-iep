@@ -18,12 +18,12 @@ export default function UserProfileForm() {
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
   const { addNotification } = useNotifications();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [saving, setSaving] = useState(false);
-  const { t } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function UserProfileForm() {
       setProfile(data);
       setError(null);
     } catch (err) {
-      setError('Service unavailable');
+      setError(t('profile.error.serviceUnavailable'));
     } finally {
       setLoading(false);
     }
@@ -50,9 +50,9 @@ export default function UserProfileForm() {
     try {
       setSaving(true);
       await apiClient.profile.updateProfile(profile);
-      addNotification('success', 'Profile updated successfully');
+      addNotification('success', t('profile.success.update'));
     } catch (err) {
-      addNotification('error', 'Failed to update profile');
+      addNotification('error', t('profile.error.update'));
     } finally {
       setSaving(false);
     }
@@ -62,7 +62,7 @@ export default function UserProfileForm() {
     return (
       <Container className="mt-4 text-center">
         <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">{t('profile.loading')}</span>
         </Spinner>
       </Container>
     );
@@ -88,14 +88,14 @@ export default function UserProfileForm() {
         </Button>
       </div>
       <Form onSubmit={handleSubmit} className="mt-4">
-        <h3 className="mb-3">Child</h3>
+        <h3 className="mb-3">{t('profile.title')}</h3>
         {profile?.children && profile.children.length > 0 ? (
           <>
             {profile.children.map((child, index) => (
               <Row key={child.childId || index} className="mb-3">
                 <Col md={5}>
                   <Form.Group controlId={`formChildName${index}`}>
-                    <Form.Label className="small">Name</Form.Label>
+                    <Form.Label className="small">{t('profile.child.name')}</Form.Label>
                     <Form.Control 
                       type="text" 
                       value={child.name}
@@ -109,7 +109,7 @@ export default function UserProfileForm() {
                 </Col>
                 <Col md={5}>
                   <Form.Group controlId={`formChildSchool${index}`}>
-                    <Form.Label className="small">School City</Form.Label>
+                    <Form.Label className="small">{t('profile.child.schoolCity')}</Form.Label>
                     <Form.Control 
                       type="text" 
                       value={child.schoolCity}
@@ -125,7 +125,7 @@ export default function UserProfileForm() {
             ))}
           </>
         ) : (
-          <Alert variant="info">No children added yet</Alert>
+          <Alert variant="info">{t('profile.noChildren')}</Alert>
         )}
 
         <div className="mt-4 d-flex gap-2">
@@ -134,14 +134,14 @@ export default function UserProfileForm() {
             type="submit" 
             disabled={saving}
           >
-            {saving ? 'Updating...' : 'Update Profile'}
+            {saving ? t('profile.button.updating') : t('profile.button.update')}
           </Button>
           <Button 
             variant="outline-danger" 
             onClick={() => navigate('/revoke-consent')}
             className="button-text"
           >
-            Revoke Consent
+            {t('profile.button.revokeConsent')}
           </Button>
         </div>
       </Form>

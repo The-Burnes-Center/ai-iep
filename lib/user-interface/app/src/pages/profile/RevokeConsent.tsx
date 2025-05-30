@@ -6,6 +6,7 @@ import { ApiClient } from '../../common/api-client/api-client';
 import { Auth } from 'aws-amplify';
 import { AuthContext } from '../../common/auth-context';
 import { useNotifications } from '../../components/notif-manager';
+import { useLanguage } from '../../common/language-context';
 import '../profile/ProfileForms.css';
 
 const RevokeConsent: React.FC = () => {
@@ -16,6 +17,7 @@ const RevokeConsent: React.FC = () => {
   const apiClient = new ApiClient(appContext);
   const { setAuthenticated } = useContext(AuthContext);
   const { addNotification } = useNotifications();
+  const { t } = useLanguage();
 
   const handleRevokeConsent = async () => {
     try {
@@ -32,7 +34,7 @@ const RevokeConsent: React.FC = () => {
       // Redirect to sign-in page
       navigate('/', { replace: true });
     } catch (err) {
-      setError('Failed to revoke consent. Please try again.');
+      setError(t('revoke.error.failed'));
       setProcessing(false);
     }
   };
@@ -46,16 +48,14 @@ const RevokeConsent: React.FC = () => {
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
           <div className="profile-form">
-            <h2 className="text-center profile-title mb-4">Revoke Consent</h2>
+            <h2 className="text-center profile-title mb-4">{t('revoke.title')}</h2>
             
             <div className="consent-box mb-4">
               <p className="consent-text">
-                By revoking your consent, you will no longer be able to use the IEP Helper tool. 
-                Your data will be deleted from our system. 
+                {t('revoke.description1')}
               </p>
               <p className="consent-text">
-                Revoking consent will immediately sign you out of the application. You can restore 
-                your consent by logging back in and accepting the consent form.
+                {t('revoke.description2')}
               </p>
             </div>
             
@@ -68,7 +68,7 @@ const RevokeConsent: React.FC = () => {
                 disabled={processing}
                 className="button-text"
               >
-                Take me back
+                {t('revoke.button.back')}
               </Button>
               <Button 
                 variant="danger" 
@@ -76,7 +76,7 @@ const RevokeConsent: React.FC = () => {
                 disabled={processing}
                 className="button-text"
               >
-                {processing ? 'Processing...' : 'Revoke & Sign Out'}
+                {processing ? t('revoke.button.processing') : t('revoke.button.revoke')}
               </Button>
             </div>
           </div>
