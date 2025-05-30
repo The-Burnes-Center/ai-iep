@@ -149,13 +149,12 @@ Your goal is to produce a complete, valid JSON output with the following structu
      - If abbreviations are used in the section, provide a **table of legends** at the end of the section. The table should include:
        - Abbreviation: The abbreviation or acronym used in the section.
        - Full Form: The full form or meaning of the abbreviation.
-     - The table should only be displayed if abbreviations are present in the section. If no abbreviations are used, skip the table.
+     - The table should only be displayed if abbreviations are present in the section. If no abbreviations are used, skip the table for that section.
      - The table should be formatted in **Markdown** as follows:
-
-Abbreviation\tFull Form
-IEP\tIndividualized Education Program
-OCR\tOptical Character Recognition
-...\t...
+        Abbreviation\tFull Form
+        IEP\tIndividualized Education Program
+        OCR\tOptical Character Recognition
+        ...\t...
 
 3. **Validation**:
 - Ensure that the English JSON matches the required schema (no missing keys, correct types).

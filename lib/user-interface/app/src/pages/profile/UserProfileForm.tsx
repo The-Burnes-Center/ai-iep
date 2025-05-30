@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
-import { UserProfile, Child } from '../../common/types';
+import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context';
 import { useNavigate } from 'react-router-dom';
@@ -22,7 +22,6 @@ export default function UserProfileForm() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [newChild, setNewChild] = useState<Child | null>(null);
   const [saving, setSaving] = useState(false);
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -77,17 +76,17 @@ export default function UserProfileForm() {
     );
   }
 
-    const handleBackClick = () => {
+  const handleBackClick = () => {
     navigate('/welcome-page');
   };
 
   return (
     <Container className="mt-4">
-            <div className="mt-3 text-start">
-              <Button variant="outline-secondary" onClick={handleBackClick}>
-                {t('common.back')}
-              </Button>
-            </div>
+      <div className="mt-3 text-start">
+        <Button variant="outline-secondary" onClick={handleBackClick}>
+          {t('common.back')}
+        </Button>
+      </div>
       <Form onSubmit={handleSubmit} className="mt-4">
         <h3 className="mb-3">Child</h3>
         {profile?.children && profile.children.length > 0 ? (
@@ -129,32 +128,6 @@ export default function UserProfileForm() {
           <Alert variant="info">No children added yet</Alert>
         )}
 
-        {newChild && (
-          <Row className="mb-3 mt-3 border-top pt-3">
-            <Col md={5}>
-              <Form.Group controlId="formNewChildName">
-                <Form.Label>Name</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  placeholder="Enter child's name"
-                  value={newChild.name}
-                  onChange={e => setNewChild(prev => prev ? {...prev, name: e.target.value} : null)}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={5}>
-              <Form.Group controlId="formNewChildSchool">
-                <Form.Label>School City</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  placeholder="Enter school city"
-                  value={newChild.schoolCity}
-                  onChange={e => setNewChild(prev => prev ? {...prev, schoolCity: e.target.value} : null)}
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        )}
         <div className="mt-4 d-flex gap-2">
           <Button 
             variant="primary" 
@@ -168,7 +141,7 @@ export default function UserProfileForm() {
             onClick={() => navigate('/revoke-consent')}
             className="button-text"
           >
-          Revoke Consent
+            Revoke Consent
           </Button>
         </div>
       </Form>

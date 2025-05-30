@@ -19,6 +19,7 @@
     "welcome.summary.description": "Vea resúmenes y traducciones de sus documentos IEP",
     "welcome.rights.title": "Sus Derechos",
     "welcome.rights.description": "Conozca sus derechos y el proceso del IEP",
+    "welcome.update.profile": "Actualizar Perfil",
   
     "common.back": "← Atrás",
     "common.next": "Siguiente",
@@ -64,6 +65,8 @@
     "sections.goals": "Objetivos",
     "sections.services": "Servicios",
     "sections.placement": "Ubicación",
+    "sections.keyPeople": "Personas Clave",
+    "sections.strengths": "Fortalezas", 
     "sections.eligibility": "Elegibilidad",
     "sections.informedConsent": "Consentimiento Informado",
     "sections.presentLevels": "Niveles Actuales de Desempeño",
