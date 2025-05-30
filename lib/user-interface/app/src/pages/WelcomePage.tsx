@@ -118,7 +118,7 @@ export default function WelcomePage() {
             className='text-decoration-none'
             onClick={() => navigate('/profile')}
           >
-            Update Profile <i className="bi bi-arrow-right"></i>
+            {t('welcome.update.profile')} <i className="bi bi-arrow-right"></i>
           </Button>
         </Col>
       </Row>

@@ -19,6 +19,7 @@
     "welcome.summary.description": "View summaries and translations of your IEP documents",
     "welcome.rights.title": "Your Rights",
     "welcome.rights.description": "Learn about your rights and the IEP process",
+    "welcome.update.profile": "Update Profile",
   
     "common.back": "← Back",
     "common.next": "Next",
@@ -81,7 +82,13 @@
     "upload.success": "File has been uploaded successfully!",
     "upload.error": "Error uploading file. Please try again.",
     "upload.button": "Upload Document",
-    
+
+    "update.profile.child": "Child",
+    "update.profile.name": "Name",
+    "update.profile.schoolCity": "School City",
+    "update.profile.noChildrenAdded": "No children added yet",
+
+
     "current.loading": "Loading...",
     "current.title": "To view summary of your existing IEP document click below",
     "current.documentOnFile": "Current IEP document on file",
