@@ -130,16 +130,15 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Section configuration with translations
   const sectionConfigRef = useRef([
-    { apiName: "Student Information", englishName: "About Student", displayName: t('sections.studentInfo') },
-    { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
+    { apiName: "Strengths", englishName: "Strengths", displayName: t('sections.strengths') },
+    { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
+    { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
     { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
     { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
+    { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
     { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
-    { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
-    { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
-    { apiName: "Informed Consent", englishName: "Informed Consent", displayName: t('sections.informedConsent') },
-    { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: t('sections.assistiveTechnology') },
-    { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') }
+    { apiName: "Key People", englishName: "Key People", displayName: t('sections.keyPeople') },
+    { apiName: "Informed Consent", englishName: "Consent", displayName: t('sections.informedConsent') },
   ]);
 
   // Handle jargon click
@@ -224,16 +223,15 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   useEffect(() => {
     if (translationsLoaded) {
       sectionConfigRef.current = [
-        { apiName: "Student Information", englishName: "About Student", displayName: t('sections.studentInfo') },
-        { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
+        { apiName: "Strengths", englishName: "Strengths", displayName: t('sections.strengths') },
+        { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
+        { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
         { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
         { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
+        { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
         { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
-        { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
-        { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
-        { apiName: "Informed Consent", englishName: "Informed Consent", displayName: t('sections.informedConsent') },
-        { apiName: "Assistive Technology", englishName: "Assistive Technology", displayName: t('sections.assistiveTechnology') },
-        { apiName: "State Testing", englishName: "State Testing", displayName: t('sections.stateTesting') }
+        { apiName: "Key People", englishName: "Key People", displayName: t('sections.keyPeople') },
+        { apiName: "Informed Consent", englishName: "Consent", displayName: t('sections.informedConsent') },
       ];
       
       // Reprocess sections if document is already loaded
