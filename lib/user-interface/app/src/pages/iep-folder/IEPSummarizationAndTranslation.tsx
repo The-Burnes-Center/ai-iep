@@ -1,20 +1,5 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
-import { 
-  Container, 
-  Row, 
-  Col, 
-  Card, 
-  Spinner, 
-  Alert, 
-  Button,
-  Badge,
-  Accordion,
-  Tabs,
-  Tab,
-  Offcanvas
-} from 'react-bootstrap';
-import { AppContext } from '../../common/app-context';
-import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } from '@fortawesome/free-solid-svg-icons';
@@ -27,10 +12,9 @@ import enGlossary from '../glossary/english.json';
 import esGlossary from '../glossary/spanish.json';
 import viGlossary from '../glossary/vietnamese.json';
 import zhGlossary from '../glossary/chinese.json';
+import { useDocumentFetch } from '../utils';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
-  const appContext = useContext(AppContext);
-  const apiClient = new IEPDocumentClient(appContext);
   const { t, language, translationsLoaded } = useLanguage();
   
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
@@ -62,14 +46,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   });
   
-  const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>('en');
   const navigate = useNavigate();
   
-  // Reference to store the polling interval
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isFirstRender = useRef<boolean>(true);
-
   const preferredLanguage = language || 'en';
 
   // Combined jargon dictionaries
@@ -309,134 +288,16 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
-  // Function to start polling if document is processing
-  const startPollingIfProcessing = (doc: any) => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-    
-    if (doc && doc.status === "PROCESSING") {
-      console.log("Document is processing. Starting polling...");
-      pollingIntervalRef.current = setInterval(() => {
-        console.log("Polling for updates...");
-        setRefreshCounter(prev => prev + 1);
-      }, 5000);
-    }
-  };
+    useDocumentFetch({
+    translationsLoaded,
+    document,
+    initialLoading,
+    setDocument,
+    setError,
+    setInitialLoading,
+    processDocumentSections
+  });
 
-  // Fetch document data
-  useEffect(() => {
-    if (!translationsLoaded) return;
-    
-    const fetchDocument = async () => {
-      if (isFirstRender.current) {
-        isFirstRender.current = false;
-      }
-      
-      try {
-        const retrievedDocument = await apiClient.getMostRecentDocumentWithSummary();
-        console.log("Fetched document data:", retrievedDocument);
-        
-        if (retrievedDocument) {
-          setDocument(prev => {
-            if (!prev || 
-                prev.status !== retrievedDocument.status || 
-                prev.createdAt !== retrievedDocument.createdAt) {
-              return {
-                ...retrievedDocument,
-                sections: {
-                  ...prev.sections, // Keep existing processed sections
-                  ...(retrievedDocument.sections || {}) // Add new sections if available
-                }
-              };
-            }
-            return prev;
-          });
-          
-          startPollingIfProcessing(retrievedDocument);
-          
-          if (retrievedDocument.status === "PROCESSED") {
-            // Set summaries
-            const newSummaries = { ...document.summaries };
-            
-            // Update each available language summary
-            if (retrievedDocument.summaries) {
-              Object.keys(retrievedDocument.summaries).forEach(lang => {
-                if (retrievedDocument.summaries[lang]) {
-                  newSummaries[lang] = retrievedDocument.summaries[lang];
-                }
-              });
-            }
-            
-            // Set document index
-            const newDocumentIndex = { ...document.document_index };
-            
-            // Update each available language document index
-            if (retrievedDocument.document_index) {
-              Object.keys(retrievedDocument.document_index).forEach(lang => {
-                if (retrievedDocument.document_index[lang]) {
-                  newDocumentIndex[lang] = retrievedDocument.document_index[lang];
-                }
-              });
-            }
-            
-            setDocument(prev => ({
-              ...prev, 
-              summaries: newSummaries,
-              document_index: newDocumentIndex
-            }));
-            
-            // Process sections
-            processDocumentSections(retrievedDocument);
-          }
-        } else {
-          // Clear document data if no document found
-          setDocument(prev => ({
-            ...prev,
-            documentId: undefined,
-            documentUrl: undefined,
-            status: undefined,
-            summaries: {
-              en: '',
-              es: '',
-              vi: '',
-              zh: ''
-            },
-            document_index: {
-              en: '',
-              es: '',
-              vi: '',
-              zh: ''
-            },
-            sections: {
-              en: [],
-              es: [],
-              vi: [],
-              zh: []
-            }
-          }));
-        }
-        
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching document:', err);
-      } finally {
-        if (initialLoading) {
-          setInitialLoading(false);
-        }
-      }
-    };
-    
-    fetchDocument();
-    
-    // Clean up interval
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [refreshCounter, translationsLoaded]);
 
   // Safe check for content availability
   const hasContent = (lang: string) => {
@@ -490,7 +351,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Render tab content for a specific language
   const renderTabContent = (lang: string) => {
     const hasSummary = document.summaries && document.summaries[lang];
-    const hasDocumentIndex = document.document_index && document.document_index[lang];
     const hasSections = (
       document.sections && 
       document.sections[lang] && 
