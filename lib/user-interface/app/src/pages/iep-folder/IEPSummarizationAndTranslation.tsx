@@ -1,36 +1,14 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
-import { 
-  Container, 
-  Row, 
-  Col, 
-  Card, 
-  Spinner, 
-  Alert, 
-  Button,
-  Badge,
-  Accordion,
-  Tabs,
-  Tab,
-  Offcanvas
-} from 'react-bootstrap';
-import { AppContext } from '../../common/app-context';
-import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage } from '../../common/language-context';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
-import enGlossary from '../glossary/english.json';
-import esGlossary from '../glossary/spanish.json';
-import viGlossary from '../glossary/vietnamese.json';
-import zhGlossary from '../glossary/chinese.json';
+import { useDocumentFetch, processContentWithJargon } from '../utils';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
-  const appContext = useContext(AppContext);
-  const apiClient = new IEPDocumentClient(appContext);
   const { t, language, translationsLoaded } = useLanguage();
   
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
@@ -62,42 +40,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   });
   
-  const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<string>('en');
   const navigate = useNavigate();
   
-  // Reference to store the polling interval
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isFirstRender = useRef<boolean>(true);
-
   const preferredLanguage = language || 'en';
-
-  // Combined jargon dictionaries
-  const jargonDictionaries = {
-    en: enGlossary,
-    es: esGlossary,
-    vi: viGlossary,
-    zh: zhGlossary
-  };
-
-  // Configure minimal marked options that are type-safe
-  marked.setOptions({
-    gfm: true,
-    breaks: true
-  });
-
-  // Section configuration with translations
-  const sectionConfigRef = useRef([
-    { apiName: "Strengths", englishName: "Strengths", displayName: t('sections.strengths') },
-    { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
-    { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
-    { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
-    { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
-    { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
-    { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
-    { apiName: "Key People", englishName: "Key People", displayName: t('sections.keyPeople') },
-    { apiName: "Informed Consent", englishName: "Consent", displayName: t('sections.informedConsent') },
-  ]);
 
   // Handle jargon click
   const handleContentClick = (e: React.MouseEvent) => {
@@ -110,90 +56,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       setShowJargonDrawer(true);
     }
   };
-
-  // Generic function to process content with jargon for any language
-  const processContentWithJargon = (content: string, languageCode: string): string => {
-    if (!content) return '';
-    
-    // Convert markdown to HTML
-    const htmlContent = marked.parse(content);
-    const htmlString = typeof htmlContent === 'string' ? htmlContent : '';
-    
-    // Get the appropriate jargon dictionary for the language
-    const jargonDict = jargonDictionaries[languageCode as keyof typeof jargonDictionaries];
-    
-    if (!jargonDict) {
-      // If no jargon dictionary exists for this language, just return sanitized HTML
-      return DOMPurify.sanitize(htmlString);
-    }
-    
-    // Create a safe copy of the content to process
-    let processedContent = htmlString;
-    
-    // Sort jargon terms by length (longest first) to avoid conflicts
-    const sortedTerms = Object.keys(jargonDict).sort((a, b) => b.length - a.length);
-    
-    // Process each jargon term
-    sortedTerms.forEach(term => {
-      // Escape special regex characters in the term
-      const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedTerm}\\b`, 'gi');
-      
-      // Check if this term exists in the content
-      const matches = processedContent.match(regex);
-      if (matches) {
-        // Properly escape the definition for HTML attribute
-        const escapedDefinition = jargonDict[term]
-          .replace(/&/g, '&amp;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-        
-        // Replace only if the term is not already inside a data-tooltip attribute or jargon span
-        processedContent = processedContent.replace(regex, (match, offset, string) => {
-          // Get the text before this match
-          const beforeMatch = string.substring(0, offset);
-          
-          // Check if we're already inside a jargon span
-          const lastSpanStart = beforeMatch.lastIndexOf('<span class="jargon-term"');
-          const lastSpanEnd = beforeMatch.lastIndexOf('</span>');
-          
-          if (lastSpanStart > lastSpanEnd) {
-            return match; // We're inside a jargon span, don't replace
-          }
-          
-          // Simple check for data-tooltip attributes
-          // Look for data-tooltip=" that's not closed before our position
-          const tooltipMatches = beforeMatch.match(/data-tooltip="[^"]*$/);
-          if (tooltipMatches) {
-            return match; // We're inside an unclosed tooltip attribute
-          }
-          
-          return `<span class="jargon-term" data-tooltip="${escapedDefinition}">${match}</span>`;
-        });
-      }
-    });
-    
-    // Return sanitized HTML
-    return DOMPurify.sanitize(processedContent);
-  };
-
-  // Original processContent function (now just calls the generic function with 'en')
-  const processContent = (content: string, processJargon: boolean = true): string => {
-    if (!processJargon) {
-      const htmlContent = marked.parse(content);
-      const htmlString = typeof htmlContent === 'string' ? htmlContent : '';
-      return DOMPurify.sanitize(htmlString);
-    }
-    
-    return processContentWithJargon(content, 'en');
-  };
   
-  // Update section config with translations when language changes
-  useEffect(() => {
-    if (translationsLoaded) {
-      sectionConfigRef.current = [
+  const sectionConfig = useMemo(() => {
+  if (!translationsLoaded) return [];
+  
+  return [
         { apiName: "Strengths", englishName: "Strengths", displayName: t('sections.strengths') },
         { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
         { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
@@ -203,17 +70,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
         { apiName: "Key People", englishName: "Key People", displayName: t('sections.keyPeople') },
         { apiName: "Informed Consent", englishName: "Consent", displayName: t('sections.informedConsent') },
-      ];
-      
-      // Reprocess sections if document is already loaded
-      if (document && document.status === "PROCESSED") {
-        processDocumentSections(document);
-      }
-    }
-  }, [t, translationsLoaded]);
+  ];
+}, [t, translationsLoaded]);
 
   const getDisplayName = (apiName: string, useTranslation: boolean = false): string => {
-    const config = sectionConfigRef.current.find(s => 
+    const config = sectionConfig.find(s => 
       s.apiName === apiName || 
       s.englishName === apiName || 
       apiName.toLowerCase().includes(s.apiName.toLowerCase())
@@ -226,12 +87,12 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Function to sort sections by predefined order
   const sortSections = (sections: IEPSection[]) => {
     return [...sections].sort((a, b) => {
-      const indexA = sectionConfigRef.current.findIndex(s => 
+      const indexA = sectionConfig.findIndex(s => 
         s.apiName === a.name || 
         s.englishName === a.name ||
         a.name.toLowerCase().includes(s.apiName.toLowerCase())
       );
-      const indexB = sectionConfigRef.current.findIndex(s => 
+      const indexB = sectionConfig.findIndex(s => 
         s.apiName === b.name || 
         s.englishName === b.name ||
         b.name.toLowerCase().includes(s.apiName.toLowerCase())
@@ -309,134 +170,16 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
-  // Function to start polling if document is processing
-  const startPollingIfProcessing = (doc: any) => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-    
-    if (doc && doc.status === "PROCESSING") {
-      console.log("Document is processing. Starting polling...");
-      pollingIntervalRef.current = setInterval(() => {
-        console.log("Polling for updates...");
-        setRefreshCounter(prev => prev + 1);
-      }, 5000);
-    }
-  };
+    useDocumentFetch({
+    translationsLoaded,
+    document,
+    initialLoading,
+    setDocument,
+    setError,
+    setInitialLoading,
+    processDocumentSections
+  });
 
-  // Fetch document data
-  useEffect(() => {
-    if (!translationsLoaded) return;
-    
-    const fetchDocument = async () => {
-      if (isFirstRender.current) {
-        isFirstRender.current = false;
-      }
-      
-      try {
-        const retrievedDocument = await apiClient.getMostRecentDocumentWithSummary();
-        console.log("Fetched document data:", retrievedDocument);
-        
-        if (retrievedDocument) {
-          setDocument(prev => {
-            if (!prev || 
-                prev.status !== retrievedDocument.status || 
-                prev.createdAt !== retrievedDocument.createdAt) {
-              return {
-                ...retrievedDocument,
-                sections: {
-                  ...prev.sections, // Keep existing processed sections
-                  ...(retrievedDocument.sections || {}) // Add new sections if available
-                }
-              };
-            }
-            return prev;
-          });
-          
-          startPollingIfProcessing(retrievedDocument);
-          
-          if (retrievedDocument.status === "PROCESSED") {
-            // Set summaries
-            const newSummaries = { ...document.summaries };
-            
-            // Update each available language summary
-            if (retrievedDocument.summaries) {
-              Object.keys(retrievedDocument.summaries).forEach(lang => {
-                if (retrievedDocument.summaries[lang]) {
-                  newSummaries[lang] = retrievedDocument.summaries[lang];
-                }
-              });
-            }
-            
-            // Set document index
-            const newDocumentIndex = { ...document.document_index };
-            
-            // Update each available language document index
-            if (retrievedDocument.document_index) {
-              Object.keys(retrievedDocument.document_index).forEach(lang => {
-                if (retrievedDocument.document_index[lang]) {
-                  newDocumentIndex[lang] = retrievedDocument.document_index[lang];
-                }
-              });
-            }
-            
-            setDocument(prev => ({
-              ...prev, 
-              summaries: newSummaries,
-              document_index: newDocumentIndex
-            }));
-            
-            // Process sections
-            processDocumentSections(retrievedDocument);
-          }
-        } else {
-          // Clear document data if no document found
-          setDocument(prev => ({
-            ...prev,
-            documentId: undefined,
-            documentUrl: undefined,
-            status: undefined,
-            summaries: {
-              en: '',
-              es: '',
-              vi: '',
-              zh: ''
-            },
-            document_index: {
-              en: '',
-              es: '',
-              vi: '',
-              zh: ''
-            },
-            sections: {
-              en: [],
-              es: [],
-              vi: [],
-              zh: []
-            }
-          }));
-        }
-        
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching document:', err);
-      } finally {
-        if (initialLoading) {
-          setInitialLoading(false);
-        }
-      }
-    };
-    
-    fetchDocument();
-    
-    // Clean up interval
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [refreshCounter, translationsLoaded]);
 
   // Safe check for content availability
   const hasContent = (lang: string) => {
@@ -490,7 +233,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Render tab content for a specific language
   const renderTabContent = (lang: string) => {
     const hasSummary = document.summaries && document.summaries[lang];
-    const hasDocumentIndex = document.document_index && document.document_index[lang];
     const hasSections = (
       document.sections && 
       document.sections[lang] && 
