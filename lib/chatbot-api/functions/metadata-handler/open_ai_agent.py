@@ -164,8 +164,13 @@ class OpenAIAgent:
         try:
             if isinstance(raw_output, str):
                 cleaned = raw_output.replace('```json','').replace('```','').strip()
-                data = IEPData.model_validate_json(cleaned, strict=False)
+                # Parse JSON and ensure complete sections before validation
+                parsed_data = json.loads(cleaned)
+                parsed_data = self._ensure_complete_sections(parsed_data)
+                data = IEPData.model_validate(parsed_data, strict=False)
             elif isinstance(raw_output, dict):
+                # Before validation, ensure all required sections are present
+                raw_output = self._ensure_complete_sections(raw_output)
                 data = IEPData.model_validate(raw_output, strict=False)
             elif isinstance(raw_output, IEPData):
                 # Already an IEPData instance, use it directly
@@ -183,3 +188,36 @@ class OpenAIAgent:
             logger.error(f"Validation error: {str(e)}")
             logger.error(traceback.format_exc(limit=3))
             return {"error": f"Validation failed: {str(e)}"}
+
+    def _ensure_complete_sections(self, data):
+        """
+        Ensure all required IEP sections are present in all languages.
+        If a section is missing, add it with appropriate placeholder content.
+        """
+        required_sections = set(IEP_SECTIONS.keys())
+        
+        if 'sections' not in data:
+            data['sections'] = {}
+            
+        for lang in ['en', 'es', 'vi', 'zh']:
+            if lang not in data['sections']:
+                data['sections'][lang] = []
+            
+            # Get existing section titles for this language
+            existing_titles = {section.get('title', '') for section in data['sections'][lang]}
+            
+            # Find missing sections
+            missing_sections = required_sections - existing_titles
+            
+            # Add missing sections
+            for missing_section in missing_sections:
+                logger.warning(f"Adding missing section '{missing_section}' for language '{lang}'")
+                placeholder_content = f"This section (_{missing_section}_) was not found in the provided IEP document."
+                
+                data['sections'][lang].append({
+                    'title': missing_section,
+                    'content': placeholder_content,
+                    'page_numbers': [1]  # Default to page 1
+                })
+        
+        return data
