@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
@@ -6,13 +6,7 @@ import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } 
 import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage } from '../../common/language-context';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
-import enGlossary from '../glossary/english.json';
-import esGlossary from '../glossary/spanish.json';
-import viGlossary from '../glossary/vietnamese.json';
-import zhGlossary from '../glossary/chinese.json';
-import { useDocumentFetch } from '../utils';
+import { useDocumentFetch, processContentWithJargon } from '../utils';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, translationsLoaded } = useLanguage();
@@ -51,33 +45,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   
   const preferredLanguage = language || 'en';
 
-  // Combined jargon dictionaries
-  const jargonDictionaries = {
-    en: enGlossary,
-    es: esGlossary,
-    vi: viGlossary,
-    zh: zhGlossary
-  };
-
-  // Configure minimal marked options that are type-safe
-  marked.setOptions({
-    gfm: true,
-    breaks: true
-  });
-
-  // Section configuration with translations
-  const sectionConfigRef = useRef([
-    { apiName: "Strengths", englishName: "Strengths", displayName: t('sections.strengths') },
-    { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
-    { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
-    { apiName: "Goals", englishName: "Goals", displayName: t('sections.goals') },
-    { apiName: "Services", englishName: "Services", displayName: t('sections.services') },
-    { apiName: "Accommodations", englishName: "Accommodations", displayName: t('sections.accommodations') },
-    { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
-    { apiName: "Key People", englishName: "Key People", displayName: t('sections.keyPeople') },
-    { apiName: "Informed Consent", englishName: "Consent", displayName: t('sections.informedConsent') },
-  ]);
-
   // Handle jargon click
   const handleContentClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -89,90 +56,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       setShowJargonDrawer(true);
     }
   };
-
-  // Generic function to process content with jargon for any language
-  const processContentWithJargon = (content: string, languageCode: string): string => {
-    if (!content) return '';
-    
-    // Convert markdown to HTML
-    const htmlContent = marked.parse(content);
-    const htmlString = typeof htmlContent === 'string' ? htmlContent : '';
-    
-    // Get the appropriate jargon dictionary for the language
-    const jargonDict = jargonDictionaries[languageCode as keyof typeof jargonDictionaries];
-    
-    if (!jargonDict) {
-      // If no jargon dictionary exists for this language, just return sanitized HTML
-      return DOMPurify.sanitize(htmlString);
-    }
-    
-    // Create a safe copy of the content to process
-    let processedContent = htmlString;
-    
-    // Sort jargon terms by length (longest first) to avoid conflicts
-    const sortedTerms = Object.keys(jargonDict).sort((a, b) => b.length - a.length);
-    
-    // Process each jargon term
-    sortedTerms.forEach(term => {
-      // Escape special regex characters in the term
-      const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedTerm}\\b`, 'gi');
-      
-      // Check if this term exists in the content
-      const matches = processedContent.match(regex);
-      if (matches) {
-        // Properly escape the definition for HTML attribute
-        const escapedDefinition = jargonDict[term]
-          .replace(/&/g, '&amp;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-        
-        // Replace only if the term is not already inside a data-tooltip attribute or jargon span
-        processedContent = processedContent.replace(regex, (match, offset, string) => {
-          // Get the text before this match
-          const beforeMatch = string.substring(0, offset);
-          
-          // Check if we're already inside a jargon span
-          const lastSpanStart = beforeMatch.lastIndexOf('<span class="jargon-term"');
-          const lastSpanEnd = beforeMatch.lastIndexOf('</span>');
-          
-          if (lastSpanStart > lastSpanEnd) {
-            return match; // We're inside a jargon span, don't replace
-          }
-          
-          // Simple check for data-tooltip attributes
-          // Look for data-tooltip=" that's not closed before our position
-          const tooltipMatches = beforeMatch.match(/data-tooltip="[^"]*$/);
-          if (tooltipMatches) {
-            return match; // We're inside an unclosed tooltip attribute
-          }
-          
-          return `<span class="jargon-term" data-tooltip="${escapedDefinition}">${match}</span>`;
-        });
-      }
-    });
-    
-    // Return sanitized HTML
-    return DOMPurify.sanitize(processedContent);
-  };
-
-  // Original processContent function (now just calls the generic function with 'en')
-  const processContent = (content: string, processJargon: boolean = true): string => {
-    if (!processJargon) {
-      const htmlContent = marked.parse(content);
-      const htmlString = typeof htmlContent === 'string' ? htmlContent : '';
-      return DOMPurify.sanitize(htmlString);
-    }
-    
-    return processContentWithJargon(content, 'en');
-  };
   
-  // Update section config with translations when language changes
-  useEffect(() => {
-    if (translationsLoaded) {
-      sectionConfigRef.current = [
+  const sectionConfig = useMemo(() => {
+  if (!translationsLoaded) return [];
+  
+  return [
         { apiName: "Strengths", englishName: "Strengths", displayName: t('sections.strengths') },
         { apiName: "Eligibility", englishName: "Eligibility", displayName: t('sections.eligibility') },
         { apiName: "Present Levels", englishName: "Present Levels of Performance", displayName: t('sections.presentLevels') },
@@ -182,17 +70,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         { apiName: "Placement", englishName: "Placement", displayName: t('sections.placement') },
         { apiName: "Key People", englishName: "Key People", displayName: t('sections.keyPeople') },
         { apiName: "Informed Consent", englishName: "Consent", displayName: t('sections.informedConsent') },
-      ];
-      
-      // Reprocess sections if document is already loaded
-      if (document && document.status === "PROCESSED") {
-        processDocumentSections(document);
-      }
-    }
-  }, [t, translationsLoaded]);
+  ];
+}, [t, translationsLoaded]);
 
   const getDisplayName = (apiName: string, useTranslation: boolean = false): string => {
-    const config = sectionConfigRef.current.find(s => 
+    const config = sectionConfig.find(s => 
       s.apiName === apiName || 
       s.englishName === apiName || 
       apiName.toLowerCase().includes(s.apiName.toLowerCase())
@@ -205,12 +87,12 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Function to sort sections by predefined order
   const sortSections = (sections: IEPSection[]) => {
     return [...sections].sort((a, b) => {
-      const indexA = sectionConfigRef.current.findIndex(s => 
+      const indexA = sectionConfig.findIndex(s => 
         s.apiName === a.name || 
         s.englishName === a.name ||
         a.name.toLowerCase().includes(s.apiName.toLowerCase())
       );
-      const indexB = sectionConfigRef.current.findIndex(s => 
+      const indexB = sectionConfig.findIndex(s => 
         s.apiName === b.name || 
         s.englishName === b.name ||
         b.name.toLowerCase().includes(s.apiName.toLowerCase())
