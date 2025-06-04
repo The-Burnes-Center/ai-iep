@@ -59,7 +59,25 @@ export default function WelcomePage() {
     <Container fluid className="welcome-container">
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
-          {/* First Card - Upload IEP */}
+          {/* First Card - Summary and Translation */}
+          <Card 
+            className="hover-effect option-card"
+            onClick={() => navigate('/summary-and-translations')}
+          >
+            <Card.Body className="py-4">
+              <div className="d-flex align-items-center">
+                <div className="flex-shrink-0">
+                  <i className="bi bi-translate text-success" style={{ fontSize: '2rem' }}></i>
+                </div>
+                <div className="ms-4 text-start">
+                  <h3 className="mb-1">{t('welcome.summary.title')}</h3>
+                  <p className="text-muted mb-0">{t('welcome.summary.description')}</p>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+
+          {/* Second Card - Upload IEP */}
           <Card 
             className="mb-4 hover-effect option-card"
             onClick={() => navigate('/iep-documents')}
@@ -77,23 +95,6 @@ export default function WelcomePage() {
             </Card.Body>
           </Card>
           
-          {/* Second Card - Summary and Translation */}
-          <Card 
-            className="hover-effect option-card"
-            onClick={() => navigate('/summary-and-translations')}
-          >
-            <Card.Body className="py-4">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <i className="bi bi-translate text-success" style={{ fontSize: '2rem' }}></i>
-                </div>
-                <div className="ms-4 text-start">
-                  <h3 className="mb-1">{t('welcome.summary.title')}</h3>
-                  <p className="text-muted mb-0">{t('welcome.summary.description')}</p>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
           {/* Third Card - Rights and Onboarding */}
           <Card 
             className="mb-4 hover-effect option-card"
