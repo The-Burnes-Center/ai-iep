@@ -17,6 +17,8 @@ import ViewAndAddChild from './pages/profile/ViewAndAddChild';
 import RevokeConsent from './pages/profile/RevokeConsent';
 import RightsAndOnboarding from './pages/RightsAndOnboarding';
 import ConsentForm from './pages/profile/ConsentForm';
+import WelcomeIntro from './pages/profile/WelcomeIntro';
+import AboutApp from './pages/profile/AboutApp';
 
 function AppContent() {
   const location = useLocation();
@@ -40,6 +42,8 @@ function AppContent() {
         <Routes>    
           <Route path="/" element={<PreferredLanguage  />} />
           <Route path="/consent-form" element={<ConsentForm />} />
+          <Route path="/welcome-intro" element={<WelcomeIntro />} />
+          <Route path="/about-app" element={<AboutApp />} />
           <Route
                 index
                 path="/welcome-page"
