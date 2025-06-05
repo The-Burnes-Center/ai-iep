@@ -156,5 +156,6 @@
     "auth.errorPasswordChange": "更改密码时出错",
     "auth.successPasswordReset": "密码重置成功。请使用新密码登录。",
     "auth.successAccountCreated": "账户创建成功！请使用您的登录凭证登录。",
-    "auth.successCodeResent": "验证码已重新发送到您的邮箱"
+    "auth.successCodeResent": "验证码已重新发送到您的邮箱",
+    "auth.smsConsent": "通过使用短信注册，您同意提供您的电话号码。我们将仅使用您的电话号码向您发送登录代码。"
   }

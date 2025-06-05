@@ -162,6 +162,6 @@
     "auth.errorPasswordChange": "Error changing password",
     "auth.successPasswordReset": "Password reset successful. Please sign in with your new password.",
     "auth.successAccountCreated": "Account created successfully! Please sign in with your credentials.",
-    "auth.successCodeResent": "Verification code has been resent to your email"
-
+    "auth.successCodeResent": "Verification code has been resent to your email",
+    "auth.smsConsent": "By signing up using SMS, you consent to providing your phone number. We will use your phone number only for the purpose of sending you your login code."
   }

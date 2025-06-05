@@ -711,7 +711,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               </div>
 
                 <p className="text-muted mt-3" style={{ fontSize: '0.8rem', textAlign: 'center' }}>
-                  By signing up using SMS, you consent to providing your phone number. We will use your phone number only for the purpose of sending you your login code.
+                  {t('auth.smsConsent')}
                 </p>
             </div>
           </div>
