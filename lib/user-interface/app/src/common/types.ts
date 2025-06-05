@@ -46,6 +46,7 @@ export interface UserProfile {
   primaryLanguage: string;
   secondaryLanguage: string;
   city: string;
+  parentName: string;
   children: Child[];
   createdAt: number;
   updatedAt: number;

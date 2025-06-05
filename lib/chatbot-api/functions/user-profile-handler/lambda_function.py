@@ -197,7 +197,8 @@ def update_user_profile(event: Dict) -> Dict:
             'city': 'city',
             'primaryLanguage': 'primaryLanguage',
             'secondaryLanguage': 'secondaryLanguage',
-            'consentGiven': 'consentGiven'
+            'consentGiven': 'consentGiven',
+            'parentName': 'parentName'
         }
 
         # If email is in the request, return an error
