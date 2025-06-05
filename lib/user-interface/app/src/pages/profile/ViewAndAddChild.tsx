@@ -85,7 +85,7 @@ export default function ViewAndAddChild() {
       }
       
       // Navigate to welcome page
-      navigate('/welcome-page');
+      navigate('/welcome-intro');
     } catch (err) {
       addNotification('error', hasExistingChild ? 'Failed to update child information' : 'Failed to add child');
     } finally {

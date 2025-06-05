@@ -709,6 +709,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   {t('auth.signUp')}
                 </Button>
               </div>
+
+                <p className="text-muted mt-3" style={{ fontSize: '0.8rem', textAlign: 'center' }}>
+                  {t('auth.smsConsent')}
+                </p>
             </div>
           </div>
         </Form>

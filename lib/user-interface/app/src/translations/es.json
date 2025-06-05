@@ -156,5 +156,6 @@
     "auth.errorPasswordChange": "Error al cambiar la contraseña",
     "auth.successPasswordReset": "Contraseña restablecida exitosamente. Por favor inicie sesión con su nueva contraseña.",
     "auth.successAccountCreated": "¡Cuenta creada exitosamente! Por favor inicie sesión con sus credenciales.",
-    "auth.successCodeResent": "El código de verificación ha sido reenviado a su correo"
+    "auth.successCodeResent": "El código de verificación ha sido reenviado a su correo",
+    "auth.smsConsent": "Al registrarse mediante SMS, usted consiente proporcionar su número de teléfono. Utilizaremos su número de teléfono únicamente con el propósito de enviarle su código de inicio de sesión."
   }

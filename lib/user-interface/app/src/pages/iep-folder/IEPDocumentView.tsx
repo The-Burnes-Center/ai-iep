@@ -10,6 +10,7 @@ const IEPDocumentView: React.FC = () => {
   const navigate = useNavigate();
   
   const [refreshNeeded, setRefreshNeeded] = useState(false);
+  const [documentExists, setDocumentExists] = useState(false);
 
   const handleUploadComplete = () => {
     setRefreshNeeded(true);
@@ -17,6 +18,10 @@ const IEPDocumentView: React.FC = () => {
 
   const handleRefreshNeeded = () => {
     setRefreshNeeded(false);
+  };
+
+  const handleDocumentStateChange = (exists: boolean) => {
+    setDocumentExists(exists);
   };
 
   const handleBackClick = () => {
@@ -43,11 +48,17 @@ const IEPDocumentView: React.FC = () => {
           
           <div className="document-sections-container">
             <div className="document-section">
-              <UploadIEPDocument onUploadComplete={handleUploadComplete} />
+              <UploadIEPDocument 
+                onUploadComplete={handleUploadComplete} 
+                hasExistingDocument={documentExists}
+              />
             </div>
             
             <div className="document-section">
-              <CurrentIEPDocument onRefreshNeeded={handleRefreshNeeded} />
+              <CurrentIEPDocument 
+                onRefreshNeeded={handleRefreshNeeded}
+                onDocumentStateChange={handleDocumentStateChange}
+              />
             </div>
           </div>
         </Col>

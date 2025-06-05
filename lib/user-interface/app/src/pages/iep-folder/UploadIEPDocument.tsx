@@ -1,5 +1,5 @@
 // UploadIEPDocument.tsx
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { 
   Form, 
   Button, 
@@ -47,9 +47,10 @@ const mimeTypes = {
 
 export interface UploadIEPDocumentProps {
   onUploadComplete: () => void;
+  hasExistingDocument: boolean;
 }
 
-const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete }) => {
+const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete, hasExistingDocument }) => {
   const appContext = useContext(AppContext);
   const apiClient = new IEPDocumentClient(appContext);
   const navigate = useNavigate();
@@ -124,8 +125,14 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete 
       // Call the callback function to notify parent component
       onUploadComplete();
       
-      // Navigate to summary page immediately after successful upload
-      navigate('/summary-and-translations');
+      // Navigate based on whether there was an existing document
+      if (hasExistingDocument) {
+        // If there was already a document, go to summary page
+        navigate('/summary-and-translations');
+      } else {
+        // If this is the first document, go to about-app page
+        navigate('/about-app');
+      }
     }
   };
 

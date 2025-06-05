@@ -124,6 +124,9 @@ def get_full_prompt() -> str:
     This prompt directs the agent to perform English-only analysis first,
     then invoke the translate_text tool once to translate all content into multiple languages.
     """
+    required_sections = list(IEP_SECTIONS.keys())
+    sections_list = "', '".join(required_sections)
+    
     return f'''
 You are an expert IEP document analyzer using GPT-4.1. 
 Your goal is to produce a complete, valid JSON output with the following structure:
@@ -134,13 +137,27 @@ Your goal is to produce a complete, valid JSON output with the following structu
 "document_index": {{ "en": "<English index with pages>" }}
 }}
 
+### CRITICAL REQUIREMENTS:
+You MUST extract information for ALL {len(required_sections)} required sections: '{sections_list}'
+
+If a section is not explicitly present in the document:
+- Still create an entry for that section with title matching exactly one of the required section names
+- Set content to indicate that this information was not found in the document
+- Use the get_section_info tool to understand what each section should contain
+
 ### Instructions:
 1. **Retrieve the Full OCR Text**: Use `get_all_ocr_text` to retrieve and index the full OCR text by page.
-2. **English-Only Summary and Analysis**:
+
+2. **Section Discovery**: For each required section ('{sections_list}'):
+   - Use `get_section_info` to understand what the section should contain
+   - Search for this information using `get_ocr_text_for_page` or `get_ocr_text_for_pages`
+   - If found, extract the content
+   - If not found, create an entry stating "This section was not found in the provided IEP document"
+
+3. **English-Only Summary and Analysis**:
    - Extract and summarize the IEP in **English only**.
    - Populate `summaries.en`, `sections.en`, and `document_index.en` with the results.
-   - **Section Extraction**: For each section, use `get_section_info` to get the description and key points.
-   - Use `get_ocr_text_for_page` or `get_ocr_text_for_pages` to locate and extract exact content for each section.
+   - **ENSURE ALL {len(required_sections)} SECTIONS ARE PRESENT** in `sections.en` array
    - Format the **content** for each section in **Markdown**, ensuring:
      - Break down big paragraphs into **smaller ones**.
      - Add a **short introductory paragraph** summarizing the content of the section.
@@ -156,9 +173,11 @@ Your goal is to produce a complete, valid JSON output with the following structu
         OCR\tOptical Character Recognition
         ...\t...
 
-3. **Validation**:
+4. **Validation**:
 - Ensure that the English JSON matches the required schema (no missing keys, correct types).
-4. **Translation**: 
+- VERIFY that sections.en contains exactly these {len(required_sections)} sections: '{sections_list}'
+
+5. **Translation**: 
 - Call the `translate_text` tool, passing the entire English JSON as input.
 - The tool will return a **JSON object containing translations** into **Spanish (es)**, **Vietnamese (vi)**, and **Chinese (zh)**, preserving the same structure:
 
@@ -168,7 +187,7 @@ Your goal is to produce a complete, valid JSON output with the following structu
 "document_index": {{ "es": ..., "vi": ..., "zh": ... }}
 }}
 
-5. **Merging Translations**:
+6. **Merging Translations**:
 - Merge the returned translations into your final output, resulting in:
 
 {{
@@ -177,7 +196,7 @@ Your goal is to produce a complete, valid JSON output with the following structu
 "document_index": {{ "en": ..., "es": ..., "vi": ..., "zh": ... }}
 }}
 
-6. **Return the Final JSON**: Return the completed JSON with all sections, summaries, and document index in all languages, without additional commentary or explanations.
+7. **Return the Final JSON**: Return the completed JSON with all sections, summaries, and document index in all languages, without additional commentary or explanations.
 
 ### Tools available:
 - `get_all_ocr_text`
