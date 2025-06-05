@@ -10,7 +10,7 @@ const AboutApp: React.FC = () => {
   const handleContinue = () => {
     setLoading(true);
     // Navigate to welcome page
-    navigate('/welcome-page');
+    navigate('/summary-and-translations');
   };
 
   return (

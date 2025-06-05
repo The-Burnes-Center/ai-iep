@@ -10,7 +10,7 @@ const WelcomeIntro: React.FC = () => {
   const handleContinue = () => {
     setLoading(true);
     // Navigate to welcome page
-    navigate('/welcome-page');
+    navigate('/iep-documents');
   };
 
   return (

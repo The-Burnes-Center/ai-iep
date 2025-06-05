@@ -8,9 +8,10 @@ import { useLanguage } from '../../common/language-context';
 
 export interface CurrentIEPDocumentProps {
   onRefreshNeeded: () => void;
+  onDocumentStateChange: (exists: boolean) => void;
 }
 
-const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded }) => {
+const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded, onDocumentStateChange }) => {
   const appContext = useContext(AppContext);
   const apiClient = new IEPDocumentClient(appContext);
   const navigate = useNavigate();
@@ -35,12 +36,18 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
         const documentUrl = recentDocument.documentUrl;
         const fileName = documentUrl.split('/').pop() || 'No filename available';
         setDocumentName(fileName);
+        // Notify parent that document exists
+        onDocumentStateChange(true);
       } else {
         setDocumentName(null);
+        // Notify parent that no document exists
+        onDocumentStateChange(false);
       }
     } catch (err) {
       console.error('Error fetching document:', err);
       // setError('Failed to load document. Please try again.');
+      // Notify parent that no document exists (due to error)
+      onDocumentStateChange(false);
     } finally {
       setLoading(false);
     }
