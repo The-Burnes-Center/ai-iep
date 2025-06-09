@@ -3,6 +3,7 @@ import { Container, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstr
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
+import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import { UserProfile, Child } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context'; 
@@ -11,6 +12,7 @@ import './ProfileForms.css';
 export default function ViewAndAddChild() {
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
+  const iepDocumentClient = new IEPDocumentClient(appContext);
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
   const { t } = useLanguage();
@@ -23,14 +25,17 @@ export default function ViewAndAddChild() {
   const [hasExistingChild, setHasExistingChild] = useState<boolean>(false);
   const [firstChildId, setFirstChildId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [hasExistingDocument, setHasExistingDocument] = useState<boolean>(false);
 
   useEffect(() => {
-    loadProfile();
+    loadProfileAndCheckDocument();
   }, []);
 
-  const loadProfile = async () => {
+  const loadProfileAndCheckDocument = async () => {
     try {
       setLoading(true);
+      
+      // Load user profile
       const data = await apiClient.profile.getProfile();
       setProfile(data);
       
@@ -45,11 +50,32 @@ export default function ViewAndAddChild() {
         setHasExistingChild(false);
       }
       
+      // Always check for existing documents regardless of children
+      await checkForExistingDocument();
+      
       setError(null);
     } catch (err) {
+      console.error('Error loading profile or checking document:', err);
       setError('Service unavailable');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkForExistingDocument = async () => {
+    try {
+      const document = await iepDocumentClient.getMostRecentDocumentWithSummary();
+      
+      // Check if document exists and has been processed or is processing
+      if (document && (document.status === "PROCESSED" || document.status === "PROCESSING")) {
+        setHasExistingDocument(true);
+      } else {
+        setHasExistingDocument(false);
+      }
+    } catch (err) {
+      console.error('Error checking for existing document:', err);
+      // If there's an error checking for documents, assume no document exists
+      setHasExistingDocument(false);
     }
   };
 
@@ -82,10 +108,17 @@ export default function ViewAndAddChild() {
         // Add new child
         await apiClient.profile.addChild(childName, schoolCity);
         addNotification('success', 'Child added successfully');
+        
+        // After adding a new child, check for documents again
+        await checkForExistingDocument();
       }
       
-      // Navigate to welcome page
-      navigate('/welcome-intro');
+      // Navigate based on whether user has existing documents
+      if (hasExistingDocument) {
+        navigate('/welcome-page');
+      } else {
+        navigate('/welcome-intro');
+      }
     } catch (err) {
       addNotification('error', hasExistingChild ? 'Failed to update child information' : 'Failed to add child');
     } finally {
