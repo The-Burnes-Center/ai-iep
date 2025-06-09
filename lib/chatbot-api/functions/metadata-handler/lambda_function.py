@@ -15,7 +15,7 @@ import uuid
 import traceback
 import re
 from mistral_ocr import process_document_with_mistral_ocr
-from open_ai_agent import OpenAIAgent
+from multi_agent_orchestrator import OpenAIAgent
 from comprehend_redactor import redact_pii_from_texts
 from decimal import Decimal
 
