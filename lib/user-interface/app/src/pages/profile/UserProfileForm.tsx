@@ -89,44 +89,21 @@ export default function UserProfileForm() {
       </div>
       <Form onSubmit={handleSubmit} className="mt-4">
         <h3 className="mb-3">{t('profile.title')}</h3>
-        {profile?.children && profile.children.length > 0 ? (
-          <>
-            {profile.children.map((child, index) => (
-              <Row key={child.childId || index} className="mb-3">
-                <Col md={5}>
-                  <Form.Group controlId={`formChildName${index}`}>
-                    <Form.Label className="small">{t('profile.child.name')}</Form.Label>
-                    <Form.Control 
-                      type="text" 
-                      value={child.name}
-                      onChange={e => {
-                        const newChildren = [...profile.children];
-                        newChildren[index] = {...child, name: e.target.value};
-                        setProfile(prev => prev ? {...prev, children: newChildren} : null);
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={5}>
-                  <Form.Group controlId={`formChildSchool${index}`}>
-                    <Form.Label className="small">{t('profile.child.schoolCity')}</Form.Label>
-                    <Form.Control 
-                      type="text" 
-                      value={child.schoolCity}
-                      onChange={e => {
-                        const newChildren = [...profile.children];
-                        newChildren[index] = {...child, schoolCity: e.target.value};
-                        setProfile(prev => prev ? {...prev, children: newChildren} : null);
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-            ))}
-          </>
-        ) : (
-          <Alert variant="info">{t('profile.noChildren')}</Alert>
-        )}
+        
+        <Row className="mb-3">
+          <Col md={10}>
+            <Form.Group controlId="formParentName">
+              <Form.Label className="small">{t('profile.parentName')}</Form.Label>
+              <Form.Control 
+                type="text" 
+                value={profile?.parentName || ''}
+                onChange={e => {
+                  setProfile(prev => prev ? {...prev, parentName: e.target.value} : null);
+                }}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
 
         <div className="mt-4 d-flex gap-2">
           <Button 

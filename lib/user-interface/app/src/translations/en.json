@@ -12,6 +12,12 @@
     "child.school.placeholder": "Enter school city",
     "child.button.saving": "Saving...",
     "child.button.save": "Save & Continue",
+
+    "parent.title": "Parent Information",
+    "parent.name.label": "Parent Name",
+    "parent.name.placeholder": "Enter parent name",
+    "parent.button.saving": "Saving...",
+    "parent.button.save": "Save & Continue",
     
     "welcome.upload.title": "Upload IEP",
     "welcome.upload.description": "Upload and manage your IEP documents",
@@ -97,17 +103,17 @@
     "document.back": "← Back",
     "document.updateAlert": "Document has been updated. Your current document information will refresh.",
 
-    "profile.title": "Child Information",
-    "profile.child.name": "Name",
-    "profile.child.schoolCity": "School City",
-    "profile.noChildren": "No children added yet",
-    "profile.button.update": "Update Profile",
-    "profile.button.updating": "Updating...",
-    "profile.button.revokeConsent": "Revoke Consent",
-    "profile.success.update": "Profile updated successfully",
-    "profile.error.update": "Failed to update profile",
-    "profile.error.serviceUnavailable": "Service unavailable",
-    "profile.loading": "Loading...",
+      "profile.title": "Profile Information",
+      "profile.parentName": "Parent Name",
+      "profile.button.update": "Update Profile",
+      "profile.button.updating": "Updating...",
+      "profile.button.revokeConsent": "Revoke Consent",
+      "profile.success.update": "Profile updated successfully",
+      "profile.error.update": "Failed to update profile",
+      "profile.error.serviceUnavailable": "Service unavailable",
+      "profile.loading": "Loading...",
+
+
 
     "revoke.title": "Revoke Consent",
     "revoke.description1": "By revoking your consent, you will no longer be able to use the IEP Helper tool. Your data will be deleted from our system.",
