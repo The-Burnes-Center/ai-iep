@@ -206,7 +206,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     expr_attr_values[':ocr_completed_at'] = current_time
                     print(f"Adding OCR data to document")
                 
-                if status == 'PROCESSED' and summaries:
+                if (status == 'PROCESSED' or status == 'PROCESSING_TRANSLATIONS') and summaries:
                     # The data from LLM is already in DynamoDB format, so we can use it directly
                     formatted_summaries = summaries.get('summaries', {})
                     formatted_sections = summaries.get('sections', {})
@@ -271,7 +271,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                 if error_message:
                     item['errorMessage'] = error_message
                     
-                if status == 'PROCESSED' and summaries:
+                if (status == 'PROCESSED' or status == 'PROCESSING_TRANSLATIONS') and summaries:
                     # The data from LLM is already in DynamoDB format, so we can use it directly
                     item['summaries'] = summaries.get('summaries', {})
                     item['sections'] = summaries.get('sections', {})
@@ -318,7 +318,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                             update_expr += ", errorMessage = :error_message"
                             expr_attr_values[':error_message'] = error_message
                             
-                        if status == 'PROCESSED' and summaries:
+                        if (status == 'PROCESSED' or status == 'PROCESSING_TRANSLATIONS') and summaries:
                             # The data from LLM is already in DynamoDB format, so we can use it directly
                             formatted_summaries_update = summaries.get('summaries', {})
                             formatted_sections_update = summaries.get('sections', {})
