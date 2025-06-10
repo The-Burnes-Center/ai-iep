@@ -12,6 +12,12 @@
     "child.school.placeholder": "Nhập thành phố của trường",
     "child.button.saving": "Đang lưu...",
     "child.button.save": "Lưu & Tiếp tục",
+
+    "parent.title": "Thông Tin Phụ Huynh",
+    "parent.name.label": "Tên Phụ Huynh",
+    "parent.name.placeholder": "Nhập tên phụ huynh",
+    "parent.button.saving": "Đang lưu...",
+    "parent.button.save": "Lưu & Tiếp Tục",
     
     "welcome.upload.title": "Tải lên IEP",
     "welcome.upload.description": "Tải lên và quản lý tài liệu IEP của bạn",

@@ -12,6 +12,12 @@
     "child.school.placeholder": "Ingrese la ciudad de la escuela",
     "child.button.saving": "Guardando...",
     "child.button.save": "Guardar y continuar",
+
+    "parent.title": "Información del Padre/Madre",
+    "parent.name.label": "Nombre del Padre/Madre",
+    "parent.name.placeholder": "Ingrese el nombre del padre/madre",
+    "parent.button.saving": "Guardando...",
+    "parent.button.save": "Guardar y Continuar",
     
     "welcome.upload.title": "Subir IEP",
     "welcome.upload.description": "Suba y administre sus documentos IEP",

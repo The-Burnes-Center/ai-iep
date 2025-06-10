@@ -1,0 +1,169 @@
+import React, { useState, useEffect, useContext } from 'react';
+import { Container, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { AppContext } from '../../common/app-context';
+import { ApiClient } from '../../common/api-client/api-client';
+import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
+import { UserProfile } from '../../common/types';
+import { useNotifications } from '../../components/notif-manager';
+import { useLanguage } from '../../common/language-context'; 
+import './ProfileForms.css';
+
+export default function ViewAndAddParent() {
+  const appContext = useContext(AppContext);
+  const apiClient = new ApiClient(appContext);
+  const iepDocumentClient = new IEPDocumentClient(appContext);
+  const navigate = useNavigate();
+  const { addNotification } = useNotifications();
+  const { t } = useLanguage();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [parentName, setParentName] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+  const [hasExistingDocument, setHasExistingDocument] = useState<boolean>(false);
+
+  useEffect(() => {
+    loadProfileAndCheckDocument();
+  }, []);
+
+  const loadProfileAndCheckDocument = async () => {
+    try {
+      setLoading(true);
+      
+      // Load user profile
+      const data = await apiClient.profile.getProfile();
+      setProfile(data);
+      
+      // Check if parentName exists in the profile
+      if (data.parentName) {
+        setParentName(data.parentName);
+      }
+      
+      // Check for existing documents
+      await checkForExistingDocument();
+      
+      setError(null);
+    } catch (err) {
+      console.error('Error loading profile or checking document:', err);
+      setError('Service unavailable');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkForExistingDocument = async () => {
+    try {
+      const document = await iepDocumentClient.getMostRecentDocumentWithSummary();
+      
+      // Check if document exists and has been processed or is processing
+      if (document && (document.status === "PROCESSED" || document.status === "PROCESSING")) {
+        setHasExistingDocument(true);
+      } else {
+        setHasExistingDocument(false);
+      }
+    } catch (err) {
+      console.error('Error checking for existing document:', err);
+      // If there's an error checking for documents, assume no document exists
+      setHasExistingDocument(false);
+    }
+  };
+
+  const handleSaveAndContinue = async () => {
+    if (!parentName.trim()) {
+      return; // Button should be disabled in this case
+    }
+
+    try {
+      setSaving(true);
+      
+      // Prepare updated profile data
+      const updatedProfileData = {
+        parentName: parentName.trim()
+      };
+      
+      // Update the profile
+      await apiClient.profile.updateProfile(updatedProfileData);
+      addNotification('success', 'Parent information saved successfully');
+      
+      // Navigate based on whether user has existing documents
+      if (hasExistingDocument) {
+        navigate('/welcome-page');
+      } else {
+        navigate('/welcome-intro');
+      }
+    } catch (err) {
+      console.error('Error saving parent name:', err);
+      addNotification('error', 'Failed to save parent information');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const isFormValid = () => {
+    return parentName.trim() !== '';
+  };
+
+  if (loading) {
+    return (
+      <Container className="text-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Alert variant="danger">{error}</Alert>
+      </Container>
+    );
+  }
+
+  return (
+    <Container 
+      fluid 
+      className="profile-form-container"
+    >
+      <Row style={{ width: '100%', justifyContent: 'center' }}>
+        <Col xs={12} md={8} lg={6}>
+          <div className="profile-form">
+            <h2 className="text-center profile-title">
+              {t('parent.title')}
+            </h2>
+            
+            <Form>
+              <Row className="mb-4">
+                <Col md={12}>
+                  <Form.Group controlId="formParentName">
+                    <Form.Label className="form-label">{t('parent.name.label')}</Form.Label>
+                    <Form.Control 
+                      type="text" 
+                      placeholder={t('parent.name.placeholder')}
+                      value={parentName} 
+                      onChange={(e) => setParentName(e.target.value)}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <div className="d-grid">
+                <Button 
+                  variant="primary" 
+                  onClick={handleSaveAndContinue}
+                  disabled={!isFormValid() || saving}
+                  className="button-text"
+                >
+                  {saving ? t('parent.button.saving') : t('parent.button.save')}
+                </Button>
+              </div>
+            </Form>
+          </div>
+        </Col>
+      </Row>
+    </Container>
+  );
+}

@@ -12,6 +12,12 @@
     "child.school.placeholder": "输入学校所在城市",
     "child.button.saving": "保存中...",
     "child.button.save": "保存并继续",
+
+    "parent.title": "家长信息",
+    "parent.name.label": "家长姓名",
+    "parent.name.placeholder": "请输入家长姓名",
+    "parent.button.saving": "保存中...",
+    "parent.button.save": "保存并继续",
     
     "welcome.upload.title": "上传IEP",
     "welcome.upload.description": "上传和管理您的IEP文档",

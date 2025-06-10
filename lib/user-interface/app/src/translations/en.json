@@ -12,6 +12,12 @@
     "child.school.placeholder": "Enter school city",
     "child.button.saving": "Saving...",
     "child.button.save": "Save & Continue",
+
+    "parent.title": "Parent Information",
+    "parent.name.label": "Parent Name",
+    "parent.name.placeholder": "Enter parent name",
+    "parent.button.saving": "Saving...",
+    "parent.button.save": "Save & Continue",
     
     "welcome.upload.title": "Upload IEP",
     "welcome.upload.description": "Upload and manage your IEP documents",

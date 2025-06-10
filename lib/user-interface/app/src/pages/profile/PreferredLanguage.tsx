@@ -56,10 +56,7 @@ export default function PreferredLanguage() {
       // Check if the user has already completed all required fields
       const hasLanguage = data && data.secondaryLanguage;
       const hasConsent = data && data.consentGiven === true;
-      const hasCompleteChildData = data && data.children && 
-                                   data.children.length > 0 && 
-                                   data.children[0].name && 
-                                   data.children[0].schoolCity;
+      const hasCompleteChildData = data && data.parentName
 
       // If everything is complete, go to welcome page
       if (hasLanguage && hasConsent && hasCompleteChildData) {
