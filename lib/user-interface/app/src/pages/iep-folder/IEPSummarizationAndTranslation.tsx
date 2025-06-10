@@ -107,14 +107,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Process document sections for a specific language
   const processLanguageSections = (doc: any, lang: string) => {
-    if (!doc || doc.status !== "PROCESSED") return;
+    // Process sections for PROCESSED status (all languages) or PROCESSING_TRANSLATIONS status (English only)
+    if (!doc || (doc.status !== "PROCESSED" && !(doc.status === "PROCESSING_TRANSLATIONS" && lang === 'en'))) return;
     
     if (doc.sections && doc.sections[lang]) {
       try {
         const extractedSections = [];
         
         if (Array.isArray(doc.sections[lang])) {
-          console.log(`Processing ${lang} sections as array`);
           doc.sections[lang].forEach(section => {
             if (section.title && section.content) {
               extractedSections.push({
@@ -128,7 +128,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         }
         
         const orderedSections = sortSections(extractedSections);
-        console.log(`Processed ${lang} sections:`, orderedSections);
         
         setDocument(prev => ({
           ...prev, 
@@ -190,6 +189,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       document.sections[lang] && 
       document.sections[lang].length > 0
     );
+    
     return hasSummary || hasSections || hasDocumentIndex;
   };
 
