@@ -16,8 +16,8 @@ SUPPORTED_LANGUAGES = ['en', 'zh', 'es', 'vi']
 DEFAULT_LANGUAGE = 'en'
 
 # Document processing statuses
-DocumentStatus = Literal['PROCESSING', 'PROCESSED', 'FAILED']
-DOCUMENT_STATUSES: List[DocumentStatus] = ['PROCESSING', 'PROCESSED', 'FAILED']
+DocumentStatus = Literal['PROCESSING', 'PROCESSING_TRANSLATIONS', 'PROCESSED', 'FAILED']
+DOCUMENT_STATUSES: List[DocumentStatus] = ['PROCESSING', 'PROCESSING_TRANSLATIONS', 'PROCESSED', 'FAILED']
 
 class DecimalEncoder(json.JSONEncoder):
     """Custom JSON encoder to handle Decimal types from DynamoDB."""

@@ -221,6 +221,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     switch(status) {
       case "PROCESSING":
         return <Badge bg="warning" text="dark"><FontAwesomeIcon icon={faClock} className="me-1" /> Processing</Badge>;
+      case "PROCESSING_TRANSLATIONS":
+        return <Badge bg="info" text="light"><FontAwesomeIcon icon={faClock} className="me-1" /> Translating</Badge>;
       case "PROCESSED":
         return <Badge bg="success"><FontAwesomeIcon icon={faCheckCircle} className="me-1" /> Processed</Badge>;
       case "FAILED":
@@ -333,7 +335,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   };
 
   // Check if document is processing
-  const isProcessing = document && document.status === "PROCESSING";
+  const isProcessing = document && (document.status === "PROCESSING" || document.status === "PROCESSING_TRANSLATIONS");
 
   // Get tab title based on language code
   const getTabTitle = (languageCode: string) => {
