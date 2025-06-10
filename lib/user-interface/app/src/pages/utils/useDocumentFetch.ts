@@ -52,6 +52,27 @@ export const useDocumentFetch = ({
             if (!prev || 
                 prev.status !== retrievedDocument.status || 
                 prev.createdAt !== retrievedDocument.createdAt) {
+              
+              // Log timing when status changes
+              const uploadStartTime = localStorage.getItem('iep-upload-start-time');
+              if (uploadStartTime) {
+                const currentTime = Date.now();
+                const elapsedSeconds = ((currentTime - parseInt(uploadStartTime)) / 1000).toFixed(1);
+                
+                if (retrievedDocument.status === 'PROCESSING' && prev.status !== 'PROCESSING') {
+                  console.log(`🔄 Document processing started after ${elapsedSeconds} seconds`);
+                  console.log(`⏱️ OCR and analysis began at ${new Date(currentTime).toLocaleTimeString()}`);
+                } else if (retrievedDocument.status === 'PROCESSING_TRANSLATIONS' && prev.status !== 'PROCESSING_TRANSLATIONS') {
+                  console.log(`📝 English data available after ${elapsedSeconds} seconds`);
+                  console.log(`⏱️ English analysis completed at ${new Date(currentTime).toLocaleTimeString()}`);
+                } else if (retrievedDocument.status === 'PROCESSED' && prev.status !== 'PROCESSED') {
+                  console.log(`🌍 Complete translated data available after ${elapsedSeconds} seconds`);
+                  console.log(`⏱️ Full processing completed at ${new Date(currentTime).toLocaleTimeString()}`);
+                  // Clear the start time since processing is complete
+                  localStorage.removeItem('iep-upload-start-time');
+                }
+              }
+              
               return {
                 ...retrievedDocument,
                 sections: {
@@ -67,7 +88,7 @@ export const useDocumentFetch = ({
             setRefreshCounter(prev => prev + 1);
           });
           
-          if (retrievedDocument.status === "PROCESSED") {
+          if (retrievedDocument.status === "PROCESSING_TRANSLATIONS" || retrievedDocument.status === "PROCESSED") {
             
             setDocument(prev => ({
               ...prev, 
@@ -75,7 +96,7 @@ export const useDocumentFetch = ({
               document_index: retrievedDocument.document_index
             }));
             
-            // Process sections
+            // Process sections (this will process English sections when PROCESSING_TRANSLATIONS, and all sections when PROCESSED)
             processDocumentSections(retrievedDocument);
           }
         } else {
