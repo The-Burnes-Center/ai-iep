@@ -371,7 +371,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
         # If document was successfully processed and we have a child ID, update the user profile
         if status == 'PROCESSED' and child_id and summaries:
             try:
-                update_user_profile_with_summary(child_id, iep_id, summaries, user_id, object_key)
+                update_user_profile_with_summary(child_id, iep_id, user_id, object_key)
             except Exception as profile_error:
                 print(f"Error updating user profile with summary: {str(profile_error)}")
                 # Even if profile update fails, document processing is still considered successful
@@ -383,7 +383,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
     return True
 
 
-def update_user_profile_with_summary(child_id, iep_id, document_summary, user_id, object_key=None):
+def update_user_profile_with_summary(child_id, iep_id, user_id, object_key=None):
     """
     Update the user profile with a reference to the IEP document.
     No longer stores the full summary and sections in the user profile.
@@ -391,7 +391,7 @@ def update_user_profile_with_summary(child_id, iep_id, document_summary, user_id
     Args:
         child_id (str): The child ID
         iep_id (str): The IEP document ID
-        document_summary (dict): The document summary information (not stored in profile)
+
         user_id (str): The user ID to directly look up the profile
         object_key (str, optional): The S3 object key for extracting user_id if not provided directly
     """
@@ -744,31 +744,13 @@ def iep_processing_pipeline(event):
         agent = OpenAIAgent(ocr_data=ocr_data)
         
         try:
-            # Analyze the document - this now includes translations
-            result = agent.analyze_document()
+            # STEP 1: Analyze the document in English only
+            print("Starting English-only document analysis...")
+            english_result = agent.analyze_document()
             
-            # Check for error in the result
-            if "error" in result:
-                error_message = f"Document analysis failed: {result.get('error')}"
-                print(error_message)
-                update_iep_document_status(
-                    iep_id=iep_id,
-                    status="FAILED",
-                    error_message=error_message,
-                    child_id=child_id,
-                    user_id=user_id,
-                    object_key=key
-                )
-                return {
-                    'statusCode': 500,
-                    'body': json.dumps({
-                        'message': error_message
-                    })
-                }
-                
-            # Check for validation errors in the result
-            if result.get('validation_errors') and not result.get('validation_errors', {}).get('is_valid', True):
-                error_message = f"Document validation failed: {result.get('validation_errors', {}).get('errors', ['Unknown validation error'])}"
+            # Check for error in the English analysis
+            if "error" in english_result:
+                error_message = f"English document analysis failed: {english_result.get('error')}"
                 print(error_message)
                 update_iep_document_status(
                     iep_id=iep_id,
@@ -785,7 +767,62 @@ def iep_processing_pipeline(event):
                     })
                 }
             
-            # Format the result for DynamoDB - convert the raw result into proper DynamoDB format
+            # Format English result for DynamoDB
+            print("Formatting English data for DynamoDB...")
+            english_formatted = {
+                'summaries': {'en': {'S': english_result.get('summary', '')}},
+                'sections': {
+                    'en': {'L': [
+                        {
+                            'M': {
+                                'title': {'S': section.get('title', '')},
+                                'content': {'S': section.get('content', '')},
+                                'page_numbers': {'L': [{'N': str(num)} for num in (section.get('page_numbers', []) or [])]}
+                            }
+                        } for section in english_result.get('sections', [])
+                    ]}
+                },
+                'document_index': {'en': {'S': english_result.get('document_index', '')}}
+            }
+            
+            # Save English data to DynamoDB with status "PROCESSING_TRANSLATIONS"
+            print("Saving English data to DynamoDB...")
+            update_iep_document_status(
+                iep_id=iep_id, 
+                status='PROCESSING_TRANSLATIONS', 
+                child_id=child_id, 
+                summaries=english_formatted,
+                user_id=user_id,
+                object_key=key,
+                ocr_data=ocr_data
+            )
+            
+            print("English analysis complete. Starting translations...")
+            
+            # STEP 2: Translate the English data
+            translation_result = agent.translate_document(english_result)
+            
+            # Check for error in the translation
+            if "error" in translation_result:
+                error_message = f"Translation failed: {translation_result.get('error')}"
+                print(error_message)
+                update_iep_document_status(
+                    iep_id=iep_id,
+                    status="FAILED",
+                    error_message=error_message,
+                    child_id=child_id,
+                    user_id=user_id,
+                    object_key=key
+                )
+                return {
+                    'statusCode': 500,
+                    'body': json.dumps({
+                        'message': error_message
+                    })
+                }
+            
+            # Format the complete result for DynamoDB (all 4 languages)
+            print("Formatting complete multilingual data for DynamoDB...")
             formatted_result = {
                 'summaries': {},
                 'sections': {},
@@ -793,13 +830,13 @@ def iep_processing_pipeline(event):
             }
             
             # Format summaries for DynamoDB
-            if result.get('summaries'):
+            if translation_result.get('summaries'):
                 formatted_result['summaries'] = {
-                    lang: {'S': summary} for lang, summary in result['summaries'].items()
+                    lang: {'S': summary} for lang, summary in translation_result['summaries'].items()
                 }
             
             # Format sections for DynamoDB
-            if result.get('sections'):
+            if translation_result.get('sections'):
                 formatted_result['sections'] = {
                     lang: {'L': [
                         {
@@ -808,14 +845,14 @@ def iep_processing_pipeline(event):
                                 'content': {'S': section.get('content', '')},
                                 'page_numbers': {'L': [{'N': str(num)} for num in (section.get('page_numbers', []) or [])]}
                             }
-                        } for section in result['sections'][lang]
-                    ]} for lang, sections in result['sections'].items()
+                        } for section in translation_result['sections'][lang]
+                    ]} for lang, sections in translation_result['sections'].items()
                 }
             
             # Format document index for DynamoDB
-            if result.get('document_index'):
+            if translation_result.get('document_index'):
                 formatted_result['document_index'] = {
-                    lang: {'S': index} for lang, index in result['document_index'].items()
+                    lang: {'S': index} for lang, index in translation_result['document_index'].items()
                 }
             
             # Clean up any timestamps or log markers in the data
@@ -849,12 +886,12 @@ def iep_processing_pipeline(event):
                     if 'en' in formatted_result.get('summaries', {}):
                         formatted_result['summaries'][lang] = formatted_result['summaries']['en']
                     else:
-                        formatted_result['summaries'][lang] = ''
+                        formatted_result['summaries'][lang] = {'S': ''}
                 
                 # Check sections
                 if lang not in formatted_result.get('sections', {}):
                     print(f"WARNING: Missing sections for language {lang} - creating empty array")
-                    formatted_result['sections'][lang] = []
+                    formatted_result['sections'][lang] = {'L': []}
                 
                 # Check document index
                 if lang not in formatted_result.get('document_index', {}):
@@ -862,9 +899,10 @@ def iep_processing_pipeline(event):
                     if 'en' in formatted_result.get('document_index', {}):
                         formatted_result['document_index'][lang] = formatted_result['document_index']['en']
                     else:
-                        formatted_result['document_index'][lang] = ''
+                        formatted_result['document_index'][lang] = {'S': ''}
             
-            # Save to DynamoDB
+            # Save complete multilingual data to DynamoDB
+            print("Saving complete multilingual data to DynamoDB...")
             update_iep_document_status(
                 iep_id=iep_id, 
                 status='PROCESSED', 
