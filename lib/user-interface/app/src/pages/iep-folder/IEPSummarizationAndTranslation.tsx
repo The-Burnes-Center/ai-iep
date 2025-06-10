@@ -193,8 +193,20 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     return hasSummary || hasSections || hasDocumentIndex;
   };
 
+  // Check if document is processing (only initial processing, not translations)
+  const isProcessing = document && document.status === "PROCESSING";
+  
+  // Check if translations are being processed (English content should be available)
+  const isTranslating = document && document.status === "PROCESSING_TRANSLATIONS";
+
   // Set active tab based on language preference and content availability
   useEffect(() => {
+    // During translation, force English tab since only English content is available
+    if (isTranslating) {
+      setActiveTab('en');
+      return;
+    }
+    
     // Default to English tab
     let tabToShow = 'en';
     
@@ -204,7 +216,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
     
     setActiveTab(tabToShow);
-  }, [language, document.summaries, document.sections, preferredLanguage]);
+  }, [language, document.summaries, document.sections, preferredLanguage, isTranslating]);
 
   const handleBackClick = () => {
     navigate('/welcome-page');
@@ -334,9 +346,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     );
   };
 
-  // Check if document is processing
-  const isProcessing = document && (document.status === "PROCESSING" || document.status === "PROCESSING_TRANSLATIONS");
-
   // Get tab title based on language code
   const getTabTitle = (languageCode: string) => {
     switch(languageCode) {
@@ -417,6 +426,20 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                       </Alert>
                     ) : (
                       <>
+                        {/* Show translation progress notification */}
+                        {isTranslating && (
+                          <Alert variant="info" className="mb-3">
+                            <div className="d-flex align-items-center">
+                              <Spinner animation="border" size="sm" className="me-2" />
+                              <div>
+                                <strong>Translations in progress...</strong>
+                                <br />
+                                <small>English content is available below. Translated version will be available soon.</small>
+                              </div>
+                            </div>
+                          </Alert>
+                        )}
+                        
                         <Tabs
                           activeKey={activeTab}
                           onSelect={(k) => k && setActiveTab(k)}
