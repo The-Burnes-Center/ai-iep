@@ -81,6 +81,31 @@ class IEPData(BaseModel):
         validate_default = True
         extra = "forbid"
 
+class SingleLanguageIEP(BaseModel):
+    """Complete IEP data structure for a single language"""
+    summary: str = Field(..., description="Summary of the IEP for this language")
+    sections: List[SectionContent] = Field(..., description="All IEP sections for this language")
+    document_index: str = Field(..., description="Document index (Table of Contents) for this language")
+
+    @model_validator(mode='after')
+    @classmethod
+    def validate_complete_sections(cls, model):
+        """Ensure all required IEP sections are present"""
+        section_titles = [section.title for section in model.sections]
+        missing_titles = set(IEP_SECTIONS.keys()) - set(section_titles)
+        extra_titles = set(section_titles) - set(IEP_SECTIONS.keys())
+        
+        if missing_titles:
+            raise ValueError(f"Missing required sections: {missing_titles}")
+        if extra_titles:
+            raise ValueError(f"Unknown sections: {extra_titles}")
+        
+        return model
+
+    class Config:
+        validate_assignment = True
+        extra = "forbid"
+
 # --- Translation-only models ---
 class TranslationSummaries(BaseModel):
     """Summaries for translations (no English)"""

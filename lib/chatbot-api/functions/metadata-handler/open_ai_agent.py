@@ -3,10 +3,10 @@ import boto3
 import logging
 import json
 import traceback
-from data_model import IEPData, TranslationOutput
+from data_model import IEPData, TranslationOutput, SingleLanguageIEP
 from openai import OpenAI
 from agents import Agent, Runner, function_tool, ModelSettings
-from config import get_full_prompt, get_translation_prompt, IEP_SECTIONS, SECTION_KEY_POINTS, LANGUAGE_CODES
+from config import get_full_prompt, get_translation_prompt, get_english_only_prompt, IEP_SECTIONS, SECTION_KEY_POINTS, LANGUAGE_CODES
 from agents.exceptions import MaxTurnsExceeded
 
 # Configure logging
@@ -109,28 +109,17 @@ class OpenAIAgent:
 
     def analyze_document(self, model="gpt-4.1"):
         """
-        Analyze and translate an IEP document in one Agent run using GPT-4.1.
-        Returns a dict matching IEPData schema.
+        Analyze an IEP document in English only using GPT-4.1.
+        Returns a dict matching SingleLanguageIEP schema.
         """
         if not self.api_key:
             return {"error": "API key missing"}
         if not self.ocr_data or 'pages' not in self.ocr_data:
             return {"error": "No OCR data"}
 
-        prompt = get_full_prompt()
-        translation_prompt = get_translation_prompt()
+        prompt = get_english_only_prompt()
 
-        # Translation tool agent
-        translation_agent = Agent(
-            name="Translation Agent",
-            model=model,
-            instructions=translation_prompt,
-            tools=[self.language_context_tool],
-            model_settings=ModelSettings(temperature=0.0), 
-            output_type=TranslationOutput
-        )
-           
-        # Main agent: analyze then translate_text
+        # English-only analysis agent
         agent = Agent(
             name="IEP Document Analyzer",
             model=model,
@@ -140,19 +129,15 @@ class OpenAIAgent:
                 self.ocr_text_tool, 
                 self.ocr_page_tool,
                 self.ocr_multiple_pages_tool,
-                self.section_info_tool,
-                translation_agent.as_tool(
-                    tool_name="translate_text",
-                    tool_description="Batch translate the English JSON into es/vi/zh"
-                )
+                self.section_info_tool
             ],
-            output_type=IEPData
+            output_type=SingleLanguageIEP
         )
             
         try:
             result = Runner.run_sync(
                 agent, 
-                "Analyze IEP and translate according to instructions.",
+                "Analyze IEP document in English only according to instructions.",
                 max_turns=150
             )
         except MaxTurnsExceeded as e:
@@ -164,20 +149,16 @@ class OpenAIAgent:
         try:
             if isinstance(raw_output, str):
                 cleaned = raw_output.replace('```json','').replace('```','').strip()
-                # Parse JSON and ensure complete sections before validation
                 parsed_data = json.loads(cleaned)
-                parsed_data = self._ensure_complete_sections(parsed_data)
-                data = IEPData.model_validate(parsed_data, strict=False)
+                parsed_data = self._ensure_complete_english_sections(parsed_data)
+                data = SingleLanguageIEP.model_validate(parsed_data, strict=False)
             elif isinstance(raw_output, dict):
-                # Before validation, ensure all required sections are present
-                raw_output = self._ensure_complete_sections(raw_output)
-                data = IEPData.model_validate(raw_output, strict=False)
-            elif isinstance(raw_output, IEPData):
-                # Already an IEPData instance, use it directly
-                logger.info("Output is already an IEPData instance")
+                raw_output = self._ensure_complete_english_sections(raw_output)
+                data = SingleLanguageIEP.model_validate(raw_output, strict=False)
+            elif isinstance(raw_output, SingleLanguageIEP):
+                logger.info("Output is already a SingleLanguageIEP instance")
                 data = raw_output
             else:
-                # Simple logging of the unexpected output type
                 output_type = type(raw_output).__name__
                 logger.error(f"Unexpected output type: {output_type}")
                 if raw_output is not None:
@@ -188,6 +169,127 @@ class OpenAIAgent:
             logger.error(f"Validation error: {str(e)}")
             logger.error(traceback.format_exc(limit=3))
             return {"error": f"Validation failed: {str(e)}"}
+
+    def translate_document(self, english_data, model="gpt-4.1"):
+        """
+        Translate English IEP data into multiple languages and create final IEPData structure.
+        
+        Args:
+            english_data (dict): English-only IEP data matching SingleLanguageIEP schema
+            model (str): Model to use for translation
+            
+        Returns:
+            dict: Complete IEPData with all 4 languages
+        """
+        if not self.api_key:
+            return {"error": "API key missing"}
+        
+        if not english_data:
+            return {"error": "No English data provided"}
+
+        translation_prompt = get_translation_prompt()
+
+        # Translation agent
+        translation_agent = Agent(
+            name="Translation Agent",
+            model=model,
+            instructions=translation_prompt,
+            tools=[self.language_context_tool],
+            model_settings=ModelSettings(temperature=0.0), 
+            output_type=TranslationOutput
+        )
+
+        # Create input for translation agent
+        english_input = {
+            "summaries": {"en": english_data["summary"]},
+            "sections": {"en": english_data["sections"]},
+            "document_index": {"en": english_data["document_index"]}
+        }
+
+        try:
+            result = Runner.run_sync(
+                translation_agent,
+                f"Translate this English IEP data into Spanish, Vietnamese, and Chinese: {json.dumps(english_input)}",
+                max_turns=50
+            )
+        except MaxTurnsExceeded as e:
+            logger.error(f"Translation max turns exceeded: {str(e)}")
+            return {"error": "Translation max turns exceeded"}
+
+        # Parse translation result
+        raw_output = result.final_output
+        try:
+            if isinstance(raw_output, str):
+                cleaned = raw_output.replace('```json','').replace('```','').strip()
+                translation_data = json.loads(cleaned)
+            elif isinstance(raw_output, dict):
+                translation_data = raw_output
+            elif isinstance(raw_output, TranslationOutput):
+                translation_data = raw_output.model_dump()
+            else:
+                output_type = type(raw_output).__name__
+                logger.error(f"Unexpected translation output type: {output_type}")
+                return {"error": f"Unexpected translation output type: {output_type}"}
+
+            # Merge English and translated data
+            final_data = {
+                "summaries": {
+                    "en": english_data["summary"],
+                    "es": translation_data["summaries"]["es"],
+                    "vi": translation_data["summaries"]["vi"],
+                    "zh": translation_data["summaries"]["zh"]
+                },
+                "sections": {
+                    "en": english_data["sections"],
+                    "es": translation_data["sections"]["es"],
+                    "vi": translation_data["sections"]["vi"],
+                    "zh": translation_data["sections"]["zh"]
+                },
+                "document_index": {
+                    "en": english_data["document_index"],
+                    "es": translation_data["document_index"]["es"],
+                    "vi": translation_data["document_index"]["vi"],
+                    "zh": translation_data["document_index"]["zh"]
+                }
+            }
+
+            # Validate final structure
+            validated_data = IEPData.model_validate(final_data, strict=False)
+            return validated_data.model_dump()
+
+        except Exception as e:
+            logger.error(f"Translation validation error: {str(e)}")
+            logger.error(traceback.format_exc(limit=3))
+            return {"error": f"Translation validation failed: {str(e)}"}
+
+    def _ensure_complete_english_sections(self, data):
+        """
+        Ensure all required IEP sections are present in English data.
+        If a section is missing, add it with appropriate placeholder content.
+        """
+        required_sections = set(IEP_SECTIONS.keys())
+        
+        if 'sections' not in data:
+            data['sections'] = []
+        
+        # Get existing section titles
+        existing_titles = {section.get('title', '') for section in data['sections']}
+        
+        # Find missing sections
+        missing_sections = required_sections - existing_titles
+        
+        # Add missing sections
+        for missing_section in missing_sections:
+            logger.warning(f"Adding missing section '{missing_section}' for English")
+            placeholder_content = f"This section (_{missing_section}_) was not found in the provided IEP document."
+            
+            data['sections'].append({
+                'title': missing_section,
+                'content': placeholder_content,
+                'page_numbers': [1]  # Default to page 1
+            })
+        
+        return data
 
     def _ensure_complete_sections(self, data):
         """
