@@ -6,7 +6,7 @@ import traceback
 from data_model import IEPData, TranslationOutput, SingleLanguageIEP
 from openai import OpenAI
 from agents import Agent, Runner, function_tool, ModelSettings
-from config import get_full_prompt, get_translation_prompt, get_english_only_prompt, IEP_SECTIONS, SECTION_KEY_POINTS, LANGUAGE_CODES
+from config import get_translation_prompt, get_english_only_prompt, IEP_SECTIONS, SECTION_KEY_POINTS, LANGUAGE_CODES
 from agents.exceptions import MaxTurnsExceeded
 
 # Configure logging
