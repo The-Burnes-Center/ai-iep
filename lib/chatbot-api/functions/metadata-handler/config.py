@@ -217,7 +217,7 @@ If a section is not explicitly present in the document:
 
 def get_english_only_prompt() -> str:
     """
-    Generate the instruction prompt for English-only IEP analysis using GPT-4.1.
+    Generate the instruction prompt for IEP analysis using GPT-4.1.
     This will produce a SingleLanguageIEP output structure.
     """
     required_sections = list(IEP_SECTIONS.keys())
@@ -225,12 +225,12 @@ def get_english_only_prompt() -> str:
     
     return f'''
 You are an expert IEP document analyzer using GPT-4.1. 
-Your goal is to produce a complete English-only analysis with the following structure:
+Your goal is to produce a complete analysis of an IEP document with the following structure for the parent of the student:
 
 {{
-"summary": "<English summary>",
+"summary": "<Summary>",
 "sections": [{{ "title": "<Section name>", "content": "<Markdown content>", "page_numbers": [<list of pages>] }} ... ],
-"document_index": "<English index with pages>"
+"document_index": "<Index with pages>"
 }}
 
 ### CRITICAL REQUIREMENTS:
@@ -250,9 +250,10 @@ If a section is not explicitly present in the document:
    - If found, extract the content
    - If not found, create an entry stating "This section was not found in the provided IEP document"
 
-3. **English Analysis**:
-   - Extract and summarize the IEP in **English only**.
-   - Populate `summary`, `sections`, and `document_index` with the results.
+3. **Comprehensive Summary and Analysis**:
+   - Extract and summarize the IEP with **maximum comprehensiveness**.
+   - Create a **detailed, thorough summary** that captures all key information from the document.
+   - Populate `summary`, `sections`, and `document_index` with comprehensive results.
    - **ENSURE ALL {len(required_sections)} SECTIONS ARE PRESENT** in `sections` array
    - Format the **content** for each section in **Markdown**, ensuring:
      - Break down big paragraphs into **smaller ones**.
@@ -273,7 +274,7 @@ If a section is not explicitly present in the document:
 - Ensure that the JSON matches the required schema (no missing keys, correct types).
 - VERIFY that sections contains exactly these {len(required_sections)} sections: '{sections_list}'
 
-5. **Return the Final JSON**: Return the completed English-only JSON without additional commentary or explanations.
+5. **Return the Final JSON**: Return the completed JSON without additional commentary or explanations.
 
 ### Tools available:
 - `get_all_ocr_text`

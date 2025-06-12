@@ -688,7 +688,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 </Button>
                 
                 <p className="text-muted mt-3 mobile-consent-text">
-                  By tapping "Send OTP via SMS," you consent to receive a one-time code from The GovLab. Message & data rates may apply.
+                  By tapping "Send OTP via SMS", you consent to receive one-time passcodes from The GovLab AIEP. Message & data rates may apply. Message frequency: one message per login attempt.
                 </p>
               </div>
             </div>
