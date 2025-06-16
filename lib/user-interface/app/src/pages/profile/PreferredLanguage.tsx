@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Container, Row, Col, Alert, Spinner, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { Language } from '../../common/types';
@@ -35,6 +35,7 @@ export default function PreferredLanguage() {
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const { addNotification } = useNotifications();
   const { setLanguage } = useLanguage();
 
@@ -42,6 +43,9 @@ export default function PreferredLanguage() {
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<Language | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Check if user came from profile page to update language
+  const isUpdatingFromProfile = location.state?.fromProfile === true;
 
   useEffect(() => {
     loadProfile();
@@ -52,6 +56,12 @@ export default function PreferredLanguage() {
       setLoading(true);
       const data = await apiClient.profile.getProfile();
       setProfile(data);
+
+      // Skip automatic redirects if user is updating from profile page
+      if (isUpdatingFromProfile) {
+        setError(null);
+        return;
+      }
 
       // Check if the user has already completed all required fields
       const hasLanguage = data && data.secondaryLanguage;
@@ -102,8 +112,12 @@ export default function PreferredLanguage() {
         addNotification('success', 'Language preference updated successfully');
       }
       
-      // Navigate to consent form
-      navigate('/consent-form');
+      // Navigate back to appropriate page
+      if (isUpdatingFromProfile) {
+        navigate('/profile');
+      } else {
+        navigate('/consent-form');
+      }
     } catch (err) {
       addNotification('error', 'Failed to update language preference');
     } finally {
@@ -137,6 +151,20 @@ export default function PreferredLanguage() {
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
           <div className="profile-form">
+            {isUpdatingFromProfile && (
+              <div className="text-center mb-4">
+                <h3>Update Language Preferences</h3>
+                <p className="text-muted">Select your preferred language for IEP translations</p>
+                <Button 
+                  variant="outline-secondary" 
+                  size="sm"
+                  onClick={() => navigate('/profile')}
+                  className="mb-3"
+                >
+                  ← Back to Profile
+                </Button>
+              </div>
+            )}
             <Row className="g-3">
               {LANGUAGE_OPTIONS.map(option => (
                 <Col xs={12} key={option.value}>

@@ -287,6 +287,18 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 ? t('summary.noSummary.message')
                 : t('summary.noTranslatedSummary.message')}
             </p>
+            {!isEnglishTab && (
+              <div className="mt-3">
+                <p className="mb-2">{t('summary.reuploadSuggestion')}</p>
+                <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+                </Button>
+              </div>
+            )}
           </Alert>
         )}
         
@@ -340,6 +352,18 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 ? t('summary.noSections.message')
                 : t('summary.noTranslatedSections.message')}
             </p>
+            {!isEnglishTab && (
+              <div className="mt-3">
+                <p className="mb-2">{t('summary.reuploadSuggestion')}</p>
+                <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+                </Button>
+              </div>
+            )}
           </Alert>
         )}
       </>
@@ -468,6 +492,26 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                             </Tab>
                           )}
                         </Tabs>
+                        
+                        {/* Show prominent alert when preferred language content is missing */}
+                        {preferredLanguage !== 'en' && !hasContent(preferredLanguage) && hasContent('en') && (
+                          <Alert variant="warning" className="mb-3">
+                            <div className="d-flex align-items-start">
+                              <FontAwesomeIcon icon={faLanguage} className="me-2 mt-1" />
+                              <div className="flex-grow-1">
+                                <h6 className="mb-2">{t('summary.noPreferredLanguageContent.title')}</h6>
+                                <p className="mb-2">{t('summary.noPreferredLanguageContent.message')}</p>
+                                <Button 
+                                  variant="primary" 
+                                  size="sm"
+                                  onClick={() => navigate('/iep-documents')}
+                                >
+                                  {t('summary.reuploadButton')}
+                                </Button>
+                              </div>
+                            </div>
+                          </Alert>
+                        )}
                         
                         {!hasContent('en') && !hasContent(preferredLanguage) && (
                           <Alert variant="info">
