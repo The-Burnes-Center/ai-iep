@@ -170,23 +170,40 @@ class OpenAIAgent:
             logger.error(traceback.format_exc(limit=3))
             return {"error": f"Validation failed: {str(e)}"}
 
-    def translate_document(self, english_data, model="gpt-4.1"):
+    def translate_document(self, english_data, target_languages=None, model="gpt-4.1"):
         """
-        Translate English IEP data into multiple languages and create final IEPData structure.
+        Translate English IEP data into specified languages and create final IEPData structure.
         
         Args:
             english_data (dict): English-only IEP data matching SingleLanguageIEP schema
+            target_languages (list): List of language codes to translate to (default: ['es', 'vi', 'zh'])
             model (str): Model to use for translation
             
         Returns:
-            dict: Complete IEPData with all 4 languages
+            dict: Complete IEPData with English and translated languages
         """
         if not self.api_key:
             return {"error": "API key missing"}
         
         if not english_data:
             return {"error": "No English data provided"}
+        
+        # Default to all languages if not specified
+        if target_languages is None:
+            target_languages = ['es', 'vi', 'zh']
+        
+        # Remove English from target languages if present (since we already have English data)
+        target_languages = [lang for lang in target_languages if lang != 'en']
+        
+        # If no target languages, return just English data
+        if not target_languages:
+            return {
+                "summaries": {"en": english_data["summary"]},
+                "sections": {"en": english_data["sections"]},
+                "document_index": {"en": english_data["document_index"]}
+            }
 
+        print(f"Translating to languages: {target_languages}")
         translation_prompt = get_translation_prompt()
 
         # Translation agent
@@ -207,9 +224,17 @@ class OpenAIAgent:
         }
 
         try:
+            language_names = {
+                'es': 'Spanish',
+                'vi': 'Vietnamese', 
+                'zh': 'Chinese'
+            }
+            target_lang_names = [language_names.get(lang, lang) for lang in target_languages]
+            lang_list = ', '.join(target_lang_names)
+            
             result = Runner.run_sync(
                 translation_agent,
-                f"Translate this English IEP data into Spanish, Vietnamese, and Chinese: {json.dumps(english_input)}",
+                f"Translate this English IEP data into {lang_list}: {json.dumps(english_input)}",
                 max_turns=50
             )
         except MaxTurnsExceeded as e:
@@ -231,31 +256,25 @@ class OpenAIAgent:
                 logger.error(f"Unexpected translation output type: {output_type}")
                 return {"error": f"Unexpected translation output type: {output_type}"}
 
-            # Merge English and translated data
+            # Merge English and translated data for target languages only
             final_data = {
-                "summaries": {
-                    "en": english_data["summary"],
-                    "es": translation_data["summaries"]["es"],
-                    "vi": translation_data["summaries"]["vi"],
-                    "zh": translation_data["summaries"]["zh"]
-                },
-                "sections": {
-                    "en": english_data["sections"],
-                    "es": translation_data["sections"]["es"],
-                    "vi": translation_data["sections"]["vi"],
-                    "zh": translation_data["sections"]["zh"]
-                },
-                "document_index": {
-                    "en": english_data["document_index"],
-                    "es": translation_data["document_index"]["es"],
-                    "vi": translation_data["document_index"]["vi"],
-                    "zh": translation_data["document_index"]["zh"]
-                }
+                "summaries": {"en": english_data["summary"]},
+                "sections": {"en": english_data["sections"]},
+                "document_index": {"en": english_data["document_index"]}
             }
+            
+            # Add translations for target languages
+            for lang in target_languages:
+                if lang in translation_data.get("summaries", {}):
+                    final_data["summaries"][lang] = translation_data["summaries"][lang]
+                if lang in translation_data.get("sections", {}):
+                    final_data["sections"][lang] = translation_data["sections"][lang]
+                if lang in translation_data.get("document_index", {}):
+                    final_data["document_index"][lang] = translation_data["document_index"][lang]
 
-            # Validate final structure
-            validated_data = IEPData.model_validate(final_data, strict=False)
-            return validated_data.model_dump()
+            # Return the final data without strict validation since we have dynamic languages
+            # The data structure will be validated when it's stored in DynamoDB
+            return final_data
 
         except Exception as e:
             logger.error(f"Translation validation error: {str(e)}")

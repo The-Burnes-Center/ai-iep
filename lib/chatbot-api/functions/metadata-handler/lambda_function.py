@@ -570,6 +570,58 @@ def update_user_profile_with_summary(child_id, iep_id, user_id, object_key=None)
     return
 
 
+def get_user_language_preferences(user_id):
+    """
+    Get user's language preferences (primaryLanguage and secondaryLanguage) from their profile.
+    
+    Args:
+        user_id (str): The user ID
+        
+    Returns:
+        list: List of language codes to translate to (excluding English)
+    """
+    if not user_id:
+        print("No user_id provided, defaulting to all languages")
+        return ['zh', 'es', 'vi']  # All non-English languages
+    
+    try:
+        user_profile = get_user_profile(user_id)
+        
+        if not user_profile:
+            print(f"No user profile found for {user_id}, defaulting to all languages")
+            return ['zh', 'es', 'vi']  # All non-English languages
+        
+        target_languages = set()  # Use set to avoid duplicates
+        
+        # Add primary language if it exists and is not English
+        primary_lang = user_profile.get('primaryLanguage')
+        if primary_lang and primary_lang != 'en':
+            target_languages.add(primary_lang)
+            print(f"Added primary language: {primary_lang}")
+        
+        # Add secondary language if it exists and is not English
+        secondary_lang = user_profile.get('secondaryLanguage')
+        if secondary_lang and secondary_lang != 'en':
+            target_languages.add(secondary_lang)
+            print(f"Added secondary language: {secondary_lang}")
+        
+        # Convert set to list
+        target_languages = list(target_languages)
+        
+        # If no languages specified or only English, return empty list (no translation needed)git 
+        if not target_languages:
+            print("No non-English languages specified in user profile, skipping translation")
+            return []
+        
+        print(f"User {user_id} target languages for translation: {target_languages}")
+        return target_languages
+        
+    except Exception as e:
+        print(f"Error getting user language preferences: {str(e)}")
+        print("Defaulting to all languages")
+        return ['zh', 'es', 'vi']  # All non-English languages as fallback
+
+
 def get_user_profile(user_id):
     """
     Get user profile for a given user ID.
@@ -797,10 +849,55 @@ def iep_processing_pipeline(event):
                 ocr_data=ocr_data
             )
             
-            print("English analysis complete. Starting translations...")
+            print("English analysis complete. Checking translation requirements...")
             
-            # STEP 2: Translate the English data
-            translation_result = agent.translate_document(english_result)
+            # Get user's language preferences for efficient translation
+            target_languages = get_user_language_preferences(user_id)
+            
+            if not target_languages:
+                print("No translation needed - user only requires English")
+                # Skip translation and prepare English-only result
+                formatted_result = {
+                    'summaries': {'en': {'S': english_result.get('summary', '')}},
+                    'sections': {
+                        'en': {'L': [
+                            {
+                                'M': {
+                                    'title': {'S': section.get('title', '')},
+                                    'content': {'S': section.get('content', '')},
+                                    'page_numbers': {'L': [{'N': str(num)} for num in (section.get('page_numbers', []) or [])]}
+                                }
+                            } for section in english_result.get('sections', [])
+                        ]}
+                    },
+                    'document_index': {'en': {'S': english_result.get('document_index', '')}}
+                }
+                
+                # Save English-only data to DynamoDB
+                print("Saving English-only data to DynamoDB...")
+                update_iep_document_status(
+                    iep_id=iep_id, 
+                    status='PROCESSED', 
+                    child_id=child_id, 
+                    summaries=formatted_result,
+                    user_id=user_id,
+                    object_key=key,
+                    ocr_data=ocr_data
+                )
+                
+                print(f"Document processed successfully (English-only): {iep_id}")
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({
+                        'message': 'Document processed successfully (English-only)',
+                        'iepId': iep_id
+                    })
+                }
+            
+            print(f"Starting translations to user's preferred languages: {target_languages}")
+            
+            # STEP 2: Translate the English data to user's preferred languages only
+            translation_result = agent.translate_document(english_result, target_languages=target_languages)
             
             # Check for error in the translation
             if "error" in translation_result:
@@ -877,12 +974,29 @@ def iep_processing_pipeline(event):
             # Apply cleaning to the formatted result
             formatted_result = clean_json_values(formatted_result)
             
-            # Verify all required languages are present
-            required_languages = LANGUAGE_CODES.values()
-            for lang in required_languages:
+            # Ensure English data is always included in the formatted result
+            if 'en' not in formatted_result.get('summaries', {}):
+                formatted_result.setdefault('summaries', {})['en'] = {'S': english_result.get('summary', '')}
+            
+            if 'en' not in formatted_result.get('sections', {}):
+                formatted_result.setdefault('sections', {})['en'] = {'L': [
+                    {
+                        'M': {
+                            'title': {'S': section.get('title', '')},
+                            'content': {'S': section.get('content', '')},
+                            'page_numbers': {'L': [{'N': str(num)} for num in (section.get('page_numbers', []) or [])]}
+                        }
+                    } for section in english_result.get('sections', [])
+                ]}
+            
+            if 'en' not in formatted_result.get('document_index', {}):
+                formatted_result.setdefault('document_index', {})['en'] = {'S': english_result.get('document_index', '')}
+            
+            # Verify user's target languages are present in the translation result
+            for lang in target_languages:
                 # Check summaries
                 if lang not in formatted_result.get('summaries', {}):
-                    print(f"WARNING: Missing summary for language {lang} - using English summary")
+                    print(f"WARNING: Missing summary for target language {lang} - using English summary")
                     if 'en' in formatted_result.get('summaries', {}):
                         formatted_result['summaries'][lang] = formatted_result['summaries']['en']
                     else:
@@ -890,12 +1004,12 @@ def iep_processing_pipeline(event):
                 
                 # Check sections
                 if lang not in formatted_result.get('sections', {}):
-                    print(f"WARNING: Missing sections for language {lang} - creating empty array")
+                    print(f"WARNING: Missing sections for target language {lang} - creating empty array")
                     formatted_result['sections'][lang] = {'L': []}
                 
                 # Check document index
                 if lang not in formatted_result.get('document_index', {}):
-                    print(f"WARNING: Missing document index for language {lang} - using English index")
+                    print(f"WARNING: Missing document index for target language {lang} - using English index")
                     if 'en' in formatted_result.get('document_index', {}):
                         formatted_result['document_index'][lang] = formatted_result['document_index']['en']
                     else:
