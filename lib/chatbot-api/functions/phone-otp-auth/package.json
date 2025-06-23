@@ -4,7 +4,9 @@
   "description": "Lambda functions for Phone OTP authentication with AWS Cognito",
   "main": "index.js",
   "dependencies": {
-    "@aws-sdk/client-sns": "^3.529.1"
+    "@aws-sdk/client-sns": "^3.529.1",
+    "@aws-sdk/client-dynamodb": "^3.529.1",
+    "@aws-sdk/lib-dynamodb": "^3.529.1"
   },
   "engines": {
     "node": ">=18.0.0"

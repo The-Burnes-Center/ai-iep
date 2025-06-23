@@ -84,8 +84,8 @@ export class NewAuthorizationStack extends Construct {
       externalId: this.node.addr,
       snsCallerArn: cognitoSmsRole.roleArn,
     };
-    cfnUserPool.smsAuthenticationMessage = 'Your authentication code is {####}';
-    cfnUserPool.smsVerificationMessage = 'Your verification code is {####}';
+    cfnUserPool.smsAuthenticationMessage = 'Your login code for The GovLab AIEP is: {####}. Do not share this code.';
+    cfnUserPool.smsVerificationMessage = 'Your OTP from The GovLab AIEP is: {####}. Do not share this code. Msg & data rates may apply.';
     // Logging is fire-and-forget since constructors cannot be async
     logger.logEvent({
       eventType: 'AUTHZ_STACK',

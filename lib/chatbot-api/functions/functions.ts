@@ -360,9 +360,22 @@ export class LambdaFunctionStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset(path.join(__dirname, 'phone-otp-auth')),
       handler: 'verify-auth-challenge.handler',
+      environment: {
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName
+      },
       timeout: cdk.Duration.seconds(30),
       logRetention: logs.RetentionDays.ONE_YEAR
     });
+
+    // Add DynamoDB permissions for user profile creation
+    verifyAuthChallengeFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:PutItem'
+      ],
+      resources: [props.userProfilesTable.tableArn]
+    }));
 
     // Allow Cognito to invoke the Lambda
     verifyAuthChallengeFunction.addPermission('CognitoVerifyAuthInvocation', {
