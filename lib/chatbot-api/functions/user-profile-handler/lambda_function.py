@@ -143,19 +143,58 @@ def get_user_profile(event: Dict) -> Dict:
         
         if 'Item' not in response:
             print(f"No existing profile found for userId: {user_id}, creating new profile")
+            
+            # Create default child for IEP document functionality
+            default_child = {
+                'childId': str(uuid.uuid4()),
+                'name': 'My Child',
+                'schoolCity': 'Not specified',
+                'createdAt': times['timestamp'],
+                'updatedAt': times['timestamp']
+            }
+            
             new_profile = {
                 'userId': user_id,
                 'createdAt': times['timestamp'],
                 'createdAtISO': times['datetime'],
                 'updatedAt': times['timestamp'],
                 'updatedAtISO': times['datetime'],
-                'children': [],
+                'children': [default_child],  # Initialize with default child
                 'consentGiven': False
             }
             user_profiles_table.put_item(Item=new_profile)
             return create_response(event, 200, {'profile': new_profile})
         
         existing_profile = response['Item']
+        
+        # Check if existing profile has no children and add default child if needed
+        if 'children' not in existing_profile or not existing_profile['children']:
+            print(f"Existing profile found but no children, adding default child for userId: {user_id}")
+            
+            default_child = {
+                'childId': str(uuid.uuid4()),
+                'name': 'My Child',
+                'schoolCity': 'Not specified',
+                'createdAt': times['timestamp'],
+                'updatedAt': times['timestamp']
+            }
+            
+            # Update the profile with default child
+            user_profiles_table.update_item(
+                Key={'userId': user_id},
+                UpdateExpression='SET children = :children, updatedAt = :updatedAt, updatedAtISO = :updatedAtISO',
+                ExpressionAttributeValues={
+                    ':children': [default_child],
+                    ':updatedAt': times['timestamp'],
+                    ':updatedAtISO': times['datetime']
+                }
+            )
+            
+            # Update the existing profile object to return
+            existing_profile['children'] = [default_child]
+            existing_profile['updatedAt'] = times['timestamp']
+            existing_profile['updatedAtISO'] = times['datetime']
+        
         return create_response(event, 200, {'profile': existing_profile})
         
     except Exception as e:
