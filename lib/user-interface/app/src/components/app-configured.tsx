@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   ThemeProvider,
-  defaultDarkModeOverride,
 } from "@aws-amplify/ui-react";
 import App from "../app";
 import { Amplify, Auth } from "aws-amplify";
@@ -134,7 +133,6 @@ export default function AppConfigured() {
           <ThemeProvider
             theme={{
               name: "default-theme",
-              overrides: [defaultDarkModeOverride],
             }}
             colorMode={theme === Mode.Dark ? "dark" : "light"}
           >
@@ -152,7 +150,6 @@ export default function AppConfigured() {
           <ThemeProvider
             theme={{
               name: "default-theme",
-              overrides: [defaultDarkModeOverride],
             }}
             colorMode={theme === Mode.Dark ? "dark" : "light"}
           >

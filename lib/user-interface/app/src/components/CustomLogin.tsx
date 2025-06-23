@@ -50,6 +50,9 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [showMobileLogin, setShowMobileLogin] = useState(false);
   const [mobileLoading, setMobileLoading] = useState(false);
+  const [smsCode, setSmsCode] = useState('');
+  const [smsCodeSent, setSmsCodeSent] = useState(false);
+  const [cognitoUserForSms, setCognitoUserForSms] = useState<any>(null);
   
   // State for toggling password visibility
   const [showMainPassword, setShowMainPassword] = useState(false);
@@ -113,26 +116,132 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
   const handleMobileLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!phoneNumber.trim()) {
+      setError(t('pleaseEnterPhoneNumber'));
+      return;
+    }
+
     setMobileLoading(true);
-    setError(null);
-    setSuccessMessage(null);
+    setError('');
+
+    // Format phone number to include country code if not present
+    let formattedPhone = phoneNumber.trim();
+    if (!formattedPhone.startsWith('+')) {
+      // Default to US country code if no country code provided
+      formattedPhone = `+1${formattedPhone.replace(/[^\d]/g, '')}`;
+    }
+
+    try {
+      console.log('Initiating Phone OTP with Custom Auth for:', formattedPhone);
+
+      // Use CUSTOM_AUTH flow with our Lambda triggers
+      const cognitoUser = await Auth.signIn(formattedPhone, undefined, {
+        authFlowType: 'CUSTOM_AUTH'
+      });
+
+      console.log('Phone OTP initiated successfully:', cognitoUser);
+      
+      if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
+        setCognitoUserForSms(cognitoUser);
+        setSmsCodeSent(true);
+      } else {
+        setError(t('unexpectedChallengeType'));
+      }
+    } catch (error: any) {
+      console.error('Phone OTP error:', error);
+      
+      // Handle various error types
+      if (error.code === 'UserNotFoundException') {
+        try {
+          // Try to sign up the user first with a phone number
+          await Auth.signUp({
+            username: formattedPhone,
+            password: Math.random().toString(36).slice(-12) + 'A1!', // Random temp password
+            attributes: {
+              phone_number: formattedPhone
+            }
+          });
+          
+          // After signup, try the phone OTP flow again
+          const cognitoUser = await Auth.signIn(formattedPhone, undefined, {
+            authFlowType: 'CUSTOM_AUTH'
+          });
+          
+          if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
+            setCognitoUserForSms(cognitoUser);
+            setSmsCodeSent(true);
+          }
+        } catch (signUpError: any) {
+          console.error('Sign up error:', signUpError);
+          setError(`${t('phoneAuthConfigIssue')} ${signUpError.message}`);
+        }
+      } else if (error.code === 'InvalidParameterException') {
+        setError(t('phoneAuthConfigIssue'));
+      } else if (error.code === 'NotAuthorizedException') {
+        setError(t('authNotAuthorized'));
+      } else {
+        setError(`${t('phoneAuthError')}: ${error.message}`);
+      }
+    }
+
+    setMobileLoading(false);
+  };
+
+  const handleSmsCodeVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
     
     try {
-      // Here you would implement the SMS OTP sending logic
-      // This is a placeholder for the actual implementation
-      console.log('Sending OTP to:', phoneNumber);
+      // Verify the SMS code using custom challenge answer
+      const user = await Auth.sendCustomChallengeAnswer(
+        cognitoUserForSms,
+        smsCode
+      );
       
-      // For now, just show a success message
-      setSuccessMessage('OTP sent successfully to your mobile number!');
-      
-      // TODO: Implement actual SMS OTP functionality with AWS Cognito
-      // await Auth.signIn(phoneNumber);
+      console.log('SMS verification successful', user);
+      onLoginSuccess();
       
     } catch (err) {
-      console.error('Mobile login error', err);
-      setError(err.message || 'Failed to send OTP. Please try again.');
+      console.error('SMS verification error', err);
+      
+      if (err.code === 'CodeMismatchException') {
+        setError(t('auth.invalidSmsCode'));
+      } else if (err.code === 'ExpiredCodeException') {
+        setError(t('auth.expiredSmsCode'));
+      } else if (err.code === 'LimitExceededException') {
+        setError(t('auth.tooManyAttempts'));
+      } else {
+        setError(err.message || t('auth.invalidSmsCode'));
+      }
     } finally {
-      setMobileLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const handleResendSmsCode = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Format phone number again
+      let formattedPhone = phoneNumber.trim();
+      if (!formattedPhone.startsWith('+')) {
+        formattedPhone = `+1${formattedPhone.replace(/[^\d]/g, '')}`;
+      }
+      
+      // Resend the SMS code by initiating sign in again with custom auth
+      const user = await Auth.signIn(formattedPhone, undefined, {
+        authFlowType: 'CUSTOM_AUTH'
+      });
+      
+      setCognitoUserForSms(user);
+      // Don't show success message, just continue with the flow
+    } catch (err) {
+      console.error('Resend SMS error', err);
+      setError(err.message || t('auth.smsDeliveryFailed'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -641,7 +750,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
         <div className="text-center mb-4">
           <h2 className="aiep-title text-primary">AIEP</h2>
-          <h4>{showMobileLogin ? 'Mobile Login' : t('auth.signIn')}</h4>
+          <h4>{showMobileLogin ? t('auth.mobileLogin') : t('auth.signIn')}</h4>
         </div>
 
         {/* Login method toggle buttons */}
@@ -652,47 +761,111 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               onClick={() => setShowMobileLogin(false)}
               className="button-text"
             >
-              Email Login
+              {t('auth.emailLogin')}
             </Button>
             <Button 
               variant={showMobileLogin ? "primary" : "outline-primary"}
               onClick={() => setShowMobileLogin(true)}
               className="button-text"
             >
-              Mobile Login
+              {t('auth.mobileLogin')}
             </Button>
           </div>
         </div>
         
         {showMobileLogin ? (
           // Mobile Login Form
-          <Form onSubmit={handleMobileLogin}>
-            <div className="mobile-form-container">
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">Phone Number</Form.Label>
-                <Form.Control
-                  type="tel"
-                  placeholder="Enter your mobile number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
-              
-              <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={mobileLoading} className="button-text">
-                  {mobileLoading ? <Spinner animation="border" size="sm" /> : 'Send OTP via SMS'}
-                </Button>
+          !smsCodeSent ? (
+            // Phone number input form
+            <Form onSubmit={handleMobileLogin}>
+              <div className="mobile-form-container">
+                <Form.Group className="mb-3">
+                  <Form.Label className="form-label-bold">{t('auth.phoneNumber')}</Form.Label>
+                  <Form.Control
+                    type="tel"
+                    placeholder={t('auth.enterPhoneNumber')}
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    required
+                  />
+                  <Form.Text className="text-muted">
+                    {t('auth.phoneNumberHelper')}
+                  </Form.Text>
+                </Form.Group>
                 
-                <p className="text-muted mt-3 mobile-consent-text">
-                  By tapping "Send OTP via SMS", you agree to receive one-time passcodes from The GovLab. Msg & data rates may apply. Message frequency: one per login attempt. Reply HELP for help, STOP to opt out.
-                </p>
+                {error && <Alert variant="danger">{error}</Alert>}
+                {successMessage && <Alert variant="success">{successMessage}</Alert>}
+                
+                <div className="d-grid gap-2">
+                  <Button variant="primary" type="submit" disabled={mobileLoading} className="button-text">
+                    {mobileLoading ? <Spinner animation="border" size="sm" /> : t('auth.sendSmsCode')}
+                  </Button>
+                  
+                  <p className="text-muted mt-3 mobile-consent-text">
+                    {t('auth.smsConsentMobile')}
+                  </p>
+                </div>
               </div>
-            </div>
-          </Form>
+            </Form>
+          ) : (
+            // SMS verification form
+            <Form onSubmit={handleSmsCodeVerification}>
+              <div className="mobile-form-container">
+                <div className="sms-verification-info">
+                  <p>
+                    {t('auth.smsCodeSentTo')}<br />
+                    <span className="phone-display">{phoneNumber}</span>
+                  </p>
+                </div>
+                
+                <Form.Group className="mb-3">
+                  <Form.Label className="form-label-bold">{t('auth.verificationCodeSms')}</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder={t('auth.enterSmsCode')}
+                    value={smsCode}
+                    onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    maxLength={6}
+                    required
+                    className="sms-code-input"
+                  />
+                </Form.Group>
+                
+                {error && <Alert variant="danger">{error}</Alert>}
+                {successMessage && <Alert variant="success">{successMessage}</Alert>}
+                
+                <div className="d-grid gap-2">
+                  <Button variant="primary" type="submit" disabled={loading || smsCode.length !== 6} className="button-text">
+                    {loading ? <Spinner animation="border" size="sm" /> : t('auth.verifySmsCode')}
+                  </Button>
+                  
+                  <Button 
+                    variant="link"
+                    onClick={handleResendSmsCode}
+                    disabled={loading}
+                    className="forgot-password-link"
+                  >
+                    {t('auth.resendSmsCode')}
+                  </Button>
+                  
+                  <Button 
+                    variant="link" 
+                    onClick={() => {
+                      setSmsCodeSent(false);
+                      setSmsCode('');
+                      setCognitoUserForSms(null);
+                      setError(null);
+                      setSuccessMessage(null);
+                    }}
+                    disabled={loading}
+                    className="forgot-password-link"
+                  >
+                    {t('auth.changePhoneNumber')}
+                  </Button>
+                </div>
+              </div>
+            </Form>
+          )
         ) : (
           // Email Login Form
           <Form onSubmit={handleSignIn}>

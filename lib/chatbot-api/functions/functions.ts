@@ -31,6 +31,9 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly metadataHandlerFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
   public readonly cognitoTriggerFunction : lambda.Function;
+  public readonly defineAuthChallengeFunction : lambda.Function;
+  public readonly createAuthChallengeFunction : lambda.Function;
+  public readonly verifyAuthChallengeFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
@@ -305,6 +308,86 @@ export class LambdaFunctionStack extends cdk.Stack {
     );
 
     this.cognitoTriggerFunction = cognitoTriggerFunction;
+
+    // Phone OTP Authentication Lambda Functions
+    // Define Auth Challenge Function
+    const defineAuthChallengeFunction = new lambda.Function(scope, 'DefineAuthChallengeFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'phone-otp-auth')),
+      handler: 'define-auth-challenge.handler',
+      timeout: cdk.Duration.seconds(30),
+      logRetention: logs.RetentionDays.ONE_YEAR
+    });
+
+    // Allow Cognito to invoke the Lambda
+    defineAuthChallengeFunction.addPermission('CognitoDefineAuthInvocation', {
+      principal: new iam.ServicePrincipal('cognito-idp.amazonaws.com'),
+      action: 'lambda:InvokeFunction',
+      sourceArn: props.userPool.userPoolArn
+    });
+
+    this.defineAuthChallengeFunction = defineAuthChallengeFunction;
+
+    // Create Auth Challenge Function
+    const createAuthChallengeFunction = new lambda.Function(scope, 'CreateAuthChallengeFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'phone-otp-auth')),
+      handler: 'create-auth-challenge.handler',
+      timeout: cdk.Duration.seconds(30),
+      logRetention: logs.RetentionDays.ONE_YEAR
+    });
+
+    // Add SNS permissions for sending SMS
+    createAuthChallengeFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'sns:Publish'
+      ],
+      resources: ['*'] // SNS publish requires * for phone numbers
+    }));
+
+    // Allow Cognito to invoke the Lambda
+    createAuthChallengeFunction.addPermission('CognitoCreateAuthInvocation', {
+      principal: new iam.ServicePrincipal('cognito-idp.amazonaws.com'),
+      action: 'lambda:InvokeFunction',
+      sourceArn: props.userPool.userPoolArn
+    });
+
+    this.createAuthChallengeFunction = createAuthChallengeFunction;
+
+    // Verify Auth Challenge Function
+    const verifyAuthChallengeFunction = new lambda.Function(scope, 'VerifyAuthChallengeFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'phone-otp-auth')),
+      handler: 'verify-auth-challenge.handler',
+      timeout: cdk.Duration.seconds(30),
+      logRetention: logs.RetentionDays.ONE_YEAR
+    });
+
+    // Allow Cognito to invoke the Lambda
+    verifyAuthChallengeFunction.addPermission('CognitoVerifyAuthInvocation', {
+      principal: new iam.ServicePrincipal('cognito-idp.amazonaws.com'),
+      action: 'lambda:InvokeFunction',
+      sourceArn: props.userPool.userPoolArn
+    });
+
+    this.verifyAuthChallengeFunction = verifyAuthChallengeFunction;
+
+    // Add the Lambda triggers to Cognito User Pool for Phone OTP authentication
+    props.userPool.addTrigger(
+      cdk.aws_cognito.UserPoolOperation.DEFINE_AUTH_CHALLENGE,
+      defineAuthChallengeFunction
+    );
+
+    props.userPool.addTrigger(
+      cdk.aws_cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
+      createAuthChallengeFunction
+    );
+
+    props.userPool.addTrigger(
+      cdk.aws_cognito.UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE,
+      verifyAuthChallengeFunction
+    );
 
     // Create a layer for logging
     const loggingLayer = new lambda.LayerVersion(this, 'LoggingLayer', {

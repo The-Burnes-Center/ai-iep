@@ -137,6 +137,29 @@ input[type="tel"]:focus {
   padding: 0 10px;
 }
 
+/* SMS verification code input styling */
+.sms-code-input {
+  text-align: center;
+  font-size: 1.2rem;
+  letter-spacing: 0.3rem;
+  font-weight: 600;
+  font-family: 'Roboto', monospace;
+}
+
+/* SMS verification info text */
+.sms-verification-info {
+  font-family: 'Roboto', sans-serif;
+  color: #6c757d;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Phone number display in verification */
+.phone-display {
+  font-weight: 600;
+  color: #0040BA;
+}
+
 /* Enhanced button styling for mobile login */
 .btn-primary[type="submit"] {
   padding: 12px 20px;
@@ -331,38 +354,42 @@ input[type="tel"]:focus {
   }
 }
 
-/* Dark mode support (if implemented) */
-@media (prefers-color-scheme: dark) {
-  .login-container {
-    background-color: #1a1a1a !important;
-    color: #ffffff;
-  }
-  
-  .form-control {
-    background-color: #2d2d2d;
-    border-color: #404040;
-    color: #ffffff;
-  }
-  
-  .form-control:focus {
-    background-color: #2d2d2d;
-    border-color: #0040BA;
-    color: #ffffff;
-  }
-  
-  .mobile-consent-text {
-    color: #b0b0b0 !important;
-  }
-  
-  .alert-success {
-    background-color: #1e3d2c;
-    color: #a7d4b4;
-  }
-  
-  .alert-danger {
-    background-color: #3d1e1e;
-    color: #d4a7a7;
-  }
+/* Dark mode styles - controlled by app theme, not system preference */
+[data-theme="dark"] .login-container,
+.awsui-dark-mode .login-container {
+  background-color: #1a1a1a !important;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .form-control,
+.awsui-dark-mode .form-control {
+  background-color: #2d2d2d;
+  border-color: #404040;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .form-control:focus,
+.awsui-dark-mode .form-control:focus {
+  background-color: #2d2d2d;
+  border-color: #0040BA;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .mobile-consent-text,
+.awsui-dark-mode .mobile-consent-text {
+  color: #b0b0b0 !important;
+}
+
+[data-theme="dark"] .alert-success,
+.awsui-dark-mode .alert-success {
+  background-color: #1e3d2c;
+  color: #a7d4b4;
+}
+
+[data-theme="dark"] .alert-danger,
+.awsui-dark-mode .alert-danger {
+  background-color: #3d1e1e;
+  color: #d4a7a7;
 }
 
 /* Accessibility improvements */

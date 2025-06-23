@@ -110,6 +110,11 @@ export class NewAuthorizationStack extends Construct {
     
     const userPoolClient = new UserPoolClient(this, 'NewUserPoolClient', {
       userPool,
+      authFlows: {
+        userPassword: true,
+        userSrp: true,
+        custom: true,  // Enable CUSTOM_AUTH flow for Phone OTP
+      },
       oAuth: {
         flows: {
           authorizationCodeGrant: true,
