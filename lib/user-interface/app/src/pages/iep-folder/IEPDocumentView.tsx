@@ -5,6 +5,7 @@ import UploadIEPDocument from './UploadIEPDocument';
 import CurrentIEPDocument from './CurrentIEPDocument';
 import './IEPDocumentView.css';
 import { useLanguage } from '../../common/language-context';
+import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 
 const IEPDocumentView: React.FC = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const IEPDocumentView: React.FC = () => {
   const { t } = useLanguage();
 
   return (
+    <>
     <Container className="document-container mt-4 mb-5">
       <div className="mt-3 text-start">
         <Button variant="outline-secondary" onClick={handleBackClick}>
@@ -64,6 +66,8 @@ const IEPDocumentView: React.FC = () => {
         </Col>
       </Row>
     </Container>
+        <MobileBottomNavigation />
+    </>
   );
 };
 

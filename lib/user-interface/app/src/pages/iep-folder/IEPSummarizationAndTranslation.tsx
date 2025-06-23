@@ -7,6 +7,7 @@ import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
+import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, translationsLoaded } = useLanguage();
@@ -396,6 +397,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   }
 
   return (
+    <>
     <Container className="summary-container mt-3 mb-3">
       <div className="mt-2 text-start button-container">
         <Button variant="outline-secondary" onClick={handleBackClick}>
@@ -551,6 +553,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         </Offcanvas.Body>
       </Offcanvas>
     </Container>
+      <MobileBottomNavigation />
+        </>
   );
 };
 
