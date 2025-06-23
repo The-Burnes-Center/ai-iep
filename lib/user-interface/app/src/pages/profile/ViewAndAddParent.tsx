@@ -83,9 +83,25 @@ export default function ViewAndAddParent() {
         parentName: parentName.trim()
       };
       
-      // Update the profile
+      // Update the profile with parent name
       await apiClient.profile.updateProfile(updatedProfileData);
       addNotification('success', 'Parent information saved successfully');
+      
+      // Check if user has any children - if not, create a default child
+      if (!profile?.children || profile.children.length === 0) {
+        try {
+          // Create a default child with generic information
+          // The user can update this later if needed
+          await apiClient.profile.addChild('My Child', profile?.city || 'Not specified');
+          console.log('Created default child for IEP document functionality');
+        } catch (childError) {
+          console.error('Error creating default child:', childError);
+          // Don't fail the flow if child creation fails - user can add manually later
+        }
+      }
+      
+      // Check for existing documents after potentially creating child
+      await checkForExistingDocument();
       
       // Navigate based on whether user has existing documents
       if (hasExistingDocument) {
