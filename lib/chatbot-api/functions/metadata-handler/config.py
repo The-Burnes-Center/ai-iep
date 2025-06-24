@@ -241,7 +241,25 @@ If a section is not explicitly present in the document:
 - Set content to indicate that this information was not found in the document
 - Use the get_section_info tool to understand what each section should contain
 
-### Instructions:
+### Summary Extraction Instructions:
+For the "summary" field, generate a fully factual, student-specific summary of this IEP document. Do not hallucinate or generalize. Only include information explicitly present in the document.
+
+Your summary must include:
+
+1. **Student Information:** Name, age, grade, eligibility categories (primary & secondary), evaluation dates.
+2. **Academic Performance:** Strengths and needs.
+3. **Communication Profile:** Speech intelligibility, AAC device usage, expressive/receptive language functioning.
+4. **Functional / Behavioral Profile:** Daily living skills, social-emotional status, behavioral observations, adaptive functioning.
+5. **Services & Placement:** Placement type, % time in general education, services provided (type, frequency, duration), ESY eligibility.
+6. **Parent Input:** Key concerns or input shared by parents.
+7. **Accommodations & Modifications:** Classroom and testing accommodations, assistive technology.
+
+- Write the summary using **Markdown formatting**.
+- Use **bullet points**, **tables**, and **bold headings** to make the summary clear and accessible.
+- Keep the tone professional but parent-friendly.
+- Avoid filler sentences. Include only facts from the document.
+
+### Instructions for Sections:
 1. **Retrieve the Full OCR Text**: Use `get_all_ocr_text` to retrieve and index the full OCR text by page.
 
 2. **Section Discovery**: For each required section ('{sections_list}'):
@@ -250,31 +268,16 @@ If a section is not explicitly present in the document:
    - If found, extract the content
    - If not found, create an entry stating "This section was not found in the provided IEP document"
 
-3. **Comprehensive Summary and Analysis**:
-   - Extract and summarize the IEP with **maximum comprehensiveness**.
-   - Create a **detailed, thorough summary** that captures all key information from the document.
-   - Populate `summary`, `sections`, and `document_index` with comprehensive results.
-   - **ENSURE ALL {len(required_sections)} SECTIONS ARE PRESENT** in `sections` array
+3. **Section Formatting**:
    - Format the **content** for each section in **Markdown**, ensuring:
-     - Break down big paragraphs into **smaller ones**.
-     - Add a **short introductory paragraph** summarizing the content of the section.
-     - Use **bullet points**, **lists**, **tables**, **bold**, **italic**, and **underline** where appropriate to enhance readability.
-     - Maintain a **friendly and warm tone** throughout.
-     - If abbreviations are used in the section, provide a **table of legends** at the end of the section. The table should include:
-       - Abbreviation: The abbreviation or acronym used in the section.
-       - Full Form: The full form or meaning of the abbreviation.
-     - The table should only be displayed if abbreviations are present in the section. If no abbreviations are used, skip the table for that section.
-     - The table should be formatted in **Markdown** as follows:
-        Abbreviation\tFull Form
-        IEP\tIndividualized Education Program
-        OCR\tOptical Character Recognition
-        ...\t...
+     - Start each section with a short introductory paragraph.
+     - Break large paragraphs into smaller ones.
+     - Use **bullet points**, **lists**, **tables**, **bold**, **italic**, and **underline** where appropriate.
+     - If abbreviations are used in the section, *always* include an abbreviation legend table in Markdown format.
 
-4. **Validation**:
+### Validation:
 - Ensure that the JSON matches the required schema (no missing keys, correct types).
-- VERIFY that sections contains exactly these {len(required_sections)} sections: '{sections_list}'
-
-5. **Return the Final JSON**: Return the completed JSON without additional commentary or explanations.
+- VERIFY that `sections` contains exactly these {len(required_sections)} sections: '{sections_list}'
 
 ### Tools available:
 - `get_all_ocr_text`
@@ -283,11 +286,8 @@ If a section is not explicitly present in the document:
 - `get_section_info`
 
 ### Formatting Guidelines:
-- Use **bullet points** when possible to organize information clearly.
-- Use **lists** to break down complex information.
-- Where appropriate, use **tables** to improve data presentation.
-- Emphasize important points with **bold** and **italic** text.
-- Use **underline** to highlight key information.
-- Always begin each section with a short **introductory paragraph** that summarizes what the section contains.
-- Keep the tone **friendly and warm**, and ensure that the language is accessible and easy to understand.
-'''
+- Use Markdown formatting throughout.
+- Use **bullet points** and **tables** generously to organize information.
+- Highlight important facts with **bold headings**.
+- Maintain a friendly and warm tone suitable for parents, but always strictly factual.
+    '''
