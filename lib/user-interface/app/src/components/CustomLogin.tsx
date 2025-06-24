@@ -159,73 +159,20 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       
       // Handle various error types
       if (error.code === 'UserNotFoundException') {
-        try {
-          console.log('User not found, creating new user with phone number:', formattedPhone);
-          
-          // Create a strong password that meets Cognito requirements
-          const tempPassword = 'TempPass123!' + Math.random().toString(36).slice(-4);
-          
-          // Auto-signup with phone number as username
-          const signUpResult = await Auth.signUp({
-            username: formattedPhone,
-            password: tempPassword,
-            attributes: {
-              phone_number: formattedPhone,
-              phone_number_verified: 'true',
-              // Add a placeholder email if required by your user pool
-              email: `${formattedPhone.replace('+', '').replace(/\D/g, '')}@temp.placeholder`
-            }
-          });
-          
-          // Auto-confirm the user immediately since we'll verify via SMS
-          try {
-            await Auth.confirmSignUp(formattedPhone, '000000', {
-              forceAliasCreation: false
-            });
-          } catch (confirmError) {
-            console.log('Confirm signup not needed or failed:', confirmError);
-          }
-          
-          console.log('User created successfully:', signUpResult);
-          
-          // Now try the phone OTP flow again
-          const cognitoUser = await Auth.signIn(formattedPhone, undefined, {
-            authFlowType: 'CUSTOM_AUTH'
-          });
-          
-          if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
-            setCognitoUserForSms(cognitoUser);
-            setSmsCodeSent(true);
-            setSuccessMessage(t('auth.smsCodeSent'));
-          } else {
-            setError(t('unexpectedChallengeType'));
-          }
-          
-        } catch (signUpError: any) {
-          console.error('Auto-signup error:', signUpError);
-          
-          if (signUpError.code === 'UsernameExistsException') {
-            // User exists but might be in a different state, try again
-            setError(t('auth.phoneNotFound'));
-          } else if (signUpError.code === 'InvalidPasswordException') {
-            setError(t('phoneAuthConfigIssue'));
-          } else {
-            setError(`${t('phoneAuthError')}: ${signUpError.message}`);
-          }
-        }
+        // For phone OTP authentication, we don't need to pre-create users
+        // The Cognito configuration should allow passwordless sign-in
+        // Let's inform the user that their phone number is not registered
+        setError(t('auth.phoneNotRegistered'));
+        console.log('Phone number not found in user pool:', formattedPhone);
       } else if (error.code === 'InvalidParameterException') {
         setError(t('phoneAuthConfigIssue'));
       } else if (error.code === 'NotAuthorizedException') {
         setError(t('authNotAuthorized'));
       } else if (error.code === 'UserNotConfirmedException') {
         try {
-          // Auto-confirm the user since we're using phone verification
-          console.log('User not confirmed, auto-confirming:', formattedPhone);
-          
-          // For phone-based auth, we can auto-confirm since SMS verification is the confirmation
-          await Auth.confirmSignUp(formattedPhone, '000000', {
-            forceAliasCreation: false
-          });
+          // For phone OTP, we don't need manual confirmation
+          // The custom auth flow will handle verification
+          console.log('User not confirmed, proceeding with custom auth flow:', formattedPhone);
           
           // Now try the phone OTP flow again
           const cognitoUser = await Auth.signIn(formattedPhone, undefined, {

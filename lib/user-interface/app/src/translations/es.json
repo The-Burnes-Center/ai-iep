@@ -186,6 +186,7 @@
     "auth.smsCodeSentTo": "Ingrese el código de 6 dígitos enviado a",
     "auth.invalidPhoneNumber": "Por favor ingrese un número de teléfono válido con código de país (ej: +1234567890)",
     "auth.phoneNotFound": "Número de teléfono no encontrado. Por favor regístrese primero o use inicio de sesión por correo.",
+    "auth.phoneNotRegistered": "Este número de teléfono no está registrado. Por favor contacte soporte o use inicio de sesión por correo.",
     "auth.smsDeliveryFailed": "Error al enviar SMS. Por favor verifique su número de teléfono e intente de nuevo.",
     "auth.tooManyAttempts": "Demasiados intentos. Por favor intente más tarde.",
     "auth.invalidSmsCode": "Código de verificación inválido. Por favor intente de nuevo.",

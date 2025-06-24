@@ -183,5 +183,13 @@
     "auth.changePhoneNumber": "更改电话号码",
     "auth.smsCodeSentTo": "短信验证码已发送至：",
     "auth.smsConsentMobile": "点击\"发送短信验证码\"即表示您明确同意接收来自The GovLab的一次性验证码短信。",
-    "auth.smsFrequencyDisclaimer": "消息频率：每次登录尝试一条。回复HELP获取帮助，回复STOP取消订阅。可能产生短信和数据费用。"
+    "auth.smsFrequencyDisclaimer": "消息频率：每次登录尝试一条。回复HELP获取帮助，回复STOP取消订阅。可能产生短信和数据费用。",
+    "auth.phoneNotFound": "未找到电话号码。请先注册或使用邮箱登录。",
+    "auth.phoneNotRegistered": "此电话号码未注册。请联系支持或使用邮箱登录。",
+    "auth.smsCodeSent": "短信验证码已发送到您的手机！",
+    "auth.invalidPhoneNumber": "请输入有效的电话号码和国家代码（例如：+1234567890）",
+    "auth.smsDeliveryFailed": "发送短信失败。请检查您的电话号码并重试。",
+    "auth.tooManyAttempts": "尝试次数过多。请稍后重试。",
+    "auth.invalidSmsCode": "验证码无效。请重试。",
+    "auth.expiredSmsCode": "验证码无效。请申请新的验证码。"
   }

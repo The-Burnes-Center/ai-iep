@@ -194,6 +194,7 @@
     "auth.smsCodeSentTo": "Enter the 6-digit code sent to",
     "auth.invalidPhoneNumber": "Please enter a valid phone number with country code (e.g., +1234567890)",
     "auth.phoneNotFound": "Phone number not found. Please sign up first or use email login.",
+    "auth.phoneNotRegistered": "This phone number is not registered. Please contact support or use email login.",
     "auth.smsDeliveryFailed": "Failed to send SMS. Please check your phone number and try again.",
     "auth.tooManyAttempts": "Too many attempts. Please try again later.",
     "auth.invalidSmsCode": "Invalid verification code. Please try again.",

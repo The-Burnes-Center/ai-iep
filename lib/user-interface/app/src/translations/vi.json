@@ -183,5 +183,13 @@
     "auth.changePhoneNumber": "Thay đổi số điện thoại",
     "auth.smsCodeSentTo": "Mã SMS đã được gửi đến:",
     "auth.smsConsentMobile": "Bằng cách nhấn \"Gửi mã SMS\", bạn đồng ý nhận mã xác thực một lần qua SMS từ The GovLab.",
-    "auth.smsFrequencyDisclaimer": "Tần suất tin nhắn: một lần mỗi lần đăng nhập. Trả lời HELP để được trợ giúp, STOP để hủy. Có thể áp dụng phí tin nhắn và dữ liệu."
+    "auth.smsFrequencyDisclaimer": "Tần suất tin nhắn: một lần mỗi lần đăng nhập. Trả lời HELP để được trợ giúp, STOP để hủy. Có thể áp dụng phí tin nhắn và dữ liệu.",
+    "auth.phoneNotFound": "Không tìm thấy số điện thoại. Vui lòng đăng ký trước hoặc sử dụng đăng nhập bằng email.",
+    "auth.phoneNotRegistered": "Số điện thoại này chưa được đăng ký. Vui lòng liên hệ hỗ trợ hoặc sử dụng đăng nhập bằng email.",
+    "auth.smsCodeSent": "Mã xác minh SMS đã được gửi đến điện thoại của bạn!",
+    "auth.invalidPhoneNumber": "Vui lòng nhập số điện thoại hợp lệ với mã quốc gia (ví dụ: +1234567890)",
+    "auth.smsDeliveryFailed": "Không thể gửi SMS. Vui lòng kiểm tra số điện thoại và thử lại.",
+    "auth.tooManyAttempts": "Quá nhiều lần thử. Vui lòng thử lại sau.",
+    "auth.invalidSmsCode": "Mã xác minh không hợp lệ. Vui lòng thử lại.",
+    "auth.expiredSmsCode": "Mã xác minh không hợp lệ. Vui lòng yêu cầu mã mới."
   }
