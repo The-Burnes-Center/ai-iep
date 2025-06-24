@@ -242,7 +242,7 @@ If a section is not explicitly present in the document:
 - Use the get_section_info tool to understand what each section should contain
 
 ### Summary Extraction Instructions:
-For the "summary" field, generate a fully factual, student-specific summary of this IEP document. Do not hallucinate or generalize. Only include information explicitly present in the document.
+For the "summary" field, generate a fully factual, student-specific summary of this IEP document. Do not hallucinate or generalize. Only include information explicitly present in the document. Target 2-4 paragraphs.
 
 Your summary must include:
 
