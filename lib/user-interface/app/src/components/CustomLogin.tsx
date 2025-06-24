@@ -129,7 +129,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     
     // Validate we have enough digits (10 for US number)
     if (digits.length < 10) {
-      setError(t('auth.invalidPhoneNumber'));
+      setError(t('auth.invalidPhoneNumber') || 'Please enter a valid US phone number (e.g., +1 (555) 555-5555)');
       setMobileLoading(false);
       return;
     }
@@ -138,65 +138,95 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     const formattedPhone = `+1${digits.slice(-10)}`;
 
     try {
-      console.log('Initiating Phone OTP with Custom Auth for:', formattedPhone);
+      console.log('Attempting phone auth for:', formattedPhone);
 
-      // Use CUSTOM_AUTH flow with our Lambda triggers
-      const cognitoUser = await Auth.signIn(formattedPhone, undefined, {
-        authFlowType: 'CUSTOM_AUTH'
-      });
+      // First try to sign in
+      try {
+        const cognitoUser = await Auth.signIn(formattedPhone, undefined, {
+          authFlowType: 'CUSTOM_AUTH'
+        });
 
-      console.log('Phone OTP initiated successfully:', cognitoUser);
-      
-      if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
-        setCognitoUserForSms(cognitoUser);
-        setSmsCodeSent(true);
-        setSuccessMessage(t('auth.smsCodeSent'));
-      } else {
-        setError(t('unexpectedChallengeType'));
+        console.log('Phone auth successful:', cognitoUser);
+        
+        if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
+          setCognitoUserForSms(cognitoUser);
+          setSmsCodeSent(true);
+          setSuccessMessage(t('auth.smsCodeSent') || 'SMS code sent. Please enter the verification code.');
+        } else {
+          setError(t('unexpectedChallengeType'));
+        }
+
+      } catch (signInError: any) {
+        // If user doesn't exist, try to sign them up
+        if (signInError.code === 'UserNotFoundException') {
+          console.log('User not found, attempting signup:', formattedPhone);
+          
+          try {
+            // Sign up the user with just phone number
+            const { user } = await Auth.signUp({
+              username: formattedPhone,
+              password: Math.random().toString(36).slice(-8), // Generate random password
+              attributes: {
+                phone_number: formattedPhone
+              }
+            });
+
+            console.log('Signup successful, proceeding with auth:', user);
+
+            // After signup, we need to confirm the user first
+            try {
+              await Auth.confirmSignUp(formattedPhone, '123456'); // This will fail, but trigger SMS send
+            } catch (confirmError: any) {
+              // We expect this to fail with CodeMismatchException
+              // This is fine - the SMS has been sent
+              console.log('Expected confirmation error:', confirmError);
+            }
+
+            // Set state to show OTP input
+            setCognitoUserForSms(user);
+            setSmsCodeSent(true);
+            setSuccessMessage(t('auth.smsCodeSentNewUser') || 'Account created and SMS code sent! Please verify your phone number.');
+
+          } catch (signUpError: any) {
+            console.error('Signup error:', signUpError);
+            
+            // Handle case where user exists but is not confirmed
+            if (signUpError.code === 'UserNotConfirmedException') {
+              try {
+                // Resend the confirmation code
+                await Auth.resendSignUp(formattedPhone);
+                setCognitoUserForSms({ username: formattedPhone });
+                setSmsCodeSent(true);
+                setSuccessMessage(t('auth.smsCodeResent'));
+              } catch (resendError: any) {
+                console.error('Error resending code:', resendError);
+                setError(resendError.message || t('auth.errorGeneric'));
+              }
+            } else if (signUpError.code === 'UsernameExistsException') {
+              setError(t('auth.errorUserExists'));
+            } else {
+              setError(signUpError.message || t('auth.errorGeneric'));
+            }
+          }
+        } else if (signInError.code === 'UserNotConfirmedException') {
+          // Handle existing but unconfirmed user
+          try {
+            await Auth.resendSignUp(formattedPhone);
+            setCognitoUserForSms({ username: formattedPhone });
+            setSmsCodeSent(true);
+            setSuccessMessage(t('auth.smsCodeResent'));
+          } catch (resendError: any) {
+            console.error('Error resending code:', resendError);
+            setError(resendError.message || t('auth.errorGeneric'));
+          }
+        } else {
+          console.error('Sign in error:', signInError);
+          setError(signInError.message || t('auth.errorGeneric')); 
+        }
       }
     } catch (error: any) {
-      console.error('Phone OTP error:', error);
-      
-      // Handle various error types
-      if (error.code === 'UserNotFoundException') {
-        // For phone OTP authentication, we don't need to pre-create users
-        // The Cognito configuration should allow passwordless sign-in
-        // Let's inform the user that their phone number is not registered
-        setError(t('auth.phoneNotRegistered'));
-        console.log('Phone number not found in user pool:', formattedPhone);
-      } else if (error.code === 'InvalidParameterException') {
-        setError(t('phoneAuthConfigIssue'));
-      } else if (error.code === 'NotAuthorizedException') {
-        setError(t('authNotAuthorized'));
-      } else if (error.code === 'UserNotConfirmedException') {
-        try {
-          // For phone OTP, we don't need manual confirmation
-          // The custom auth flow will handle verification
-          console.log('User not confirmed, proceeding with custom auth flow:', formattedPhone);
-          
-          // Now try the phone OTP flow again
-          const cognitoUser = await Auth.signIn(formattedPhone, undefined, {
-            authFlowType: 'CUSTOM_AUTH'
-          });
-          
-          if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
-            setCognitoUserForSms(cognitoUser);
-            setSmsCodeSent(true);
-            setSuccessMessage(t('auth.smsCodeSent'));
-          } else {
-            setError(t('unexpectedChallengeType'));
-          }
-          
-        } catch (confirmError: any) {
-          console.error('Auto-confirm error:', confirmError);
-          // If auto-confirm fails, just proceed with the SMS flow anyway
-          setError(t('auth.phoneNotFound'));
-        }
-      } else if (error.code === 'LimitExceededException') {
-        setError(t('auth.tooManyAttempts'));
-      } else {
-        setError(`${t('phoneAuthError')}: ${error.message}`);
-      }
+      console.error('Phone auth error:', error);
+      setError(error.message || t('auth.errorGeneric'));
     }
 
     setMobileLoading(false);
@@ -206,28 +236,45 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccessMessage(null);
     
     try {
-      // Verify the SMS code using custom challenge answer
-      const user = await Auth.sendCustomChallengeAnswer(
-        cognitoUserForSms,
-        smsCode
-      );
+      let user = cognitoUserForSms;
       
-      console.log('SMS verification successful', user);
-      onLoginSuccess();
+      // If we have a CUSTOM_CHALLENGE, handle it directly without trying to confirm
+      if (user.challengeName === 'CUSTOM_CHALLENGE') {
+        // Send the SMS code as the challenge answer
+        const challengeResponse = await Auth.sendCustomChallengeAnswer(user, smsCode);
+        
+        // Verify the session is established
+        if (challengeResponse.signInUserSession?.accessToken?.jwtToken) {
+          console.log('Authentication successful, session established');
+          onLoginSuccess();
+        } else {
+          throw new Error('INVALID_CODE');
+        }
+      } else {
+        // If no challenge but we have a session, proceed
+        if (user.signInUserSession?.accessToken?.jwtToken) {
+          console.log('Authentication successful, session established');
+          onLoginSuccess();
+        } else {
+          throw new Error('INVALID_CODE');
+        }
+      }
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('SMS verification error', err);
+      setSuccessMessage(null);
       
-      if (err.code === 'CodeMismatchException') {
-        setError(t('auth.invalidSmsCode'));
+      if (err.code === 'CodeMismatchException' || err.message === 'INVALID_CODE') {
+        setError(t('auth.invalidSmsCode') || 'Invalid verification code. Please try again.');
       } else if (err.code === 'ExpiredCodeException') {
         setError(t('auth.expiredSmsCode'));
       } else if (err.code === 'LimitExceededException') {
         setError(t('auth.tooManyAttempts'));
       } else {
-        setError(err.message || t('auth.invalidSmsCode'));
+        setError(t('auth.invalidSmsCode') || 'Invalid verification code. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -936,7 +983,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     disabled={loading}
                     className="forgot-password-link"
                   >
-                    {t('auth.changePhoneNumber')}
+                    {t('auth.backToLogin')}
                   </Button>
                 </div>
               </div>

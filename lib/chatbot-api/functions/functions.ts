@@ -95,24 +95,55 @@ export class LambdaFunctionStack extends cdk.Stack {
 
     this.getS3KnowledgeFunction = getS3APIHandlerFunction;
 
-    const uploadS3APIHandlerFunction = new lambda.Function(scope, 'UploadS3FilesHandlerFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X, // Choose any supported Node.js runtime
-      code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/upload-s3')), // Points to the lambda directory
-      handler: 'index.handler', // Points to the 'hello' file in the lambda directory
+    const uploadS3KnowledgeAPIHandlerFunction = createTaggedLambda('UploadS3KnowledgeFilesHandlerFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/upload-s3')),
+      handler: 'index.handler',
       environment: {
-        "BUCKET" : props.knowledgeBucket.bucketName,        
+        "BUCKET": props.knowledgeBucket.bucketName,
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName
       },
-      timeout: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(300),
       logRetention: logs.RetentionDays.ONE_YEAR
     });
 
-    uploadS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+    uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
-      actions: ['s3:PutObject'],
-      resources: [props.knowledgeBucket.bucketArn + "/*"]
+      actions: [
+        's3:*'
+      ],
+      resources: [props.knowledgeBucket.bucketArn, props.knowledgeBucket.bucketArn + "/*"]
     }));
 
-    this.uploadS3KnowledgeFunction = uploadS3APIHandlerFunction;
+    // Add DynamoDB permissions for IEP documents table
+    uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:PutItem',
+        'dynamodb:GetItem',
+        'dynamodb:DeleteItem',
+        'dynamodb:Query',
+        'dynamodb:UpdateItem'
+      ],
+      resources: [
+        props.iepDocumentsTable.tableArn,
+        `${props.iepDocumentsTable.tableArn}/index/byChildId`
+      ]
+    }));
+    
+    // Add DynamoDB permissions for user profiles table
+    uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:Query',
+        'dynamodb:UpdateItem'
+      ],
+      resources: [props.userProfilesTable.tableArn]
+    }));
+    
+    this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
 
     const metadataHandlerFunction = new lambda.Function(scope, 'MetadataHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
