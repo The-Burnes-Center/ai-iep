@@ -175,7 +175,7 @@
     "auth.emailLogin": "Iniciar Sesión por Correo",
     "auth.phoneNumber": "Número de Teléfono",
     "auth.enterPhoneNumber": "Ingrese su número móvil (ej: +1234567890)",
-    "auth.phoneNumberHelper": "Incluya código de país (ej: +1 para números de EE.UU.)",
+  
     "auth.sendSmsCode": "Enviar Código SMS",
     "auth.verificationCodeSms": "Código de Verificación",
     "auth.enterSmsCode": "Ingrese código de 6 dígitos",
@@ -190,7 +190,8 @@
     "auth.tooManyAttempts": "Demasiados intentos. Por favor intente más tarde.",
     "auth.invalidSmsCode": "Código de verificación inválido. Por favor intente de nuevo.",
     "auth.expiredSmsCode": "Código de verificación inválido. Por favor solicite uno nuevo.",
-    "auth.smsConsentMobile": "Al tocar \"Enviar código SMS\", da su consentimiento expreso para recibir códigos de un solo uso vía SMS de The GovLab. Frecuencia de mensajes: uno por intento de inicio de sesión. Pueden aplicarse tarifas de mensajes y datos. Responda HELP para ayuda, STOP para cancelar.",
+    "auth.smsConsentMobile": "Al tocar \"Enviar código SMS\", da su consentimiento expreso para recibir códigos de un solo uso vía SMS de The GovLab.",
+    "auth.smsFrequencyDisclaimer": "Frecuencia de mensajes: uno por intento de inicio de sesión. Responda HELP para ayuda, STOP para cancelar. Pueden aplicarse tarifas de mensajes y datos.",
     "pleaseEnterPhoneNumber": "Por favor ingrese un número de teléfono",
     "phoneAuthConfigIssue": "Problema de configuración de autenticación telefónica. Por favor contacte al soporte.",
     "authNotAuthorized": "Autenticación no autorizada. Por favor intente de nuevo.",

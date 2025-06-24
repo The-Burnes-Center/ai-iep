@@ -47,7 +47,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   // Mobile login state variables
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+1 ');
   const [showMobileLogin, setShowMobileLogin] = useState(false);
   const [mobileLoading, setMobileLoading] = useState(false);
   const [smsCode, setSmsCode] = useState('');
@@ -124,12 +124,18 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     setMobileLoading(true);
     setError('');
 
-    // Format phone number to include country code if not present
-    let formattedPhone = phoneNumber.trim();
-    if (!formattedPhone.startsWith('+')) {
-      // Default to US country code if no country code provided
-      formattedPhone = `+1${formattedPhone.replace(/[^\d]/g, '')}`;
+    // Extract only digits and format properly
+    const digits = phoneNumber.replace(/\D/g, '');
+    
+    // Validate we have enough digits (10 for US number)
+    if (digits.length < 10) {
+      setError(t('auth.invalidPhoneNumber'));
+      setMobileLoading(false);
+      return;
     }
+
+    // Format as +1XXXXXXXXXX (E.164 format)
+    const formattedPhone = `+1${digits.slice(-10)}`;
 
     try {
       console.log('Initiating Phone OTP with Custom Auth for:', formattedPhone);
@@ -144,6 +150,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
         setCognitoUserForSms(cognitoUser);
         setSmsCodeSent(true);
+        setSuccessMessage(t('auth.smsCodeSent'));
       } else {
         setError(t('unexpectedChallengeType'));
       }
@@ -153,16 +160,35 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       // Handle various error types
       if (error.code === 'UserNotFoundException') {
         try {
-          // Try to sign up the user first with a phone number
-          await Auth.signUp({
+          console.log('User not found, creating new user with phone number:', formattedPhone);
+          
+          // Create a strong password that meets Cognito requirements
+          const tempPassword = 'TempPass123!' + Math.random().toString(36).slice(-4);
+          
+          // Auto-signup with phone number as username
+          const signUpResult = await Auth.signUp({
             username: formattedPhone,
-            password: Math.random().toString(36).slice(-12) + 'A1!', // Random temp password
+            password: tempPassword,
             attributes: {
-              phone_number: formattedPhone
+              phone_number: formattedPhone,
+              phone_number_verified: 'true',
+              // Add a placeholder email if required by your user pool
+              email: `${formattedPhone.replace('+', '').replace(/\D/g, '')}@temp.placeholder`
             }
           });
           
-          // After signup, try the phone OTP flow again
+          // Auto-confirm the user immediately since we'll verify via SMS
+          try {
+            await Auth.confirmSignUp(formattedPhone, '000000', {
+              forceAliasCreation: false
+            });
+          } catch (confirmError) {
+            console.log('Confirm signup not needed or failed:', confirmError);
+          }
+          
+          console.log('User created successfully:', signUpResult);
+          
+          // Now try the phone OTP flow again
           const cognitoUser = await Auth.signIn(formattedPhone, undefined, {
             authFlowType: 'CUSTOM_AUTH'
           });
@@ -170,15 +196,57 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
             setCognitoUserForSms(cognitoUser);
             setSmsCodeSent(true);
+            setSuccessMessage(t('auth.smsCodeSent'));
+          } else {
+            setError(t('unexpectedChallengeType'));
           }
+          
         } catch (signUpError: any) {
-          console.error('Sign up error:', signUpError);
-          setError(`${t('phoneAuthConfigIssue')} ${signUpError.message}`);
+          console.error('Auto-signup error:', signUpError);
+          
+          if (signUpError.code === 'UsernameExistsException') {
+            // User exists but might be in a different state, try again
+            setError(t('auth.phoneNotFound'));
+          } else if (signUpError.code === 'InvalidPasswordException') {
+            setError(t('phoneAuthConfigIssue'));
+          } else {
+            setError(`${t('phoneAuthError')}: ${signUpError.message}`);
+          }
         }
       } else if (error.code === 'InvalidParameterException') {
         setError(t('phoneAuthConfigIssue'));
       } else if (error.code === 'NotAuthorizedException') {
         setError(t('authNotAuthorized'));
+      } else if (error.code === 'UserNotConfirmedException') {
+        try {
+          // Auto-confirm the user since we're using phone verification
+          console.log('User not confirmed, auto-confirming:', formattedPhone);
+          
+          // For phone-based auth, we can auto-confirm since SMS verification is the confirmation
+          await Auth.confirmSignUp(formattedPhone, '000000', {
+            forceAliasCreation: false
+          });
+          
+          // Now try the phone OTP flow again
+          const cognitoUser = await Auth.signIn(formattedPhone, undefined, {
+            authFlowType: 'CUSTOM_AUTH'
+          });
+          
+          if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
+            setCognitoUserForSms(cognitoUser);
+            setSmsCodeSent(true);
+            setSuccessMessage(t('auth.smsCodeSent'));
+          } else {
+            setError(t('unexpectedChallengeType'));
+          }
+          
+        } catch (confirmError: any) {
+          console.error('Auto-confirm error:', confirmError);
+          // If auto-confirm fails, just proceed with the SMS flow anyway
+          setError(t('auth.phoneNotFound'));
+        }
+      } else if (error.code === 'LimitExceededException') {
+        setError(t('auth.tooManyAttempts'));
       } else {
         setError(`${t('phoneAuthError')}: ${error.message}`);
       }
@@ -224,11 +292,9 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     setError('');
     
     try {
-      // Format phone number again
-      let formattedPhone = phoneNumber.trim();
-      if (!formattedPhone.startsWith('+')) {
-        formattedPhone = `+1${formattedPhone.replace(/[^\d]/g, '')}`;
-      }
+      // Extract only digits and format properly
+      const digits = phoneNumber.replace(/\D/g, '');
+      const formattedPhone = `+1${digits.slice(-10)}`;
       
       // Resend the SMS code by initiating sign in again with custom auth
       const user = await Auth.signIn(formattedPhone, undefined, {
@@ -236,7 +302,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       });
       
       setCognitoUserForSms(user);
-      // Don't show success message, just continue with the flow
+      setSuccessMessage(t('auth.successCodeResent'));
     } catch (err) {
       console.error('Resend SMS error', err);
       setError(err.message || t('auth.smsDeliveryFailed'));
@@ -783,14 +849,76 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   <Form.Label className="form-label-bold">{t('auth.phoneNumber')}</Form.Label>
                   <Form.Control
                     type="tel"
-                    placeholder={t('auth.enterPhoneNumber')}
+                    placeholder="(xxx) xxx-xxxx"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    onChange={(e) => {
+                      const input = e.target.value;
+                      
+                      // If input is shorter than "+1 ", reset to "+1 "
+                      if (input.length < 3) {
+                        setPhoneNumber('+1 ');
+                        return;
+                      }
+                      
+                      // Always keep +1 prefix
+                      if (!input.startsWith('+1 ')) {
+                        // Extract only digits from input
+                        const digits = input.replace(/\D/g, '');
+                        // Format as +1 (xxx) xxx-xxxx
+                        let formatted = '+1 ';
+                        if (digits.length > 0) {
+                          if (digits.length <= 3) {
+                            formatted += `(${digits}`;
+                          } else if (digits.length <= 6) {
+                            formatted += `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                          } else {
+                            formatted += `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+                          }
+                        }
+                        setPhoneNumber(formatted);
+                      } else {
+                        // Handle input that already has +1 prefix
+                        const withoutPrefix = input.slice(3);
+                        const digits = withoutPrefix.replace(/\D/g, '');
+                        let formatted = '+1 ';
+                        if (digits.length > 0) {
+                          if (digits.length <= 3) {
+                            formatted += `(${digits}`;
+                          } else if (digits.length <= 6) {
+                            formatted += `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                          } else {
+                            formatted += `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+                          }
+                        }
+                        setPhoneNumber(formatted);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      // Prevent cursor movement before "+1 "
+                      const target = e.target as HTMLInputElement;
+                      if ((e.key === 'ArrowLeft' || e.key === 'Home') && target.selectionStart !== null && target.selectionStart <= 3) {
+                        e.preventDefault();
+                        target.setSelectionRange(3, 3);
+                      }
+                    }}
+                    onClick={(e) => {
+                      // Prevent cursor placement before "+1 "
+                      const target = e.target as HTMLInputElement;
+                      if (target.selectionStart !== null && target.selectionStart < 3) {
+                        target.setSelectionRange(3, 3);
+                      }
+                    }}
+                    onFocus={(e) => {
+                      // Set cursor after "+1 " on focus
+                      const target = e.target as HTMLInputElement;
+                      setTimeout(() => {
+                        if (target.selectionStart !== null && target.selectionStart < 3) {
+                          target.setSelectionRange(3, 3);
+                        }
+                      }, 0);
+                    }}
                     required
                   />
-                  <Form.Text className="text-muted">
-                    {t('auth.phoneNumberHelper')}
-                  </Form.Text>
                 </Form.Group>
                 
                 {error && <Alert variant="danger">{error}</Alert>}
@@ -853,6 +981,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     onClick={() => {
                       setSmsCodeSent(false);
                       setSmsCode('');
+                      setPhoneNumber('+1 ');
                       setCognitoUserForSms(null);
                       setError(null);
                       setSuccessMessage(null);
@@ -938,6 +1067,15 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           </Form>
         )}
       </Col>
+      
+      {/* SMS Frequency Disclaimer - positioned at bottom */}
+      {showMobileLogin && (
+        <div className="position-fixed bottom-0 start-0 end-0 p-2" style={{ backgroundColor: 'rgba(248, 249, 250, 0.95)', borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+          <p className="text-center mb-0" style={{ fontSize: '0.75rem', color: 'rgba(108, 117, 125, 0.7)', lineHeight: '1.2' }}>
+            {t('auth.smsFrequencyDisclaimer')}
+          </p>
+        </div>
+      )}
     </Container>
   );
 };

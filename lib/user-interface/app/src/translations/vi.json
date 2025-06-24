@@ -170,5 +170,18 @@
     "auth.successPasswordReset": "Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới của bạn.",
     "auth.successAccountCreated": "Tạo tài khoản thành công! Vui lòng đăng nhập bằng thông tin đăng nhập của bạn.",
     "auth.successCodeResent": "Mã xác nhận đã được gửi lại đến email của bạn",
-    "auth.smsConsent": "Bằng cách đăng ký qua SMS, bạn đồng ý cung cấp số điện thoại của mình. Chúng tôi sẽ chỉ sử dụng số điện thoại của bạn với mục đích gửi mã đăng nhập."
+    "auth.smsConsent": "Bằng cách đăng ký qua SMS, bạn đồng ý cung cấp số điện thoại của mình. Chúng tôi sẽ chỉ sử dụng số điện thoại của bạn với mục đích gửi mã đăng nhập.",
+    "auth.mobileLogin": "Đăng nhập bằng điện thoại",
+    "auth.emailLogin": "Đăng nhập bằng email",
+    "auth.phoneNumber": "Số điện thoại",
+    "auth.enterPhoneNumber": "Nhập số điện thoại của bạn (ví dụ: +1234567890)",
+    "auth.sendSmsCode": "Gửi mã SMS",
+    "auth.verificationCodeSms": "Mã xác minh",
+    "auth.enterSmsCode": "Nhập mã từ SMS",
+    "auth.verifySmsCode": "Xác minh mã SMS",
+    "auth.resendSmsCode": "Gửi lại mã SMS",
+    "auth.changePhoneNumber": "Thay đổi số điện thoại",
+    "auth.smsCodeSentTo": "Mã SMS đã được gửi đến:",
+    "auth.smsConsentMobile": "Bằng cách nhấn \"Gửi mã SMS\", bạn đồng ý nhận mã xác thực một lần qua SMS từ The GovLab.",
+    "auth.smsFrequencyDisclaimer": "Tần suất tin nhắn: một lần mỗi lần đăng nhập. Trả lời HELP để được trợ giúp, STOP để hủy. Có thể áp dụng phí tin nhắn và dữ liệu."
   }

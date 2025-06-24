@@ -183,7 +183,7 @@
     "auth.emailLogin": "Email Login",
     "auth.phoneNumber": "Phone Number",
     "auth.enterPhoneNumber": "Enter your mobile number (e.g., +1234567890)",
-    "auth.phoneNumberHelper": "Include country code (e.g., +1 for US numbers)",
+  
     "auth.sendSmsCode": "Send SMS Code",
     "auth.verificationCodeSms": "Verification Code",
     "auth.enterSmsCode": "Enter 6-digit code",
@@ -198,7 +198,8 @@
     "auth.tooManyAttempts": "Too many attempts. Please try again later.",
     "auth.invalidSmsCode": "Invalid verification code. Please try again.",
     "auth.expiredSmsCode": "Invalid verification code. Please request a new one.",
-    "auth.smsConsentMobile": "By tapping \"Send SMS Code\", you give express consent to receive one-time passcodes via SMS from The GovLab. Message frequency: one per login attempt. Msg & data rates may apply. Reply HELP for help, STOP to opt out.",
+    "auth.smsConsentMobile": "By tapping \"Send SMS Code\", you give express consent to receive one-time passcodes via SMS from The GovLab.",
+    "auth.smsFrequencyDisclaimer": "Message frequency: one per login attempt. Reply HELP for help, STOP to opt out. Msg & data rates may apply.",
     "pleaseEnterPhoneNumber": "Please enter a phone number",
     "phoneAuthConfigIssue": "Phone authentication configuration issue. Please contact support.",
     "authNotAuthorized": "Authentication not authorized. Please try again.",

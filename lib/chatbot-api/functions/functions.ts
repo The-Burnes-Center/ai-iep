@@ -31,9 +31,6 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly metadataHandlerFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
   public readonly cognitoTriggerFunction : lambda.Function;
-  public readonly defineAuthChallengeFunction : lambda.Function;
-  public readonly createAuthChallengeFunction : lambda.Function;
-  public readonly verifyAuthChallengeFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
@@ -67,14 +64,13 @@ export class LambdaFunctionStack extends cdk.Stack {
 
     deleteS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
-      actions: [
-        's3:*'
-      ],
-      resources: [props.knowledgeBucket.bucketArn,props.knowledgeBucket.bucketArn+"/*"]
+      actions: ['s3:DeleteObject'],
+      resources: [props.knowledgeBucket.bucketArn + "/*"]
     }));
+
     this.deleteS3Function = deleteS3APIHandlerFunction;
 
-    const getS3KnowledgeAPIHandlerFunction = new lambda.Function(scope, 'GetS3KnowledgeFilesHandlerFunction', {
+    const getS3APIHandlerFunction = new lambda.Function(scope, 'GetS3FilesHandlerFunction', {
       runtime: lambda.Runtime.NODEJS_20_X, // Choose any supported Node.js runtime
       code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/get-s3')), // Points to the lambda directory
       handler: 'index.handler', // Points to the 'hello' file in the lambda directory
@@ -85,138 +81,99 @@ export class LambdaFunctionStack extends cdk.Stack {
       logRetention: logs.RetentionDays.ONE_YEAR
     });
 
-    getS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+    getS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
-      actions: [
-        's3:*'
-      ],
-      resources: [props.knowledgeBucket.bucketArn,props.knowledgeBucket.bucketArn+"/*"]
+      actions: ['s3:GetObject'],
+      resources: [props.knowledgeBucket.bucketArn + "/*"]
     }));
-    this.getS3KnowledgeFunction = getS3KnowledgeAPIHandlerFunction;
 
-    const uploadS3KnowledgeAPIHandlerFunction = createTaggedLambda('UploadS3KnowledgeFilesHandlerFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/upload-s3')),
-      handler: 'index.handler',
+    getS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['s3:ListBucket'],
+      resources: [props.knowledgeBucket.bucketArn]
+    }));
+
+    this.getS3KnowledgeFunction = getS3APIHandlerFunction;
+
+    const uploadS3APIHandlerFunction = new lambda.Function(scope, 'UploadS3FilesHandlerFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X, // Choose any supported Node.js runtime
+      code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/upload-s3')), // Points to the lambda directory
+      handler: 'index.handler', // Points to the 'hello' file in the lambda directory
+      environment: {
+        "BUCKET" : props.knowledgeBucket.bucketName,        
+      },
+      timeout: cdk.Duration.seconds(30),
+      logRetention: logs.RetentionDays.ONE_YEAR
+    });
+
+    uploadS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['s3:PutObject'],
+      resources: [props.knowledgeBucket.bucketArn + "/*"]
+    }));
+
+    this.uploadS3KnowledgeFunction = uploadS3APIHandlerFunction;
+
+    const metadataHandlerFunction = new lambda.Function(scope, 'MetadataHandlerFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler')),
+      handler: 'lambda_function.lambda_handler',
       environment: {
         "BUCKET": props.knowledgeBucket.bucketName,
-        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-        "USER_PROFILES_TABLE": props.userProfilesTable.tableName
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName
       },
       timeout: cdk.Duration.seconds(300),
       logRetention: logs.RetentionDays.ONE_YEAR
     });
 
-    uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        's3:*'
-      ],
-      resources: [props.knowledgeBucket.bucketArn, props.knowledgeBucket.bucketArn + "/*"]
-    }));
-
-    // Add DynamoDB permissions for IEP documents table
-    uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'dynamodb:PutItem',
-        'dynamodb:GetItem',
-        'dynamodb:DeleteItem',
-        'dynamodb:Query',
-        'dynamodb:UpdateItem'
-      ],
-      resources: [
-        props.iepDocumentsTable.tableArn,
-        `${props.iepDocumentsTable.tableArn}/index/byChildId`
-      ]
-    }));
-    
-    // Add DynamoDB permissions for user profiles table
-    uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'dynamodb:GetItem',
-        'dynamodb:Query',
-        'dynamodb:UpdateItem'
-      ],
-      resources: [props.userProfilesTable.tableArn]
-    }));
-    
-    this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
-
-    // Define the Lambda function for metadata
-    const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
-      runtime: lambda.Runtime.PYTHON_3_12,
-      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
-        bundling: {
-          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
-          command: [
-            'bash', '-c',
-            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
-          ],
-        },
-      }),
-      handler: 'lambda_function.lambda_handler',
-      environment: {
-        "BUCKET": props.knowledgeBucket.bucketName,
-        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-        "USER_PROFILES_TABLE": props.userProfilesTable.tableName, 
-        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
-        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
-      },
-      timeout: cdk.Duration.seconds(900),
-      memorySize: 2048,
-      logRetention: logs.RetentionDays.ONE_YEAR
-    });
-    
+    // Grant S3 permissions
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
         's3:GetObject',
         's3:PutObject',
-        's3:DeleteObject',
-        's3:ListBucket',
-        's3:GetBucketLocation',
-        'bedrock:InvokeModel',
-        'bedrock:Retrieve',
-        'bedrock-agent-runtime:Retrieve',
-        'comprehend:BatchDetectPiiEntities',
-        'comprehend:DetectPiiEntities',
+        's3:DeleteObject'
       ],
-      resources: [
-        props.knowledgeBucket.bucketArn,
-        props.knowledgeBucket.bucketArn + "/*",
-        'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
-        '*', // Comprehend permissions apply to all resources
-      ]
+      resources: [props.knowledgeBucket.bucketArn + "/*"]
     }));
 
-    // Add DynamoDB permissions for updating document status and user profiles
+    // Grant DynamoDB permissions
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
         'dynamodb:GetItem',
         'dynamodb:PutItem',
         'dynamodb:UpdateItem',
+        'dynamodb:DeleteItem',
         'dynamodb:Query',
         'dynamodb:Scan'
       ],
       resources: [
+        props.userProfilesTable.tableArn,
+        props.userProfilesTable.tableArn + "/index/*",
         props.iepDocumentsTable.tableArn,
-        props.userProfilesTable.tableArn
+        props.iepDocumentsTable.tableArn + "/index/*"
       ]
     }));
 
-    // Add SSM permission to access the parameter
+    // Grant Comprehend permissions
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
-        'ssm:GetParameter'
+        'comprehend:DetectPiiEntities',
+        'comprehend:ContainsPiiEntities'
       ],
-      resources: [
-        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`,
-        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
-      ]
+      resources: ['*']
+    }));
+
+    // Grant Bedrock permissions
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'bedrock:InvokeModel'
+      ],
+      resources: ['*']
     }));
 
     this.metadataHandlerFunction = metadataHandlerFunction;
@@ -308,99 +265,6 @@ export class LambdaFunctionStack extends cdk.Stack {
     );
 
     this.cognitoTriggerFunction = cognitoTriggerFunction;
-
-    // Phone OTP Authentication Lambda Functions
-    // Define Auth Challenge Function
-    const defineAuthChallengeFunction = new lambda.Function(scope, 'DefineAuthChallengeFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset(path.join(__dirname, 'phone-otp-auth')),
-      handler: 'define-auth-challenge.handler',
-      timeout: cdk.Duration.seconds(30),
-      logRetention: logs.RetentionDays.ONE_YEAR
-    });
-
-    // Allow Cognito to invoke the Lambda
-    defineAuthChallengeFunction.addPermission('CognitoDefineAuthInvocation', {
-      principal: new iam.ServicePrincipal('cognito-idp.amazonaws.com'),
-      action: 'lambda:InvokeFunction',
-      sourceArn: props.userPool.userPoolArn
-    });
-
-    this.defineAuthChallengeFunction = defineAuthChallengeFunction;
-
-    // Create Auth Challenge Function
-    const createAuthChallengeFunction = new lambda.Function(scope, 'CreateAuthChallengeFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset(path.join(__dirname, 'phone-otp-auth')),
-      handler: 'create-auth-challenge.handler',
-      timeout: cdk.Duration.seconds(30),
-      logRetention: logs.RetentionDays.ONE_YEAR
-    });
-
-    // Add SNS permissions for sending SMS
-    createAuthChallengeFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'sns:Publish'
-      ],
-      resources: ['*'] // SNS publish requires * for phone numbers
-    }));
-
-    // Allow Cognito to invoke the Lambda
-    createAuthChallengeFunction.addPermission('CognitoCreateAuthInvocation', {
-      principal: new iam.ServicePrincipal('cognito-idp.amazonaws.com'),
-      action: 'lambda:InvokeFunction',
-      sourceArn: props.userPool.userPoolArn
-    });
-
-    this.createAuthChallengeFunction = createAuthChallengeFunction;
-
-    // Verify Auth Challenge Function
-    const verifyAuthChallengeFunction = new lambda.Function(scope, 'VerifyAuthChallengeFunction', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset(path.join(__dirname, 'phone-otp-auth')),
-      handler: 'verify-auth-challenge.handler',
-      environment: {
-        "USER_PROFILES_TABLE": props.userProfilesTable.tableName
-      },
-      timeout: cdk.Duration.seconds(30),
-      logRetention: logs.RetentionDays.ONE_YEAR
-    });
-
-    // Add DynamoDB permissions for user profile creation
-    verifyAuthChallengeFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'dynamodb:GetItem',
-        'dynamodb:PutItem'
-      ],
-      resources: [props.userProfilesTable.tableArn]
-    }));
-
-    // Allow Cognito to invoke the Lambda
-    verifyAuthChallengeFunction.addPermission('CognitoVerifyAuthInvocation', {
-      principal: new iam.ServicePrincipal('cognito-idp.amazonaws.com'),
-      action: 'lambda:InvokeFunction',
-      sourceArn: props.userPool.userPoolArn
-    });
-
-    this.verifyAuthChallengeFunction = verifyAuthChallengeFunction;
-
-    // Add the Lambda triggers to Cognito User Pool for Phone OTP authentication
-    props.userPool.addTrigger(
-      cdk.aws_cognito.UserPoolOperation.DEFINE_AUTH_CHALLENGE,
-      defineAuthChallengeFunction
-    );
-
-    props.userPool.addTrigger(
-      cdk.aws_cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
-      createAuthChallengeFunction
-    );
-
-    props.userPool.addTrigger(
-      cdk.aws_cognito.UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE,
-      verifyAuthChallengeFunction
-    );
 
     // Create a layer for logging
     const loggingLayer = new lambda.LayerVersion(this, 'LoggingLayer', {
