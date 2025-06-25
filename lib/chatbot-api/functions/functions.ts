@@ -145,14 +145,26 @@ export class LambdaFunctionStack extends cdk.Stack {
     
     this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
 
+    // Create Lambda layer for Python dependencies
+    const pythonDepsLayer = new lambda.LayerVersion(scope, 'PythonDependenciesLayer', {
+      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler/python-deps-layer.zip')),
+      compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
+      description: 'Python dependencies for metadata handler (requests, openai, mistral, etc.)',
+    });
+
     const metadataHandlerFunction = new lambda.Function(scope, 'MetadataHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
-      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler')),
+      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
+        exclude: ['python-deps-layer.zip', 'python-deps-layer', 'build-layer.sh', 'requirements-minimal.txt']
+      }),
       handler: 'lambda_function.lambda_handler',
+      layers: [pythonDepsLayer],
       environment: {
         "BUCKET": props.knowledgeBucket.bucketName,
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
-        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/mistral-api-key",
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/openai-api-key"
       },
       timeout: cdk.Duration.seconds(300),
       logRetention: logs.RetentionDays.ONE_YEAR
@@ -205,6 +217,18 @@ export class LambdaFunctionStack extends cdk.Stack {
         'bedrock:InvokeModel'
       ],
       resources: ['*']
+    }));
+
+    // Grant SSM permissions for API keys
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'ssm:GetParameter'
+      ],
+      resources: [
+        `arn:aws:ssm:*:*:parameter/ai-iep/mistral-api-key`,
+        `arn:aws:ssm:*:*:parameter/ai-iep/openai-api-key`
+      ]
     }));
 
     this.metadataHandlerFunction = metadataHandlerFunction;
