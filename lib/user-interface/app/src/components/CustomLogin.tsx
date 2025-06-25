@@ -54,7 +54,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [smsCodeSent, setSmsCodeSent] = useState(false);
   const [cognitoUserForSms, setCognitoUserForSms] = useState<any>(null);
   const [isNewUserConfirmation, setIsNewUserConfirmation] = useState(false); // Track if this is signup confirmation
-  const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(null); // Store phone for confirmation flow
+  const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(null);
+  const [isNewUserSignup, setIsNewUserSignup] = useState(false); // Track if this is a brand new user signup // Store phone for confirmation flow
   
   // State for toggling password visibility
   const [showMainPassword, setShowMainPassword] = useState(false);
@@ -74,6 +75,23 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Handle language change
   const handleLanguageChange = (lang: SupportedLanguage) => {
     setLanguage(lang);
+  };
+
+  // Handle successful authentication with smart routing
+  const handleSuccessfulAuthentication = () => {
+    if (isNewUserSignup) {
+      console.log('New user signup detected, storing flag for onboarding flow');
+      // Set a flag in localStorage to indicate this is a new phone signup
+      // The PreferredLanguage component will check this flag
+      localStorage.setItem('isNewPhoneSignup', 'true');
+    } else {
+      console.log('Existing user signin detected, clearing any signup flags');
+      // Clear any existing signup flags
+      localStorage.removeItem('isNewPhoneSignup');
+    }
+    
+    // Always call onLoginSuccess to set authenticated state
+    onLoginSuccess();
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -189,6 +207,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             // Set up for confirmation flow
             setIsNewUserConfirmation(true);
             setPendingPhoneNumber(formattedPhone);
+            setIsNewUserSignup(true); // Mark as new user signup
             setSmsCodeSent(true);
             setSuccessMessage('Account created! Please enter the verification code sent to your phone.');
             
@@ -305,7 +324,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             console.log('User authenticated successfully after confirmation');
             setSuccessMessage('Account confirmed and signed in successfully!');
             setTimeout(() => {
-              onLoginSuccess();
+              handleSuccessfulAuthentication();
             }, 1000);
           } else {
             console.error('Unexpected auth state after confirmation:', cognitoUser);
@@ -328,6 +347,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           setIsNewUserConfirmation(false);
           setPendingPhoneNumber(null);
           setSmsCode('');
+          setIsNewUserSignup(false);
         }
         
       } else {
@@ -353,7 +373,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           
           // Small delay to show success message, then redirect
           setTimeout(() => {
-            onLoginSuccess();
+            handleSuccessfulAuthentication();
           }, 1000);
           
         } else if (result.challengeName) {
@@ -1048,6 +1068,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                       setSuccessMessage(null);
                       setIsNewUserConfirmation(false);
                       setPendingPhoneNumber(null);
+                      setIsNewUserSignup(false);
                     }}
                     disabled={loading}
                     className="forgot-password-link"

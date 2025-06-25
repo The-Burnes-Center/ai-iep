@@ -63,6 +63,18 @@ export default function PreferredLanguage() {
         return;
       }
 
+      // Check if this is a new phone signup
+      const isNewPhoneSignup = localStorage.getItem('isNewPhoneSignup') === 'true';
+      
+      if (isNewPhoneSignup) {
+        console.log('New phone signup detected, starting onboarding flow');
+        // Clear the flag since we're handling it
+        localStorage.removeItem('isNewPhoneSignup');
+        // For new phone signups, always start with language selection (stay on current screen)
+        setError(null);
+        return;
+      }
+
       // Check if the user has already completed all required fields
       const hasLanguage = data && data.secondaryLanguage;
       const hasConsent = data && data.consentGiven === true;
