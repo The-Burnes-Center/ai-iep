@@ -189,6 +189,7 @@
     "auth.phoneNotRegistered": "Este número de teléfono no está registrado. Por favor contacte soporte o use inicio de sesión por correo.",
     "auth.smsCodeSent": "Código SMS enviado. Por favor, ingrese el código de verificación.",
     "auth.smsCodeSentNewUser": "¡Cuenta creada y código SMS enviado! Por favor, verifique su número de teléfono.",
+    "auth.accountConfirmedNewCode": "¡Excelente! Está confirmado. Le enviaremos otro código ahora para que pueda iniciar sesión por primera vez.",
     "auth.smsCodeResent": "¡El código SMS ha sido reenviado a su teléfono!",
     "auth.invalidPhoneNumber": "Por favor ingrese un número de teléfono válido de EE.UU. (ej: +1 (555) 555-5555)",
     "auth.smsDeliveryFailed": "Error al enviar SMS. Por favor verifique su número de teléfono e intente de nuevo.",

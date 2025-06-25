@@ -188,6 +188,7 @@
     "auth.phoneNotRegistered": "此电话号码未注册。请联系支持或使用邮箱登录。",
     "auth.smsCodeSent": "短信验证码已发送。请输入验证码。",
     "auth.smsCodeSentNewUser": "账户已创建并发送短信验证码！请验证您的手机号码。",
+    "auth.accountConfirmedNewCode": "太好了！您已确认。我们现在将向您发送另一个验证码，以便您首次登录。",
     "auth.smsCodeResent": "短信验证码已重新发送到您的手机！",
     "auth.invalidPhoneNumber": "请输入有效的美国电话号码（例如：+1 (555) 555-5555）",
     "auth.smsDeliveryFailed": "发送短信失败。请检查您的电话号码并重试。",

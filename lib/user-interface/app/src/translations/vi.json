@@ -193,6 +193,7 @@
     "auth.phoneNotRegistered": "Số điện thoại này chưa được đăng ký. Vui lòng liên hệ hỗ trợ hoặc sử dụng đăng nhập bằng email.",
     "auth.smsCodeSent": "Đã gửi mã SMS. Vui lòng nhập mã xác minh.",
     "auth.smsCodeSentNewUser": "Đã tạo tài khoản và gửi mã SMS! Vui lòng xác minh số điện thoại của bạn.",
+    "auth.accountConfirmedNewCode": "Tuyệt vời! Bạn đã được xác nhận. Chúng tôi sẽ gửi cho bạn một mã khác ngay bây giờ để bạn có thể đăng nhập lần đầu tiên.",
     "auth.smsCodeResent": "Mã SMS đã được gửi lại đến điện thoại của bạn!",
     "auth.invalidPhoneNumber": "Vui lòng nhập số điện thoại hợp lệ (ví dụ: +1 (555) 555-5555)",
     "auth.smsDeliveryFailed": "Không thể gửi SMS. Vui lòng kiểm tra số điện thoại và thử lại.",

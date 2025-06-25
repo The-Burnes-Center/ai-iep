@@ -197,6 +197,7 @@
     "auth.phoneNotRegistered": "This phone number is not registered. Please contact support or use email login.",
     "auth.smsCodeSent": "SMS code sent. Please enter the verification code.",
     "auth.smsCodeSentNewUser": "Account created and SMS code sent! Please verify your phone number.",
+    "auth.accountConfirmedNewCode": "Great! You're confirmed. We will send you another code now so you can login for the first time.",
     "auth.smsCodeResent": "SMS code has been resent to your phone!",
     "auth.invalidPhoneNumber": "Please enter a valid US phone number (e.g., +1 (555) 555-5555)",
     "auth.smsDeliveryFailed": "Failed to send SMS. Please check your phone number and try again.",
