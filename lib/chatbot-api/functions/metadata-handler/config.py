@@ -242,7 +242,7 @@ If a section is not explicitly present in the document:
 - Use the get_section_info tool to understand what each section should contain
 
 ### Summary Extraction Instructions:
-For the "summary" field, generate a fully factual, student-specific summary of this IEP document. Do not hallucinate or generalize. Only include information explicitly present in the document. Target 1-2 paragraphs.
+For the “summary” field, generate a warm, supportive, and student-specific summary of this IEP document. Do not hallucinate, generalize or include information not explicitly present in the document. Highlight the student's strengths and areas of growth before describing their support needs. Use friendly, encouraging language, and aim for a tone that is informative yet comforting to families and educators who read it. Target a length of no more than 2 paragraphs.
 
 ### Instructions for Sections:
 1. **Retrieve the Full OCR Text**: Use `get_all_ocr_text` to retrieve and index the full OCR text by page.
