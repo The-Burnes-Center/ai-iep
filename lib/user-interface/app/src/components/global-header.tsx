@@ -2,17 +2,22 @@ import React, { useEffect, useState, useContext } from "react";
 import { Navbar, Container, Nav, Button, Dropdown } from 'react-bootstrap';
 import { Auth } from "aws-amplify";
 import { AuthContext } from "../common/auth-context"; 
+import { AppContext } from "../common/app-context";
+import { ApiClient } from "../common/api-client/api-client";
 import { CHATBOT_NAME } from "../common/constants";
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage, SupportedLanguage } from '../common/language-context';
+import { useNotifications } from './notif-manager';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './global-header.css';
 
 export default function GlobalHeader() {
   const [userName, setUserName] = useState<string | null>(null);
   const { setAuthenticated } = useContext(AuthContext); 
+  const appContext = useContext(AppContext);
   const { language, setLanguage } = useLanguage();
+  const { addNotification } = useNotifications();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
 
@@ -69,8 +74,45 @@ export default function GlobalHeader() {
   };
 
   // Handle language change
-  const handleLanguageChange = (lang: SupportedLanguage) => {
+  const handleLanguageChange = async (lang: SupportedLanguage) => {
+    // Update UI language immediately for responsive UX
     setLanguage(lang);
+    
+    // Update backend profile to sync language preference
+    try {
+      const apiClient = new ApiClient(appContext);
+      
+      // Get current profile
+      const currentProfile = await apiClient.profile.getProfile();
+      
+      if (currentProfile) {
+        // Update the secondary language (keeping primary as English)
+        const updatedProfile = {
+          ...currentProfile,
+          primaryLanguage: 'en',
+          secondaryLanguage: lang === 'en' ? undefined : lang
+        };
+        
+        // Only update if there's actually a change
+        if (currentProfile.secondaryLanguage !== updatedProfile.secondaryLanguage) {
+          await apiClient.profile.updateProfile(updatedProfile);
+          console.log(`Language preference updated to: ${lang}`);
+          
+          // Show success notification
+          const languageLabels = {
+            'en': 'English',
+            'es': 'Spanish',
+            'zh': 'Chinese', 
+            'vi': 'Vietnamese'
+          };
+          addNotification('success', `Language preference updated to ${languageLabels[lang] || lang}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update language preference in profile:', error);
+      // Don't show error to user as UI language change still works
+      // The mismatch will be resolved when they manually update profile or re-upload
+    }
   };
 
   // Language options with labels

@@ -15,9 +15,22 @@ export class IEPDocumentClient {
   // Get the childId from the first child in the profile
   private async getDefaultChildId(): Promise<string> {
     const profile = await this.profileClient.getProfile();
+    
+    // If no children exist, create a default child automatically
     if (!profile.children || profile.children.length === 0) {
-      throw new Error('No children found in profile');
+      console.log('No children found in profile, creating default child for IEP document functionality');
+      
+      try {
+        // Create a default child
+        const childResponse = await this.profileClient.addChild('My Child', 'Not specified');
+        console.log('Successfully created default child:', childResponse.childId);
+        return childResponse.childId;
+      } catch (error) {
+        console.error('Failed to create default child:', error);
+        throw new Error('No children found in profile and failed to create default child');
+      }
     }
+    
     return profile.children[0].childId;
   }
   

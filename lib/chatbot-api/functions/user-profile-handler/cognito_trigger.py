@@ -1,6 +1,7 @@
 import json
 import os
 import boto3
+import uuid
 from datetime import datetime
 from botocore.exceptions import ClientError
 
@@ -41,12 +42,21 @@ def lambda_handler(event, context):
         # Create timestamp
         current_time = int(datetime.now().timestamp())
         
+        # Create default child for IEP document functionality
+        default_child = {
+            'childId': str(uuid.uuid4()),
+            'name': 'My Child',
+            'schoolCity': 'Not specified',
+            'createdAt': current_time,
+            'updatedAt': current_time
+        }
+        
         # Create default profile only if one doesn't exist
         new_profile = {
             'userId': user_id,
             'createdAt': current_time,
             'updatedAt': current_time,
-            'children': [],  # Initialize empty children array
+            'children': [default_child],  # Initialize with default child
             'consentGiven': False  # Add new field with default value of false
         }
         

@@ -15,12 +15,16 @@ import { NewAuthorizationStack } from "../authorization/new-auth";
 
 
 export interface ChatBotApiProps {
-  readonly authentication: NewAuthorizationStack;
+  readonly authentication?: NewAuthorizationStack;
 }
 
 export class ChatBotApi extends Construct {
   public readonly httpAPI: RestBackendAPI;
   public readonly logging: LoggingStack;
+  public readonly userProfilesTable: any;
+  private lambdaFunctions: LambdaFunctionStack;
+  private tables: TableStack;
+  private buckets: S3BucketStack;
 
   constructor(scope: Construct, id: string, props: ChatBotApiProps) {
     super(scope, id);
@@ -28,44 +32,64 @@ export class ChatBotApi extends Construct {
     // Initialize logging
     this.logging = new LoggingStack(this, "Logging");
 
-    const tables = new TableStack(this, "TableStack");
-    const buckets = new S3BucketStack(this, "BucketStack");
+    this.tables = new TableStack(this, "TableStack");
+    this.buckets = new S3BucketStack(this, "BucketStack");
+    
+    // Expose user profiles table
+    this.userProfilesTable = this.tables.userProfilesTable;
     
     const restBackend = new RestBackendAPI(this, "RestBackend", {})
     this.httpAPI = restBackend;
 
-    const lambdaFunctions = new LambdaFunctionStack(this, "LambdaFunctions",
+    // If authentication is provided, set up the full API
+    if (props.authentication) {
+      this.setupApiWithAuthentication(props.authentication);
+    }
+  }
+
+  /**
+   * Set authentication and set up the API routes
+   */
+  public setAuthentication(authentication: NewAuthorizationStack) {
+    this.setupApiWithAuthentication(authentication);
+  }
+
+  /**
+   * Set up API routes with authentication
+   */
+  private setupApiWithAuthentication(authentication: NewAuthorizationStack) {
+    this.lambdaFunctions = new LambdaFunctionStack(this, "LambdaFunctions",
       {
-        knowledgeBucket: buckets.knowledgeBucket,
-        userProfilesTable: tables.userProfilesTable,
-        iepDocumentsTable: tables.iepDocumentsTable,
-        userPool: props.authentication.userPool,
+        knowledgeBucket: this.buckets.knowledgeBucket,
+        userProfilesTable: this.tables.userProfilesTable,
+        iepDocumentsTable: this.tables.iepDocumentsTable,
+        userPool: authentication.userPool,
         logGroup: this.logging.logGroup,
         logRole: this.logging.logRole
       })
 
-    const httpAuthorizer = new HttpJwtAuthorizer('HTTPAuthorizer', props.authentication.userPool.userPoolProviderUrl,{
-      jwtAudience: [props.authentication.userPoolClient.userPoolClientId],
+    const httpAuthorizer = new HttpJwtAuthorizer('HTTPAuthorizer', authentication.userPool.userPoolProviderUrl,{
+      jwtAudience: [authentication.userPoolClient.userPoolClientId],
     });
 
-    const s3GetKnowledgeAPIIntegration = new HttpLambdaIntegration('S3GetKnowledgeAPIIntegration', lambdaFunctions.getS3KnowledgeFunction);
-    restBackend.restAPI.addRoutes({
+    const s3GetKnowledgeAPIIntegration = new HttpLambdaIntegration('S3GetKnowledgeAPIIntegration', this.lambdaFunctions.getS3KnowledgeFunction);
+    this.httpAPI.restAPI.addRoutes({
       path: "/s3-knowledge-bucket-data",
       methods: [apigwv2.HttpMethod.POST],
       integration: s3GetKnowledgeAPIIntegration,
       authorizer: httpAuthorizer,
     })
 
-    const s3DeleteAPIIntegration = new HttpLambdaIntegration('S3DeleteAPIIntegration', lambdaFunctions.deleteS3Function);
-    restBackend.restAPI.addRoutes({
+    const s3DeleteAPIIntegration = new HttpLambdaIntegration('S3DeleteAPIIntegration', this.lambdaFunctions.deleteS3Function);
+    this.httpAPI.restAPI.addRoutes({
       path: "/delete-s3-file",
       methods: [apigwv2.HttpMethod.POST],
       integration: s3DeleteAPIIntegration,
       authorizer: httpAuthorizer,
     })
 
-    const s3UploadKnowledgeAPIIntegration = new HttpLambdaIntegration('S3UploadKnowledgeAPIIntegration', lambdaFunctions.uploadS3KnowledgeFunction);
-    restBackend.restAPI.addRoutes({
+    const s3UploadKnowledgeAPIIntegration = new HttpLambdaIntegration('S3UploadKnowledgeAPIIntegration', this.lambdaFunctions.uploadS3KnowledgeFunction);
+    this.httpAPI.restAPI.addRoutes({
       path: "/signed-url-knowledge",
       methods: [apigwv2.HttpMethod.POST],
       integration: s3UploadKnowledgeAPIIntegration,
@@ -74,39 +98,39 @@ export class ChatBotApi extends Construct {
 
     const userProfileAPIIntegration = new HttpLambdaIntegration(
       'UserProfileAPIIntegration', 
-      lambdaFunctions.userProfileFunction
+      this.lambdaFunctions.userProfileFunction
     );
 
     // Add routes for user profile management
-    restBackend.restAPI.addRoutes({
+    this.httpAPI.restAPI.addRoutes({
       path: "/profile",
       methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 
-    restBackend.restAPI.addRoutes({
+    this.httpAPI.restAPI.addRoutes({
       path: "/profile/children",
       methods: [apigwv2.HttpMethod.POST],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 
-    restBackend.restAPI.addRoutes({
+    this.httpAPI.restAPI.addRoutes({
       path: "/profile/children/{childId}/documents",
       methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.DELETE],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 
-    restBackend.restAPI.addRoutes({
+    this.httpAPI.restAPI.addRoutes({
       path: "/documents/{iepId}/status",
       methods: [apigwv2.HttpMethod.GET],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
 
-    restBackend.restAPI.addRoutes({
+    this.httpAPI.restAPI.addRoutes({
       path: "/summary",
       methods: [apigwv2.HttpMethod.POST],
       integration: userProfileAPIIntegration,
@@ -115,7 +139,7 @@ export class ChatBotApi extends Construct {
 
     // Prints out the AppSync GraphQL API key to the terminal
     new cdk.CfnOutput(this, "HTTP-API - apiEndpoint", {
-      value: restBackend.restAPI.apiEndpoint || "",
+      value: this.httpAPI.restAPI.apiEndpoint || "",
     });
   }
 }

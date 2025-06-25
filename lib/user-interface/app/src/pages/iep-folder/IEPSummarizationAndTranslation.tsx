@@ -7,6 +7,7 @@ import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
+import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, translationsLoaded } = useLanguage();
@@ -107,14 +108,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Process document sections for a specific language
   const processLanguageSections = (doc: any, lang: string) => {
-    if (!doc || doc.status !== "PROCESSED") return;
+    // Process sections for PROCESSED status (all languages) or PROCESSING_TRANSLATIONS status (English only)
+    if (!doc || (doc.status !== "PROCESSED" && !(doc.status === "PROCESSING_TRANSLATIONS" && lang === 'en'))) return;
     
     if (doc.sections && doc.sections[lang]) {
       try {
         const extractedSections = [];
         
         if (Array.isArray(doc.sections[lang])) {
-          console.log(`Processing ${lang} sections as array`);
           doc.sections[lang].forEach(section => {
             if (section.title && section.content) {
               extractedSections.push({
@@ -128,7 +129,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         }
         
         const orderedSections = sortSections(extractedSections);
-        console.log(`Processed ${lang} sections:`, orderedSections);
         
         setDocument(prev => ({
           ...prev, 
@@ -190,11 +190,24 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       document.sections[lang] && 
       document.sections[lang].length > 0
     );
+    
     return hasSummary || hasSections || hasDocumentIndex;
   };
 
+  // Check if document is processing (only initial processing, not translations)
+  const isProcessing = document && document.status === "PROCESSING";
+  
+  // Check if translations are being processed (English content should be available)
+  const isTranslating = document && document.status === "PROCESSING_TRANSLATIONS";
+
   // Set active tab based on language preference and content availability
   useEffect(() => {
+    // During translation, force English tab since only English content is available
+    if (isTranslating) {
+      setActiveTab('en');
+      return;
+    }
+    
     // Default to English tab
     let tabToShow = 'en';
     
@@ -204,7 +217,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
     
     setActiveTab(tabToShow);
-  }, [language, document.summaries, document.sections, preferredLanguage]);
+  }, [language, document.summaries, document.sections, preferredLanguage, isTranslating]);
 
   const handleBackClick = () => {
     navigate('/welcome-page');
@@ -221,6 +234,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     switch(status) {
       case "PROCESSING":
         return <Badge bg="warning" text="dark"><FontAwesomeIcon icon={faClock} className="me-1" /> Processing</Badge>;
+      case "PROCESSING_TRANSLATIONS":
+        return <Badge bg="info" text="light"><FontAwesomeIcon icon={faClock} className="me-1" /> Translating</Badge>;
       case "PROCESSED":
         return <Badge bg="success"><FontAwesomeIcon icon={faCheckCircle} className="me-1" /> Processed</Badge>;
       case "FAILED":
@@ -273,6 +288,18 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 ? t('summary.noSummary.message')
                 : t('summary.noTranslatedSummary.message')}
             </p>
+            {!isEnglishTab && (
+              <div className="mt-3">
+                <p className="mb-2">{t('summary.reuploadSuggestion')}</p>
+                <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+                </Button>
+              </div>
+            )}
           </Alert>
         )}
         
@@ -326,14 +353,23 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 ? t('summary.noSections.message')
                 : t('summary.noTranslatedSections.message')}
             </p>
+            {!isEnglishTab && (
+              <div className="mt-3">
+                <p className="mb-2">{t('summary.reuploadSuggestion')}</p>
+                <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+                </Button>
+              </div>
+            )}
           </Alert>
         )}
       </>
     );
   };
-
-  // Check if document is processing
-  const isProcessing = document && document.status === "PROCESSING";
 
   // Get tab title based on language code
   const getTabTitle = (languageCode: string) => {
@@ -361,6 +397,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   }
 
   return (
+    <>
     <Container className="summary-container mt-3 mb-3">
       <div className="mt-2 text-start button-container">
         <Button variant="outline-secondary" onClick={handleBackClick}>
@@ -415,6 +452,20 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                       </Alert>
                     ) : (
                       <>
+                        {/* Show translation progress notification */}
+                        {isTranslating && (
+                          <Alert variant="info" className="mb-3">
+                            <div className="d-flex align-items-center">
+                              <Spinner animation="border" size="sm" className="me-2" />
+                              <div>
+                                <strong>Translations in progress...</strong>
+                                <br />
+                                <small>English content is available below. Translated version will be available soon.</small>
+                              </div>
+                            </div>
+                          </Alert>
+                        )}
+                        
                         <Tabs
                           activeKey={activeTab}
                           onSelect={(k) => k && setActiveTab(k)}
@@ -443,6 +494,26 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                             </Tab>
                           )}
                         </Tabs>
+                        
+                        {/* Show prominent alert when preferred language content is missing */}
+                        {preferredLanguage !== 'en' && !hasContent(preferredLanguage) && hasContent('en') && (
+                          <Alert variant="warning" className="mb-3">
+                            <div className="d-flex align-items-start">
+                              <FontAwesomeIcon icon={faLanguage} className="me-2 mt-1" />
+                              <div className="flex-grow-1">
+                                <h6 className="mb-2">{t('summary.noPreferredLanguageContent.title')}</h6>
+                                <p className="mb-2">{t('summary.noPreferredLanguageContent.message')}</p>
+                                <Button 
+                                  variant="primary" 
+                                  size="sm"
+                                  onClick={() => navigate('/iep-documents')}
+                                >
+                                  {t('summary.reuploadButton')}
+                                </Button>
+                              </div>
+                            </div>
+                          </Alert>
+                        )}
                         
                         {!hasContent('en') && !hasContent(preferredLanguage) && (
                           <Alert variant="info">
@@ -482,6 +553,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         </Offcanvas.Body>
       </Offcanvas>
     </Container>
+      <MobileBottomNavigation />
+        </>
   );
 };
 

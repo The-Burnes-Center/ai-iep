@@ -59,7 +59,7 @@ export default function ConsentForm() {
     
     // If consent was already given, go to child data collection
     if (profile?.consentGiven) {
-      navigate('/view-update-add-child');
+      navigate('/view-and-add-parent');
       return;
     }
     
@@ -70,7 +70,7 @@ export default function ConsentForm() {
       addNotification('success', 'Consent saved successfully');
       
       // After saving consent, always go to child data collection
-      navigate('/view-update-add-child');
+      navigate('/view-and-add-parent');
     } catch (err) {
       addNotification('error', 'Failed to save consent');
       setError('Failed to save consent. Please try again.');

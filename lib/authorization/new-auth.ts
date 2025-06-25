@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import { cognitoDomainName } from '../constants' 
 import { UserPool, UserPoolIdentityProviderOidc, UserPoolClient, UserPoolClientIdentityProvider, ProviderAttribute } from 'aws-cdk-lib/aws-cognito';
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
 import { getTagProps, tagResource } from '../tags';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -10,18 +11,26 @@ import { CfnUserPool } from 'aws-cdk-lib/aws-cognito';
 import { Logger } from '../chatbot-api/logging/logger';
 
 /**
+ * Props for NewAuthorizationStack
+ */
+export interface NewAuthorizationStackProps extends cdk.StackProps {
+  userProfilesTable?: any; // DynamoDB table for user profiles
+}
+
+/**
  * CDK Construct for Cognito User Pool and SMS configuration for AI-IEP authentication.
  *
  * - Creates a Cognito User Pool with self sign-up, email/phone support, and optional SMS-MFA.
  * - Configures an IAM Role for Cognito SMS with trust policy conditions.
  * - Adds a CfnUserPoolSmsConfiguration for custom SMS messages.
+ * - Sets up Lambda triggers for Phone OTP authentication.
  * - Applies standard tags and outputs resource ARNs/IDs.
  */
 export class NewAuthorizationStack extends Construct {
   public readonly userPool: UserPool;
   public readonly userPoolClient: UserPoolClient;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: NewAuthorizationStackProps) {
     super(scope, id);
 
     // Use the shared Logger for consistent logging
@@ -69,7 +78,7 @@ export class NewAuthorizationStack extends Construct {
     cfnRole.addPropertyOverride('AssumeRolePolicyDocument.Statement.0.Condition', {
       'StringEquals': { 'sts:ExternalId': this.node.addr }
     });
-    // Logging is fire-and-forget since constructors cannot be async
+    
     logger.logEvent({
       eventType: 'AUTHZ_STACK',
       action: 'Created CognitoSmsRole',
@@ -77,16 +86,15 @@ export class NewAuthorizationStack extends Construct {
       resourceId: cognitoSmsRole.roleArn,
       details: { roleArn: cognitoSmsRole.roleArn, externalId: this.node.addr },
     });
-    const smsRoleExternalId = this.node.addr;
 
     // 4. Attach the SMS role to the user pool
     cfnUserPool.smsConfiguration = {
       externalId: this.node.addr,
       snsCallerArn: cognitoSmsRole.roleArn,
     };
-    cfnUserPool.smsAuthenticationMessage = 'Your authentication code is {####}';
-    cfnUserPool.smsVerificationMessage = 'Your verification code is {####}';
-    // Logging is fire-and-forget since constructors cannot be async
+    cfnUserPool.smsAuthenticationMessage = 'Your login code for The GovLab AIEP is: {####}. Do not share this code.';
+    cfnUserPool.smsVerificationMessage = 'Your OTP from The GovLab AIEP is: {####}. Do not share this code. Msg & data rates may apply.';
+    
     logger.logEvent({
       eventType: 'AUTHZ_STACK',
       action: 'Configured Cognito SMS settings',
@@ -94,6 +102,9 @@ export class NewAuthorizationStack extends Construct {
       resourceId: userPool.userPoolId,
       details: { userPoolId: userPool.userPoolId },
     });
+
+    // 5. Create Lambda functions for Phone OTP authentication
+    this.createPhoneOtpLambdaTriggers(userPool, props?.userProfilesTable);
 
     // Apply standard tags to the User Pool
     tagResource(userPool, {
@@ -110,6 +121,11 @@ export class NewAuthorizationStack extends Construct {
     
     const userPoolClient = new UserPoolClient(this, 'NewUserPoolClient', {
       userPool,
+      authFlows: {
+        userPassword: true,
+        userSrp: true,
+        custom: true,  // Enable CUSTOM_AUTH flow for Phone OTP
+      },
       oAuth: {
         flows: {
           authorizationCodeGrant: true,
@@ -160,5 +176,91 @@ export class NewAuthorizationStack extends Construct {
     new cdk.CfnOutput(this, "CognitoSmsRoleArn", {
       value: cognitoSmsRole.roleArn,
     });
+  }
+
+  /**
+   * Create and configure Lambda triggers for Phone OTP authentication
+   */
+  private createPhoneOtpLambdaTriggers(userPool: UserPool, userProfilesTable?: any) {
+    // Define Auth Challenge Function
+    const defineAuthChallengeFunction = new lambda.Function(this, 'DefineAuthChallengeFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, '../chatbot-api/functions/phone-otp-auth')),
+      handler: 'define-auth-challenge.handler',
+      timeout: cdk.Duration.seconds(30),
+      logRetention: cdk.aws_logs.RetentionDays.ONE_YEAR,
+      description: 'Define Auth Challenge for Phone OTP authentication'
+    });
+
+    // Create Auth Challenge Function
+    const createAuthChallengeFunction = new lambda.Function(this, 'CreateAuthChallengeFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, '../chatbot-api/functions/phone-otp-auth')),
+      handler: 'create-auth-challenge.handler',
+      timeout: cdk.Duration.seconds(30),
+      logRetention: cdk.aws_logs.RetentionDays.ONE_YEAR,
+      description: 'Create Auth Challenge for Phone OTP authentication'
+    });
+
+    // Add SNS permissions for sending SMS
+    createAuthChallengeFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'sns:Publish'
+      ],
+      resources: ['*'] // SNS publish requires * for phone numbers
+    }));
+
+    // Verify Auth Challenge Function
+    const verifyAuthChallengeFunction = new lambda.Function(this, 'VerifyAuthChallengeFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, '../chatbot-api/functions/phone-otp-auth')),
+      handler: 'verify-auth-challenge.handler',
+      environment: {
+        ...(userProfilesTable && { USER_PROFILES_TABLE: userProfilesTable.tableName })
+      },
+      timeout: cdk.Duration.seconds(30),
+      logRetention: cdk.aws_logs.RetentionDays.ONE_YEAR,
+      description: 'Verify Auth Challenge for Phone OTP authentication'
+    });
+
+    // Add DynamoDB permissions for user profile creation (if table provided)
+    if (userProfilesTable) {
+      verifyAuthChallengeFunction.addToRolePolicy(new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'dynamodb:GetItem',
+          'dynamodb:PutItem'
+        ],
+        resources: [userProfilesTable.tableArn]
+      }));
+    }
+
+    // Allow Cognito to invoke the Lambda functions
+    [defineAuthChallengeFunction, createAuthChallengeFunction, verifyAuthChallengeFunction].forEach(func => {
+      func.addPermission('CognitoInvocation', {
+        principal: new iam.ServicePrincipal('cognito-idp.amazonaws.com'),
+        action: 'lambda:InvokeFunction',
+        sourceArn: userPool.userPoolArn
+      });
+    });
+
+    // Add the Lambda triggers to Cognito User Pool
+    userPool.addTrigger(
+      cognito.UserPoolOperation.DEFINE_AUTH_CHALLENGE,
+      defineAuthChallengeFunction
+    );
+
+    userPool.addTrigger(
+      cognito.UserPoolOperation.CREATE_AUTH_CHALLENGE,
+      createAuthChallengeFunction
+    );
+
+    userPool.addTrigger(
+      cognito.UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE,
+      verifyAuthChallengeFunction
+    );
+
+    console.log('Phone OTP Lambda triggers configured successfully');
   }
 } 

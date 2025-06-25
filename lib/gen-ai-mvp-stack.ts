@@ -25,13 +25,19 @@ export class GenAiMvpStack extends cdk.Stack {
     //   authentication = new AuthorizationStack(this, "Authorization")
     // }
     
-    // Create the new UserPool with self sign-up and email/phone support
-    const authentication = new NewAuthorizationStack(this, getResourceName("NewAuthorization"));
-    
-    // Use the new UserPool for all resources
+    // Create the ChatBot API first to get the user profiles table
     const chatbotAPI = new ChatBotApi(this, getResourceName("ChatbotAPI"), {
-      authentication
+      authentication: undefined // We'll set this later
     });
+    
+    // Create the new UserPool with self sign-up and email/phone support
+    // Pass the user profiles table to enable user profile creation on phone OTP verification
+    const authentication = new NewAuthorizationStack(this, getResourceName("NewAuthorization"), {
+      userProfilesTable: chatbotAPI.userProfilesTable
+    });
+    
+    // Update the chatbot API with the authentication
+    chatbotAPI.setAuthentication(authentication);
     
     const userInterface = new UserInterface(this, getResourceName("UserInterface"),
      {userPoolId : authentication.userPool.userPoolId,
@@ -52,8 +58,6 @@ export class GenAiMvpStack extends cdk.Stack {
     ];
     
     // Apply tags to all resources in the stack
-    applyTags(this, {
-      'Stack': id,
-    });
+    applyTags(this);
   }
 }

@@ -88,6 +88,11 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete,
   const handleUpload = async () => {
     if (!file) return;
     
+    // Log upload start time for timing measurements
+    const uploadStartTime = Date.now();
+    console.log(`🚀 Document upload started at ${new Date(uploadStartTime).toLocaleTimeString()}`);
+    localStorage.setItem('iep-upload-start-time', uploadStartTime.toString());
+    
     setUploadStatus('uploading');
     setUploadProgress(0);
     setCurrentFileName(file.name);

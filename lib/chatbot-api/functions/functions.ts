@@ -69,9 +69,10 @@ export class LambdaFunctionStack extends cdk.Stack {
       ],
       resources: [props.knowledgeBucket.bucketArn,props.knowledgeBucket.bucketArn+"/*"]
     }));
+
     this.deleteS3Function = deleteS3APIHandlerFunction;
 
-    const getS3KnowledgeAPIHandlerFunction = new lambda.Function(scope, 'GetS3KnowledgeFilesHandlerFunction', {
+    const getS3APIHandlerFunction = new lambda.Function(scope, 'GetS3FilesHandlerFunction', {
       runtime: lambda.Runtime.NODEJS_20_X, // Choose any supported Node.js runtime
       code: lambda.Code.fromAsset(path.join(__dirname, 'knowledge-management/get-s3')), // Points to the lambda directory
       handler: 'index.handler', // Points to the 'hello' file in the lambda directory
@@ -82,14 +83,15 @@ export class LambdaFunctionStack extends cdk.Stack {
       logRetention: logs.RetentionDays.ONE_YEAR
     });
 
-    getS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+    getS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
         's3:*'
       ],
       resources: [props.knowledgeBucket.bucketArn,props.knowledgeBucket.bucketArn+"/*"]
     }));
-    this.getS3KnowledgeFunction = getS3KnowledgeAPIHandlerFunction;
+
+    this.getS3KnowledgeFunction = getS3APIHandlerFunction;
 
     const uploadS3KnowledgeAPIHandlerFunction = createTaggedLambda('UploadS3KnowledgeFilesHandlerFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -165,7 +167,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       memorySize: 2048,
       logRetention: logs.RetentionDays.ONE_YEAR
     });
-    
+
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [

@@ -81,7 +81,7 @@ export interface IEPDocument {
   // Basic document info
   documentId?: string;
   documentUrl?: string;
-  status?: "PROCESSING" | "PROCESSED" | "FAILED";
+  status?: "PROCESSING" | "PROCESSING_TRANSLATIONS" | "PROCESSED" | "FAILED";
   createdAt?: string;
   
   // Document content by language

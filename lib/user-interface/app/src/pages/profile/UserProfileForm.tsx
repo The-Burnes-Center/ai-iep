@@ -6,6 +6,7 @@ import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context';
 import { useNavigate } from 'react-router-dom';
+import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 
 const LANGUAGE_OPTIONS = [
   { value: 'en', label: 'English' },
@@ -58,6 +59,17 @@ export default function UserProfileForm() {
     }
   };
 
+  const handleLanguageSelectionClick = () => {
+    // Navigate to language selection page with state to indicate coming from profile
+    navigate('/', { state: { fromProfile: true } });
+  };
+
+  // Helper function to get language label
+  const getLanguageLabel = (languageCode: string) => {
+    const option = LANGUAGE_OPTIONS.find(opt => opt.value === languageCode);
+    return option ? option.label : languageCode;
+  };
+
   if (loading) {
     return (
       <Container className="mt-4 text-center">
@@ -81,6 +93,7 @@ export default function UserProfileForm() {
   };
 
   return (
+    <>
     <Container className="mt-4">
       <div className="mt-3 text-start">
         <Button variant="outline-secondary" onClick={handleBackClick}>
@@ -89,44 +102,52 @@ export default function UserProfileForm() {
       </div>
       <Form onSubmit={handleSubmit} className="mt-4">
         <h3 className="mb-3">{t('profile.title')}</h3>
-        {profile?.children && profile.children.length > 0 ? (
-          <>
-            {profile.children.map((child, index) => (
-              <Row key={child.childId || index} className="mb-3">
-                <Col md={5}>
-                  <Form.Group controlId={`formChildName${index}`}>
-                    <Form.Label className="small">{t('profile.child.name')}</Form.Label>
-                    <Form.Control 
-                      type="text" 
-                      value={child.name}
-                      onChange={e => {
-                        const newChildren = [...profile.children];
-                        newChildren[index] = {...child, name: e.target.value};
-                        setProfile(prev => prev ? {...prev, children: newChildren} : null);
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={5}>
-                  <Form.Group controlId={`formChildSchool${index}`}>
-                    <Form.Label className="small">{t('profile.child.schoolCity')}</Form.Label>
-                    <Form.Control 
-                      type="text" 
-                      value={child.schoolCity}
-                      onChange={e => {
-                        const newChildren = [...profile.children];
-                        newChildren[index] = {...child, schoolCity: e.target.value};
-                        setProfile(prev => prev ? {...prev, children: newChildren} : null);
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-            ))}
-          </>
-        ) : (
-          <Alert variant="info">{t('profile.noChildren')}</Alert>
-        )}
+        
+        <Row className="mb-3">
+          <Col md={10}>
+            <Form.Group controlId="formParentName">
+              <Form.Label className="small">{t('profile.parentName')}</Form.Label>
+              <Form.Control 
+                type="text" 
+                value={profile?.parentName || ''}
+                onChange={e => {
+                  setProfile(prev => prev ? {...prev, parentName: e.target.value} : null);
+                }}
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Language Preferences Section */}
+        <Row className="mb-4">
+          <Col md={10}>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <Form.Label className="small mb-0">{t('profile.languagePreferences')}</Form.Label>
+              <Button 
+                variant="outline-primary" 
+                size="sm"
+                onClick={handleLanguageSelectionClick}
+              >
+                {t('profile.button.changeLanguage')}
+              </Button>
+            </div>
+            <div className="bg-light p-3 rounded">
+              <div className="mb-2">
+                <strong>{t('profile.primaryLanguage')}:</strong> {getLanguageLabel(profile?.primaryLanguage || 'en')}
+              </div>
+              {profile?.secondaryLanguage && (
+                <div>
+                  <strong>{t('profile.secondaryLanguage')}:</strong> {getLanguageLabel(profile.secondaryLanguage)}
+                </div>
+              )}
+              {!profile?.secondaryLanguage && (
+                <div className="text-muted">
+                  {t('profile.noSecondaryLanguage')}
+                </div>
+              )}
+            </div>
+          </Col>
+        </Row>
 
         <div className="mt-4 d-flex gap-2">
           <Button 
@@ -146,5 +167,7 @@ export default function UserProfileForm() {
         </div>
       </Form>
     </Container>
+        <MobileBottomNavigation />
+    </>
   );
 }
