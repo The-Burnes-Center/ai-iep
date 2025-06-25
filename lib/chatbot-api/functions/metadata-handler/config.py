@@ -242,22 +242,7 @@ If a section is not explicitly present in the document:
 - Use the get_section_info tool to understand what each section should contain
 
 ### Summary Extraction Instructions:
-For the "summary" field, generate a fully factual, student-specific summary of this IEP document. Do not hallucinate or generalize. Only include information explicitly present in the document. Target 2-4 paragraphs.
-
-Your summary must include:
-
-1. **Student Information:** Name, age, grade, eligibility categories (primary & secondary), evaluation dates.
-2. **Academic Performance:** Strengths and needs.
-3. **Communication Profile:** Speech intelligibility, AAC device usage, expressive/receptive language functioning.
-4. **Functional / Behavioral Profile:** Daily living skills, social-emotional status, behavioral observations, adaptive functioning.
-5. **Services & Placement:** Placement type, % time in general education, services provided (type, frequency, duration), ESY eligibility.
-6. **Parent Input:** Key concerns or input shared by parents.
-7. **Accommodations & Modifications:** Classroom and testing accommodations, assistive technology.
-
-- Write the summary using **Markdown formatting**.
-- Use **bullet points**, **tables**, and **bold headings** to make the summary clear and accessible.
-- Keep the tone professional but parent-friendly.
-- Avoid filler sentences. Include only facts from the document.
+For the "summary" field, generate a fully factual, student-specific summary of this IEP document. Do not hallucinate or generalize. Only include information explicitly present in the document. Target 1-2 paragraphs.
 
 ### Instructions for Sections:
 1. **Retrieve the Full OCR Text**: Use `get_all_ocr_text` to retrieve and index the full OCR text by page.
