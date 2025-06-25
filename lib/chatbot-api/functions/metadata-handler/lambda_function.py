@@ -2,22 +2,71 @@ import os
 import time
 import datetime
 from datetime import datetime, timezone
-
 import json
 import urllib.parse
 import boto3
 from botocore.exceptions import ClientError
-from config import LANGUAGE_CODES
 import io
 import base64
 import logging
 import uuid
 import traceback
 import re
-from mistral_ocr import process_document_with_mistral_ocr
-from open_ai_agent import OpenAIAgent
-from comprehend_redactor import redact_pii_from_texts
 from decimal import Decimal
+
+# Global flag to track if critical imports succeeded
+IMPORTS_SUCCESSFUL = True
+IMPORT_ERROR_MESSAGE = None
+
+# Try to import critical dependencies that may fail
+try:
+    from config import LANGUAGE_CODES
+    from mistral_ocr import process_document_with_mistral_ocr
+    from open_ai_agent import OpenAIAgent
+    from comprehend_redactor import redact_pii_from_texts
+    print("All critical imports successful")
+except ImportError as e:
+    IMPORTS_SUCCESSFUL = False
+    IMPORT_ERROR_MESSAGE = f"Critical import failed: {str(e)}"
+    print(f"CRITICAL IMPORT ERROR: {IMPORT_ERROR_MESSAGE}")
+    
+    # Create stub functions to prevent further errors
+    def process_document_with_mistral_ocr(*args, **kwargs):
+        return {"error": IMPORT_ERROR_MESSAGE}
+    
+    class OpenAIAgent:
+        def __init__(self, *args, **kwargs):
+            pass
+        def analyze_document(self):
+            return {"error": IMPORT_ERROR_MESSAGE}
+        def translate_document(self, *args, **kwargs):
+            return {"error": IMPORT_ERROR_MESSAGE}
+    
+    def redact_pii_from_texts(*args, **kwargs):
+        return [], {}
+    
+    LANGUAGE_CODES = {}
+except Exception as e:
+    IMPORTS_SUCCESSFUL = False
+    IMPORT_ERROR_MESSAGE = f"Unexpected error during imports: {str(e)}"
+    print(f"CRITICAL IMPORT ERROR: {IMPORT_ERROR_MESSAGE}")
+    
+    # Create stub functions to prevent further errors
+    def process_document_with_mistral_ocr(*args, **kwargs):
+        return {"error": IMPORT_ERROR_MESSAGE}
+    
+    class OpenAIAgent:
+        def __init__(self, *args, **kwargs):
+            pass
+        def analyze_document(self):
+            return {"error": IMPORT_ERROR_MESSAGE}
+        def translate_document(self, *args, **kwargs):
+            return {"error": IMPORT_ERROR_MESSAGE}
+    
+    def redact_pii_from_texts(*args, **kwargs):
+        return [], {}
+    
+    LANGUAGE_CODES = {}
 
 # AWS clients
 s3 = boto3.client('s3')
@@ -669,9 +718,85 @@ def lambda_handler(event, context):
     Lambda function handler for document handling API. This function processes S3 events for document uploads.
     """
     print("Event received:", json.dumps(event))
+    print(f"Lambda function started - imports successful: {IMPORTS_SUCCESSFUL}")
+    if not IMPORTS_SUCCESSFUL:
+        print(f"Import error details: {IMPORT_ERROR_MESSAGE}")
     
-    # This is an S3 event
-    return iep_processing_pipeline(event)
+    # Extract basic info from event for error handling
+    bucket = None
+    key = None
+    user_id = None
+    child_id = None
+    iep_id = None
+    
+    try:
+        # Extract S3 event info for error handling
+        if 'Records' in event and len(event['Records']) > 0:
+            record = event['Records'][0]
+            bucket = record['s3']['bucket']['name']
+            key = record['s3']['object']['key']
+            key = urllib.parse.unquote_plus(key)
+            
+            # Extract user ID, child ID, and IEP ID from the key
+            key_parts = key.split('/')
+            if len(key_parts) >= 3:
+                user_id = key_parts[0]
+                child_id = key_parts[1]
+                iep_id = key_parts[2]
+        
+        # This is an S3 event
+        return iep_processing_pipeline(event)
+        
+    except ImportError as e:
+        error_message = f"Import error: {str(e)}"
+        print(f"CRITICAL ERROR - {error_message}")
+        
+        # Try to update document status even with import errors
+        try:
+            if iep_id:
+                update_iep_document_status(
+                    iep_id=iep_id,
+                    status="FAILED",
+                    error_message=error_message,
+                    child_id=child_id,
+                    user_id=user_id,
+                    object_key=key
+                )
+        except Exception as update_error:
+            print(f"Failed to update document status after import error: {update_error}")
+        
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'message': error_message
+            })
+        }
+        
+    except Exception as e:
+        error_message = f"Unexpected error in lambda handler: {str(e)}"
+        print(f"CRITICAL ERROR - {error_message}")
+        print(f"Error type: {type(e).__name__}")
+        
+        # Try to update document status for any other critical errors
+        try:
+            if iep_id:
+                update_iep_document_status(
+                    iep_id=iep_id,
+                    status="FAILED",
+                    error_message=error_message,
+                    child_id=child_id,
+                    user_id=user_id,
+                    object_key=key
+                )
+        except Exception as update_error:
+            print(f"Failed to update document status after critical error: {update_error}")
+        
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'message': error_message
+            })
+        }
 
 def delete_s3_object(bucket, key):
     try:
@@ -710,6 +835,25 @@ def iep_processing_pipeline(event):
             user_id = key_parts[0]
             child_id = key_parts[1]
             iep_id = key_parts[2]
+        
+        # Check if critical imports failed - fail immediately if so
+        if not IMPORTS_SUCCESSFUL:
+            print(f"Critical imports failed, cannot process document: {IMPORT_ERROR_MESSAGE}")
+            if iep_id:
+                update_iep_document_status(
+                    iep_id=iep_id,
+                    status="FAILED",
+                    error_message=IMPORT_ERROR_MESSAGE,
+                    child_id=child_id,
+                    user_id=user_id,
+                    object_key=key
+                )
+            return {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'message': IMPORT_ERROR_MESSAGE
+                })
+            }
         
         # Process the document using Mistral OCR API
         ocr_result = process_document_with_mistral_ocr(bucket, key)

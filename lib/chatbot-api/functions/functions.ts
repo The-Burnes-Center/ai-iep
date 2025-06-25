@@ -64,8 +64,10 @@ export class LambdaFunctionStack extends cdk.Stack {
 
     deleteS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
-      actions: ['s3:DeleteObject'],
-      resources: [props.knowledgeBucket.bucketArn + "/*"]
+      actions: [
+        's3:*'
+      ],
+      resources: [props.knowledgeBucket.bucketArn,props.knowledgeBucket.bucketArn+"/*"]
     }));
 
     this.deleteS3Function = deleteS3APIHandlerFunction;
@@ -83,14 +85,10 @@ export class LambdaFunctionStack extends cdk.Stack {
 
     getS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
-      actions: ['s3:GetObject'],
-      resources: [props.knowledgeBucket.bucketArn + "/*"]
-    }));
-
-    getS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: ['s3:ListBucket'],
-      resources: [props.knowledgeBucket.bucketArn]
+      actions: [
+        's3:*'
+      ],
+      resources: [props.knowledgeBucket.bucketArn,props.knowledgeBucket.bucketArn+"/*"]
     }));
 
     this.getS3KnowledgeFunction = getS3APIHandlerFunction;
@@ -145,89 +143,78 @@ export class LambdaFunctionStack extends cdk.Stack {
     
     this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
 
-    // Create Lambda layer for Python dependencies
-    const pythonDepsLayer = new lambda.LayerVersion(scope, 'PythonDependenciesLayer', {
-      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler/python-deps-layer.zip')),
-      compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
-      description: 'Python dependencies for metadata handler (requests, openai, mistral, etc.)',
-    });
-
-    const metadataHandlerFunction = new lambda.Function(scope, 'MetadataHandlerFunction', {
+    // Define the Lambda function for metadata
+    const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
       code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
-        exclude: ['python-deps-layer.zip', 'python-deps-layer', 'build-layer.sh', 'requirements-minimal.txt']
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
       }),
       handler: 'lambda_function.lambda_handler',
-      layers: [pythonDepsLayer],
       environment: {
         "BUCKET": props.knowledgeBucket.bucketName,
-        "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/mistral-api-key",
-        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/openai-api-key"
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName, 
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
       },
-      timeout: cdk.Duration.seconds(300),
+      timeout: cdk.Duration.seconds(900),
+      memorySize: 2048,
       logRetention: logs.RetentionDays.ONE_YEAR
     });
 
-    // Grant S3 permissions
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
         's3:GetObject',
         's3:PutObject',
-        's3:DeleteObject'
+        's3:DeleteObject',
+        's3:ListBucket',
+        's3:GetBucketLocation',
+        'bedrock:InvokeModel',
+        'bedrock:Retrieve',
+        'bedrock-agent-runtime:Retrieve',
+        'comprehend:BatchDetectPiiEntities',
+        'comprehend:DetectPiiEntities',
       ],
-      resources: [props.knowledgeBucket.bucketArn + "/*"]
+      resources: [
+        props.knowledgeBucket.bucketArn,
+        props.knowledgeBucket.bucketArn + "/*",
+        'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
+        '*', // Comprehend permissions apply to all resources
+      ]
     }));
 
-    // Grant DynamoDB permissions
+    // Add DynamoDB permissions for updating document status and user profiles
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
         'dynamodb:GetItem',
         'dynamodb:PutItem',
         'dynamodb:UpdateItem',
-        'dynamodb:DeleteItem',
         'dynamodb:Query',
         'dynamodb:Scan'
       ],
       resources: [
-        props.userProfilesTable.tableArn,
-        props.userProfilesTable.tableArn + "/index/*",
         props.iepDocumentsTable.tableArn,
-        props.iepDocumentsTable.tableArn + "/index/*"
+        props.userProfilesTable.tableArn
       ]
     }));
 
-    // Grant Comprehend permissions
-    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'comprehend:DetectPiiEntities',
-        'comprehend:ContainsPiiEntities'
-      ],
-      resources: ['*']
-    }));
-
-    // Grant Bedrock permissions
-    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'bedrock:InvokeModel'
-      ],
-      resources: ['*']
-    }));
-
-    // Grant SSM permissions for API keys
+    // Add SSM permission to access the parameter
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
         'ssm:GetParameter'
       ],
       resources: [
-        `arn:aws:ssm:*:*:parameter/ai-iep/mistral-api-key`,
-        `arn:aws:ssm:*:*:parameter/ai-iep/openai-api-key`
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
       ]
     }));
 
