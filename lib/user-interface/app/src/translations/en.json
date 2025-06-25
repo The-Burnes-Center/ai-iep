@@ -208,5 +208,11 @@
     "auth.phoneAuthConfigIssue": "Phone authentication configuration issue. Please contact support.",
     "authNotAuthorized": "Authentication not authorized. Please try again.",
     "auth.phoneAuthError": "Phone authentication error",
-    "auth.unexpectedChallengeType": "Unexpected challenge type received"
+    "auth.unexpectedChallengeType": "Unexpected challenge type received",
+    "auth.pleaseEnterSmsCode": "Please enter the verification code",
+    "auth.sessionExpired": "Session expired. Please start over.",
+    "auth.authenticationIncomplete": "Authentication incomplete. Please try again.",
+    "auth.maxAttemptsExceeded": "Maximum verification attempts exceeded. Please start over.",
+    "auth.verificationFailed": "Code verification failed. Please try again.",
+    "auth.resendFailed": "Failed to resend verification code. Please try again."
   }
