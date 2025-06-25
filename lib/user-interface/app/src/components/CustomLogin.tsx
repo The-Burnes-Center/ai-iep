@@ -53,6 +53,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [smsCode, setSmsCode] = useState('');
   const [smsCodeSent, setSmsCodeSent] = useState(false);
   const [cognitoUserForSms, setCognitoUserForSms] = useState<any>(null);
+  const [isNewUserConfirmation, setIsNewUserConfirmation] = useState(false); // Track if this is signup confirmation
+  const [pendingPhoneNumber, setPendingPhoneNumber] = useState<string | null>(null); // Store phone for confirmation flow
   
   // State for toggling password visibility
   const [showMainPassword, setShowMainPassword] = useState(false);
@@ -116,7 +118,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
   /**
    * Clean Phone Authentication Flow (Frontend Only)
-   * Works with existing AWS Lambda triggers
+   * Handles both signup confirmation and custom auth properly
    */
   const handleMobileLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,12 +144,27 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
     try {
       console.log('Starting phone authentication for:', formattedPhone);
+      console.log('Current auth state - smsCodeSent:', smsCodeSent, 'isNewUserConfirmation:', isNewUserConfirmation);
       
       // Try custom auth first (for existing users)
       let cognitoUser;
       try {
         cognitoUser = await Auth.signIn(formattedPhone);
         console.log('Existing user found, custom auth initiated');
+        console.log('SignIn result:', { challengeName: cognitoUser.challengeName, username: cognitoUser.username });
+        
+        // Handle the authentication response for existing users
+        if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
+          setCognitoUserForSms(cognitoUser);
+          setSmsCodeSent(true);
+          setIsNewUserConfirmation(false);
+          setSuccessMessage(t('auth.smsCodeSent') || 'Verification code sent to your phone!');
+          console.log('SMS code sent for existing user');
+        } else {
+          console.log('User authenticated successfully');
+          onLoginSuccess();
+        }
+        
       } catch (signInError: any) {
         console.log('SignIn error:', signInError.code);
         
@@ -159,7 +176,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           const tempPassword = 'TempPass123!' + Math.random().toString(36).substring(2, 15);
           
           try {
-            await Auth.signUp({
+            const signUpResult = await Auth.signUp({
               username: formattedPhone,
               password: tempPassword,
               attributes: {
@@ -167,47 +184,52 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               }
             });
             
-            console.log('New user created, now signing in');
-            cognitoUser = await Auth.signIn(formattedPhone);
+            console.log('New user created:', signUpResult);
+            
+            // Set up for confirmation flow
+            setIsNewUserConfirmation(true);
+            setPendingPhoneNumber(formattedPhone);
+            setSmsCodeSent(true);
+            setSuccessMessage('Account created! Please enter the verification code sent to your phone.');
             
           } catch (signUpError: any) {
             console.error('SignUp error:', signUpError);
             if (signUpError.code === 'UsernameExistsException') {
               // User was created between our attempts, try signin again
               cognitoUser = await Auth.signIn(formattedPhone);
+              
+              if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
+                setCognitoUserForSms(cognitoUser);
+                setSmsCodeSent(true);
+                setIsNewUserConfirmation(false);
+                setSuccessMessage(t('auth.smsCodeSent') || 'Verification code sent to your phone!');
+              } else {
+                onLoginSuccess();
+              }
             } else {
               throw signUpError;
             }
           }
+        } else if (signInError.code === 'UserNotConfirmedException') {
+          // User exists but not confirmed - treat as new user confirmation
+          console.log('User exists but not confirmed, setting up confirmation flow');
+          
+          // Try to resend confirmation code for existing unconfirmed user
+          try {
+            await Auth.resendSignUp(formattedPhone);
+            console.log('Resent confirmation code for existing user');
+          } catch (resendError: any) {
+            console.log('Could not resend confirmation code:', resendError.code);
+            // Continue anyway - user might still have valid code
+          }
+          
+          setIsNewUserConfirmation(true);
+          setPendingPhoneNumber(formattedPhone);
+          setSmsCodeSent(true);
+          setSuccessMessage('Please enter the verification code sent to your phone to confirm your account.');
         } else {
           throw signInError;
         }
-      }
-      
-      console.log('Auth result:', cognitoUser);
-      
-      // Handle the authentication response
-      if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
-        // Perfect! Custom challenge initiated, SMS should be sent
-        setCognitoUserForSms(cognitoUser);
-        setSmsCodeSent(true);
-        setSuccessMessage(t('auth.smsCodeSent') || 'Verification code sent to your phone!');
-        console.log('SMS code sent, waiting for user input');
-        
-      } else if (cognitoUser.challengeName === 'SMS_MFA' || cognitoUser.challengeName === 'SOFTWARE_TOKEN_MFA') {
-        // Handle MFA challenges
-        setCognitoUserForSms(cognitoUser);
-        setSmsCodeSent(true);
-        setSuccessMessage(t('auth.smsCodeSent') || 'Verification code sent to your phone!');
-        
-      } else if (cognitoUser.challengeName === 'NEW_PASSWORD_REQUIRED') {
-        // Handle new password requirement (shouldn't happen for phone auth)
-        setError('Password setup required. Please use email login.');
-        
-      } else {
-        // User is already signed in
-        console.log('User authenticated successfully');
-        onLoginSuccess();
       }
       
     } catch (error: any) {
@@ -220,8 +242,6 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         setError('Invalid phone number format. Please use a valid US phone number.');
       } else if (error.code === 'LimitExceededException') {
         setError(t('auth.tooManyAttempts') || 'Too many attempts. Please wait before trying again.');
-      } else if (error.code === 'UserNotConfirmedException') {
-        setError('Account not confirmed. Please contact support.');
       } else {
         setError(error.message || 'Authentication failed. Please try again.');
       }
@@ -232,18 +252,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
   /**
    * Handle SMS Code Verification (Frontend Only)
-   * Works with existing verify-auth-challenge Lambda
+   * Handles both signup confirmation and custom auth challenges
    */
   const handleSmsCodeVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!smsCode.trim() || smsCode.length !== 6) {
       setError(t('auth.pleaseEnterSmsCode') || 'Please enter the 6-digit verification code');
-      return;
-    }
-
-    if (!cognitoUserForSms) {
-      setError('Session expired. Please start over.');
-      setSmsCodeSent(false);
       return;
     }
 
@@ -253,32 +267,106 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
     try {
       console.log('Verifying SMS code:', smsCode);
+      console.log('Is new user confirmation:', isNewUserConfirmation);
+      console.log('Pending phone number:', pendingPhoneNumber);
+      console.log('Cognito user for SMS:', cognitoUserForSms ? 'Present' : 'Null');
       
-      // Send the challenge response
-      const result = await Auth.sendCustomChallengeAnswer(cognitoUserForSms, smsCode);
-      
-      console.log('Challenge response result:', result);
-      
-      // Check if authentication is complete
-      if (result.signInUserSession) {
-        console.log('Authentication successful!');
-        setSuccessMessage('Phone verification successful!');
+      if (isNewUserConfirmation) {
+        // This is a signup confirmation
+        if (!pendingPhoneNumber) {
+          setError('Session expired. Please start over.');
+          setSmsCodeSent(false);
+          setLoading(false);
+          return;
+        }
         
-        // Small delay to show success message, then redirect
-        setTimeout(() => {
-          onLoginSuccess();
-        }, 1000);
+        console.log('Confirming signup for:', pendingPhoneNumber);
         
-      } else if (result.challengeName) {
-        // Still have challenges to complete
-        console.log('Additional challenge required:', result.challengeName);
-        setCognitoUserForSms(result);
-        setError('Additional verification required. Please try again.');
+        // Confirm the signup
+        await Auth.confirmSignUp(pendingPhoneNumber, smsCode);
+        console.log('Signup confirmed successfully');
+        
+        // Now initiate custom auth for the confirmed user
+        console.log('Starting custom auth after confirmation');
+        
+        try {
+          const cognitoUser = await Auth.signIn(pendingPhoneNumber);
+          
+          if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
+            // Switch to custom auth mode
+            setCognitoUserForSms(cognitoUser);
+            setIsNewUserConfirmation(false);
+            setPendingPhoneNumber(null);
+            setSmsCode(''); // Clear the confirmation code
+            setSuccessMessage('Account confirmed! Please enter the new verification code sent to your phone.');
+            console.log('Custom auth initiated after confirmation');
+          } else if (cognitoUser.signInUserSession) {
+            // User is fully authenticated (shouldn't happen with CUSTOM_AUTH but handle gracefully)
+            console.log('User authenticated successfully after confirmation');
+            setSuccessMessage('Account confirmed and signed in successfully!');
+            setTimeout(() => {
+              onLoginSuccess();
+            }, 1000);
+          } else {
+            console.error('Unexpected auth state after confirmation:', cognitoUser);
+            setError('Authentication error after confirmation. Please try signing in again.');
+            // Reset to phone input
+            setSmsCodeSent(false);
+            setIsNewUserConfirmation(false);
+            setPendingPhoneNumber(null);
+            setSmsCode('');
+          }
+        } catch (postConfirmError: any) {
+          console.error('Error starting custom auth after confirmation:', postConfirmError);
+          if (postConfirmError.code === 'UserNotConfirmedException') {
+            setError('Account confirmation failed. Please try the process again.');
+          } else {
+            setError('Authentication error after confirmation. Please try again.');
+          }
+          // Reset to phone input
+          setSmsCodeSent(false);
+          setIsNewUserConfirmation(false);
+          setPendingPhoneNumber(null);
+          setSmsCode('');
+        }
         
       } else {
-        // Unexpected state
-        console.error('Unexpected auth state:', result);
-        setError('Authentication incomplete. Please try again.');
+        // This is a custom auth challenge
+        if (!cognitoUserForSms) {
+          setError('Session expired. Please start over.');
+          setSmsCodeSent(false);
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Verifying custom auth challenge');
+        
+        // Send the challenge response
+        const result = await Auth.sendCustomChallengeAnswer(cognitoUserForSms, smsCode);
+        
+        console.log('Challenge response result:', result);
+        
+        // Check if authentication is complete
+        if (result.signInUserSession) {
+          console.log('Authentication successful!');
+          setSuccessMessage('Phone verification successful!');
+          
+          // Small delay to show success message, then redirect
+          setTimeout(() => {
+            onLoginSuccess();
+          }, 1000);
+          
+        } else if (result.challengeName) {
+          // Still have challenges to complete
+          console.log('Additional challenge required:', result.challengeName);
+          setCognitoUserForSms(result);
+          setError('Additional verification required. Please try again.');
+          
+        } else {
+          // Unexpected state
+          console.error('Unexpected auth state:', result);
+          setError('Authentication incomplete. Please try again.');
+        }
       }
       
     } catch (error: any) {
@@ -307,33 +395,66 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
   /**
    * Resend SMS Code (Frontend Only)
-   * Triggers the create-auth-challenge Lambda again
+   * Handles both signup confirmation resend and custom auth resend
    */
   const handleResendSmsCode = async () => {
-    if (!cognitoUserForSms) {
-      setError('Session expired. Please start over.');
-      setSmsCodeSent(false);
-      return;
-    }
-
     setLoading(true);
     setError('');
     setSuccessMessage(null);
 
     try {
       console.log('Resending SMS code');
+      console.log('Is new user confirmation:', isNewUserConfirmation);
       
-      // Trigger a new challenge to resend the SMS
-      const result = await Auth.sendCustomChallengeAnswer(cognitoUserForSms, 'RESEND');
-      
-      console.log('Resend result:', result);
-      
-      if (result.challengeName === 'CUSTOM_CHALLENGE') {
-        setCognitoUserForSms(result);
-        setSuccessMessage(t('auth.smsCodeResent') || 'New verification code sent to your phone!');
+      if (isNewUserConfirmation) {
+        // Resend signup confirmation code
+        if (!pendingPhoneNumber) {
+          setError('Session expired. Please start over.');
+          setSmsCodeSent(false);
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Resending signup confirmation for:', pendingPhoneNumber);
+        await Auth.resendSignUp(pendingPhoneNumber);
+        setSuccessMessage('New verification code sent to your phone!');
         setSmsCode(''); // Clear previous code
+        
       } else {
-        setError('Failed to resend code. Please try again.');
+        // Resend custom auth challenge
+        if (!cognitoUserForSms) {
+          setError('Session expired. Please start over.');
+          setSmsCodeSent(false);
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Resending custom auth challenge');
+        
+        // For custom auth, we need to re-initiate the auth flow to get a new challenge
+        // Instead of using sendCustomChallengeAnswer with 'RESEND', we restart the flow
+        try {
+          const phoneNumber = cognitoUserForSms.username || cognitoUserForSms.challengeParam?.USERNAME;
+          if (!phoneNumber) {
+            setError('Session expired. Please start over.');
+            setSmsCodeSent(false);
+            setLoading(false);
+            return;
+          }
+          
+          const result = await Auth.signIn(phoneNumber);
+          
+          if (result.challengeName === 'CUSTOM_CHALLENGE') {
+            setCognitoUserForSms(result);
+            setSuccessMessage(t('auth.smsCodeResent') || 'New verification code sent to your phone!');
+            setSmsCode(''); // Clear previous code
+          } else {
+            setError('Failed to resend code. Please try again.');
+          }
+        } catch (resendError: any) {
+          console.error('Resend custom auth error:', resendError);
+          setError('Failed to resend code. Please try again.');
+        }
       }
       
     } catch (error: any) {
@@ -925,6 +1046,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                       setPhoneNumber('+1 ');
                       setError(null);
                       setSuccessMessage(null);
+                      setIsNewUserConfirmation(false);
+                      setPendingPhoneNumber(null);
                     }}
                     disabled={loading}
                     className="forgot-password-link"
