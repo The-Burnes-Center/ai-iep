@@ -61,6 +61,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
 
+  // Add new state for phone confirmation
+  const [showPhoneConfirmation, setShowPhoneConfirmation] = useState(false);
+  const [phoneConfirmationCode, setPhoneConfirmationCode] = useState('');
+  const [pendingPhone, setPendingPhone] = useState<string | null>(null);
+
   // Language options with labels
   const languageOptions = [
     { value: 'en', label: 'English' },
@@ -126,25 +131,18 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
     // Extract only digits and format properly
     const digits = phoneNumber.replace(/\D/g, '');
-    
-    // Validate we have enough digits (10 for US number)
     if (digits.length < 10) {
       setError(t('auth.invalidPhoneNumber') || 'Please enter a valid US phone number (e.g., +1 (555) 555-5555)');
       setMobileLoading(false);
       return;
     }
-
-    // Format as +1XXXXXXXXXX (E.164 format)
     const formattedPhone = `+1${digits.slice(-10)}`;
+    setPendingPhone(formattedPhone);
 
     try {
       console.log('Attempting phone auth for:', formattedPhone);
-
-      // First try to sign in
       try {
         const cognitoUser = await Auth.signIn(formattedPhone);
-        console.log('Phone auth successful:', cognitoUser);
-        
         if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
           setCognitoUserForSms(cognitoUser);
           setSmsCodeSent(true);
@@ -153,87 +151,70 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           setError(t('unexpectedChallengeType'));
         }
       } catch (signInError: any) {
-        // If user doesn't exist, try to sign them up
         if (signInError.code === 'UserNotFoundException') {
-          console.log('User not found, attempting signup:', formattedPhone);
-          
           try {
-            // Generate a secure random password (32 characters)
             const randomPassword = Array.from(crypto.getRandomValues(new Uint8Array(24)))
               .map(b => b.toString(16).padStart(2, '0'))
               .join('');
-            
-            // Sign up the user with phone number
-            const { user } = await Auth.signUp({
+            await Auth.signUp({
               username: formattedPhone,
               password: randomPassword,
-              attributes: {
-                phone_number: formattedPhone
-              }
+              attributes: { phone_number: formattedPhone }
             });
-
-            console.log('Signup successful, proceeding with auth:', user);
-
-            // After signup, initiate the sign-in flow to trigger SMS
-            const signInAfterSignup = await Auth.signIn(formattedPhone);
-            
-            if (signInAfterSignup.challengeName === 'CUSTOM_CHALLENGE') {
-              setCognitoUserForSms(signInAfterSignup);
-              setSmsCodeSent(true);
-              setSuccessMessage(t('auth.smsCodeSentNewUser') || 'Account created and SMS code sent! Please verify your phone number.');
-            } else {
-              throw new Error('Unexpected challenge type after signup');
-            }
+            // After signup, show phone confirmation input
+            setShowPhoneConfirmation(true);
+            setSuccessMessage(t('auth.smsCodeSentNewUser') || 'Account created and SMS code sent! Please verify your phone number.');
           } catch (signUpError: any) {
-            console.error('Signup error:', signUpError);
-            
-            if (signUpError.code === 'UsernameExistsException') {
-              // If username exists but we got UserNotFoundException earlier,
-              // the user might be in an inconsistent state. Try to resend the code.
-              try {
-                const retrySignIn = await Auth.signIn(formattedPhone);
-                if (retrySignIn.challengeName === 'CUSTOM_CHALLENGE') {
-                  setCognitoUserForSms(retrySignIn);
-                  setSmsCodeSent(true);
-                  setSuccessMessage(t('auth.smsCodeSent'));
-                } else {
-                  setError(t('auth.phoneAuthConfigIssue'));
-                }
-              } catch (retryError: any) {
-                console.error('Retry error:', retryError);
-                setError(t('auth.phoneAuthError'));
-              }
+            if (signUpError.code === 'UsernameExistsException' || signUpError.code === 'UserNotConfirmedException') {
+              setShowPhoneConfirmation(true);
+              setSuccessMessage(t('auth.smsCodeSent') || 'SMS code sent. Please enter the verification code.');
             } else {
               setError(signUpError.message || t('auth.errorGeneric'));
             }
           }
         } else if (signInError.code === 'UserNotConfirmedException') {
-          // Handle existing but unconfirmed user
-          try {
-            // Try to sign in again to trigger SMS
-            const retrySignIn = await Auth.signIn(formattedPhone);
-            if (retrySignIn.challengeName === 'CUSTOM_CHALLENGE') {
-              setCognitoUserForSms(retrySignIn);
-              setSmsCodeSent(true);
-              setSuccessMessage(t('auth.smsCodeSent'));
-            } else {
-              setError(t('auth.phoneAuthConfigIssue'));
-            }
-          } catch (retryError: any) {
-            console.error('Error resending code:', retryError);
-            setError(retryError.message || t('auth.errorGeneric'));
-          }
+          setShowPhoneConfirmation(true);
+          setSuccessMessage(t('auth.smsCodeSent') || 'SMS code sent. Please enter the verification code.');
         } else {
-          console.error('Sign in error:', signInError);
-          setError(signInError.message || t('auth.errorGeneric')); 
+          setError(signInError.message || t('auth.errorGeneric'));
         }
       }
     } catch (error: any) {
-      console.error('Phone auth error:', error);
       setError(error.message || t('auth.errorGeneric'));
     }
-
     setMobileLoading(false);
+  };
+
+  // Handle phone confirmation code submit
+  const handlePhoneConfirmation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingPhone) return;
+    setLoading(true);
+    setError('');
+    setSuccessMessage(null);
+    try {
+      await Auth.confirmSignUp(pendingPhone, phoneConfirmationCode);
+      // After confirmation, sign in automatically
+      const cognitoUser = await Auth.signIn(pendingPhone);
+      if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
+        setCognitoUserForSms(cognitoUser);
+        setSmsCodeSent(true);
+        setShowPhoneConfirmation(false);
+        setSuccessMessage(t('auth.smsCodeSent') || 'SMS code sent. Please enter the verification code.');
+      } else {
+        setError(t('unexpectedChallengeType'));
+      }
+    } catch (err: any) {
+      if (err.code === 'CodeMismatchException' || err.message === 'INVALID_CODE') {
+        setError(t('auth.invalidSmsCode') || 'Invalid verification code. Please try again.');
+      } else if (err.code === 'ExpiredCodeException') {
+        setError(t('auth.expiredSmsCode'));
+      } else {
+        setError(err.message || t('auth.errorGeneric'));
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSmsCodeVerification = async (e: React.FormEvent) => {
@@ -839,7 +820,60 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         
         {showMobileLogin ? (
           // Mobile Login Form
-          !smsCodeSent ? (
+          showPhoneConfirmation ? (
+            <Form onSubmit={handlePhoneConfirmation}>
+              <div className="mobile-form-container">
+                <div className="sms-verification-info">
+                  <p>
+                    {t('auth.smsCodeSentTo')}<br />
+                    <span className="phone-display">{phoneNumber}</span>
+                  </p>
+                </div>
+                <Form.Group className="mb-3">
+                  <Form.Label className="form-label-bold">{t('auth.verificationCodeSms')}</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder={t('auth.enterSmsCode')}
+                    value={phoneConfirmationCode}
+                    onChange={(e) => setPhoneConfirmationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    maxLength={6}
+                    required
+                    className="sms-code-input"
+                  />
+                </Form.Group>
+                {error && <Alert variant="danger">{error}</Alert>}
+                {successMessage && <Alert variant="success">{successMessage}</Alert>}
+                <div className="d-grid gap-2">
+                  <Button variant="primary" type="submit" disabled={loading || phoneConfirmationCode.length !== 6} className="button-text">
+                    {loading ? <Spinner animation="border" size="sm" /> : t('auth.verifySmsCode')}
+                  </Button>
+                  <Button 
+                    variant="link"
+                    onClick={handleResendSmsCode}
+                    disabled={loading}
+                    className="forgot-password-link"
+                  >
+                    {t('auth.resendSmsCode')}
+                  </Button>
+                  <Button 
+                    variant="link" 
+                    onClick={() => {
+                      setShowPhoneConfirmation(false);
+                      setPhoneConfirmationCode('');
+                      setPhoneNumber('+1 ');
+                      setPendingPhone(null);
+                      setError(null);
+                      setSuccessMessage(null);
+                    }}
+                    disabled={loading}
+                    className="forgot-password-link"
+                  >
+                    {t('auth.backToLogin')}
+                  </Button>
+                </div>
+              </div>
+            </Form>
+          ) : (
             // Phone number input form
             <Form onSubmit={handleMobileLogin}>
               <div className="mobile-form-container">
@@ -930,65 +964,6 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   <p className="text-muted mt-3 mobile-consent-text">
                     {t('auth.smsConsentMobile')}
                   </p>
-                </div>
-              </div>
-            </Form>
-          ) : (
-            // SMS verification form
-            <Form onSubmit={handleSmsCodeVerification}>
-              <div className="mobile-form-container">
-                <div className="sms-verification-info">
-                  <p>
-                    {t('auth.smsCodeSentTo')}<br />
-                    <span className="phone-display">{phoneNumber}</span>
-                  </p>
-                </div>
-                
-                <Form.Group className="mb-3">
-                  <Form.Label className="form-label-bold">{t('auth.verificationCodeSms')}</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder={t('auth.enterSmsCode')}
-                    value={smsCode}
-                    onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    maxLength={6}
-                    required
-                    className="sms-code-input"
-                  />
-                </Form.Group>
-                
-                {error && <Alert variant="danger">{error}</Alert>}
-                {successMessage && <Alert variant="success">{successMessage}</Alert>}
-                
-                <div className="d-grid gap-2">
-                  <Button variant="primary" type="submit" disabled={loading || smsCode.length !== 6} className="button-text">
-                    {loading ? <Spinner animation="border" size="sm" /> : t('auth.verifySmsCode')}
-                  </Button>
-                  
-                  <Button 
-                    variant="link"
-                    onClick={handleResendSmsCode}
-                    disabled={loading}
-                    className="forgot-password-link"
-                  >
-                    {t('auth.resendSmsCode')}
-                  </Button>
-                  
-                  <Button 
-                    variant="link" 
-                    onClick={() => {
-                      setSmsCodeSent(false);
-                      setSmsCode('');
-                      setPhoneNumber('+1 ');
-                      setCognitoUserForSms(null);
-                      setError(null);
-                      setSuccessMessage(null);
-                    }}
-                    disabled={loading}
-                    className="forgot-password-link"
-                  >
-                    {t('auth.backToLogin')}
-                  </Button>
                 </div>
               </div>
             </Form>
