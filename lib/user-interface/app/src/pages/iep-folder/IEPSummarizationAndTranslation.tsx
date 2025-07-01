@@ -2,12 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
-import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage } from '@fortawesome/free-solid-svg-icons';
+import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import { generatePDF, canGeneratePDF } from '../../common/pdf-generator.tsx';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, translationsLoaded } = useLanguage();
@@ -16,6 +17,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showJargonDrawer, setShowJargonDrawer] = useState(false);
   const [selectedJargon, setSelectedJargon] = useState<{term: string, definition: string} | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   const [document, setDocument] = useState<IEPDocument>({
     documentId: undefined,
@@ -223,6 +226,30 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     navigate('/welcome-page');
   };
 
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    if (!canGeneratePDF(document)) {
+      setPdfError('No content available for PDF generation');
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    setPdfError(null);
+
+    try {
+      await generatePDF({
+        document,
+        preferredLanguage
+        // Let the PDF generator handle the filename automatically
+      });
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      setPdfError(error instanceof Error ? error.message : 'Failed to generate PDF');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   // Extract filename from document URL
   const getFileName = (documentUrl: string) => {
     if (!documentUrl) return 'Document';
@@ -399,11 +426,35 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   return (
     <>
     <Container className="summary-container mt-3 mb-3">
-      <div className="mt-2 text-start button-container">
+      <div className="mt-2 text-start button-container d-flex gap-2 align-items-center">
         <Button variant="outline-secondary" onClick={handleBackClick}>
           {t('summary.back')}
         </Button>
+        {canGeneratePDF(document) && (
+          <Button 
+            variant="primary" 
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPDF || isProcessing}
+          >
+            {isGeneratingPDF ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faDownload} className="me-2" />
+                Save
+              </>
+            )}
+          </Button>
+        )}
       </div>
+      {pdfError && (
+        <Alert variant="danger" className="mt-2" dismissible onClose={() => setPdfError(null)}>
+          <strong>PDF Generation Failed:</strong> {pdfError}
+        </Alert>
+      )}
       <Row className="mt-2">
         <Col>
           {error && <Alert variant="danger">{error}</Alert>}

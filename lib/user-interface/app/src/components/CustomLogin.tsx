@@ -317,7 +317,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             setIsNewUserConfirmation(false);
             setPendingPhoneNumber(null);
             setSmsCode(''); // Clear the confirmation code
-            setSuccessMessage('Account confirmed! Please enter the new verification code sent to your phone.');
+            setSuccessMessage(t('auth.accountConfirmedNewCode') || 'Great! You\'re confirmed. We will send you another code now so you can login for the first time.');
             console.log('Custom auth initiated after confirmation');
           } else if (cognitoUser.signInUserSession) {
             // User is fully authenticated (shouldn't happen with CUSTOM_AUTH but handle gracefully)

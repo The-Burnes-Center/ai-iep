@@ -25,7 +25,7 @@ SECTION_KEY_POINTS = {
     'Goals': """Detail the specific academic goals for each subject area where the student needs support. For each goal, summarize the baseline goal, the measurable annual goals and any short-term objectives and explain how progress will be measured and tracked. Provide clear dates and timelines for when each goal should be achieved. Include the objectives listed for each goal. For each goal, if progress reports are available, include the summary of progress as well as any additional comments listed in that section. Include behavioral and social goals that address any identified challenges. Specify life skills goals where applicable. Break out short-term objectives from annual goals.Mention the list of persons responsible for each area. Specify how frequently progress is reported.
     For goals: Ensure that every sentence is clear and complete. For example, instead of saying "baseline: 50% accuracy," provide a complete sentence, such as "Student X is responding to literal questions about an independent level text with a baseline of 50% accuracy.""",
     
-    'Services': """List all types of special education services the student will receive. Include any related services such as speech therapy, occupational therapy, or physical therapy. For each service, specify the frequency and duration using the following format: show the original duration in minutes as mentioned in the IEP, followed by the conversion to hours in parentheses (e.g., "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"). Also mention the frequency clearly (e.g. 25 minutes sessions, 4 times per week). Identify who will provide each service and document the specific dates when each services will begin and end. Indicate whether services are delivered in a group or 1:1, and whether they are direct or consultative. Include the setting of service delivery. If available, note whether the provider is school-based or external. Make sure to mention any aditional comments from the team about the service.""",
+    'Services': """List all types of special education services the student will receive. Include any related services such as speech therapy, occupational therapy, or physical therapy. For each service, specify the frequency and duration using the following format: show the original duration in minutes as mentioned in the IEP, followed by the conversion to hours in parentheses (e.g., "300 min/week (5 hrs/week)" or "100 min/week (1 hr 40 min/week)"). Also mention the frequency clearly (e.g. 25 minutes sessions, 4 times per week). Identify who will provide each service and document the specific dates when each services will begin and end. Indicate whether services are delivered in a group or 1:1, and whether they are direct or consultative. Include the setting of service delivery. If available, note whether the provider is school-based or external. Make sure to mention any aditional comments from the team about the service. Use tables to organize the information of services.""",
     
     'Informed Consent': """Document all parent rights and responsibilities regarding the IEP process. Note whether consent was given or refused for each aspect of the IEP. Record any concerns or input provided by the parents. List all team meeting participants and their roles. Include all important dates and deadlines related to the IEP process. Note any partial consents or formal disagreements. Include mention of prior written notices (PWNs) if included. Document whether interpretation or translation services were offered.""",
     
@@ -242,22 +242,7 @@ If a section is not explicitly present in the document:
 - Use the get_section_info tool to understand what each section should contain
 
 ### Summary Extraction Instructions:
-For the "summary" field, generate a fully factual, student-specific summary of this IEP document. Do not hallucinate or generalize. Only include information explicitly present in the document. Target 2-4 paragraphs.
-
-Your summary must include:
-
-1. **Student Information:** Name, age, grade, eligibility categories (primary & secondary), evaluation dates.
-2. **Academic Performance:** Strengths and needs.
-3. **Communication Profile:** Speech intelligibility, AAC device usage, expressive/receptive language functioning.
-4. **Functional / Behavioral Profile:** Daily living skills, social-emotional status, behavioral observations, adaptive functioning.
-5. **Services & Placement:** Placement type, % time in general education, services provided (type, frequency, duration), ESY eligibility.
-6. **Parent Input:** Key concerns or input shared by parents.
-7. **Accommodations & Modifications:** Classroom and testing accommodations, assistive technology.
-
-- Write the summary using **Markdown formatting**.
-- Use **bullet points**, **tables**, and **bold headings** to make the summary clear and accessible.
-- Keep the tone professional but parent-friendly.
-- Avoid filler sentences. Include only facts from the document.
+For the “summary” field, generate a warm, supportive, and student-specific summary of this IEP document. Do not hallucinate, generalize or include information not explicitly present in the document. Highlight the student's strengths and areas of growth before describing their support needs. Use friendly, encouraging language, and aim for a tone that is informative yet comforting to families and educators who read it. Target a length of no more than 2 paragraphs.
 
 ### Instructions for Sections:
 1. **Retrieve the Full OCR Text**: Use `get_all_ocr_text` to retrieve and index the full OCR text by page.
