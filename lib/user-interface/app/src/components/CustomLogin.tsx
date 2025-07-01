@@ -48,7 +48,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   
   // Mobile login state variables
   const [phoneNumber, setPhoneNumber] = useState('+1 ');
-  const [showMobileLogin, setShowMobileLogin] = useState(false);
+  const [showMobileLogin, setShowMobileLogin] = useState(true);  
   const [mobileLoading, setMobileLoading] = useState(false);
   const [smsCode, setSmsCode] = useState('');
   const [smsCodeSent, setSmsCodeSent] = useState(false);
@@ -997,18 +997,18 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         <div className="d-grid gap-2 mb-4">
           <div className="btn-group" role="group">
             <Button 
-              variant={!showMobileLogin ? "primary" : "outline-primary"}
-              onClick={() => setShowMobileLogin(false)}
-              className="button-text"
-            >
-              {t('auth.emailLogin')}
-            </Button>
-            <Button 
               variant={showMobileLogin ? "primary" : "outline-primary"}
               onClick={() => setShowMobileLogin(true)}
               className="button-text"
             >
               {t('auth.mobileLogin')}
+            </Button>
+            <Button 
+              variant={!showMobileLogin ? "primary" : "outline-primary"}
+              onClick={() => setShowMobileLogin(false)}
+              className="button-text"
+            >
+              {t('auth.emailLogin')}
             </Button>
           </div>
         </div>
