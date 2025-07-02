@@ -93,7 +93,6 @@ export default function NavigationPanel() {
           type: "link",
           info: <Box margin="xxs" textAlign="center" >
             <SpaceBetween size="xs">
-            <RouterButton href={"/chatbot/sessions"} loading={loadingSessions} variant="link">View All Sessions</RouterButton>
             <Button onClick={onReloadClick} iconName="refresh" loading={loadingSessions} variant="link">Reload Sessions</Button>            
             </SpaceBetween>
             </Box>
