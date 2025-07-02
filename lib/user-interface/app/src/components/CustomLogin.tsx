@@ -968,6 +968,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   return (
     <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
       <Col xs={12} sm={8} md={6} lg={4}>
+        <div className="text-center mb-4">
+          <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
+          <h4>{t('auth.signInHeader')}</h4>
+        </div>
+
         {/* Language dropdown */}
         <div className="text-end mb-3">
           <Dropdown>
@@ -986,11 +991,6 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               ))}
             </Dropdown.Menu>
           </Dropdown>
-        </div>
-
-        <div className="text-center mb-4">
-          <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
-          <h4>{t('auth.signInHeader')}</h4>
         </div>
 
         {/* Login method toggle buttons */}

@@ -138,6 +138,7 @@
     "auth.confirmPassword": "Xác nhận mật khẩu của bạn",
     "auth.createPassword": "Tạo mật khẩu",
     "auth.signIn": "Đăng Nhập",
+    "auth.signInHeader": "Đăng Nhập",
     "auth.signUp": "Đăng Ký",
     "auth.signUpPrompt": "Chưa có tài khoản? Đăng ký",
     "auth.signInPrompt": "Đã có tài khoản? Đăng nhập",

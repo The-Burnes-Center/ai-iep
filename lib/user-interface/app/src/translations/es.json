@@ -133,6 +133,7 @@
     "auth.confirmPassword": "Confirme su contraseña",
     "auth.createPassword": "Cree una contraseña",
     "auth.signIn": "Iniciar Sesión",
+    "auth.signInHeader": "Iniciar Sesión",
     "auth.signUp": "Registrarse",
     "auth.signUpPrompt": "¿No tiene una cuenta? Regístrese",
     "auth.signInPrompt": "¿Ya tiene una cuenta? Inicie sesión",
