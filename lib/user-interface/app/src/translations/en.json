@@ -141,6 +141,7 @@
     "auth.confirmPassword": "Confirm your password",
     "auth.createPassword": "Create a password",
     "auth.signIn": "Sign In",
+    "auth.signInHeader": "Log In",
     "auth.signUp": "Sign Up",
     "auth.signUpPrompt": "Don't have an account? Sign Up",
     "auth.signInPrompt": "Already have an account? Sign In",
@@ -179,8 +180,8 @@
     "auth.successAccountCreated": "Account created successfully! Please sign in with your credentials.",
     "auth.successCodeResent": "Verification code has been resent to your email",
     "auth.smsConsent": "By signing up using SMS, you consent to providing your phone number. We will use your phone number only for the purpose of sending you your login code.",
-    "auth.mobileLogin": "Mobile Login",
-    "auth.emailLogin": "Email Login",
+    "auth.mobileLogin": "WITH PHONE",
+    "auth.emailLogin": "WITH EMAIL",
     "auth.phoneNumber": "Phone Number",
     "auth.enterPhoneNumber": "Enter your mobile number (e.g., +1234567890)",
   

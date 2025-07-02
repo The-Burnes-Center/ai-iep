@@ -636,7 +636,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
-            <h2 className="aiep-title text-primary">AIEP</h2>
+            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
             <h4>{t('auth.changePassword')}</h4>
           </div>
           
@@ -709,7 +709,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
-            <h2 className="aiep-title text-primary">AIEP</h2>
+            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
             <h4>{t('auth.resetPassword')}</h4>
           </div>
           
@@ -826,7 +826,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
-            <h2 className="aiep-title text-primary">AIEP</h2>
+            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
             <h4>{isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')}</h4>
           </div>
           
@@ -989,8 +989,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         </div>
 
         <div className="text-center mb-4">
-          <h2 className="aiep-title text-primary">AIEP</h2>
-          <h4>{showMobileLogin ? t('auth.mobileLogin') : t('auth.signIn')}</h4>
+          <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
+          <h4>{t('auth.signInHeader')}</h4>
         </div>
 
         {/* Login method toggle buttons */}

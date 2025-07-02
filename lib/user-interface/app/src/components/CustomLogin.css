@@ -9,6 +9,13 @@
   animation: fadeIn 1.2s ease-in;
 }
 
+/* AIEP logo style */
+.aiep-logo {
+  max-width: 200px;
+  height: auto;
+  animation: fadeIn 1.2s ease-in;
+}
+
 /* Fade-in animation */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -29,7 +36,7 @@
 
 /* Forgot Password link style */
 .forgot-password-link {
-  color: #0040BA !important;
+  color: #1E1E1E !important;
   text-decoration: none !important; 
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
@@ -39,24 +46,27 @@
 .form-control::placeholder {
   font-family: 'Roboto', sans-serif;
   font-weight: 300;
-  opacity: 0.7;
+  color: #1E1E1E;
+  opacity: 0.35;
 }
 
 /* Background color for login container */
 .login-container {
-  background-color: #FFFFFF !important;
+  background-color: #F5F3EE;
 }
 
 /* Primary button color override */
 .btn-primary {
-  background-color: #0040BA !important;
-  border-color: #0040BA !important;
+  background-color: #FFB522 !important;
+  border-color: #FFB522 !important;
+  color: #1E1E1E !important;
 }
 
 /* Button hover effect */
 .btn-primary:hover {
-  background-color: #003399 !important;
-  border-color: #003399 !important;
+  background-color: #E6A31F !important;
+  border-color: #E6A31F !important;
+  color: #1E1E1E !important;
 }
 
 /* Form control focus */
@@ -84,19 +94,19 @@
 }
 
 .btn-outline-primary {
-  color: #0040BA;
-  border-color: #0040BA;
+  color: #1E1E1E;
+  border-color: #FFB522;
   background-color: transparent;
 }
 
 .btn-outline-primary:hover {
-  color: #FFFFFF;
-  background-color: #0040BA;
-  border-color: #0040BA;
+  color: #1E1E1E;
+  background-color: #FFB522;
+  border-color: #FFB522;
 }
 
 .btn-outline-primary:focus {
-  box-shadow: 0 0 0 0.25rem rgba(0, 64, 186, 0.25);
+  box-shadow: 0 0 0 0.25rem rgba(255, 181, 34, 0.25);
 }
 
 /* Mobile form container styling */
@@ -192,6 +202,8 @@ input[type="tel"]:focus {
   border-radius: 0.5rem;
   border: 2px solid #e9ecef;
   transition: all 0.3s ease;
+  background-color: #E7E4DC;
+  color: #1E1E1E;
 }
 
 .form-control:focus {
@@ -231,30 +243,46 @@ input[type="tel"]:focus {
 
 /* Language dropdown styling */
 .dropdown-toggle {
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   font-family: 'Roboto', sans-serif;
   font-size: 0.875rem;
+  background-color: #E7E4DC !important;
+  color: #1E1E1E !important;
+  border: 2px solid #e9ecef !important;
+  transition: all 0.3s ease;
+}
+
+.dropdown-toggle:hover,
+.dropdown-toggle:focus {
+  background-color: #E7E4DC !important;
+  color: #1E1E1E !important;
+  border-color: #FFB522 !important;
+  box-shadow: 0 0 0 0.25rem rgba(255, 181, 34, 0.15) !important;
 }
 
 .dropdown-menu {
   border-radius: 0.5rem;
   border: 1px solid #dee2e6;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: #E7E4DC;
 }
 
 .dropdown-item {
   font-family: 'Roboto', sans-serif;
   padding: 8px 16px;
+  color: #1E1E1E;
+  background-color: transparent;
 }
 
 .dropdown-item:hover {
-  background-color: #f8f9fa;
-  color: #0040BA;
+  background-color: #FFB522;
+  color: #1E1E1E;
 }
 
 .dropdown-item.active {
-  background-color: #0040BA;
-  color: white;
+  background-color: #FFB522;
+  color: #1E1E1E;
+  font-weight: 600;
 }
 
 /* Mobile responsive styling */
