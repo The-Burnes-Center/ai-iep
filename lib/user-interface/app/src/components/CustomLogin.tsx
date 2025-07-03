@@ -48,7 +48,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   
   // Mobile login state variables
   const [phoneNumber, setPhoneNumber] = useState('+1 ');
-  const [showMobileLogin, setShowMobileLogin] = useState(false);
+  const [showMobileLogin, setShowMobileLogin] = useState(true);  
   const [mobileLoading, setMobileLoading] = useState(false);
   const [smsCode, setSmsCode] = useState('');
   const [smsCodeSent, setSmsCodeSent] = useState(false);
@@ -636,7 +636,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
-            <h2 className="aiep-title text-primary">AIEP</h2>
+            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
             <h4>{t('auth.changePassword')}</h4>
           </div>
           
@@ -709,7 +709,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
-            <h2 className="aiep-title text-primary">AIEP</h2>
+            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
             <h4>{t('auth.resetPassword')}</h4>
           </div>
           
@@ -826,7 +826,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
-            <h2 className="aiep-title text-primary">AIEP</h2>
+            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
             <h4>{isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')}</h4>
           </div>
           
@@ -968,6 +968,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   return (
     <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
       <Col xs={12} sm={8} md={6} lg={4}>
+        <div className="text-center mb-4">
+          <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
+          <h4>{t('auth.signInHeader')}</h4>
+        </div>
+
         {/* Language dropdown */}
         <div className="text-end mb-3">
           <Dropdown>
@@ -988,27 +993,22 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           </Dropdown>
         </div>
 
-        <div className="text-center mb-4">
-          <h2 className="aiep-title text-primary">AIEP</h2>
-          <h4>{showMobileLogin ? t('auth.mobileLogin') : t('auth.signIn')}</h4>
-        </div>
-
         {/* Login method toggle buttons */}
         <div className="d-grid gap-2 mb-4">
           <div className="btn-group" role="group">
-            <Button 
-              variant={!showMobileLogin ? "primary" : "outline-primary"}
-              onClick={() => setShowMobileLogin(false)}
-              className="button-text"
-            >
-              {t('auth.emailLogin')}
-            </Button>
             <Button 
               variant={showMobileLogin ? "primary" : "outline-primary"}
               onClick={() => setShowMobileLogin(true)}
               className="button-text"
             >
               {t('auth.mobileLogin')}
+            </Button>
+            <Button 
+              variant={!showMobileLogin ? "primary" : "outline-primary"}
+              onClick={() => setShowMobileLogin(false)}
+              className="button-text"
+            >
+              {t('auth.emailLogin')}
             </Button>
           </div>
         </div>

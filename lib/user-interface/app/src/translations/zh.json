@@ -133,6 +133,7 @@
     "auth.confirmPassword": "确认您的密码",
     "auth.createPassword": "创建密码",
     "auth.signIn": "登录",
+    "auth.signInHeader": "登录",
     "auth.signUp": "注册",
     "auth.signUpPrompt": "没有账户？注册",
     "auth.signInPrompt": "已有账户？登录",

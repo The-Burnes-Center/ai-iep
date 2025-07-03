@@ -118,11 +118,10 @@
   
   /* Mobile language dropdown styling */
   #language-dropdown {
-    width: 40%;
+    width: 25%;
     text-align: left;
-    margin: 0.5rem 2rem;
+    margin: 0.5rem 0;
     color: #000 !important;
-    background-color: white !important;
     border-color: #dee2e6 !important;
   }
   
