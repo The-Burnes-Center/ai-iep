@@ -216,5 +216,9 @@
     "auth.authenticationIncomplete": "Authentication incomplete. Please try again.",
     "auth.maxAttemptsExceeded": "Maximum verification attempts exceeded. Please start over.",
     "auth.verificationFailed": "Code verification failed. Please try again.",
-    "auth.resendFailed": "Failed to resend verification code. Please try again."
+    "auth.resendFailed": "Failed to resend verification code. Please try again.",
+    "auth.checkEmailForCode": "Check your email for the verification code",
+    "auth.signUpSuccess": "Sign up successful! Please check your email to verify your account.",
+    "auth.verify": "Verify",
+    "auth.verificationCodeResent": "Verification code resent"
   }

@@ -198,6 +198,10 @@
     "auth.expiredSmsCode": "验证码无效。请申请新的验证码。",
     "auth.backToLogin": "返回登录",
     "auth.pleaseEnterPhoneNumber": "请输入电话号码",
+    "auth.checkEmailForCode": "检查您的邮箱以获取验证码",
+    "auth.signUpSuccess": "注册成功！请检查您的邮箱以验证您的账户。",
+    "auth.verify": "验证",
+    "auth.verificationCodeResent": "验证码已重新发送",
     "auth.phoneAuthConfigIssue": "电话认证配置问题。请联系支持。",
     "auth.phoneAuthError": "电话认证错误",
     "auth.unexpectedChallengeType": "收到意外的验证类型"
