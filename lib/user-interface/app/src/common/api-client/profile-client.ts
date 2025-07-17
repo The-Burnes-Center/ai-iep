@@ -65,4 +65,21 @@ export class ProfileClient {
 
     return response.json();
   }
+
+  async deleteProfile(): Promise<void> {
+    const auth = await Utils.authenticate();
+    const response = await fetch(`${this.API}/profile`, {
+      method: 'DELETE',
+      mode: 'cors',
+      headers: {
+        'Authorization': 'Bearer ' + auth,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete profile');
+    }
+  }
 }

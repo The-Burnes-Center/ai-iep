@@ -137,3 +137,34 @@
   font-weight: 500;
   opacity: 1;
 }
+
+/* Checkbox container for custom styling */
+.checkbox-container {
+  margin-bottom: 2rem;
+}
+
+/* Custom checkbox styles */
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Custom button group styles for profile actions */
+.profile-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+@media (max-width: 576px) {
+  .profile-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .profile-actions .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}

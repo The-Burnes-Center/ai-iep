@@ -7,6 +7,8 @@ import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context';
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import DeleteProfileModal from './DeleteProfileModal';
+import './ProfileForms.css';
 
 const LANGUAGE_OPTIONS = [
   { value: 'en', label: 'English' },
@@ -25,6 +27,7 @@ export default function UserProfileForm() {
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,6 +71,10 @@ export default function UserProfileForm() {
   const getLanguageLabel = (languageCode: string) => {
     const option = LANGUAGE_OPTIONS.find(opt => opt.value === languageCode);
     return option ? option.label : languageCode;
+  };
+
+  const handleDeleteProfile = () => {
+    setShowDeleteModal(true);
   };
 
   if (loading) {
@@ -149,7 +156,7 @@ export default function UserProfileForm() {
           </Col>
         </Row>
 
-        <div className="mt-4 d-flex gap-2">
+        <div className="mt-4 profile-actions">
           <Button 
             variant="primary" 
             type="submit" 
@@ -164,10 +171,21 @@ export default function UserProfileForm() {
           >
             {t('profile.button.revokeConsent')}
           </Button>
+          <Button 
+            variant="danger" 
+            onClick={handleDeleteProfile}
+            className="button-text"
+          >
+            {t('profile.button.deleteProfile')}
+          </Button>
         </div>
       </Form>
     </Container>
-        <MobileBottomNavigation />
+    <DeleteProfileModal 
+      show={showDeleteModal} 
+      onHide={() => setShowDeleteModal(false)} 
+    />
+    <MobileBottomNavigation />
     </>
   );
 }

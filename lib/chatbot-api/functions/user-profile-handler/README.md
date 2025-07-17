@@ -28,6 +28,7 @@ The main Lambda handler implements a REST API with the following endpoints:
 
 - **GET /profile**: Retrieves a user's profile
 - **PUT /profile**: Updates a user's profile information
+- **DELETE /profile**: Deletes the entire user profile and all associated data
 - **POST /profile/children**: Adds a child to a user's profile
 - **GET /profile/children/{childId}/documents**: Gets documents for a specific child
 - **DELETE /profile/children/{childId}/documents/{documentId}**: Deletes a document
@@ -130,6 +131,7 @@ The function implements robust error handling:
 - `USER_PROFILES_TABLE`: DynamoDB table for user profiles
 - `IEP_DOCUMENTS_TABLE`: DynamoDB table for IEP document metadata
 - `BUCKET`: S3 bucket for IEP documents
+- `USER_POOL_ID`: Cognito User Pool ID for user account deletion
 
 ### Permissions
 
@@ -138,6 +140,7 @@ The Lambda function requires:
 - DynamoDB read/write access to user profiles table
 - DynamoDB read/write access to IEP documents table
 - S3 read/delete access to documents bucket
+- Cognito admin permissions for user deletion (`cognito-idp:AdminDeleteUser`)
 
 ## Development Guidelines
 
@@ -369,7 +372,42 @@ Content-Type: application/json
 }
 ```
 
-### 3. Add Child
+### 3. Delete User Profile
+```http
+DELETE /profile
+Authorization: Bearer <jwt-token>
+```
+
+Deletes the entire user profile and all associated data permanently. This operation:
+1. Deletes all S3 files for the user (all folders under `userId/`)
+2. Deletes all IEP document records in the database
+3. Deletes the user profile record
+4. Deletes the Cognito user account
+
+**⚠️ WARNING: This operation is irreversible and will completely remove all user data.**
+
+**Response (200)**
+```json
+{
+  "message": "User profile and all associated data successfully deleted",
+  "userId": "string",
+  "deletionSummary": {
+    "s3ObjectsDeleted": number,
+    "documentsDeleted": number,
+    "profileDeleted": boolean,
+    "cognitoUserDeleted": boolean
+  }
+}
+```
+
+**Response (500)**
+```json
+{
+  "message": "Error deleting user profile: [error details]"
+}
+```
+
+### 4. Add Child
 ```http
 POST /profile/children
 Authorization: Bearer <jwt-token>

@@ -104,7 +104,7 @@ export class ChatBotApi extends Construct {
     // Add routes for user profile management
     this.httpAPI.restAPI.addRoutes({
       path: "/profile",
-      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT],
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT, apigwv2.HttpMethod.DELETE],
       integration: userProfileAPIIntegration,
       authorizer: httpAuthorizer,
     });
