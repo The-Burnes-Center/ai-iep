@@ -77,20 +77,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     setLanguage(lang);
   };
 
-  // Handle successful authentication with smart routing
+  // Handle successful authentication
   const handleSuccessfulAuthentication = () => {
-    if (isNewUserSignup) {
-      console.log('New user signup detected, storing flag for onboarding flow');
-      // Set a flag in localStorage to indicate this is a new phone signup
-      // The PreferredLanguage component will check this flag
-      localStorage.setItem('isNewPhoneSignup', 'true');
-    } else {
-      console.log('Existing user signin detected, clearing any signup flags');
-      // Clear any existing signup flags
-      localStorage.removeItem('isNewPhoneSignup');
-    }
-    
-    // Always call onLoginSuccess to set authenticated state
+    console.log('User authentication successful');
+    // Authentication is handled, onboarding decisions will be made based on profile.showOnboarding
     onLoginSuccess();
   };
 

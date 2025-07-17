@@ -160,7 +160,8 @@ def get_user_profile(event: Dict) -> Dict:
                 'updatedAt': times['timestamp'],
                 'updatedAtISO': times['datetime'],
                 'children': [default_child],  # Initialize with default child
-                'consentGiven': False
+                'consentGiven': False,
+                'showOnboarding': True
             }
             user_profiles_table.put_item(Item=new_profile)
             return create_response(event, 200, {'profile': new_profile})
@@ -237,7 +238,8 @@ def update_user_profile(event: Dict) -> Dict:
             'primaryLanguage': 'primaryLanguage',
             'secondaryLanguage': 'secondaryLanguage',
             'consentGiven': 'consentGiven',
-            'parentName': 'parentName'
+            'parentName': 'parentName',
+            'showOnboarding': 'showOnboarding'
         }
 
         # If email is in the request, return an error
@@ -259,6 +261,12 @@ def update_user_profile(event: Dict) -> Dict:
                 if field == 'consentGiven' and not isinstance(body[field], bool):
                     return create_response(event, 400, {
                         'message': 'consentGiven must be a boolean value (true or false)'
+                    })
+                
+                # Validation for showOnboarding boolean field
+                if field == 'showOnboarding' and not isinstance(body[field], bool):
+                    return create_response(event, 400, {
+                        'message': 'showOnboarding must be a boolean value (true or false)'
                     })
                 
                 update_parts.append(f'{attr_name} = :{field}')

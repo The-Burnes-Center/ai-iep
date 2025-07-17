@@ -202,6 +202,7 @@ User identity information (email, etc.) is managed exclusively through Amazon Co
   secondaryLanguage?: string, // Optional secondary language
   city: string,           // User's city of residence
   consentGiven: boolean,    // User's consent status (defaults to false)
+  showOnboarding: boolean,  // Whether to show onboarding flow (defaults to true)
   children: [                 // Array of children
     {
       childId: string,      // Unique identifier for child
@@ -321,6 +322,7 @@ Returns the user's profile information. Creates a default profile if none exists
     "secondaryLanguage": "string",
     "city": "string",
     "consentGiven": boolean,
+    "showOnboarding": boolean,
     "children": [
       {
         "childId": "string",
@@ -346,6 +348,7 @@ Content-Type: application/json
   "secondaryLanguage": "string",
   "city": "string",
   "consentGiven": boolean,
+  "showOnboarding": boolean,
   "children": [
     {
       "childId": "string",
@@ -356,7 +359,7 @@ Content-Type: application/json
 }
 ```
 
-**Note**: Email updates must be performed through Cognito user management, not through this API. The consentGiven field must be a valid JSON boolean value (true or false, lowercase without quotes).
+**Note**: Email updates must be performed through Cognito user management, not through this API. The consentGiven and showOnboarding fields must be valid JSON boolean values (true or false, lowercase without quotes).
 
 **Response (200)**
 ```json
@@ -365,10 +368,17 @@ Content-Type: application/json
 }
 ```
 
-**Response (400) - Invalid consentGiven type**
+**Response (400) - Invalid boolean field type**
 ```json
 {
   "message": "consentGiven must be a boolean value (true or false)"
+}
+```
+
+**Response (400) - Invalid showOnboarding type**
+```json
+{
+  "message": "showOnboarding must be a boolean value (true or false)"
 }
 ```
 

@@ -57,7 +57,8 @@ def lambda_handler(event, context):
             'createdAt': current_time,
             'updatedAt': current_time,
             'children': [default_child],  # Initialize with default child
-            'consentGiven': False  # Add new field with default value of false
+            'consentGiven': False,  # Add new field with default value of false
+            'showOnboarding': True  # Add new field with default value of true
         }
         
         # Use put_item with condition to prevent overwriting

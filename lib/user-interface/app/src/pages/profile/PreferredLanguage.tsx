@@ -63,37 +63,36 @@ export default function PreferredLanguage() {
         return;
       }
 
-      // Check if this is a new phone signup
-      const isNewPhoneSignup = localStorage.getItem('isNewPhoneSignup') === 'true';
+      // Check if user needs onboarding based on profile showOnboarding field
+      const needsOnboarding = data && data.showOnboarding === true;
       
-      if (isNewPhoneSignup) {
-        console.log('New phone signup detected, starting onboarding flow');
-        // Clear the flag since we're handling it
-        localStorage.removeItem('isNewPhoneSignup');
-        // For new phone signups, always start with language selection (stay on current screen)
+      if (needsOnboarding) {
+        console.log('User needs onboarding, starting onboarding flow');
+        // Check if the user has already completed some required fields to determine where to start
+        const hasLanguage = data && data.secondaryLanguage;
+        const hasConsent = data && data.consentGiven === true;
+        const hasCompleteChildData = data && data.parentName;
+
+        // If user has language but missing consent or child data, go to consent form
+        if (hasLanguage && !hasConsent) {
+          navigate('/consent-form');
+          return;
+        }
+
+        // If user has language and consent but missing parent data, go to parent form
+        if (hasLanguage && hasConsent && !hasCompleteChildData) {
+          navigate('/view-and-add-parent');
+          return;
+        }
+
+        // Otherwise, stay on language selection (current screen) to start onboarding
         setError(null);
         return;
       }
 
-      // Check if the user has already completed all required fields
-      const hasLanguage = data && data.secondaryLanguage;
-      const hasConsent = data && data.consentGiven === true;
-      const hasCompleteChildData = data && data.parentName
-
-      // If everything is complete, go to welcome page
-      if (hasLanguage && hasConsent && hasCompleteChildData) {
-        navigate('/welcome-page');
-        return;
-      }
-
-      // If user has language but missing consent or child data, go to consent form
-      if (hasLanguage) {
-        navigate('/consent-form');
-        return;
-      }
-
-      // Otherwise, stay on language selection (current screen)
-      setError(null);
+      // User doesn't need onboarding, go directly to welcome page
+      console.log('User has completed onboarding, going to welcome page');
+      navigate('/welcome-page');
     } catch (err) {
       setError('Service unavailable');
     } finally {

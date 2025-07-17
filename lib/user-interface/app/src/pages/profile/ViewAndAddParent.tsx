@@ -103,6 +103,15 @@ export default function ViewAndAddParent() {
       // Check for existing documents after potentially creating child
       await checkForExistingDocument();
       
+      // Mark onboarding as completed since user has finished all required steps
+      try {
+        await apiClient.profile.updateProfile({ showOnboarding: false });
+        console.log('Onboarding completed - showOnboarding set to false');
+      } catch (onboardingError) {
+        console.error('Error updating onboarding status:', onboardingError);
+        // Don't fail the flow if this update fails
+      }
+      
       // Navigate based on whether user has existing documents
       if (hasExistingDocument) {
         navigate('/welcome-page');

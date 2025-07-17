@@ -165,13 +165,6 @@ export default function UserProfileForm() {
             {saving ? t('profile.button.updating') : t('profile.button.update')}
           </Button>
           <Button 
-            variant="outline-danger" 
-            onClick={() => navigate('/revoke-consent')}
-            className="button-text"
-          >
-            {t('profile.button.revokeConsent')}
-          </Button>
-          <Button 
             variant="danger" 
             onClick={handleDeleteProfile}
             className="button-text"

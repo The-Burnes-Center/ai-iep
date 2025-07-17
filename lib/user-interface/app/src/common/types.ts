@@ -51,6 +51,7 @@ export interface UserProfile {
   createdAt: number;
   updatedAt: number;
   consentGiven: Boolean;
+  showOnboarding: Boolean;
 }
 
 export interface Language {
