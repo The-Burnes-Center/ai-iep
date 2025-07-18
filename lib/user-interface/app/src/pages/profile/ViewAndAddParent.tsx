@@ -156,7 +156,7 @@ export default function ViewAndAddParent() {
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
           <div className="profile-form">
-            <h2 className="text-center profile-title">
+            <h2 className="profile-title">
               {t('parent.title')}
             </h2>
             
@@ -180,7 +180,7 @@ export default function ViewAndAddParent() {
                   variant="primary" 
                   onClick={handleSaveAndContinue}
                   disabled={!isFormValid() || saving}
-                  className="button-text"
+                  className="consent-button"
                 >
                   {saving ? t('parent.button.saving') : t('parent.button.save')}
                 </Button>
