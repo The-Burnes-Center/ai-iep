@@ -144,7 +144,7 @@ export default function ConsentForm() {
                 variant="primary" 
                 onClick={handleContinue}
                 disabled={!isChecked || saving}
-                className="button-text"
+                className="consent-button"
               >
                 {saving ? (
                   <>

@@ -57,16 +57,16 @@
 
 /* Primary button color override */
 .btn-primary {
-  background-color: #FFB522 !important;
-  border-color: #FFB522 !important;
-  color: #1E1E1E !important;
+  background-color: #00682F !important;
+  border-color: #1E1E1E !important;
+  color: #F5F3EE !important;
 }
 
 /* Button hover effect */
 .btn-primary:hover {
   background-color: #E6A31F !important;
   border-color: #E6A31F !important;
-  color: #1E1E1E !important;
+  color: #F5F3EE !important;
 }
 
 /* Form control focus */
@@ -95,14 +95,14 @@
 
 .btn-outline-primary {
   color: #1E1E1E;
-  border-color: #FFB522;
+  border-color: #1E1E1E;
   background-color: transparent;
 }
 
 .btn-outline-primary:hover {
   color: #1E1E1E;
-  background-color: #FFB522;
-  border-color: #FFB522;
+  background-color: #00682F;
+  border-color: #F5F3EE;
 }
 
 .btn-outline-primary:focus {
@@ -428,17 +428,4 @@ input[type="tel"]:focus {
 .btn:focus {
   outline: 2px solid #0040BA;
   outline-offset: 2px;
-}
-
-/* Print styles */
-@media print {
-  .login-container {
-    background-color: white !important;
-  }
-  
-  .btn-primary {
-    background-color: white !important;
-    color: black !important;
-    border: 2px solid black !important;
-  }
 }
