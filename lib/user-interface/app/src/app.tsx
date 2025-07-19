@@ -1,15 +1,14 @@
-import { useContext } from "react";
 import {
   BrowserRouter,
   Route,
   Routes,
   useLocation
 } from "react-router-dom";
-import { AppContext } from "./common/app-context";
 import GlobalHeader from "./components/global-header";
 import WelcomePage from "./pages/WelcomePage";
 import "./styles/app.scss";
 import PreferredLanguage  from './pages/profile/PreferredLanguage'; 
+import OnboardingUser from './pages/profile/OnboardingUser';
 import UserProfileForm from './pages/profile/UserProfileForm';
 import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
 import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslationsPage';
@@ -23,10 +22,9 @@ import AboutApp from './pages/profile/AboutApp';
 
 function AppContent() {
   const location = useLocation();
-  const appContext = useContext(AppContext);
   
   // Routes where header should be hidden
-  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent"];
+  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user"];
   
   // Check if current location is in the list of routes where header should be hidden
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
@@ -42,6 +40,7 @@ function AppContent() {
       <div>
         <Routes>    
           <Route path="/" element={<PreferredLanguage  />} />
+          <Route path="/onboarding-user" element={<OnboardingUser />} />
           <Route path="/consent-form" element={<ConsentForm />} />
           <Route path="/welcome-intro" element={<WelcomeIntro />} />
           <Route path="/about-app" element={<AboutApp />} />

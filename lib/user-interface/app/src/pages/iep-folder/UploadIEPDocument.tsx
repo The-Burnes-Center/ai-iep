@@ -26,23 +26,6 @@ const mimeTypes = {
   '.pdf': 'application/pdf',
   '.doc': 'application/msword',
   '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  '.xls': 'application/vnd.ms-excel',
-  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  '.ppt': 'application/vnd.ms-powerpoint',
-  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  '.txt': 'text/plain',
-  '.csv': 'text/csv',
-  '.html': 'text/html',
-  '.xml': 'application/xml',
-  '.json': 'application/json',
-  '.md': 'text/markdown',
-  '.rtf': 'application/rtf',
-  '.epub': 'application/epub+zip',
-  '.odt': 'application/vnd.oasis.opendocument.text',
-  '.tsv': 'text/tab-separated-values',
-  '.eml': 'message/rfc822',
-  '.msg': 'application/vnd.ms-outlook',
-  '.rst': 'text/x-rst'
 };
 
 export interface UploadIEPDocumentProps {
@@ -154,9 +137,7 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete,
 
   return (
     <Container className="p-0">
-      <Card className="upload-container">
-        <Card.Body>
-          <h4 className="mb-3">{t('upload.title')}</h4>
+          <h2 className="upload-iep-title">{t('upload.title')}</h2>
           <p>
           {t('upload.maxSize')}
           </p>
@@ -235,8 +216,6 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete,
               </Button>
             </div>
           </Form>
-        </Card.Body>
-      </Card>
     </Container>
   );
 };

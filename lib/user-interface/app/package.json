@@ -39,6 +39,7 @@
     "react-use-websocket": "^4.5.0",
     "regenerator-runtime": "^0.14.0",
     "remark-gfm": "^4.0.0",
+    "swiper": "^11.2.10",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
