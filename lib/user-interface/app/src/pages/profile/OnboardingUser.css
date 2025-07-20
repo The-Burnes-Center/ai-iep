@@ -1,16 +1,19 @@
-/* Base styles for the component */
-.onboarding-container {
-  position: relative;
-  height: 100%;
+/* Container for the entire carousel section */
+.carousel-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
+  height: 100vh;
+  position: relative;
 }
 
-/* Swiper component styles */
+/* Basic Swiper styles */
 .swiper {
   width: 100%;
-  height: 100%;
 }
 
+/* Slide styling */
 .swiper-slide {
   text-align: center;
   font-size: 18px;
@@ -18,8 +21,8 @@
   border: 2px solid #1E1E1E;
   
   /* Make slides square with 1:1 ratio */
-  width: 350px !important;
-  height: 350px !important;
+  width: 35vh !important;
+  height: 35vh !important;
   
   /* Center slide text vertically */
   display: flex !important;
@@ -28,22 +31,15 @@
   
   /* Add border radius for better appearance */
   border-radius: 8px;
-
   padding: 1rem;
   line-height: 1;
 }
 
-.swiper-slide img {
-  width: 310px;
-  height: 310px;
-  object-fit: contain !important;
-  max-width: 100%;
-}
-
+/* Swiper container */
 .mySwiper {
   width: 100%;
-  height: 100vh;
-  
+  height: 40vh; /* Reduced to make room for heading and pagination */
+  margin-top: 15vh;
   /* Center the carousel on the screen */
   display: flex;
   align-items: center;
@@ -55,69 +51,96 @@
   align-items: center;
 }
 
-/* Text container below slides */
-.slide-text-container {
-  position: absolute;
-  bottom: 125px !important; /* Position above pagination */
-  left: 55%;
-  transform: translateX(-50%);
+/* Heading below the slider */
+.carousel-heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+.carousel-paragraph {
+  font-size: 1rem;
+  align-self: flex-start;
+}
+
+.heading-paragraph-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 80%;
+  height: 8rem;
+  margin-left: 8vw;
+}
+
+/* Custom pagination styling */
+.swiper-custom-pagination {
+  display: flex;
+  justify-content: center;
   width: 100%;
-  text-align: start;
-  z-index: 10;
 }
 
-.slide-description {
-  font-family: 'Roboto', sans-serif;
-  font-size: 1.5rem !important;
-  font-weight: 500;
-  color: #1E1E1E;
-  margin: 0;
-  padding: 0 2rem;
-  line-height: 1.4;
-  max-width: 600px;
-  margin: 0 auto;
-  white-space: pre-line;
-}
-
-.slide-paragraph {
-    font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
-    font-weight: 400;
-    color: #1E1E1E;
-    margin: 1rem 0 0 0;
-    line-height: 1.5;
-    width: 80%;
-    padding-left: 1.2rem;
-    opacity: 0.8;
-  }
-
-/* Move pagination dots higher up to make space for text */
-.swiper-pagination {
-  bottom: 60px !important; /* Moved higher to make space for text */
-}
-
-.swiper-pagination-bullet {
+/* Pagination bullets */
+.swiper-custom-pagination .swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
   background: #EFECE5;
   opacity: 1;
+  margin: 0 5px;
+  cursor: pointer;
 }
 
-.swiper-pagination-bullet-active {
+.swiper-custom-pagination .swiper-pagination-bullet-active {
   background: #1E1E1E !important;
   opacity: 1;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .slide-description {
-    font-size: 1.2rem;
-    padding: 0 1rem;
+/* Make sure images maintain aspect ratio if added later */
+.swiper-slide img {
+  max-width: 80%;
+  max-height: 80%;
+  object-fit: contain !important;
+}
+
+
+.continue-onboarding {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+}
+
+/* Disabled consent button styling */
+.continue-onboarding:disabled {
+  background-color: #E7E4DC !important;
+  color: #A09E99 !important;
+  border-color: #E7E4DC !important;
+  opacity: 1 !important; /* Override Bootstrap's default opacity */
+}
+
+/* Remove hover effects when disabled */
+.continue-onboarding:disabled:hover {
+  background-color: #E7E4DC !important;
+  color: #A09E99 !important;
+  border-color: #E7E4DC !important;
+  transform: none !important;
+}
+
+
+.carousel-container .d-grid {
+  width: 85%;
+  margin-top: 2rem;
+}
+
+/* Media query for smaller screens */
+@media (max-height: 600px) {
+  .mySwiper {
+    height: 50vh;
   }
   
-  .slide-text-container {
-    bottom: 100px;
+  .swiper-slide {
+    width: 30vh !important;
+    height: 30vh !important;
   }
+
   
-  .swiper-pagination {
-    bottom: 40px !important;
-  }
+
 }

@@ -71,7 +71,7 @@ export default function PreferredLanguage() {
         // Check if the user has already completed some required fields to determine where to start
         const hasLanguage = data && data.secondaryLanguage;
         const hasConsent = data && data.consentGiven === true;
-        const hasCompleteChildData = data && data.parentName;
+        const hasCompleteParentData = data && data.parentName;
 
         // If user has language but missing consent or child data, go to consent form
         if (hasLanguage && !hasConsent) {
@@ -80,7 +80,7 @@ export default function PreferredLanguage() {
         }
 
         // If user has language and consent but missing parent data, go to parent form
-        if (hasLanguage && hasConsent && !hasCompleteChildData) {
+        if (hasLanguage && hasConsent && !hasCompleteParentData) {
           navigate('/view-and-add-parent');
           return;
         }
@@ -127,7 +127,7 @@ export default function PreferredLanguage() {
       if (isUpdatingFromProfile) {
         navigate('/profile');
       } else {
-        navigate('/consent-form');
+        navigate('/onboarding-user');
       }
     } catch (err) {
       addNotification('error', 'Failed to update language preference');

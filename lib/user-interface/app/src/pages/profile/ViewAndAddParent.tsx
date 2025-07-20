@@ -114,9 +114,9 @@ export default function ViewAndAddParent() {
       
       // Navigate based on whether user has existing documents
       if (hasExistingDocument) {
-        navigate('/welcome-page');
+        navigate('/iep-documents');
       } else {
-        navigate('/welcome-intro');
+        navigate('/iep-documents');
       }
     } catch (err) {
       console.error('Error saving parent name:', err);
