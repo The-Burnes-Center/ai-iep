@@ -119,7 +119,7 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete,
         navigate('/summary-and-translations');
       } else {
         // If this is the first document, go to about-app page
-        navigate('/about-app');
+        navigate('/summary-and-translations');
       }
     }
   };
