@@ -19,6 +19,7 @@ import RightsAndOnboarding from './pages/RightsAndOnboarding';
 import ConsentForm from './pages/profile/ConsentForm';
 import WelcomeIntro from './pages/profile/WelcomeIntro';
 import AboutApp from './pages/profile/AboutApp';
+import ParentRights from "./components/ParentRights";
 
 function AppContent() {
   const location = useLocation();
@@ -62,6 +63,8 @@ function AppContent() {
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
             <Route path="/revoke-consent" element={<RevokeConsent />} />
+            {/*To be removed*/}
+            <Route path="/parent-rights" element={<ParentRights />} />
         </Routes>
       </div>
     </div>
