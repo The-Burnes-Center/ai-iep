@@ -21,13 +21,16 @@
     padding: 0;
     border: none;
     box-shadow: none;
-    background-color: transparent;
+    background-color: #F5f3EE;
   }
   
   .summary-content {
     border: none;
-    background-color: #FFFFFF;
     border-radius: 8px;
+  }
+
+  .summary-content .card-body {
+    background-color: #F5f3EE;
   }
   
   .summary-accordion .accordion-item {
