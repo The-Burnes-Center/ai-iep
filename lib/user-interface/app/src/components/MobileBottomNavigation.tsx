@@ -8,11 +8,6 @@ const MobileBottomNavigation: React.FC = () => {
 
   const navigationItems = [
     {
-      icon: 'bi-house-fill',
-      label: 'Home',
-      route: '/welcome-page'
-    },
-    {
       icon: 'bi-book-fill',
       label: 'Summary',
       route: '/summary-and-translations'
