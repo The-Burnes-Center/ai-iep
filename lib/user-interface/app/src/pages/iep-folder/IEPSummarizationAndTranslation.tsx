@@ -25,23 +25,33 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const parentRightsSlideData = [
     {
       id: 'slide-1',
-      title: 'Your Rights as a Parent',
-      content: 'You have the right to be involved in all decisions about your child\'s education and services.'
+      title: 'You can request a translator',
+      content: 'You can request a translator for IEP meetings to ensure clear communication.'
     },
     {
       id: 'slide-2',
-      title: 'Right to Information',
-      content: 'You have the right to access your child\'s educational records and receive information in your native language.'
+      title: 'You can take your time',
+      content: 'You have the right to take your time before signing an IEP - you don\'t need to sign until you\'re ready.'
     },
     {
       id: 'slide-3',
-      title: 'Due Process Rights',
-      content: 'You have the right to request a due process hearing if you disagree with decisions about your child\'s education.'
+      title: 'You can consent or not',
+      content: 'You can consent to all, some, or none of the proposed services - your child won\'t receive new services without your approval.'
     },
     {
       id: 'slide-4',
-      title: 'Right to Advocate',
-      content: 'You have the right to bring an advocate or attorney to meetings about your child\'s educational program.'
+      title: 'You can request a meeting',
+      content: 'You have the right to request an IEP meeting at any time, not just at  the annual review, and the school must schedule it within 30 days.'
+    },
+    {
+      id: 'slide-5',
+      title: 'You can reschedule',
+      content: 'If an administrator isn\'t present at the meeting, you have the right to reschedule for a time when they can attend.'
+    },
+    {
+      id: 'slide-6',
+      title: 'You must be given a booklet of your rights',
+      content: 'By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting.'
     }
   ];
 

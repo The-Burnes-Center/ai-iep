@@ -58,7 +58,7 @@
 .slide-content {
   position: relative;
   z-index: 2;
-  text-align: center;
+  text-align: start;
   color: #343a40;
   padding: 2rem;
   max-width: 85%;
