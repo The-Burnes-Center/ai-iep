@@ -9,6 +9,7 @@ import { useLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { generatePDF, canGeneratePDF } from '../../common/pdf-generator.tsx';
+import ParentRightsCarousel from '../../components/ParentRightsCarousel';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, translationsLoaded } = useLanguage();
@@ -19,6 +20,30 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [selectedJargon, setSelectedJargon] = useState<{term: string, definition: string} | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+
+  // Parent Rights carousel data - same as ParentRights.tsx
+  const parentRightsSlideData = [
+    {
+      id: 'slide-1',
+      title: 'Your Rights as a Parent',
+      content: 'You have the right to be involved in all decisions about your child\'s education and services.'
+    },
+    {
+      id: 'slide-2',
+      title: 'Right to Information',
+      content: 'You have the right to access your child\'s educational records and receive information in your native language.'
+    },
+    {
+      id: 'slide-3',
+      title: 'Due Process Rights',
+      content: 'You have the right to request a due process hearing if you disagree with decisions about your child\'s education.'
+    },
+    {
+      id: 'slide-4',
+      title: 'Right to Advocate',
+      content: 'You have the right to bring an advocate or attorney to meetings about your child\'s educational program.'
+    }
+  ];
 
   const [document, setDocument] = useState<IEPDocument>({
     documentId: undefined,
@@ -476,26 +501,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 <Row>
                   <Col md={12}>
                     {isProcessing ? (
-                      <div className="text-center my-5">
-                        <Spinner animation="border" variant="warning" role="status">
-                          <span className="visually-hidden">Processing document...</span>
-                        </Spinner>
-                        <Alert variant="warning" className="mt-3">
-                          <h5>{t('summary.processing.title')}</h5>
-                          <p>{t('summary.processing.message')}</p>
-                          <div className="text-start">
-                            <p>{t('rights.description')}</p>
-                            <ul className="mt-3 text-start">
-                              <li className="mb-2">{t('rights.bulletPoints.1')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.2')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.3')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.4')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.5')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.6')}</li>
-                            </ul>
-                          </div>
-                        </Alert>
-                      </div>
+                      <ParentRightsCarousel slides={parentRightsSlideData} />
                     ) : document.status === "FAILED" ? (
                       <Alert variant="danger">
                         <h5>{t('summary.failed.title')}</h5>
