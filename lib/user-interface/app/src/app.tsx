@@ -25,7 +25,7 @@ function AppContent() {
   const location = useLocation();
   
   // Routes where header should be hidden
-  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/parent-rights"];
+  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/parent-rights","proffile"];
   
   // Check if current location is in the list of routes where header should be hidden
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
