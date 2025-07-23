@@ -92,7 +92,7 @@ export default function PreferredLanguage() {
 
       // User doesn't need onboarding, go directly to welcome page
       console.log('User has completed onboarding, going to welcome page');
-      navigate('/welcome-page');
+      navigate('/summary-and-translations');
     } catch (err) {
       setError('Service unavailable');
     } finally {

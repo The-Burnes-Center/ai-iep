@@ -264,7 +264,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   }, [language, document.summaries, document.sections, preferredLanguage, isTranslating]);
 
   const handleBackClick = () => {
-    navigate('/welcome-page');
+    navigate('/iep-documents');
   };
 
   // Handle PDF download

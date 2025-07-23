@@ -96,7 +96,7 @@ export default function UserProfileForm() {
   }
 
   const handleBackClick = () => {
-    navigate('/welcome-page');
+    navigate('/summary-and-translations');
   };
 
   return (
