@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  background-color: #ffffff;
+  background-color: #00682F;
   border-top: 1px solid #e9ecef;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   padding: 8px 0;
@@ -30,7 +30,7 @@
   justify-content: center;
   background: none;
   border: none;
-  color: #6c757d;
+  color: #7AAD8E;
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 6px 8px;
@@ -41,7 +41,7 @@
 }
 
 .nav-item:hover {
-  color: #0040BA;
+  color: #F5F3EE;
   background-color: rgba(0, 64, 186, 0.05);
 }
 
@@ -50,13 +50,13 @@
 }
 
 .nav-item:focus {
-  outline: 2px solid #0040BA;
+  outline: 2px solid #F5F3EE;
   outline-offset: 2px;
 }
 
 .nav-item.active {
-  color: #0040BA;
-  background-color: rgba(0, 64, 186, 0.1);
+  color: #F5F3EE;
+  background-color: #00682F;
 }
 
 .nav-item i {
@@ -107,55 +107,5 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .mobile-bottom-navigation {
-    background-color: #1f1f1f;
-    border-top-color: #404040;
-  }
-  
-  .nav-item {
-    color: #b0b0b0;
-  }
-  
-  .nav-item:hover {
-    color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  .nav-item.active {
-    color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.15);
-  }
-}
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .mobile-bottom-navigation {
-    border-top-width: 2px;
-  }
-  
-  .nav-item {
-    border: 1px solid transparent;
-  }
-  
-  .nav-item:focus {
-    outline: 3px solid #0040BA;
-    outline-offset: 2px;
-  }
-  
-  .nav-item.active {
-    border-color: #0040BA;
-  }
-}
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .nav-item {
-    transition: none;
-  }
-  
-  .nav-item:active {
-    transform: none;
-  }
-}
