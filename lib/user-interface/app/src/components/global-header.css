@@ -27,6 +27,8 @@
 #language-dropdown {
   border-radius: 4px;
   font-weight: 500;
+  background-color: #F5F3EE;
+  border: 1px solid #1E1E1E;
 }
 
 #language-dropdown:focus,
@@ -122,7 +124,8 @@
     text-align: left;
     margin: 0.5rem 0;
     color: #000 !important;
-    border-color: #dee2e6 !important;
+    border-color: #1E1E1E !important;
+    border-radius: 20px;
   }
   
   .dropdown-menu {

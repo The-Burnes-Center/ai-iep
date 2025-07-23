@@ -1,18 +1,23 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas} from 'react-bootstrap';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
+import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas, Dropdown} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
-import { useLanguage } from '../../common/language-context';
+import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { generatePDF, canGeneratePDF } from '../../common/pdf-generator.tsx';
 import ParentRightsCarousel from '../../components/ParentRightsCarousel';
+import { ApiClient } from '../../common/api-client/api-client';
+import { AppContext } from '../../common/app-context';
+import { useNotifications } from '../../components/notif-manager';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
-  const { t, language, translationsLoaded } = useLanguage();
+  const { t, language, setLanguage, translationsLoaded } = useLanguage();
+  const appContext = useContext(AppContext);
+  const { addNotification } = useNotifications();
   
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +25,95 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [selectedJargon, setSelectedJargon] = useState<{term: string, definition: string} | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+
+  const [document, setDocument] = useState<IEPDocument>({
+    documentId: undefined,
+    documentUrl: undefined,
+    status: undefined,
+    summaries: {
+      en: '',
+      es: '',
+      vi: '',
+      zh: ''
+    },
+    document_index: {
+      en: '',
+      es: '',
+      vi: '',
+      zh: ''
+    },
+    sections: {
+      en: [],
+      es: [],
+      vi: [],
+      zh: []
+    }
+  });
+  
+  const [activeTab, setActiveTab] = useState<string>('en');
+  const navigate = useNavigate();
+  
+  const preferredLanguage = language || 'en';
+
+  // Dynamic language options - only show English and preferred language
+  const allLanguageOptions = [
+    { value: 'en', label: 'English' },
+    { value: 'es', label: 'Español' },
+    { value: 'zh', label: '中文' },
+    { value: 'vi', label: 'Tiếng Việt' }
+  ];
+
+  const languageOptions = preferredLanguage === 'en' 
+    ? [{ value: 'en', label: 'English' }] 
+    : [
+        { value: 'en', label: 'English' },
+        allLanguageOptions.find(option => option.value === preferredLanguage)!
+      ].filter(Boolean);
+
+  // Don't show dropdown if preferred language is English
+  const shouldShowLanguageDropdown = preferredLanguage !== 'en';
+
+  // Handle language change
+  const handleLanguageChange = async (lang: SupportedLanguage) => {
+    // Update UI language immediately for responsive UX
+    setLanguage(lang);
+    
+    // Update backend profile to sync language preference
+    try {
+      const apiClient = new ApiClient(appContext);
+      
+      // Get current profile
+      const currentProfile = await apiClient.profile.getProfile();
+      
+      if (currentProfile) {
+        // Update the secondary language (keeping primary as English)
+        const updatedProfile = {
+          ...currentProfile,
+          primaryLanguage: 'en',
+          secondaryLanguage: lang === 'en' ? undefined : lang
+        };
+        
+        // Only update if there's actually a change
+        if (currentProfile.secondaryLanguage !== updatedProfile.secondaryLanguage) {
+          await apiClient.profile.updateProfile(updatedProfile);
+          console.log(`Language preference updated to: ${lang}`);
+          
+          // Show success notification
+          const languageLabels = {
+            'en': 'English',
+            'es': 'Spanish',
+            'zh': 'Chinese', 
+            'vi': 'Vietnamese'
+          };
+          addNotification('success', `Language preference updated to ${languageLabels[lang] || lang}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update language preference in profile:', error);
+      // Don't show error to user as UI language change still works
+      // The mismatch will be resolved when they manually update profile or re-upload
+    }
+  };
 
   // Parent Rights carousel data - same as ParentRights.tsx
   const parentRightsSlideData = [
@@ -60,35 +154,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       image: '/images/carousel/confident.png'
     }
   ];
-
-  const [document, setDocument] = useState<IEPDocument>({
-    documentId: undefined,
-    documentUrl: undefined,
-    status: undefined,
-    summaries: {
-      en: '',
-      es: '',
-      vi: '',
-      zh: ''
-    },
-    document_index: {
-      en: '',
-      es: '',
-      vi: '',
-      zh: ''
-    },
-    sections: {
-      en: [],
-      es: [],
-      vi: [],
-      zh: []
-    }
-  });
-  
-  const [activeTab, setActiveTab] = useState<string>('en');
-  const navigate = useNavigate();
-  
-  const preferredLanguage = language || 'en';
 
   // Handle jargon click
   const handleContentClick = (e: React.MouseEvent) => {
@@ -263,9 +328,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     setActiveTab(tabToShow);
   }, [language, document.summaries, document.sections, preferredLanguage, isTranslating]);
 
-  const handleBackClick = () => {
-    navigate('/iep-documents');
-  };
 
   // Handle PDF download
   const handleDownloadPDF = async () => {
@@ -467,28 +529,47 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   return (
     <>
     <Container className="summary-container mt-3 mb-3">
-      <div className="mt-2 text-start button-container d-flex gap-2 align-items-center">
-        <Button variant="outline-secondary" onClick={handleBackClick}>
-          {t('summary.back')}
-        </Button>
-        {canGeneratePDF(document) && (
-          <Button 
-            variant="primary" 
-            onClick={handleDownloadPDF}
-            disabled={isGeneratingPDF || isProcessing}
-          >
-            {isGeneratingPDF ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <FontAwesomeIcon icon={faDownload} className="me-2" />
-                Save
-              </>
-            )}
-          </Button>
+      <div className="mt-2 text-start button-container d-flex justify-content-between align-items-center">
+        <div className="d-flex gap-2 align-items-center">
+          {canGeneratePDF(document) && (
+            <Button 
+              variant="primary" 
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPDF || isProcessing}
+            >
+              {isGeneratingPDF ? (
+                <>
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faDownload} className="me-2" />
+                  Save
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+        
+        {/* Language Dropdown - Only show if preferred language is not English */}
+        {shouldShowLanguageDropdown && (
+          <Dropdown>
+            <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
+              {languageOptions.find(option => option.value === language)?.label || 'English'}
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              {languageOptions.map(option => (
+                <Dropdown.Item 
+                  key={option.value} 
+                  onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
+                  active={language === option.value}
+                >
+                  {option.label}
+                </Dropdown.Item>
+              ))}
+            </Dropdown.Menu>
+          </Dropdown>
         )}
       </div>
       {pdfError && (
