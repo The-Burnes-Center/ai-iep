@@ -11,11 +11,13 @@
   }
   
   .summary-card-header {
-    background-color: #FFFFFF;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 8px !important;
+    background-color: #F5F3EE;
+    border: 1px solid #1E1E1E;
+    border-radius: 25px !important;
     padding: 0.85rem;
     margin-bottom: 6.5rem;
+    width: 80%;
+    align-self: center;
   }
   
   .summary-card-body {

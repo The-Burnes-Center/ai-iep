@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas, Dropdown} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
-import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload } from '@fortawesome/free-solid-svg-icons';
+import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
@@ -680,12 +680,15 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   </Col>
                 </Row>
               </Card.Body>
-              <Card.Header className="summary-card-header d-flex justify-content-between align-items-center">
+              <Card.Header 
+                className="summary-card-header d-flex justify-content-center align-items-center" 
+                onClick={() => navigate('/iep-documents')}
+                style={{ cursor: 'pointer' }}
+              >
                 <div>
-                  <FontAwesomeIcon icon={faFileAlt} className="me-2" />
-                  {document.documentUrl ? getFileName(document.documentUrl) : 'Document'}
+                  <FontAwesomeIcon icon={faArrowsRotate} className="me-2" />
+                  REPLACE IEP DOCUMENT
                 </div>
-                {document.status && renderStatusBadge(document.status)}
               </Card.Header>
             </Card>
           )}
