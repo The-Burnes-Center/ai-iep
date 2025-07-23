@@ -6,7 +6,7 @@
   align-items: center;
   min-height: 60vh;
   padding: 1rem;
-  background: #f8f9fa;
+  background: #F5F3EE;
 }
 
 .parent-rights-carousel-wrapper {
@@ -15,12 +15,13 @@
   height: 60vh;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #F5F3EE;
+  border: 1px solid #1E1E1E;
 }
 
 .parent-rights-carousel {
   height: 100%;
+
 }
 
 .parent-rights-carousel .carousel-inner {
@@ -36,12 +37,22 @@
 .carousel-slide {
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.slide-image {
+  width: 25%;
+  height: 25%;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  z-index: 2;
+  position: relative;
 }
 
 .carousel-slide::before {
@@ -53,6 +64,7 @@
   bottom: 0;
   background: rgba(255, 255, 255, 0.95);
   z-index: 1;
+  background: #F5F3EE;
 }
 
 .slide-content {
@@ -103,18 +115,18 @@
 }
 
 .parent-rights-carousel .carousel-indicators [data-bs-target] {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  border: 2px solid rgba(0, 64, 186, 0.5);
-  background-color: transparent;
+  border: 2px solid #E7E4DC;
+  background-color: #E7E4DC;
   margin: 0 4px;
   transition: all 0.3s ease;
 }
 
 .parent-rights-carousel .carousel-indicators .active {
-  background-color: #0040BA;
-  border-color: #0040BA;
+  background-color: #1E1E1E;
+  border-color: #1E1E1E;
   transform: scale(1.1);
 }
 
@@ -139,11 +151,13 @@
   .slide-content h2 {
     font-size: 2.2rem;
     margin-bottom: 1.5rem;
+    color: #1E1E1E;
   }
 
   .slide-content p {
     font-size: 1.1rem;
     line-height: 1.6;
+    color: #1E1E1E;
   }
 }
 
@@ -184,11 +198,14 @@
   .slide-content h2 {
     font-size: 1.3rem;
     margin-bottom: 0.8rem;
+    color: #1E1E1E;
+
   }
 
   .slide-content p {
     font-size: 0.9rem;
     line-height: 1.4;
+    color: #1E1E1E;
   }
 }
 
