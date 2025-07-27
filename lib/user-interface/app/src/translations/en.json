@@ -242,5 +242,14 @@
     "auth.changePassword": "Change Password",
     "auth.resetCode": "Reset Code",
     "auth.enterResetCode": "Enter reset code",
-    "auth.verifyEmail": "Verify Email"
+    "auth.verifyEmail": "Verify Email",
+
+    "onboarding.carousel.heading.accessible": "Your IEP Document, made accessible",
+    "onboarding.carousel.heading.summarize": "Summarize",
+    "onboarding.carousel.heading.translate": "Translate", 
+    "onboarding.carousel.heading.advocate": "Advocate",
+    "onboarding.carousel.paragraph.accessible": "The AIEP tool can help you understand your child or student's IEP documents.",
+    "onboarding.carousel.paragraph.summarize": "The tool will break down the key aspects of your IEP document into easy-to-understand language.",
+    "onboarding.carousel.paragraph.translate": "AIEP can also translate the summaries of IEP documents into your the language of your choice.",
+    "onboarding.carousel.paragraph.advocate": "Advocate for your child's education by exploring the IEP and understanding your rights."
   }

@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { useNavigate } from 'react-router-dom';
+// Add this import at the top
+import { useLanguage } from '../../common/language-context';
+
+// Then inside your component function, add this line after the component declaration:
+
+
 
 // Import Swiper styles
 import 'swiper/css';
@@ -16,22 +22,26 @@ import './OnboardingUser.css';
 const OnboardingUser: React.FC = () => {
   // Track the active slide to show dynamic content
   const [activeSlide, setActiveSlide] = useState(0);
+  const { t, language } = useLanguage();
 
   const navigate = useNavigate();
   // Array of four strings for the carousel headings
-  const carouselHeadings = [
-    "Your IEP Document, made accessible",
-    "Summarize", 
-    "Translate",
-    "Advocate"
-  ];
 
-  const carouselParagraphs = [
-    "The AIEP tool can help you understand your child or student's IEP documents.",
-    "The tool will break down the key aspects of your IEP document into easy-to-understand language.",
-    "AIEP can also translate the summaries of IEP documents into your the language of your choice.",
-    "Advocate for your child's education by exploring the IEP and understanding your rights.",
-  ];
+// Replace the carouselHeadings array with:
+const carouselHeadings = useMemo(() => [
+  t('onboarding.carousel.heading.accessible'),
+  t('onboarding.carousel.heading.summarize'), 
+  t('onboarding.carousel.heading.translate'),
+  t('onboarding.carousel.heading.advocate')
+], [t, language]);
+
+
+const carouselParagraphs = useMemo(() => [
+  t('onboarding.carousel.paragraph.accessible'),
+  t('onboarding.carousel.paragraph.summarize'),
+  t('onboarding.carousel.paragraph.translate'),
+  t('onboarding.carousel.paragraph.advocate')
+], [t, language]);
 
     // Array of image data
 const slideImages = [
