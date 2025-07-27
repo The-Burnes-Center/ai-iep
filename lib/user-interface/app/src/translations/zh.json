@@ -226,5 +226,14 @@
     "auth.changePassword": "更改密码",
     "auth.resetCode": "重置码",
     "auth.enterResetCode": "输入重置码",
-    "auth.verifyEmail": "验证邮箱"
+    "auth.verifyEmail": "验证邮箱",
+
+    "onboarding.carousel.heading.accessible": "让IEP文档易懂",
+    "onboarding.carousel.heading.summarize": "总结",
+    "onboarding.carousel.heading.translate": "翻译", 
+    "onboarding.carousel.heading.advocate": "维权",
+    "onboarding.carousel.paragraph.accessible": "AIEP帮助您理解孩子的IEP文档。",
+    "onboarding.carousel.paragraph.summarize": "工具会将IEP的关键方面转化为易懂的语言。",
+    "onboarding.carousel.paragraph.translate": "AIEP可将IEP文档摘要翻译成您选择的语言。",
+    "onboarding.carousel.paragraph.advocate": "通过了解IEP和您的权利来为孩子的教育争取权益。"
 }

@@ -227,5 +227,14 @@
     "auth.changePassword": "Cambiar Contraseña",
     "auth.resetCode": "Código de Restablecimiento",
     "auth.enterResetCode": "Ingrese el código de restablecimiento",
-    "auth.verifyEmail": "Verificar Correo Electrónico"
+    "auth.verifyEmail": "Verificar Correo Electrónico",
+
+    "onboarding.carousel.heading.accessible": "Su Documento IEP, Accesible",
+    "onboarding.carousel.heading.summarize": "Resumir",
+    "onboarding.carousel.heading.translate": "Traducir", 
+    "onboarding.carousel.heading.advocate": "Abogar",
+    "onboarding.carousel.paragraph.accessible": "AIEP le ayuda a entender los documentos IEP de su hijo.",
+    "onboarding.carousel.paragraph.summarize": "Desglosamos los aspectos clave de su IEP en lenguaje fácil de entender.",
+    "onboarding.carousel.paragraph.translate": "AIEP traduce los resúmenes de documentos IEP a su idioma preferido.",
+    "onboarding.carousel.paragraph.advocate": "Abogue por la educación de su hijo explorando el IEP y sus derechos."
   }

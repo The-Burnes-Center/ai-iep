@@ -232,5 +232,14 @@
     "auth.changePassword": "Thay Đổi Mật Khẩu",
     "auth.resetCode": "Mã Đặt Lại",
     "auth.enterResetCode": "Nhập mã đặt lại",
-    "auth.verifyEmail": "Xác Minh Email"
+    "auth.verifyEmail": "Xác Minh Email",
+
+    "onboarding.carousel.heading.accessible": "Tài Liệu IEP Dễ Hiểu",
+    "onboarding.carousel.heading.summarize": "Tóm Tắt",
+    "onboarding.carousel.heading.translate": "Dịch Thuật", 
+    "onboarding.carousel.heading.advocate": "Ủng Hộ",
+    "onboarding.carousel.paragraph.accessible": "AIEP giúp bạn hiểu tài liệu IEP của con mình.",
+    "onboarding.carousel.paragraph.summarize": "Công cụ phân tích các khía cạnh chính của IEP một cách dễ hiểu.",
+    "onboarding.carousel.paragraph.translate": "AIEP dịch tóm tắt tài liệu IEP sang ngôn ngữ bạn chọn.",
+    "onboarding.carousel.paragraph.advocate": "Ủng hộ giáo dục con bạn bằng cách tìm hiểu IEP và quyền lợi."
 }
