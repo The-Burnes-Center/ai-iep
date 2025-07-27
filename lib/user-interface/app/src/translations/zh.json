@@ -235,5 +235,18 @@
     "onboarding.carousel.paragraph.accessible": "AIEP帮助您理解孩子的IEP文档。",
     "onboarding.carousel.paragraph.summarize": "工具会将IEP的关键方面转化为易懂的语言。",
     "onboarding.carousel.paragraph.translate": "AIEP可将IEP文档摘要翻译成您选择的语言。",
-    "onboarding.carousel.paragraph.advocate": "通过了解IEP和您的权利来为孩子的教育争取权益。"
+    "onboarding.carousel.paragraph.advocate": "通过了解IEP和您的权利来为孩子的教育争取权益。",
+
+    "rights.slide1.title": "您可以要求翻译",
+    "rights.slide1.content": "您可以为IEP会议请求一名翻译，以确保沟通清晰。",
+    "rights.slide2.title": "您可以花时间考虑",
+    "rights.slide2.content": "您有权在签署IEP前花时间考虑 - 您无需急于签署，可以等到准备好了再签。",
+    "rights.slide3.title": "您可以同意或不同意",
+    "rights.slide3.content": "您可以同意全部、部分或不同意任何建议的服务 - 没有您的批准，您的孩子不会接受新服务。",
+    "rights.slide4.title": "您可以要求召开会议",
+    "rights.slide4.content": "您有权随时要求召开IEP会议，而不仅仅是在年度审查时，学校必须在30天内安排会议。",
+    "rights.slide5.title": "您可以重新安排时间",
+    "rights.slide5.content": "如果管理人员缺席会议，您有权重新安排他们能够参加的时间。",
+    "rights.slide6.title": "您必须获得权利手册",
+    "rights.slide6.content": "根据法律，您的案例经理必须在IEP会议前向您提供一本关于家长权利的手册。"
 }

@@ -241,5 +241,18 @@
     "onboarding.carousel.paragraph.accessible": "AIEP giúp bạn hiểu tài liệu IEP của con mình.",
     "onboarding.carousel.paragraph.summarize": "Công cụ phân tích các khía cạnh chính của IEP một cách dễ hiểu.",
     "onboarding.carousel.paragraph.translate": "AIEP dịch tóm tắt tài liệu IEP sang ngôn ngữ bạn chọn.",
-    "onboarding.carousel.paragraph.advocate": "Ủng hộ giáo dục con bạn bằng cách tìm hiểu IEP và quyền lợi."
+    "onboarding.carousel.paragraph.advocate": "Ủng hộ giáo dục con bạn bằng cách tìm hiểu IEP và quyền lợi.",
+
+    "rights.slide1.title": "Bạn có thể yêu cầu phiên dịch",
+    "rights.slide1.content": "Bạn có thể yêu cầu một phiên dịch viên cho các cuộc họp IEP để đảm bảo giao tiếp rõ ràng.",
+    "rights.slide2.title": "Bạn có thể dành thời gian",
+    "rights.slide2.content": "Bạn có quyền dành thời gian trước khi ký IEP - bạn không cần phải ký cho đến khi bạn sẵn sàng.",
+    "rights.slide3.title": "Bạn có thể đồng ý hoặc không",
+    "rights.slide3.content": "Bạn có thể đồng ý với tất cả, một số hoặc không đồng ý với bất kỳ dịch vụ đề xuất nào - con bạn sẽ không nhận được dịch vụ mới nếu không có sự chấp thuận của bạn.",
+    "rights.slide4.title": "Bạn có thể yêu cầu cuộc họp",
+    "rights.slide4.content": "Bạn có quyền yêu cầu một cuộc họp IEP bất cứ lúc nào, không chỉ trong buổi đánh giá hàng năm, và nhà trường phải lên lịch trong vòng 30 ngày.",
+    "rights.slide5.title": "Bạn có thể sắp xếp lại lịch",
+    "rights.slide5.content": "Nếu quản trị viên không có mặt tại cuộc họp, bạn có quyền sắp xếp lại lịch họp vào thời điểm họ có thể tham dự.",
+    "rights.slide6.title": "Bạn phải được cung cấp sách hướng dẫn quyền lợi",
+    "rights.slide6.content": "Theo luật, người quản lý hồ sơ của bạn phải cung cấp cho bạn một cuốn sách nhỏ về quyền phụ huynh trước cuộc họp IEP."
 }

@@ -236,5 +236,18 @@
     "onboarding.carousel.paragraph.accessible": "AIEP le ayuda a entender los documentos IEP de su hijo.",
     "onboarding.carousel.paragraph.summarize": "Desglosamos los aspectos clave de su IEP en lenguaje fácil de entender.",
     "onboarding.carousel.paragraph.translate": "AIEP traduce los resúmenes de documentos IEP a su idioma preferido.",
-    "onboarding.carousel.paragraph.advocate": "Abogue por la educación de su hijo explorando el IEP y sus derechos."
+    "onboarding.carousel.paragraph.advocate": "Abogue por la educación de su hijo explorando el IEP y sus derechos.",
+
+    "rights.slide1.title": "Puede solicitar un traductor",
+    "rights.slide1.content": "Puede solicitar un traductor para las reuniones del IEP para garantizar una comunicación clara.",
+    "rights.slide2.title": "Puede tomarse su tiempo",
+    "rights.slide2.content": "Tiene derecho a tomarse su tiempo antes de firmar un IEP - no necesita firmar hasta que esté listo.",
+    "rights.slide3.title": "Puede consentir o no",
+    "rights.slide3.content": "Puede dar su consentimiento a todos, algunos o ninguno de los servicios propuestos - su hijo no recibirá nuevos servicios sin su aprobación.",
+    "rights.slide4.title": "Puede solicitar una reunión",
+    "rights.slide4.content": "Tiene derecho a solicitar una reunión de IEP en cualquier momento, no solo en la revisión anual, y la escuela debe programarla dentro de los 30 días.",
+    "rights.slide5.title": "Puede reprogramar",
+    "rights.slide5.content": "Si un administrador no está presente en la reunión, tiene derecho a reprogramarla para cuando pueda asistir.",
+    "rights.slide6.title": "Debe recibir un folleto de sus derechos",
+    "rights.slide6.content": "Por ley, su administrador de caso debe proporcionarle un folleto con sus derechos como padre antes de la reunión del IEP."
   }

@@ -251,5 +251,18 @@
     "onboarding.carousel.paragraph.accessible": "The AIEP tool can help you understand your child or student's IEP documents.",
     "onboarding.carousel.paragraph.summarize": "The tool will break down the key aspects of your IEP document into easy-to-understand language.",
     "onboarding.carousel.paragraph.translate": "AIEP can also translate the summaries of IEP documents into your the language of your choice.",
-    "onboarding.carousel.paragraph.advocate": "Advocate for your child's education by exploring the IEP and understanding your rights."
+    "onboarding.carousel.paragraph.advocate": "Advocate for your child's education by exploring the IEP and understanding your rights.",
+
+    "rights.slide1.title": "You can request a translator",
+    "rights.slide1.content": "You can request a translator for IEP meetings to ensure clear communication.",
+    "rights.slide2.title": "You can take your time",
+    "rights.slide2.content": "You have the right to take your time before signing an IEP - you don't need to sign until you're ready.",
+    "rights.slide3.title": "You can consent or not",
+    "rights.slide3.content": "You can consent to all, some, or none of the proposed services - your child won't receive new services without your approval.",
+    "rights.slide4.title": "You can request a meeting",
+    "rights.slide4.content": "You have the right to request an IEP meeting at any time, not just at the annual review, and the school must schedule it within 30 days.",
+    "rights.slide5.title": "You can reschedule",
+    "rights.slide5.content": "If an administrator isn't present at the meeting, you have the right to reschedule for a time when they can attend.",
+    "rights.slide6.title": "You must be given a booklet of your rights",
+    "rights.slide6.content": "By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting."
   }
