@@ -20,21 +20,21 @@ const OnboardingUser: React.FC = () => {
   const navigate = useNavigate();
   // Array of four strings for the carousel headings
   const carouselHeadings = [
-    <>Your IEP Document,<br />made accessible</>,
+    "Your IEP Document, made accessible",
     "Summarize", 
     "Translate",
     "Advocate"
   ];
 
   const carouselParagraphs = [
-    <>The AIEP tool can help you understand<br /> your child or student’s IEP documents.</>,
-    <>The tool will break down the key aspects<br /> of your IEP document into easy-to-understand language.</>,
-    <>AIEP can also translate the summaries of IEP documents into your the language of your choice.</>,
-    <>Advocate for your child’s education by exploring the IEP and understanding your rights.</>,
+    "The AIEP tool can help you understand your child or student's IEP documents.",
+    "The tool will break down the key aspects of your IEP document into easy-to-understand language.",
+    "AIEP can also translate the summaries of IEP documents into your the language of your choice.",
+    "Advocate for your child's education by exploring the IEP and understanding your rights.",
   ];
 
     // Array of image data
-    const slideImages = [
+const slideImages = [
       {
         src: '/images/carousel/Complex_IEP.png',
         alt: 'Complex IEP Document made accessible'
