@@ -219,5 +219,13 @@
     "auth.pleaseEnterPhoneNumber": "Por favor ingrese un número de teléfono",
     "auth.phoneAuthConfigIssue": "Problema de configuración de autenticación telefónica. Por favor contacte soporte.",
     "auth.phoneAuthError": "Error de autenticación telefónica",
-    "auth.unexpectedChallengeType": "Tipo de desafío inesperado recibido"
+    "auth.unexpectedChallengeType": "Tipo de desafío inesperado recibido",
+    "auth.resetCodeSent": "El código de restablecimiento ha sido enviado a su correo electrónico",
+    "auth.passwordResetSuccess": "Contraseña restablecida exitosamente",
+    "auth.errorUserExists": "El usuario ya existe",
+    "auth.emailVerified": "Correo electrónico verificado exitosamente",
+    "auth.changePassword": "Cambiar Contraseña",
+    "auth.resetCode": "Código de Restablecimiento",
+    "auth.enterResetCode": "Ingrese el código de restablecimiento",
+    "auth.verifyEmail": "Verificar Correo Electrónico"
   }

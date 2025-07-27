@@ -234,5 +234,13 @@
     "auth.checkEmailForCode": "Check your email for the verification code",
     "auth.signUpSuccess": "Sign up successful! Please check your email to verify your account.",
     "auth.verify": "Verify",
-    "auth.verificationCodeResent": "Verification code resent"
+    "auth.verificationCodeResent": "Verification code resent",
+    "auth.resetCodeSent": "Reset code has been sent to your email",
+    "auth.passwordResetSuccess": "Password reset successful",
+    "auth.errorUserExists": "User already exists",
+    "auth.emailVerified": "Email verified successfully",
+    "auth.changePassword": "Change Password",
+    "auth.resetCode": "Reset Code",
+    "auth.enterResetCode": "Enter reset code",
+    "auth.verifyEmail": "Verify Email"
   }

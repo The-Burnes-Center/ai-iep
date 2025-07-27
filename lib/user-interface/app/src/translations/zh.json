@@ -218,5 +218,13 @@
     "auth.verificationCodeResent": "验证码已重新发送",
     "auth.phoneAuthConfigIssue": "电话认证配置问题。请联系支持。",
     "auth.phoneAuthError": "电话认证错误",
-    "auth.unexpectedChallengeType": "收到意外的验证类型"
+    "auth.unexpectedChallengeType": "收到意外的验证类型",
+    "auth.resetCodeSent": "重置码已发送到您的邮箱",
+    "auth.passwordResetSuccess": "密码重置成功",
+    "auth.errorUserExists": "用户已存在",
+    "auth.emailVerified": "邮箱验证成功",
+    "auth.changePassword": "更改密码",
+    "auth.resetCode": "重置码",
+    "auth.enterResetCode": "输入重置码",
+    "auth.verifyEmail": "验证邮箱"
 }

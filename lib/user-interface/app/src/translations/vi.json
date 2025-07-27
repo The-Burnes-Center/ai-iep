@@ -224,5 +224,13 @@
     "auth.phoneAuthConfigIssue": "Sự cố cấu hình xác thực điện thoại. Vui lòng liên hệ hỗ trợ.",
     "auth.phoneAuthError": "Lỗi xác thực điện thoại",
     "auth.unexpectedChallengeType": "Nhận được loại thử thách không mong đợi",
-    "authNotAuthorized": "Xác thực không được phép. Vui lòng thử lại."
+    "authNotAuthorized": "Xác thực không được phép. Vui lòng thử lại.",
+    "auth.resetCodeSent": "Mã đặt lại đã được gửi đến email của bạn",
+    "auth.passwordResetSuccess": "Đặt lại mật khẩu thành công",
+    "auth.errorUserExists": "Người dùng đã tồn tại",
+    "auth.emailVerified": "Email đã được xác minh thành công",
+    "auth.changePassword": "Thay Đổi Mật Khẩu",
+    "auth.resetCode": "Mã Đặt Lại",
+    "auth.enterResetCode": "Nhập mã đặt lại",
+    "auth.verifyEmail": "Xác Minh Email"
 }
