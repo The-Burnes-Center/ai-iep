@@ -177,7 +177,7 @@
 
 /* More prominent with animated underline */
 .jargon-term {
-  color: #0040BA;
+  color: #007AD1;
   font-weight: 500;
   position: relative;
   cursor: pointer;
@@ -200,7 +200,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: #0040BA;
+  background: #007AD1;
   transform: scaleX(0);
   transform-origin: right;
   transition: transform 0.3s ease;
@@ -336,4 +336,15 @@
 .button-container .dropdown .dropdown-item.active {
   background-color: rgba(30, 30, 30, 0.2);
   color: #1E1E1E;
+}
+
+/* Hide tab navigation when dropdown controls the tabs */
+.hidden-tab-nav .nav-tabs {
+  display: none !important;
+}
+
+/* Additional rule to ensure all tab navigation elements are hidden */
+.hidden-tab-nav .nav-link,
+.hidden-tab-nav .nav-item {
+  display: none !important;
 }

@@ -92,6 +92,7 @@
     "upload.success": "文件已成功上传！",
     "upload.error": "上传文件时出错。请重试。",
     "upload.button": "上传文档",
+    "upload.replaceDocument": "替换IEP文档",
     
     "current.loading": "加载中...",
     "current.title": "点击下方查看现有IEP文档的摘要",

@@ -51,9 +51,26 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   });
   
   const [activeTab, setActiveTab] = useState<string>('en');
+  // Add state for dropdown language selection (separate from global language preference)
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const navigate = useNavigate();
   
   const preferredLanguage = language || 'en';
+  console.log('preferredLanguage', preferredLanguage);
+
+  // Initialize selectedLanguage and activeTab after document loads
+  useEffect(() => {
+    // Don't initialize until initial loading is complete
+    if (initialLoading) return;
+    
+    if (preferredLanguage !== 'en' && hasContent(preferredLanguage)) {
+      setSelectedLanguage(preferredLanguage);
+      setActiveTab(preferredLanguage);
+    } else {
+      setSelectedLanguage('en');
+      setActiveTab('en');
+    }
+  }, [preferredLanguage, initialLoading, document.summaries, document.sections]);
 
   // Dynamic language options - only show English and preferred language
   const allLanguageOptions = [
@@ -73,46 +90,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Don't show dropdown if preferred language is English
   const shouldShowLanguageDropdown = preferredLanguage !== 'en';
 
-  // Handle language change
-  const handleLanguageChange = async (lang: SupportedLanguage) => {
-    // Update UI language immediately for responsive UX
-    setLanguage(lang);
-    
-    // Update backend profile to sync language preference
-    try {
-      const apiClient = new ApiClient(appContext);
-      
-      // Get current profile
-      const currentProfile = await apiClient.profile.getProfile();
-      
-      if (currentProfile) {
-        // Update the secondary language (keeping primary as English)
-        const updatedProfile = {
-          ...currentProfile,
-          primaryLanguage: 'en',
-          secondaryLanguage: lang === 'en' ? undefined : lang
-        };
-        
-        // Only update if there's actually a change
-        if (currentProfile.secondaryLanguage !== updatedProfile.secondaryLanguage) {
-          await apiClient.profile.updateProfile(updatedProfile);
-          console.log(`Language preference updated to: ${lang}`);
-          
-          // Show success notification
-          const languageLabels = {
-            'en': 'English',
-            'es': 'Spanish',
-            'zh': 'Chinese', 
-            'vi': 'Vietnamese'
-          };
-          addNotification('success', `Language preference updated to ${languageLabels[lang] || lang}`);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to update language preference in profile:', error);
-      // Don't show error to user as UI language change still works
-      // The mismatch will be resolved when they manually update profile or re-upload
-    }
+  // Handle language change - now just controls tab content, no API calls
+  const handleLanguageChange = (lang: SupportedLanguage) => {
+    // Update dropdown selection and active tab immediately
+    setSelectedLanguage(lang);
+    setActiveTab(lang);
   };
 
   // Parent Rights carousel data - internationalized using useLanguage hook
@@ -313,24 +295,23 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Check if translations are being processed (English content should be available)
   const isTranslating = document && document.status === "PROCESSING_TRANSLATIONS";
 
-  // Set active tab based on language preference and content availability
+  // Set active tab based on selected language and content availability
   useEffect(() => {
     // During translation, force English tab since only English content is available
     if (isTranslating) {
       setActiveTab('en');
+      setSelectedLanguage('en');
       return;
     }
     
-    // Default to English tab
-    let tabToShow = 'en';
-    
-    // If user prefers another language and content exists for that language, show it
-    if (preferredLanguage !== 'en' && hasContent(preferredLanguage)) {
-      tabToShow = preferredLanguage;
+    // Set active tab to selected language if content exists, otherwise fall back to English
+    if (hasContent(selectedLanguage)) {
+      setActiveTab(selectedLanguage);
+    } else {
+      setActiveTab('en');
+      setSelectedLanguage('en');
     }
-    
-    setActiveTab(tabToShow);
-  }, [language, document.summaries, document.sections, preferredLanguage, isTranslating]);
+  }, [selectedLanguage, document.summaries, document.sections, isTranslating]);
 
 
   // Handle PDF download
@@ -560,14 +541,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {shouldShowLanguageDropdown && (
           <Dropdown>
             <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
-              {languageOptions.find(option => option.value === language)?.label || 'English'}
+              {languageOptions.find(option => option.value === selectedLanguage)?.label || 'English'}
             </Dropdown.Toggle>
             <Dropdown.Menu>
               {languageOptions.map(option => (
                 <Dropdown.Item 
                   key={option.value} 
                   onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
-                  active={language === option.value}
+                  active={selectedLanguage === option.value}
                 >
                   {option.label}
                 </Dropdown.Item>
@@ -627,7 +608,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         <Tabs
                           activeKey={activeTab}
                           onSelect={(k) => k && setActiveTab(k)}
-                          className="mb-2 mt-2 summary-tabs"
+                          className="mb-2 mt-2 summary-tabs hidden-tab-nav"
                         >
                           {/* Always show English tab */}
                           <Tab 
@@ -691,7 +672,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               >
                 <div>
                   <FontAwesomeIcon icon={faArrowsRotate} className="me-2" />
-                  REPLACE IEP DOCUMENT
+                  {t('upload.replaceDocument')}
                 </div>
               </Card.Header>
             </Card>
