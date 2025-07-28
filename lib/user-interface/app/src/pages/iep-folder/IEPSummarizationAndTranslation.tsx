@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas, Dropdown} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
-import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload, faArrowsRotate } from '@fortawesome/free-solid-svg-icons';
+import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload, faArrowsRotate, faForward } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection } from '../../common/types';
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
@@ -10,6 +10,7 @@ import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { generatePDF, canGeneratePDF } from '../../common/pdf-generator.tsx';
 import ParentRightsCarousel from '../../components/ParentRightsCarousel';
+import AppTutorialCarousel from '../../components/AppTutorialCarousel';
 import { ApiClient } from '../../common/api-client/api-client';
 import { AppContext } from '../../common/app-context';
 import { useNotifications } from '../../components/notif-manager';
@@ -25,6 +26,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [selectedJargon, setSelectedJargon] = useState<{term: string, definition: string} | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  
+  // Tutorial flow state management
+  const [tutorialPhase, setTutorialPhase] = useState<'app-tutorial' | 'parent-rights' | 'completed'>('app-tutorial');
 
   const [document, setDocument] = useState<IEPDocument>({
     documentId: undefined,
@@ -95,6 +99,55 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     // Update dropdown selection and active tab immediately
     setSelectedLanguage(lang);
     setActiveTab(lang);
+  };
+
+  // AppTutorial carousel data
+  const appTutorialSlideData = [
+    {
+      id: 'slide-1',
+      title: 'What are we doing right now?',
+      content: 'We\'re summarizing the key aspects of your IEP. You\'ll first see a general overview of the document, and then a summary for each one of the key sections.',
+      image: '/images/carousel/surprised.png'
+    },
+    {
+      id: 'slide-2',
+      title: 'What are we doing right now?',
+      content: 'We\'re including the pages where we found the information we\'re about to show. That way, you can double check the information in case something doesn\'t make sense.',
+      image: '/images/carousel/blissful.png'
+    },
+    {
+      id: 'slide-3',
+      title: 'What are we doing right now?',
+      content: 'We\'re translating the summaries to your language. The IEP document will remain in English, but the summaries we created will be translated to the language of your choice.',
+      image: '/images/carousel/joyful.png'
+    },
+    {
+      id: 'slide-4',
+      title: 'What are we doing right now?',
+      content: 'We\'re removing your personal information from the summaries. You can rest assured that we will not store any of your or your child\'s personal details.',
+      image: '/images/carousel/surprised.png'
+    },
+    {
+      id: 'slide-5',
+      title: 'What are we doing right now?',
+      content: 'Your IEP document won\'t be changed. You can download the summaries we\'re creating by clicking on the download button.',
+      image: '/images/carousel/blissful.png'
+    },
+    {
+      id: 'slide-6',
+      title: 'What are we doing right now?',
+      content: 'We\'re creating a glossary to help you understand the document. You can click over the highlighted words and read their definitions on the panel that will emerge.',
+      image: '/images/carousel/confident.png'
+    }
+  ];
+
+  // Tutorial flow functions
+  const handleSkipToRights = () => {
+    setTutorialPhase('parent-rights');
+  };
+
+  const handleSkipRights = () => {
+    setTutorialPhase('completed');
   };
 
   // Parent Rights carousel data - internationalized using useLanguage hook
@@ -294,6 +347,18 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   
   // Check if translations are being processed (English content should be available)
   const isTranslating = document && document.status === "PROCESSING_TRANSLATIONS";
+
+  // Reset tutorial phase when document status changes from processing
+  useEffect(() => {
+    if (!isProcessing) {
+      setTutorialPhase('completed');
+    } else {
+      // Reset to app-tutorial when processing starts
+      setTutorialPhase('app-tutorial');
+    }
+  }, [isProcessing]);
+
+
 
   // Set active tab based on selected language and content availability
   useEffect(() => {
@@ -537,8 +602,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           )}
         </div>
         
-        {/* Language Dropdown - Only show if preferred language is not English */}
-        {shouldShowLanguageDropdown && (
+
+        
+        {/* Language Dropdown - Only show if preferred language is not English and not processing */}
+        {shouldShowLanguageDropdown && !isProcessing && (
           <Dropdown>
             <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
               {languageOptions.find(option => option.value === selectedLanguage)?.label || 'English'}
@@ -583,7 +650,38 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 <Row>
                   <Col md={12}>
                     {isProcessing ? (
-                      <ParentRightsCarousel slides={parentRightsSlideData} />
+                      tutorialPhase === 'app-tutorial' ? (
+                        <div className="carousel-with-button">
+                          <AppTutorialCarousel slides={appTutorialSlideData} />
+                          <div className="text-center mt-3">
+                            <Button 
+                              variant="primary" 
+                              onClick={handleSkipToRights}
+                            >
+                              Skip to Rights
+                            </Button>
+                          </div>
+                        </div>
+                      ) : tutorialPhase === 'parent-rights' ? (
+                        <div className="carousel-with-button">
+                          <ParentRightsCarousel slides={parentRightsSlideData} />
+                          <div className="text-center mt-3">
+                            <Button 
+                              variant="outline-secondary" 
+                              onClick={handleSkipRights}
+                            >
+                              Skip
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center my-5">
+                          <Spinner animation="border" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </Spinner>
+                          <p className="mt-3">Processing your document...</p>
+                        </div>
+                      )
                     ) : document.status === "FAILED" ? (
                       <Alert variant="danger">
                         <h5>{t('summary.failed.title')}</h5>
@@ -665,6 +763,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   </Col>
                 </Row>
               </Card.Body>
+            
+            {document.status === "PROCESSED" && (
               <Card.Header 
                 className="summary-card-header d-flex justify-content-center align-items-center" 
                 onClick={() => navigate('/iep-documents')}
@@ -675,6 +775,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   {t('upload.replaceDocument')}
                 </div>
               </Card.Header>
+            )}
+
             </Card>
           )}
         </Col>
