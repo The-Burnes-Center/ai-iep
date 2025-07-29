@@ -117,6 +117,7 @@
     "profile.languagePreferences": "Tùy Chọn Ngôn Ngữ",
     "profile.primaryLanguage": "Ngôn Ngữ Chính",
     "profile.secondaryLanguage": "Ngôn Ngữ Phụ",
+    "profile.preferredLanguage": "Ngôn Ngữ Ưa Thích",
     "profile.noSecondaryLanguage": "Chưa chọn ngôn ngữ phụ",
     "profile.success.update": "Hồ sơ đã được cập nhật thành công",
     "profile.error.update": "Không thể cập nhật hồ sơ",

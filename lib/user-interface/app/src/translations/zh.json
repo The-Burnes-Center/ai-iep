@@ -112,6 +112,7 @@
     "profile.languagePreferences": "语言偏好",
     "profile.primaryLanguage": "主要语言",
     "profile.secondaryLanguage": "次要语言",
+    "profile.preferredLanguage": "首选语言",
     "profile.noSecondaryLanguage": "未选择次要语言",
   "profile.success.update": "个人资料更新成功",
   "profile.error.update": "更新个人资料失败",

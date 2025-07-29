@@ -112,6 +112,7 @@
     "profile.languagePreferences": "Preferencias de Idioma",
     "profile.primaryLanguage": "Idioma Principal",
     "profile.secondaryLanguage": "Idioma Secundario",
+    "profile.preferredLanguage": "Idioma Preferido",
     "profile.noSecondaryLanguage": "No se ha seleccionado idioma secundario",
     "profile.success.update": "Perfil actualizado con éxito",
     "profile.error.update": "Error al actualizar el perfil",
