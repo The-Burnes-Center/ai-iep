@@ -216,13 +216,17 @@
   max-width: 400px;
 }
 
+.jargon-drawer .offcanvas-body {
+  background-color: #F5F3EE;
+}
+
 .jargon-drawer .offcanvas-header {
-  background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
+  background-color: #007AD1;
 }
 
 .jargon-drawer .offcanvas-title {
-  color: #0040BA;
+  color: #F5F3EE;
   font-weight: 600;
 }
 
@@ -234,6 +238,7 @@
   line-height: 1.6;
   margin: 0;
 }
+
 
 /* Mobile responsive drawer */
 @media (max-width: 768px) {
