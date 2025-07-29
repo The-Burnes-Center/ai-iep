@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload, faArrowsRotate, faForward } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
-import { IEPDocument, IEPSection } from '../../common/types';
+import { IEPDocument, IEPSection, Language } from '../../common/types';
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
@@ -19,6 +19,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, setLanguage, translationsLoaded } = useLanguage();
   const appContext = useContext(AppContext);
   const { addNotification } = useNotifications();
+  const apiClient = new ApiClient(appContext);
   
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +27,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [selectedJargon, setSelectedJargon] = useState<{term: string, definition: string} | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  
+  // Profile-related state
+  const [profile, setProfile] = useState<Language | null>(null);
+  const [profileLoading, setProfileLoading] = useState<boolean>(true);
   
   // Tutorial flow state management
   const [tutorialPhase, setTutorialPhase] = useState<'app-tutorial' | 'parent-rights' | 'completed'>('app-tutorial');
@@ -59,8 +64,31 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const navigate = useNavigate();
   
-  const preferredLanguage = language || 'en';
-  console.log('preferredLanguage', preferredLanguage);
+  // Get preferred language from profile API, fallback to context language, then to 'en'
+  const preferredLanguage = profile?.secondaryLanguage || language || 'en';
+
+  // Load profile data on component mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setProfileLoading(true);
+        const profileData = await apiClient.profile.getProfile();
+        setProfile(profileData);
+        
+        // Sync the language context if profile has a different secondary language
+        if (profileData?.secondaryLanguage && profileData.secondaryLanguage !== language) {
+          setLanguage(profileData.secondaryLanguage as SupportedLanguage);
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
+        // Profile loading failure is not critical, continue with context language
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   // Initialize selectedLanguage and activeTab after document loads
   useEffect(() => {
@@ -97,7 +125,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Handle language change - now just controls tab content, no API calls
   const handleLanguageChange = (lang: SupportedLanguage) => {
     // Update dropdown selection and active tab immediately
-    // setSelectedLanguage(lang);
+    setSelectedLanguage(lang);
     setActiveTab(lang);
   };
 
@@ -559,15 +587,19 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
-  // Loading state while translations are being loaded
-  if (!translationsLoaded) {
+  // Loading state while translations and profile are being loaded
+  if (!translationsLoaded || profileLoading) {
     return (
       <Container className="summary-container mt-4 mb-5">
         <div className="text-center my-5">
           <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading translations...</span>
+            <span className="visually-hidden">Loading...</span>
           </Spinner>
-          <p className="mt-3">Loading translations...</p>
+          <p className="mt-3">
+            {!translationsLoaded && profileLoading ? 'Loading translations and profile...' :
+             !translationsLoaded ? 'Loading translations...' : 
+             'Loading profile...'}
+          </p>
         </div>
       </Container>
     );
