@@ -255,5 +255,18 @@
     "rights.slide5.title": "Bạn có thể sắp xếp lại lịch",
     "rights.slide5.content": "Nếu quản trị viên không có mặt tại cuộc họp, bạn có quyền sắp xếp lại lịch họp vào thời điểm họ có thể tham dự.",
     "rights.slide6.title": "Bạn phải được cung cấp sách hướng dẫn quyền lợi",
-    "rights.slide6.content": "Theo luật, người quản lý hồ sơ của bạn phải cung cấp cho bạn một cuốn sách nhỏ về quyền phụ huynh trước cuộc họp IEP."
+    "rights.slide6.content": "Theo luật, người quản lý hồ sơ của bạn phải cung cấp cho bạn một cuốn sách nhỏ về quyền phụ huynh trước cuộc họp IEP.",
+
+    "appTutorial.slide1.title": "Chúng tôi đang làm gì ngay bây giờ?",
+    "appTutorial.slide1.content": "Chúng tôi đang tóm tắt các khía cạnh quan trọng của IEP của bạn. Trước tiên bạn sẽ thấy tổng quan về tài liệu, sau đó là tóm tắt cho từng phần quan trọng.",
+    "appTutorial.slide2.title": "Chúng tôi đang làm gì ngay bây giờ?",
+    "appTutorial.slide2.content": "Chúng tôi đang bao gồm các trang mà chúng tôi tìm thấy thông tin sắp hiển thị. Như vậy, bạn có thể kiểm tra lại thông tin trong trường hợp có điều gì đó không hợp lý.",
+    "appTutorial.slide3.title": "Chúng tôi đang làm gì ngay bây giờ?",
+    "appTutorial.slide3.content": "Chúng tôi đang dịch các bản tóm tắt sang ngôn ngữ của bạn. Tài liệu IEP sẽ vẫn bằng tiếng Anh, nhưng các bản tóm tắt chúng tôi tạo sẽ được dịch sang ngôn ngữ bạn chọn.",
+    "appTutorial.slide4.title": "Chúng tôi đang làm gì ngay bây giờ?",
+    "appTutorial.slide4.content": "Chúng tôi đang loại bỏ thông tin cá nhân của bạn khỏi các bản tóm tắt. Bạn có thể yên tâm rằng chúng tôi sẽ không lưu trữ bất kỳ thông tin cá nhân nào của bạn hoặc con bạn.",
+    "appTutorial.slide5.title": "Chúng tôi đang làm gì ngay bây giờ?",
+    "appTutorial.slide5.content": "Tài liệu IEP của bạn sẽ không bị thay đổi. Bạn có thể tải xuống các bản tóm tắt chúng tôi đang tạo bằng cách nhấp vào nút tải xuống.",
+    "appTutorial.slide6.title": "Chúng tôi đang làm gì ngay bây giờ?",
+    "appTutorial.slide6.content": "Chúng tôi đang tạo một bảng thuật ngữ để giúp bạn hiểu tài liệu. Bạn có thể nhấp vào các từ được tô sáng và đọc định nghĩa của chúng trên bảng sẽ xuất hiện."
 }

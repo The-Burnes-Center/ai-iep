@@ -265,5 +265,18 @@
     "rights.slide5.title": "You can reschedule",
     "rights.slide5.content": "If an administrator isn't present at the meeting, you have the right to reschedule for a time when they can attend.",
     "rights.slide6.title": "You must be given a booklet of your rights",
-    "rights.slide6.content": "By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting."
+    "rights.slide6.content": "By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting.",
+
+    "appTutorial.slide1.title": "What are we doing right now?",
+    "appTutorial.slide1.content": "We're summarizing the key aspects of your IEP. You'll first see a general overview of the document, and then a summary for each one of the key sections.",
+    "appTutorial.slide2.title": "What are we doing right now?",
+    "appTutorial.slide2.content": "We're including the pages where we found the information we're about to show. That way, you can double check the information in case something doesn't make sense.",
+    "appTutorial.slide3.title": "What are we doing right now?",
+    "appTutorial.slide3.content": "We're translating the summaries to your language. The IEP document will remain in English, but the summaries we created will be translated to the language of your choice.",
+    "appTutorial.slide4.title": "What are we doing right now?",
+    "appTutorial.slide4.content": "We're removing your personal information from the summaries. You can rest assured that we will not store any of your or your child's personal details.",
+    "appTutorial.slide5.title": "What are we doing right now?",
+    "appTutorial.slide5.content": "Your IEP document won't be changed. You can download the summaries we're creating by clicking on the download button.",
+    "appTutorial.slide6.title": "What are we doing right now?",
+    "appTutorial.slide6.content": "We're creating a glossary to help you understand the document. You can click over the highlighted words and read their definitions on the panel that will emerge."
   }

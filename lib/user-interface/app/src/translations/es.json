@@ -250,5 +250,18 @@
     "rights.slide5.title": "Puede reprogramar",
     "rights.slide5.content": "Si un administrador no está presente en la reunión, tiene derecho a reprogramarla para cuando pueda asistir.",
     "rights.slide6.title": "Debe recibir un folleto de sus derechos",
-    "rights.slide6.content": "Por ley, su administrador de caso debe proporcionarle un folleto con sus derechos como padre antes de la reunión del IEP."
+    "rights.slide6.content": "Por ley, su administrador de caso debe proporcionarle un folleto con sus derechos como padre antes de la reunión del IEP.",
+
+    "appTutorial.slide1.title": "¿Qué estamos haciendo ahora?",
+    "appTutorial.slide1.content": "Estamos resumiendo los aspectos clave de su IEP. Primero verá una descripción general del documento, y luego un resumen de cada una de las secciones clave.",
+    "appTutorial.slide2.title": "¿Qué estamos haciendo ahora?",
+    "appTutorial.slide2.content": "Estamos incluyendo las páginas donde encontramos la información que estamos a punto de mostrar. De esta manera, puede verificar la información en caso de que algo no tenga sentido.",
+    "appTutorial.slide3.title": "¿Qué estamos haciendo ahora?",
+    "appTutorial.slide3.content": "Estamos traduciendo los resúmenes a su idioma. El documento IEP permanecerá en inglés, pero los resúmenes que creamos serán traducidos al idioma de su elección.",
+    "appTutorial.slide4.title": "¿Qué estamos haciendo ahora?",
+    "appTutorial.slide4.content": "Estamos eliminando su información personal de los resúmenes. Puede estar seguro de que no almacenaremos ninguno de sus datos personales o los de su hijo.",
+    "appTutorial.slide5.title": "¿Qué estamos haciendo ahora?",
+    "appTutorial.slide5.content": "Su documento IEP no será modificado. Puede descargar los resúmenes que estamos creando haciendo clic en el botón de descarga.",
+    "appTutorial.slide6.title": "¿Qué estamos haciendo ahora?",
+    "appTutorial.slide6.content": "Estamos creando un glosario para ayudarle a entender el documento. Puede hacer clic sobre las palabras resaltadas y leer sus definiciones en el panel que aparecerá."
   }
