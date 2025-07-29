@@ -239,6 +239,11 @@
   margin: 0;
 }
 
+.jargon-drawer .btn-close {
+  --bs-btn-close-color: #F5F3EE;
+  /* You may also need these properties for proper display on the blue header */
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
 
 /* Mobile responsive drawer */
 @media (max-width: 768px) {
