@@ -97,7 +97,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Handle language change - now just controls tab content, no API calls
   const handleLanguageChange = (lang: SupportedLanguage) => {
     // Update dropdown selection and active tab immediately
-    setSelectedLanguage(lang);
+    // setSelectedLanguage(lang);
     setActiveTab(lang);
   };
 
@@ -256,8 +256,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Process document sections for a specific language
   const processLanguageSections = (doc: any, lang: string) => {
-    // Process sections for PROCESSED status (all languages) or PROCESSING_TRANSLATIONS status (English only)
-    if (!doc || (doc.status !== "PROCESSED" && !(doc.status === "PROCESSING_TRANSLATIONS" && lang === 'en'))) return;
+    // Only process sections when document is fully PROCESSED
+    if (!doc || doc.status !== "PROCESSED") return;
     
     if (doc.sections && doc.sections[lang]) {
       try {
@@ -342,11 +342,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     return hasSummary || hasSections || hasDocumentIndex;
   };
 
-  // Check if document is processing (only initial processing, not translations)
-  const isProcessing = document && document.status === "PROCESSING";
+  // Check if document is processing (includes both initial processing and translations)
+  const isProcessing = document && (document.status === "PROCESSING" || document.status === "PROCESSING_TRANSLATIONS");
   
-  // Check if translations are being processed (English content should be available)
-  const isTranslating = document && document.status === "PROCESSING_TRANSLATIONS";
+  // Remove the separate isTranslating check since we're treating translation as part of processing
 
   // Reset tutorial phase when document status changes from processing
   useEffect(() => {
@@ -362,10 +361,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Set active tab based on selected language and content availability
   useEffect(() => {
-    // During translation, force English tab since only English content is available
-    if (isTranslating) {
-      setActiveTab('en');
-      setSelectedLanguage('en');
+    // Don't set active tab during any processing phase
+    if (isProcessing) {
       return;
     }
     
@@ -376,7 +373,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       setActiveTab('en');
       setSelectedLanguage('en');
     }
-  }, [selectedLanguage, document.summaries, document.sections, isTranslating]);
+  }, [selectedLanguage, document.summaries, document.sections, isProcessing]);
 
 
   // Handle PDF download
@@ -679,7 +676,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           <Spinner animation="border" role="status">
                             <span className="visually-hidden">Loading...</span>
                           </Spinner>
-                          <p className="mt-3">Processing your document...</p>
+                          <p className="mt-3">Processing your document and translations...</p>
                         </div>
                       )
                     ) : document.status === "FAILED" ? (
@@ -687,21 +684,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         <h5>{t('summary.failed.title')}</h5>
                         <p>{t('summary.failed.message')}</p>
                       </Alert>
-                    ) : (
+                    ) : document.status === "PROCESSED" ? (
                       <>
-                        {/* Show translation progress notification */}
-                        {isTranslating && (
-                          <Alert variant="info" className="mb-3">
-                            <div className="d-flex align-items-center">
-                              <Spinner animation="border" size="sm" className="me-2" />
-                              <div>
-                                <strong>Translations in progress...</strong>
-                                <br />
-                                <small>English content is available below. Translated version will be available soon.</small>
-                              </div>
-                            </div>
-                          </Alert>
-                        )}
+                        {/* Only show content when document is fully processed */}
                         
                         <Tabs
                           activeKey={activeTab}
@@ -759,6 +744,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           </Alert>
                         )}
                       </>
+                    ) : (
+                      <div className="text-center my-5">
+                        <Spinner animation="border" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </Spinner>
+                        <p className="mt-3">Processing your document and translations...</p>
+                      </div>
                     )}
                   </Col>
                 </Row>
