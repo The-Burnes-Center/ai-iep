@@ -18,14 +18,14 @@ const MobileBottomNavigation: React.FC = () => {
       route: '/iep-documents'
     },
     {
-      icon: 'bi-info-circle-fill',
-      label: 'Rights',
-      route: '/rights-and-onboarding'
-    },
-    {
       icon: 'bi-person-fill',
       label: 'Profile',
       route: '/profile'
+    },
+    {
+      icon: 'bi-info-circle-fill',
+      label: 'Rights',
+      route: '/rights-and-onboarding'
     }
   ];
 

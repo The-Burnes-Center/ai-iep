@@ -624,7 +624,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               ) : (
                 <>
                   <FontAwesomeIcon icon={faDownload} className="me-2" />
-                  Save
+                  {t('common.save')}
                 </>
               )}
             </Button>
