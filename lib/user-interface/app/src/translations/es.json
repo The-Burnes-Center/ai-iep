@@ -230,6 +230,9 @@
     "auth.resetCode": "Código de Restablecimiento",
     "auth.enterResetCode": "Ingrese el código de restablecimiento",
     "auth.verifyEmail": "Verificar Correo Electrónico",
+    "auth.phoneAccountConfirmPrompt": "Por favor, ingrese el código de verificación enviado a su teléfono para confirmar su cuenta.",
+    "auth.accountConfirmedSuccess": "¡Cuenta confirmada e iniciada sesión exitosamente!",
+    "auth.phoneVerificationSuccess": "¡Verificación telefónica exitosa!",
 
     "onboarding.carousel.heading.accessible": "Su Documento IEP, Accesible",
     "onboarding.carousel.heading.summarize": "Resumir",

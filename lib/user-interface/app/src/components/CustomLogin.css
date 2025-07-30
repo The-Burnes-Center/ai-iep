@@ -64,8 +64,8 @@
 
 /* Button hover effect */
 .btn-primary:hover {
-  background-color: #E6A31F !important;
-  border-color: #E6A31F !important;
+  background-color: #00682F !important;
+  border-color: #00682F !important;
   color: #F5F3EE !important;
 }
 
@@ -97,6 +97,8 @@
   color: #1E1E1E;
   border-color: #1E1E1E;
   background-color: transparent;
+  --bs-btn-active-bg: #00682F !important;
+  --bs-btn-active-border-color: #00682F !important;
 }
 
 .btn-outline-primary:hover {
@@ -280,7 +282,7 @@ input[type="tel"]:focus {
 }
 
 .dropdown-item.active {
-  background-color: #FFB522;
+  background-color: #EFECE5;
   color: #1E1E1E;
   font-weight: 600;
 }

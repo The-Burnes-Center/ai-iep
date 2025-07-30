@@ -245,6 +245,9 @@
     "auth.resetCode": "Reset Code",
     "auth.enterResetCode": "Enter reset code",
     "auth.verifyEmail": "Verify Email",
+    "auth.phoneAccountConfirmPrompt": "Please enter the verification code sent to your phone to confirm your account.",
+    "auth.accountConfirmedSuccess": "Account confirmed and signed in successfully!",
+    "auth.phoneVerificationSuccess": "Phone verification successful!",
 
     "onboarding.carousel.heading.accessible": "Your IEP Document, made accessible",
     "onboarding.carousel.heading.summarize": "Summarize",

@@ -229,6 +229,9 @@
     "auth.resetCode": "重置码",
     "auth.enterResetCode": "输入重置码",
     "auth.verifyEmail": "验证邮箱",
+    "auth.phoneAccountConfirmPrompt": "请输入发送到您手机的验证码以确认您的账户。",
+    "auth.accountConfirmedSuccess": "账户确认并登录成功！",
+    "auth.phoneVerificationSuccess": "手机验证成功！",
 
     "onboarding.carousel.heading.accessible": "让IEP文档易懂",
     "onboarding.carousel.heading.summarize": "总结",

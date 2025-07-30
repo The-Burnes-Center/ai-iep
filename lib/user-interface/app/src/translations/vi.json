@@ -235,6 +235,9 @@
     "auth.resetCode": "Mã Đặt Lại",
     "auth.enterResetCode": "Nhập mã đặt lại",
     "auth.verifyEmail": "Xác Minh Email",
+    "auth.phoneAccountConfirmPrompt": "Vui lòng nhập mã xác minh đã gửi đến điện thoại của bạn để xác nhận tài khoản.",
+    "auth.accountConfirmedSuccess": "Tài khoản đã được xác nhận và đăng nhập thành công!",
+    "auth.phoneVerificationSuccess": "Xác minh điện thoại thành công!",
 
     "onboarding.carousel.heading.accessible": "Tài Liệu IEP Dễ Hiểu",
     "onboarding.carousel.heading.summarize": "Tóm Tắt",
