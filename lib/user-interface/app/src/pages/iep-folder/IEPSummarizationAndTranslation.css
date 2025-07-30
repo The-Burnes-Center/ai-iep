@@ -297,7 +297,7 @@
 }
 
 .button-container {
-  padding: 1rem;
+  padding: 0.25rem;
 }
 
 /* Language dropdown styling in button-container */
@@ -356,4 +356,86 @@
 .hidden-tab-nav .nav-link,
 .hidden-tab-nav .nav-item {
   display: none !important;
+}
+
+/* Carousel with button background image and button styling */
+.carousel-with-button {
+  background-image: url('/images/your-rights-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 2rem;
+}
+
+.carousel-with-button .btn {
+  background-color: #F5F3EE !important;
+  border-radius: 1.5rem !important;
+  border: 1px solid #ddd;
+}
+
+/* Custom styling for carousel buttons */
+.custom-carousel-button {
+  background-color: #F5f3EE !important;
+  color: #1E1E1E !important;
+  border: 1px solid #1E1E1E !important;
+  border-radius: 1.5rem !important;
+  padding: 0.5rem 1.5rem;
+  font-weight: 500;
+}
+
+.custom-carousel-button:hover {
+  background-color: #1E1E1E !important;
+  color: #F5f3EE !important;
+  border-color: #1E1E1E !important;
+}
+
+.custom-carousel-button:focus,
+.custom-carousel-button:active {
+  background-color: #1E1E1E !important;
+  color: #F5f3EE !important;
+  border-color: #1E1E1E !important;
+  box-shadow: 0 0 0 0.2rem rgba(30, 30, 30, 0.25) !important;
+}
+
+/* Processing background for summary card */
+.summary-card-processing {
+  background-image: url('/images/your-rights-bg.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  border-radius: 0 !important;
+}
+
+/* Make container full width when processing card is present */
+.summary-container:has(.summary-card-processing) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Hide controls when processing */
+.summary-container:has(.summary-card-processing) .button-container {
+  display: none !important;
+}
+
+/* Apply green background to whole page when processing */
+body:has(.summary-card-processing) {
+  background-color: #00682F !important;
+}
+
+/* Ensure the page content area maintains the green background */
+html:has(.summary-card-processing) {
+  background-color: #00682F !important;
+}
+
+/* Apply green background to col-md-12 inside processing summary card */
+.summary-card-processing .col-md-12 {
+  background-color: #00682F !important;
+}
+
+/* Apply green background to summary-card-body inside processing summary card */
+.summary-card-processing .summary-card-body {
+  background-color: #00682F !important;
 }

@@ -115,3 +115,19 @@
   background-color: #e9ecef;
   color: #6c757d;
 }
+
+.form-control[type="file"] {
+  border-radius: 1.5rem;
+}
+
+.form-control[type="file"]::file-selector-button {
+  border: 1px solid #1E1E1E;
+  border-radius: 1rem;
+  background-color: #f8f9fa;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.form-control[type="file"]::file-selector-button:hover {
+  border-color: #1E1E1E;
+  background-color: #e9ecef;
+}

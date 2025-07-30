@@ -679,45 +679,53 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             <Alert variant="info">
               {t('summary.noDocuments')}
             </Alert>
+          ) : isProcessing ? (
+            <Card className="summary-card summary-card-processing">
+              <Card.Body className="summary-card-body pt-2 pb-0">
+                <Row>
+                  <Col md={12}>
+                    {tutorialPhase === 'app-tutorial' ? (
+                      <div className="carousel-with-button">
+                        <AppTutorialCarousel slides={appTutorialSlideData} />
+                        <div className="text-center mt-3">
+                          <Button 
+                            className="custom-carousel-button"
+                            onClick={handleSkipToRights}
+                          >
+                            Skip to Rights
+                          </Button>
+                        </div>
+                      </div>
+                    ) : tutorialPhase === 'parent-rights' ? (
+                      <div className="carousel-with-button">
+                        <ParentRightsCarousel slides={parentRightsSlideData} />
+                        <div className="text-center mt-3">
+                          <Button 
+                            className="custom-carousel-button"
+                            onClick={handleSkipRights}
+                          >
+                            Skip
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center my-5">
+                        <Spinner animation="border" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </Spinner>
+                        <p className="mt-3">Processing your document and translations...</p>
+                      </div>
+                    )}
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
           ) : (
             <Card className="summary-card">
               <Card.Body className="summary-card-body pt-2 pb-0">
                 <Row>
                   <Col md={12}>
-                    {isProcessing ? (
-                      tutorialPhase === 'app-tutorial' ? (
-                        <div className="carousel-with-button">
-                          <AppTutorialCarousel slides={appTutorialSlideData} />
-                          <div className="text-center mt-3">
-                            <Button 
-                              variant="primary" 
-                              onClick={handleSkipToRights}
-                            >
-                              Skip to Rights
-                            </Button>
-                          </div>
-                        </div>
-                      ) : tutorialPhase === 'parent-rights' ? (
-                        <div className="carousel-with-button">
-                          <ParentRightsCarousel slides={parentRightsSlideData} />
-                          <div className="text-center mt-3">
-                            <Button 
-                              variant="outline-secondary" 
-                              onClick={handleSkipRights}
-                            >
-                              Skip
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center my-5">
-                          <Spinner animation="border" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                          </Spinner>
-                          <p className="mt-3">Processing your document and translations...</p>
-                        </div>
-                      )
-                    ) : document.status === "FAILED" ? (
+                    {document.status === "FAILED" ? (
                       <Alert variant="danger">
                         <h5>{t('summary.failed.title')}</h5>
                         <p>{t('summary.failed.message')}</p>
@@ -794,19 +802,19 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 </Row>
               </Card.Body>
             
-            {document.status === "PROCESSED" && (
-              <Card.Header 
-                className="summary-card-header d-flex justify-content-center align-items-center" 
-                onClick={() => navigate('/iep-documents')}
-                style={{ cursor: 'pointer' }}
-              >
-                <div>
-                  <FontAwesomeIcon icon={faArrowsRotate} className="me-2" />
-                  {t('upload.replaceDocument')}
-                </div>
-              </Card.Header>
-            )}
-
+              {/* Replace Document Button - only shown for processed documents */}
+              {document.status === "PROCESSED" && (
+                <Card.Header 
+                  className="summary-card-header d-flex justify-content-center align-items-center" 
+                  onClick={() => navigate('/iep-documents')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div>
+                    <FontAwesomeIcon icon={faArrowsRotate} className="me-2" />
+                    {t('upload.replaceDocument')}
+                  </div>
+                </Card.Header>
+              )}
             </Card>
           )}
         </Col>
