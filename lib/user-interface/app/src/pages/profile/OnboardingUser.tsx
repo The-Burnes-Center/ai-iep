@@ -62,50 +62,62 @@ const slideImages = [
         alt: 'Advocate for your child'
       }
     ];
+
+  const handleBackClick = () => {
+    navigate('/');
+  };
   
   return (
-    <div className="carousel-container">
-      {/* Swiper component */}
-      <Swiper
-        slidesPerView="auto"
-        spaceBetween={15}
-        centeredSlides={true}
-        pagination={{
-          clickable: true,
-          el: '.swiper-custom-pagination',
-        }}
-        onSlideChange={(swiper) => setActiveSlide(swiper.activeIndex)}
-        modules={[Pagination]}
-        className="mySwiper"
-      >
-        {slideImages.map((image, index) => (
-          <SwiperSlide key={index}>
-            <img 
-              src={image.src} 
-              alt={image.alt}
-              className="carousel-image"
-            />
-          </SwiperSlide>
-        ))}
-      </Swiper>
-      
-      <div className='heading-paragraph-container'>
-        <h5 className="carousel-heading">
-          {carouselHeadings[activeSlide]}
-        </h5>
-        <p className="carousel-paragraph">
-          {carouselParagraphs[activeSlide]}
-        </p>
+    <div>
+      <div className="mt-3 text-start px-3 py-2">
+        <Button variant="outline-secondary" onClick={handleBackClick}>
+          {t('common.back')}
+        </Button>
       </div>
-
-
-      {/* Custom pagination element */}
-      <div className="swiper-custom-pagination"></div>
       
-      <div className="d-grid" >
-            <Button variant="primary" className="continue-onboarding" disabled={activeSlide < 3} onClick={() => navigate('/consent-form')}>CONTINUE</Button>
-      </div>
+      <div className="carousel-container">
+        {/* Swiper component */}
+        <Swiper
+          slidesPerView="auto"
+          spaceBetween={15}
+          centeredSlides={true}
+          pagination={{
+            clickable: true,
+            el: '.swiper-custom-pagination',
+          }}
+          onSlideChange={(swiper) => setActiveSlide(swiper.activeIndex)}
+          modules={[Pagination]}
+          className="mySwiper"
+        >
+          {slideImages.map((image, index) => (
+            <SwiperSlide key={index}>
+              <img 
+                src={image.src} 
+                alt={image.alt}
+                className="carousel-image"
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        
+        <div className='heading-paragraph-container'>
+          <h5 className="carousel-heading">
+            {carouselHeadings[activeSlide]}
+          </h5>
+          <p className="carousel-paragraph">
+            {carouselParagraphs[activeSlide]}
+          </p>
+        </div>
 
+
+        {/* Custom pagination element */}
+        <div className="swiper-custom-pagination"></div>
+        
+        <div className="d-grid" >
+              <Button variant="primary" className="continue-onboarding" disabled={activeSlide < 3} onClick={() => navigate('/consent-form')}>CONTINUE</Button>
+        </div>
+
+      </div>
     </div>
   );
 };

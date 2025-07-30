@@ -73,12 +73,6 @@ export default function PreferredLanguage() {
         const hasConsent = data && data.consentGiven === true;
         const hasCompleteParentData = data && data.parentName;
 
-        // If user has language but missing consent or child data, go to consent form
-        if (hasLanguage && !hasConsent) {
-          navigate('/consent-form');
-          return;
-        }
-
         // If user has language and consent but missing parent data, go to parent form
         if (hasLanguage && hasConsent && !hasCompleteParentData) {
           navigate('/view-and-add-parent');
