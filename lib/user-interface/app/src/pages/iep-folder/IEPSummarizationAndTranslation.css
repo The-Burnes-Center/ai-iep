@@ -384,15 +384,15 @@
 }
 
 .custom-carousel-button:hover {
-  background-color: #1E1E1E !important;
-  color: #F5f3EE !important;
+  background-color: #F5f3EE !important;
+   color: #1E1E1E !important;
   border-color: #1E1E1E !important;
 }
 
 .custom-carousel-button:focus,
 .custom-carousel-button:active {
-  background-color: #1E1E1E !important;
-  color: #F5f3EE !important;
+  background-color: #F5F3EE !important;
+  color: #1e1e1e !important;
   border-color: #1E1E1E !important;
   box-shadow: 0 0 0 0.2rem rgba(30, 30, 30, 0.25) !important;
 }

@@ -689,6 +689,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         <AppTutorialCarousel slides={appTutorialSlideData} />
                         <div className="text-center mt-3">
                           <Button 
+                            variant="none"
                             className="custom-carousel-button"
                             onClick={handleSkipToRights}
                           >
@@ -701,6 +702,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         <ParentRightsCarousel slides={parentRightsSlideData} />
                         <div className="text-center mt-3">
                           <Button 
+                            variant="none"
                             className="custom-carousel-button"
                             onClick={handleSkipRights}
                           >
