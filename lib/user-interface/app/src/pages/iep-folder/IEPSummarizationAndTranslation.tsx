@@ -711,7 +711,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center my-5">
+                      <div className="text-center my-5" style={{ backgroundColor: '#F5F3EE', padding: '2rem', borderRadius: '8px', margin: '1rem' }}>
                         <Spinner animation="border" role="status">
                           <span className="visually-hidden">Loading...</span>
                         </Spinner>
@@ -793,7 +793,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         )}
                       </>
                     ) : (
-                      <div className="text-center my-5">
+                      <div className="text-center my-5" style={{ backgroundColor: '#F5F3EE', padding: '2rem', borderRadius: '8px', margin: '1rem' }}>
                         <Spinner animation="border" role="status">
                           <span className="visually-hidden">Loading...</span>
                         </Spinner>

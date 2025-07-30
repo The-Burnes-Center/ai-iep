@@ -13,19 +13,19 @@ const MobileBottomNavigation: React.FC = () => {
       route: '/summary-and-translations'
     },
     {
-      icon: 'bi-upload',
-      label: 'Upload',
-      route: '/iep-documents'
+      icon: 'bi-question-circle-fill',
+      label: 'Support',
+      route: '/support-center'
     },
     {
       icon: 'bi-person-fill',
-      label: 'Profile',
+      label: 'Account',
       route: '/profile'
     },
     {
       icon: 'bi-info-circle-fill',
-      label: 'Rights',
-      route: '/rights-and-onboarding'
+      label: 'About',
+      route: '/about-aiep'
     }
   ];
 
