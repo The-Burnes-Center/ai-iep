@@ -130,6 +130,10 @@ export default function ViewAndAddParent() {
     return parentName.trim() !== '';
   };
 
+  const handleBackClick = () => {
+    navigate('/consent-form');
+  };
+
   if (loading) {
     return (
       <Container className="text-center">
@@ -149,46 +153,54 @@ export default function ViewAndAddParent() {
   }
 
   return (
-    <Container 
-      fluid 
-      className="profile-form-container"
-    >
-      <Row style={{ width: '100%', justifyContent: 'center' }}>
-        <Col xs={12} md={8} lg={6}>
-          <div className="profile-form">
-            <h2 className="profile-title">
-              {t('parent.title')}
-            </h2>
-            
-            <Form>
-              <Row className="mb-4">
-                <Col md={12}>
-                  <Form.Group controlId="formParentName">
-                    <Form.Label className="form-label">{t('parent.name.label')}</Form.Label>
-                    <Form.Control 
-                      type="text" 
-                      placeholder={t('parent.name.placeholder')}
-                      value={parentName} 
-                      onChange={(e) => setParentName(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
+    <div>
+      <div className="mt-3 text-start px-3 py-2">
+        <Button variant="outline-secondary" onClick={handleBackClick}>
+          {t('common.back')}
+        </Button>
+      </div>
+      
+      <Container 
+        fluid 
+        className="profile-form-container"
+      >
+        <Row style={{ width: '100%', justifyContent: 'center' }}>
+          <Col xs={12} md={8} lg={6}>
+            <div className="profile-form">
+              <h2 className="profile-title">
+                {t('parent.title')}
+              </h2>
+              
+              <Form>
+                <Row className="mb-4">
+                  <Col md={12}>
+                    <Form.Group controlId="formParentName">
+                      <Form.Label className="form-label">{t('parent.name.label')}</Form.Label>
+                      <Form.Control 
+                        type="text" 
+                        placeholder={t('parent.name.placeholder')}
+                        value={parentName} 
+                        onChange={(e) => setParentName(e.target.value)}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-              <div className="d-grid">
-                <Button 
-                  variant="primary" 
-                  onClick={handleSaveAndContinue}
-                  disabled={!isFormValid() || saving}
-                  className="consent-button"
-                >
-                  {saving ? t('parent.button.saving') : t('parent.button.save')}
-                </Button>
-              </div>
-            </Form>
-          </div>
-        </Col>
-      </Row>
-    </Container>
+                <div className="d-grid">
+                  <Button 
+                    variant="primary" 
+                    onClick={handleSaveAndContinue}
+                    disabled={!isFormValid() || saving}
+                    className="consent-button"
+                  >
+                    {saving ? t('parent.button.saving') : t('parent.button.save')}
+                  </Button>
+                </div>
+              </Form>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 }

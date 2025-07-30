@@ -3,11 +3,10 @@
 
 /* Form container */
 .profile-form-container {
-  min-height: 100vh;
+  min-height: 80vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 64px;
 }
 
 /* Form title */
