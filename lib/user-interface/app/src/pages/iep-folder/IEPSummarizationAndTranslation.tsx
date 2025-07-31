@@ -593,7 +593,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
-  // Loading state while translations and profile are being loaded
+  // Handle initial loading and no document states first
   if (!translationsLoaded || profileLoading) {
     return (
       <Container className="summary-container mt-4 mb-5">
@@ -611,118 +611,158 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     );
   }
 
+  if (initialLoading) {
+    return (
+      <>
+        <Container className="summary-container mt-3 mb-3">
+          <Row className="mt-2">
+            <Col>
+              <div className="text-center my-5">
+                <Spinner animation="border" role="status">
+                  <span className="visually-hidden">{t('summary.loading')}</span>
+                </Spinner>
+                <p className="mt-3">{t('summary.loading')}</p>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+        <MobileBottomNavigation />
+      </>
+    );
+  }
+
+  if (!document) {
+    return (
+      <>
+        <Container className="summary-container mt-3 mb-3">
+          <Row className="mt-2">
+            <Col>
+              <Alert variant="info">
+                {t('summary.noDocuments')}
+              </Alert>
+            </Col>
+          </Row>
+        </Container>
+        <MobileBottomNavigation />
+      </>
+    );
+  }
+
+  // Processing Container - when document is being processed
+  if (isProcessing) {
+    return (
+      <>
+        <Container className="summary-container mt-3 mb-3">
+          <Row className="mt-2">
+            <Col>
+              {error && <Alert variant="danger">{error}</Alert>}
+              
+              <Card className="summary-card">
+                <Card.Body className="summary-card-body pt-2 pb-0">
+                  <Row>
+                    <Col md={12}>
+                      {tutorialPhase === 'app-tutorial' ? (
+                        <div className="carousel-with-button">
+                          <AppTutorialCarousel slides={appTutorialSlideData} />
+                          <div className="text-center mt-3">
+                            <Button 
+                              variant="primary" 
+                              onClick={handleSkipToRights}
+                            >
+                              Skip to Rights
+                            </Button>
+                          </div>
+                        </div>
+                      ) : tutorialPhase === 'parent-rights' ? (
+                        <div className="carousel-with-button">
+                          <ParentRightsCarousel slides={parentRightsSlideData} />
+                          <div className="text-center mt-3">
+                            <Button 
+                              variant="outline-secondary" 
+                              onClick={handleSkipRights}
+                            >
+                              Skip
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center my-5">
+                          <Spinner animation="border" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </Spinner>
+                          <p className="mt-3">Processing your document and translations...</p>
+                        </div>
+                      )}
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+        <MobileBottomNavigation />
+      </>
+    );
+  }
+
+  // Processed Container - when document is processed, failed, or in other states
   return (
     <>
-    <Container className="summary-container mt-3 mb-3">
-      <div className="mt-2 text-start button-container d-flex justify-content-between align-items-center">
-        <div className="d-flex gap-2 align-items-center">
-          {canGeneratePDF(document) && (
-            <Button 
-              variant="primary" 
-              onClick={handleDownloadPDF}
-              disabled={isGeneratingPDF || isProcessing}
-            >
-              {isGeneratingPDF ? (
-                <>
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  Generating PDF...
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faDownload} className="me-2" />
-                  {t('common.save')}
-                </>
-              )}
-            </Button>
+      <Container className="summary-container mt-3 mb-3">
+        <div className="mt-2 text-start button-container d-flex justify-content-between align-items-center">
+          <div className="d-flex gap-2 align-items-center">
+            {canGeneratePDF(document) && (
+              <Button 
+                variant="primary" 
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF || isProcessing}
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faDownload} className="me-2" />
+                    {t('common.save')}
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+          
+          {/* Language Dropdown - Only show if preferred language is not English and not processing */}
+          {shouldShowLanguageDropdown && !isProcessing && (
+            <Dropdown>
+              <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
+                {languageOptions.find(option => option.value === selectedLanguage)?.label || 'English'}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                {languageOptions.map(option => (
+                  <Dropdown.Item 
+                    key={option.value} 
+                    onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
+                    active={selectedLanguage === option.value}
+                  >
+                    {option.label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
           )}
         </div>
         
-
-        
-        {/* Language Dropdown - Only show if preferred language is not English and not processing */}
-        {shouldShowLanguageDropdown && !isProcessing && (
-          <Dropdown>
-            <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
-              {languageOptions.find(option => option.value === selectedLanguage)?.label || 'English'}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              {languageOptions.map(option => (
-                <Dropdown.Item 
-                  key={option.value} 
-                  onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
-                  active={selectedLanguage === option.value}
-                >
-                  {option.label}
-                </Dropdown.Item>
-              ))}
-            </Dropdown.Menu>
-          </Dropdown>
+        {pdfError && (
+          <Alert variant="danger" className="mt-2" dismissible onClose={() => setPdfError(null)}>
+            <strong>PDF Generation Failed:</strong> {pdfError}
+          </Alert>
         )}
-      </div>
-      {pdfError && (
-        <Alert variant="danger" className="mt-2" dismissible onClose={() => setPdfError(null)}>
-          <strong>PDF Generation Failed:</strong> {pdfError}
-        </Alert>
-      )}
-      <Row className="mt-2">
-        <Col>
-          {error && <Alert variant="danger">{error}</Alert>}
-          
-          {initialLoading ? (
-            <div className="text-center my-5">
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">{t('summary.loading')}</span>
-              </Spinner>
-              <p className="mt-3">{t('summary.loading')}</p>
-            </div>
-          ) : !document ? (
-            <Alert variant="info">
-              {t('summary.noDocuments')}
-            </Alert>
-          ) : isProcessing ? (
-            <Card className="summary-card summary-card-processing">
-              <Card.Body className="summary-card-body pt-2 pb-0">
-                <Row>
-                  <Col md={12}>
-                    {tutorialPhase === 'app-tutorial' ? (
-                      <div className="carousel-with-button">
-                        <AppTutorialCarousel slides={appTutorialSlideData} />
-                        <div className="text-center mt-3">
-                          <Button 
-                            variant="none"
-                            className="custom-carousel-button"
-                            onClick={handleSkipToRights}
-                          >
-                            Skip to Rights
-                          </Button>
-                        </div>
-                      </div>
-                    ) : tutorialPhase === 'parent-rights' ? (
-                      <div className="carousel-with-button">
-                        <ParentRightsCarousel slides={parentRightsSlideData} />
-                        <div className="text-center mt-3">
-                          <Button 
-                            variant="none"
-                            className="custom-carousel-button"
-                            onClick={handleSkipRights}
-                          >
-                            Skip
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center my-5" style={{ backgroundColor: '#F5F3EE', padding: '2rem', borderRadius: '8px', margin: '1rem' }}>
-                        <Spinner animation="border" role="status">
-                          <span className="visually-hidden">Loading...</span>
-                        </Spinner>
-                        <p className="mt-3">Processing your document and translations...</p>
-                      </div>
-                    )}
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          ) : (
+        
+        <Row className="mt-2">
+          <Col>
+            {error && <Alert variant="danger">{error}</Alert>}
+            
             <Card className="summary-card">
               <Card.Body className="summary-card-body pt-2 pb-0">
                 <Row>
@@ -793,7 +833,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         )}
                       </>
                     ) : (
-                      <div className="text-center my-5" style={{ backgroundColor: '#F5F3EE', padding: '2rem', borderRadius: '8px', margin: '1rem' }}>
+                      <div className="text-center my-5">
                         <Spinner animation="border" role="status">
                           <span className="visually-hidden">Loading...</span>
                         </Spinner>
@@ -804,7 +844,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 </Row>
               </Card.Body>
             
-              {/* Replace Document Button - only shown for processed documents */}
               {document.status === "PROCESSED" && (
                 <Card.Header 
                   className="summary-card-header d-flex justify-content-center align-items-center" 
@@ -818,27 +857,26 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 </Card.Header>
               )}
             </Card>
-          )}
-        </Col>
-      </Row>
-      
-      {/* Jargon Drawer */}
-      <Offcanvas 
-        show={showJargonDrawer} 
-        onHide={() => setShowJargonDrawer(false)}
-        placement="end"
-        className="jargon-drawer"
-      >
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>{selectedJargon?.term}</Offcanvas.Title>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          <p>{selectedJargon?.definition}</p>
-        </Offcanvas.Body>
-      </Offcanvas>
-    </Container>
+          </Col>
+        </Row>
+        
+        {/* Jargon Drawer */}
+        <Offcanvas 
+          show={showJargonDrawer} 
+          onHide={() => setShowJargonDrawer(false)}
+          placement="end"
+          className="jargon-drawer"
+        >
+          <Offcanvas.Header closeButton>
+            <Offcanvas.Title>{selectedJargon?.term}</Offcanvas.Title>
+          </Offcanvas.Header>
+          <Offcanvas.Body>
+            <p>{selectedJargon?.definition}</p>
+          </Offcanvas.Body>
+        </Offcanvas>
+      </Container>
       <MobileBottomNavigation />
-        </>
+    </>
   );
 };
 
