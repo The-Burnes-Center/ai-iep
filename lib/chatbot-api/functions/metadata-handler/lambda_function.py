@@ -960,7 +960,17 @@ def iep_processing_pipeline(event):
                         } for section in english_result.get('sections', [])
                     ]}
                 },
-                'document_index': {'en': {'S': english_result.get('document_index', '')}}
+                'document_index': {'en': {'S': english_result.get('document_index', '')}},
+                'abbreviations': {
+                    'en': {'L': [
+                        {
+                            'M': {
+                                'abbreviation': {'S': abbrev.get('abbreviation', '')},
+                                'full_form': {'S': abbrev.get('full_form', '')}
+                            }
+                        } for abbrev in english_result.get('abbreviations', [])
+                    ]}
+                }
             }
             
             # Save English data to DynamoDB with status "PROCESSING_TRANSLATIONS"
@@ -995,7 +1005,17 @@ def iep_processing_pipeline(event):
                             } for section in english_result.get('sections', [])
                         ]}
                     },
-                    'document_index': {'en': {'S': english_result.get('document_index', '')}}
+                    'document_index': {'en': {'S': english_result.get('document_index', '')}},
+                    'abbreviations': {
+                        'en': {'L': [
+                            {
+                                'M': {
+                                    'abbreviation': {'S': abbrev.get('abbreviation', '')},
+                                    'full_form': {'S': abbrev.get('full_form', '')}
+                                }
+                            } for abbrev in english_result.get('abbreviations', [])
+                        ]}
+                    }
                 }
                 
                 # Save English-only data to DynamoDB
@@ -1006,8 +1026,7 @@ def iep_processing_pipeline(event):
                     child_id=child_id, 
                     summaries=formatted_result,
                     user_id=user_id,
-                    object_key=key,
-                    ocr_data=ocr_data
+                    object_key=key
                 )
                 
                 print(f"Document processed successfully (English-only): {iep_id}")
