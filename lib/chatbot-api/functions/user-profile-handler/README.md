@@ -467,33 +467,28 @@ Query Parameters:
     "zh": "string",
     "vi": "string"
   },
+  "abbreviations": {
+    "en": [
+      {
+        "abbreviation": "IEP",
+        "full_form": "Individualized Education Program"
+      }
+    ],
+    "es": [
+      {
+        "abbreviation": "IEP",
+        "full_form": "Programa de Educación Individualizada"
+      }
+    ],
+    "zh": [...],
+    "vi": [...]
+  },
   "sections": {
     "en": {
       "section1": "string",
       "section2": "string"
     }
   },
-  "ocrData": {
-    "pages": [
-      {
-        "index": 0,
-        "markdown": "string",
-        "images": [],
-        "dimensions": {
-          "dpi": number,
-          "height": number,
-          "width": number
-        }
-      }
-    ],
-    "model": "string",
-    "usage": {
-      "pages_processed": number,
-      "document_size_bytes": number
-    },
-    "success": boolean
-  },
-  "ocrCompletedAt": "string",
   "createdAt": number,
   "updatedAt": number
 }
@@ -507,7 +502,7 @@ Query Parameters:
 }
 ```
 
-**Note**: Only the most recent document for a child is returned. When a new document is uploaded for a child, any existing documents for that child are automatically deleted. The document response now includes OCR data that provides detailed text extraction from the IEP document in markdown format, organized by page.
+**Note**: Only the most recent document for a child is returned. When a new document is uploaded for a child, any existing documents for that child are automatically deleted.
 
 ### 5. Delete Child's IEP Documents
 ```http
