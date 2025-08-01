@@ -199,37 +199,37 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         id: 'slide-1',
         title: t('appTutorial.slide1.title'),
         content: t('appTutorial.slide1.content'),
-        image: '/images/Summary_And_Sections.gif'
+        image: '/images/Opening_Section_Accordion.gif'
       },
       {
         id: 'slide-2',
         title: t('appTutorial.slide2.title'),
         content: t('appTutorial.slide2.content'),
-        image: '/images/Summary_And_Sections.gif'
+        image: '/images/Highlighting_Page_Numbers.gif'
       },
       {
         id: 'slide-3',
         title: t('appTutorial.slide3.title'),
         content: t('appTutorial.slide3.content'),
-        image: '/images/Summary_And_Sections.gif'
+        image: '/images/Language_Switch.gif'
       },
       {
         id: 'slide-4',
         title: t('appTutorial.slide4.title'),
         content: t('appTutorial.slide4.content'),
-        image: '/images/Summary_And_Sections.gif'
+        image: '/images/Opening_Section_Accordion.gif'
       },
       {
         id: 'slide-5',
         title: t('appTutorial.slide5.title'),
         content: t('appTutorial.slide5.content'),
-        image: '/images/Summary_And_Sections.gif'
+        image: '/images/Opening_Section_Accordion.gif'
       },
       {
         id: 'slide-6',
         title: t('appTutorial.slide6.title'),
         content: t('appTutorial.slide6.content'),
-        image: '/images/Summary_And_Sections.gif'
+        image: '/images/Jargon_Drawer.gif'
       }
     ];
   }, [t, translationsLoaded]);

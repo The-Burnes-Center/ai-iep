@@ -28,7 +28,7 @@ const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides, cla
           {slides.map((slide, index) => (
             <Carousel.Item key={slide.id}>
               <div className={`carousel-slide slide-${index + 1}`}>
-                <img src={slide.image} className="slide-image" alt="" />
+                <img src={slide.image} className="slide-rights-image" alt="" />
                 <div className="slide-content">
                   <h2>{index + 1}/6</h2>
                   <h2>{slide.title}</h2>
