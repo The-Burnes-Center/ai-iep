@@ -28,6 +28,7 @@ const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, class
           {slides.map((slide, index) => (
             <Carousel.Item key={slide.id}>
               <div className={`carousel-slide slide-${index + 1}`}>
+                <img src={slide.image} className="slide-image" alt="" />
                 <div className="slide-content">
                   <p>{slide.content}</p>
                 </div>

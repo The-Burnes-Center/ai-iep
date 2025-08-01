@@ -199,37 +199,37 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         id: 'slide-1',
         title: t('appTutorial.slide1.title'),
         content: t('appTutorial.slide1.content'),
-        image: '/images/carousel/surprised.png'
+        image: '/images/Summary_And_Sections.gif'
       },
       {
         id: 'slide-2',
         title: t('appTutorial.slide2.title'),
         content: t('appTutorial.slide2.content'),
-        image: '/images/carousel/blissful.png'
+        image: '/images/Summary_And_Sections.gif'
       },
       {
         id: 'slide-3',
         title: t('appTutorial.slide3.title'),
         content: t('appTutorial.slide3.content'),
-        image: '/images/carousel/joyful.png'
+        image: '/images/Summary_And_Sections.gif'
       },
       {
         id: 'slide-4',
         title: t('appTutorial.slide4.title'),
         content: t('appTutorial.slide4.content'),
-        image: '/images/carousel/surprised.png'
+        image: '/images/Summary_And_Sections.gif'
       },
       {
         id: 'slide-5',
         title: t('appTutorial.slide5.title'),
         content: t('appTutorial.slide5.content'),
-        image: '/images/carousel/blissful.png'
+        image: '/images/Summary_And_Sections.gif'
       },
       {
         id: 'slide-6',
         title: t('appTutorial.slide6.title'),
         content: t('appTutorial.slide6.content'),
-        image: '/images/carousel/confident.png'
+        image: '/images/Summary_And_Sections.gif'
       }
     ];
   }, [t, translationsLoaded]);
@@ -694,7 +694,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               
               {/* Title div - only shown during tutorial phases */}
               {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
-                <div className="text-center mb-3">
+                <div className="text-center">
                   <h3>
                     {tutorialPhase === 'app-tutorial' 
                       ? 'What are we doing right now ?' 
