@@ -84,7 +84,7 @@
 }
 
 .slide-content p {
-  font-size: 0.95rem;
+  font-size: 1.2rem;
   line-height: 1.5;
   margin-bottom: 0;
   color: #6c757d;
@@ -154,7 +154,7 @@
   }
 
   .slide-content p {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     line-height: 1.6;
     color: #1E1E1E;
   }
@@ -190,19 +190,18 @@
   }
 
   .slide-content {
-    padding: 1.5rem;
     max-width: 90%;
   }
 
   .slide-content h2 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     margin-bottom: 0.8rem;
     color: #1E1E1E;
 
   }
 
   .slide-content p {
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     line-height: 1.4;
     color: #1E1E1E;
   }

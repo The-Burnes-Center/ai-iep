@@ -3,13 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './MobileBottomNavigation.css';
 
 interface MobileBottomNavigationProps {
-  showProcessingLine?: boolean;
-  showProcessingHeader?: boolean;
+  tutorialPhase?: boolean;
 }
 
 const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
-  showProcessingLine = false,
-  showProcessingHeader = false 
+  tutorialPhase = false,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,32 +41,26 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
 
   return (
     <div className="mobile-bottom-navigation">
-      {showProcessingHeader && (
-        <div className="processing-header">
-          <h3>Your document is</h3>
-          <h3>being processed...</h3>
-        </div>
-      )}
-      {showProcessingLine && (
+      {tutorialPhase ? (
         <div className="processing-line">
           Your document is being processed...
         </div>
+      ) : (
+        <div className="navigation-container">
+          {navigationItems.map((item, index) => (
+            <button
+              key={index}
+              className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
+              onClick={() => handleNavigation(item.route)}
+              aria-label={`Navigate to ${item.label}`}
+            >
+              <i className={`bi ${item.icon}`}></i>
+              <span className="nav-label">{item.label}</span>
+            </button>
+          ))}
+        </div>
       )}
-      <div className="navigation-container">
-        {navigationItems.map((item, index) => (
-          <button
-            key={index}
-            className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
-            onClick={() => handleNavigation(item.route)}
-            aria-label={`Navigate to ${item.label}`}
-          >
-            <i className={`bi ${item.icon}`}></i>
-            <span className="nav-label">{item.label}</span>
-          </button>
-        ))}
-      </div>
     </div>
-
   );
 };
 

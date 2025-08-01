@@ -727,7 +727,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 </Card>
               )}
         </Container>
-        <MobileBottomNavigation showProcessingLine={tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights'} showProcessingHeader={tutorialPhase === 'completed'}/>
+        <MobileBottomNavigation tutorialPhase={true} />
       </>
     );
   }
