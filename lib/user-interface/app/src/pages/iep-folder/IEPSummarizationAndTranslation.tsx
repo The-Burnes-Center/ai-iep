@@ -130,14 +130,20 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   };
 
 
-
-  // Tutorial flow functions
-  const handleSkipToRights = () => {
-    setTutorialPhase('parent-rights');
+  // Unified skip handler for the external button
+  const handleSkip = () => {
+    if (tutorialPhase === 'app-tutorial') {
+      setTutorialPhase('parent-rights');
+    } else if (tutorialPhase === 'parent-rights') {
+      setTutorialPhase('completed');
+    }
   };
 
-  const handleSkipRights = () => {
-    setTutorialPhase('completed');
+  // Back button handler
+  const handleBack = () => {
+    if (tutorialPhase === 'parent-rights') {
+      setTutorialPhase('app-tutorial');
+    }
   };
 
   // Parent Rights carousel data - internationalized using useLanguage hook
@@ -652,53 +658,63 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   if (isProcessing) {
     return (
       <>
-        <Container className="summary-container mt-3 mb-3">
-          <Row className="mt-2">
-            <Col>
+        <Container className="processing-summary-container">
+
               {error && <Alert variant="danger">{error}</Alert>}
               
-              <Card className="summary-card">
-                <Card.Body className="summary-card-body pt-2 pb-0">
-                  <Row>
-                    <Col md={12}>
-                      {tutorialPhase === 'app-tutorial' ? (
-                        <div className="carousel-with-button">
-                          <AppTutorialCarousel slides={appTutorialSlideData} />
-                          <div className="text-center mt-3">
-                            <Button 
-                              variant="primary" 
-                              onClick={handleSkipToRights}
-                            >
-                              Skip to Rights
-                            </Button>
-                          </div>
-                        </div>
-                      ) : tutorialPhase === 'parent-rights' ? (
-                        <div className="carousel-with-button">
-                          <ParentRightsCarousel slides={parentRightsSlideData} />
-                          <div className="text-center mt-3">
-                            <Button 
-                              variant="outline-secondary" 
-                              onClick={handleSkipRights}
-                            >
-                              Skip
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center my-5">
-                          <Spinner animation="border" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                          </Spinner>
-                          <p className="mt-3">Processing your document and translations...</p>
-                        </div>
-                      )}
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+              {/* Button container - only shown during tutorial phases */}
+              {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
+                <div className="d-flex justify-content-between align-items-center mb-3 px-3 py-2">
+                  {/* Back button - only shown during parent-rights phase */}
+                  {tutorialPhase === 'parent-rights' ? (
+                    <Button 
+                      variant="outline-secondary" 
+                      onClick={handleBack}
+                    >
+                      Back
+                    </Button>
+                  ) : (
+                    <div></div>
+                  )}
+                  
+                  {/* Skip button */}
+                  <Button 
+                    variant="outline-secondary" 
+                    onClick={handleSkip}
+                  >
+                    Skip
+                  </Button>
+                </div>
+              )}
+              
+              {tutorialPhase === 'app-tutorial' ? (
+                <Card className="processing-summary-app-tutorial-card">
+                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
+                    <div className="carousel-with-button">
+                      <AppTutorialCarousel slides={appTutorialSlideData} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              ) : tutorialPhase === 'parent-rights' ? (
+                <Card className="processing-summary-parent-rights-card">
+                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
+                    <div className="carousel-with-button">
+                      <ParentRightsCarousel slides={parentRightsSlideData} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              ) : (
+                <Card className="processing-summary-card">
+                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
+                    <div className="text-center my-5">
+                      <Spinner animation="border" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </Spinner>
+                      <p className="mt-3">Processing your document and translations...</p>
+                    </div>
+                  </Card.Body>
+                </Card>
+              )}
         </Container>
         <MobileBottomNavigation />
       </>
