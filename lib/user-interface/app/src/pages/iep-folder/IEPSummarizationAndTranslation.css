@@ -26,12 +26,22 @@
   box-shadow: none;
   border-radius: 0;
   height: 100vh;
-  background-image: url('@your-rights-bg.png');
+  background-image: url('/images/your-rights-bg.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
+.processing-summary-loader-card {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  height: 100vh;
+  background-image: url('/images/your-rights-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
 .processing-summary-card-body {
   padding: 0;
   border: none;

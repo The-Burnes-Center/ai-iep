@@ -687,6 +687,18 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 </div>
               )}
               
+              {/* Title div - only shown during tutorial phases */}
+              {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
+                <div className="text-center mb-3">
+                  <h3>
+                    {tutorialPhase === 'app-tutorial' 
+                      ? 'What are we doing right now ?' 
+                      : 'Your rights as a parent:'
+                    }
+                  </h3>
+                </div>
+              )}
+              
               {tutorialPhase === 'app-tutorial' ? (
                 <Card className="processing-summary-app-tutorial-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
@@ -704,19 +716,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   </Card.Body>
                 </Card>
               ) : (
-                <Card className="processing-summary-card">
+                <Card className="processing-summary-loader-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
-                    <div className="text-center my-5">
-                      <Spinner animation="border" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                      </Spinner>
-                      <p className="mt-3">Processing your document and translations...</p>
-                    </div>
                   </Card.Body>
                 </Card>
               )}
         </Container>
-        <MobileBottomNavigation />
+        <MobileBottomNavigation showProcessingLine={tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights'} showProcessingHeader={tutorialPhase === 'completed'}/>
       </>
     );
   }

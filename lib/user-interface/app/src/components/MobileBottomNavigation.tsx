@@ -2,7 +2,15 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './MobileBottomNavigation.css';
 
-const MobileBottomNavigation: React.FC = () => {
+interface MobileBottomNavigationProps {
+  showProcessingLine?: boolean;
+  showProcessingHeader?: boolean;
+}
+
+const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
+  showProcessingLine = false,
+  showProcessingHeader = false 
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,6 +43,17 @@ const MobileBottomNavigation: React.FC = () => {
 
   return (
     <div className="mobile-bottom-navigation">
+      {showProcessingHeader && (
+        <div className="processing-header">
+          <h3>Your document is</h3>
+          <h3>being processed...</h3>
+        </div>
+      )}
+      {showProcessingLine && (
+        <div className="processing-line">
+          Your document is being processed...
+        </div>
+      )}
       <div className="navigation-container">
         {navigationItems.map((item, index) => (
           <button
@@ -49,6 +68,7 @@ const MobileBottomNavigation: React.FC = () => {
         ))}
       </div>
     </div>
+
   );
 };
 
