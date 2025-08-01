@@ -669,7 +669,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               
               {/* Button container - only shown during tutorial phases */}
               {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
-                <div className="d-flex justify-content-between align-items-center mb-3 px-3 py-2">
+                <div className="d-flex justify-content-between align-items-center mb-3 px-3 py-4">
                   {/* Back button - only shown during parent-rights phase */}
                   {tutorialPhase === 'parent-rights' ? (
                     <Button 
@@ -694,7 +694,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               
               {/* Title div - only shown during tutorial phases */}
               {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
-                <div className="text-center">
+                <div className="text-center py-2">
                   <h3>
                     {tutorialPhase === 'app-tutorial' 
                       ? 'What are we doing right now ?' 
