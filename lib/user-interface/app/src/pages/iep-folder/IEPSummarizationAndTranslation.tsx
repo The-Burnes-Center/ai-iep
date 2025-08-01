@@ -534,12 +534,17 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   </Accordion.Header>
                   <Accordion.Body>
                     {section.pageNumbers && section.pageNumbers.length > 0 && (
-                      <p className="text-muted mb-2">
+                      <p className="text-muted mb-2 page-numbers-text">
                         <small>
-                          {isEnglishTab ? 'The original content for this section can be found in your IEP document on Pages: ' : 'Páginas: '}
-                          {Array.isArray(section.pageNumbers) 
-                            ? section.pageNumbers.join(', ') 
-                            : section.pageNumbers}
+                          <span className="page-numbers-label">
+                            {isEnglishTab ? 'Found in ' : t('sections.foundIn')}
+                          </span>
+                          <span className="page-numbers-value">
+                            {isEnglishTab ? 'pages ' : t('sections.pages')}
+                            {Array.isArray(section.pageNumbers) 
+                              ? section.pageNumbers.join(', ') 
+                              : section.pageNumbers}
+                          </span>
                         </small>
                       </p>
                     )}

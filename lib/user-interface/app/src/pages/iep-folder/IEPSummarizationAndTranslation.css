@@ -110,14 +110,23 @@
 
 /* Custom accordion button icons - downward arrow for closed */
 .summary-accordion .accordion-button::after {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+  background-image: url('/images/arrow.svg');
+  background-size: 15px 18px;
   transition: transform 0.2s ease-in-out;
 }
 
 /* Custom accordion button icons - upward arrow for open */
 .summary-accordion .accordion-button:not(.collapsed)::after {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23212529'%3e%3cpath fill-rule='evenodd' d='M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z'/%3e%3c/svg%3e");
-  transform: rotate(0deg);
+  background-image: url('/images/arrow.svg');
+  background-size: 15px 18px;
+  background-position: center center;
+  transform: rotate(180deg);
+  transform-origin: center center;
+}
+
+/* Background color for open accordion header */
+.summary-accordion .accordion-button:not(.collapsed) {
+  background-color: #E7E4DC;
 }
 
 .summary-accordion .accordion-item:first-child {
@@ -407,4 +416,17 @@ display: none !important;
 .hidden-tab-nav .nav-link,
 .hidden-tab-nav .nav-item {
 display: none !important;
+}
+
+/* Page numbers text styling */
+.page-numbers-text {
+  font-style: italic;
+}
+
+.page-numbers-label {
+  color: #A8A9A5;
+}
+
+.page-numbers-value {
+  color: #1E1E1E;
 }

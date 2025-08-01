@@ -92,7 +92,7 @@
     "upload.success": "File has been uploaded successfully!",
     "upload.error": "Error uploading file. Please try again.",
     "upload.button": "Upload Document",
-    "upload.replaceDocument": "REPLACE IEP DOCUMENT",
+    "upload.replaceDocument": "UPDATE IEP DOCUMENT",
 
     "update.profile.child": "Child",
     "update.profile.name": "Name",

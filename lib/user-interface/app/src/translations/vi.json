@@ -81,7 +81,9 @@
     "sections.eligibility": "Điều kiện hội đủ",
     "sections.informedConsent": "Chấp thuận sau khi được thông báo",
     "sections.assistiveTechnology": "Công nghệ hỗ trợ",
-    "sections.stateTesting": "Kiểm tra của tiểu bang",    
+    "sections.stateTesting": "Kiểm tra của tiểu bang",
+    "sections.foundIn": "Tìm thấy trong",
+    "sections.pages": "trang",
   
     "upload.title": "Tải lên tài liệu IEP",
     "upload.maxSize": "Kích thước tệp tối đa: 100MB.",

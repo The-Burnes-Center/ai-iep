@@ -81,7 +81,9 @@
     "sections.informedConsent": "知情同意",
     "sections.presentLevels": "当前表现水平",
     "sections.assistiveTechnology": "辅助技术",
-    "sections.stateTesting": "州测试",    
+    "sections.stateTesting": "州测试",
+    "sections.foundIn": "在",
+    "sections.pages": "页面",
   
     "upload.title": "上传IEP文档",
     "upload.maxSize": "最大文件大小：100MB。",

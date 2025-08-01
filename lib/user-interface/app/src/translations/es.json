@@ -81,7 +81,9 @@
     "sections.informedConsent": "Consentimiento Informado",
     "sections.presentLevels": "Niveles Actuales de Desempeño",
     "sections.assistiveTechnology": "Tecnología de asistencia",
-    "sections.stateTesting": "Pruebas estatales",  
+    "sections.stateTesting": "Pruebas estatales",
+    "sections.foundIn": "Encontrado en",
+    "sections.pages": "páginas",
 
     "upload.title": "Subir Documento IEP",
     "upload.maxSize": "Tamaño máximo de archivo: 100MB.",
