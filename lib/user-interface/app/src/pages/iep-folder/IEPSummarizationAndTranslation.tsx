@@ -478,7 +478,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Summary Section */}
         {hasSummary ? (
           <>
-            <h4 className="mt-4 mb-3">
+            <h4 className="summary-header mt-4 mb-3">
               {isEnglishTab ? 'IEP Summary' : t('summary.iepSummary')}
             </h4>
             <Card className="summary-content mb-3">
