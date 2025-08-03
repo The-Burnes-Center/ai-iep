@@ -277,5 +277,11 @@
     "appTutorial.slide6.title": "Chúng tôi đang làm gì ngay bây giờ?",
     "appTutorial.slide6.content": "Chúng tôi đang tạo một bảng thuật ngữ để giúp bạn hiểu tài liệu. Bạn có thể nhấp vào các từ được tô sáng và đọc định nghĩa của chúng trên bảng sẽ xuất hiện.",
 
-    "glossary.header": "Bảng chú giải"
+    "glossary.header": "Bảng chú giải",
+
+    "navigation.summary": "Tóm tắt",
+    "navigation.support": "Hỗ trợ",
+    "navigation.account": "Tài khoản",
+    "navigation.about": "Giới thiệu", 
+    "navigation.processing": "Tài liệu của bạn đang được xử lý..."
 }

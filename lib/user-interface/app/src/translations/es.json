@@ -272,5 +272,11 @@
     "appTutorial.slide6.title": "¿Qué estamos haciendo ahora?",
     "appTutorial.slide6.content": "Estamos creando un glosario para ayudarle a entender el documento. Puede hacer clic sobre las palabras resaltadas y leer sus definiciones en el panel que aparecerá.",
 
-    "glossary.header": "Glosario"
+    "glossary.header": "Glosario",
+
+    "navigation.summary": "Resumen",
+    "navigation.support": "Soporte",
+    "navigation.account": "Cuenta", 
+    "navigation.about": "Acerca de",
+    "navigation.processing": "Su documento está siendo procesado..."
   }

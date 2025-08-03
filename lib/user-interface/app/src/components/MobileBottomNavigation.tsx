@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useLanguage } from '../common/language-context';
 import './MobileBottomNavigation.css';
 
 interface MobileBottomNavigationProps {
@@ -11,26 +12,27 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
 
   const navigationItems = [
     {
       icon: 'bi-book-fill',
-      label: 'Summary',
+      label: t('navigation.summary') || 'Summary',
       route: '/summary-and-translations'
     },
     {
       icon: 'bi-question-circle-fill',
-      label: 'Support',
+      label: t('navigation.support') || 'Support',
       route: '/support-center'
     },
     {
       icon: 'bi-person-fill',
-      label: 'Account',
+      label: t('navigation.account') || 'Account',
       route: '/profile'
     },
     {
       icon: 'bi-info-circle-fill',
-      label: 'About',
+      label: t('navigation.about') || 'About',
       route: '/about-aiep'
     }
   ];
@@ -43,7 +45,7 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
     <div className="mobile-bottom-navigation">
       {tutorialPhase ? (
         <div className="processing-line">
-          Your document is being processed...
+          {t('navigation.processing') || 'Your document is being processed...'}
         </div>
       ) : (
         <div className="navigation-container">

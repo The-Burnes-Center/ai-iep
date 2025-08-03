@@ -285,5 +285,11 @@
     "appTutorial.slide6.title": "What are we doing right now?",
     "appTutorial.slide6.content": "We're creating a glossary to help you understand the document. You can click over the highlighted words and read their definitions on the panel that will emerge.",
   
-    "glossary.header": "Glossary"
+    "glossary.header": "Glossary",
+
+    "navigation.summary": "Summary",
+    "navigation.support": "Support", 
+    "navigation.account": "Account",
+    "navigation.about": "About",
+    "navigation.processing": "Your document is being processed..."
   }
