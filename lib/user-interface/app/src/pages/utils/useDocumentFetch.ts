@@ -47,12 +47,20 @@ export const useDocumentFetch = ({
         console.log("Fetched document data:", retrievedDocument);
         
         if (retrievedDocument) {
+
+          if(retrievedDocument.message && retrievedDocument.message === "No document found for this child") {
+            setDocument(prev => ({
+              ...prev,
+              message: retrievedDocument.message
+            }));
+          }
           
-          setDocument(prev => {
+          setDocument(prev => {         
             if (!prev || 
                 prev.status !== retrievedDocument.status || 
                 prev.createdAt !== retrievedDocument.createdAt) {
-              
+                  
+              console.log("if (prev) is true");
               // Log timing when status changes
               const uploadStartTime = localStorage.getItem('iep-upload-start-time');
               if (uploadStartTime) {
@@ -100,12 +108,14 @@ export const useDocumentFetch = ({
             processDocumentSections(retrievedDocument);
           }
         } else {
+          console.log("else (retrievedDocument) is true");
           // Clear document data if no document found
           setDocument(prev => ({
             ...prev,
             documentId: undefined,
             documentUrl: undefined,
             status: undefined,
+            message: '',
             summaries: {
               en: '',
               es: '',

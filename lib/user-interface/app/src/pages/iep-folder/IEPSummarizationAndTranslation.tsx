@@ -39,6 +39,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     documentId: undefined,
     documentUrl: undefined,
     status: undefined,
+    message: '',
     summaries: {
       en: '',
       es: '',
@@ -440,28 +441,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
-  // Extract filename from document URL
-  const getFileName = (documentUrl: string) => {
-    if (!documentUrl) return 'Document';
-    return documentUrl.split('/').pop() || 'Document';
-  };
-
-  // Render status badge
-  const renderStatusBadge = (status: string) => {
-    switch(status) {
-      case "PROCESSING":
-        return <Badge bg="warning" text="dark"><FontAwesomeIcon icon={faClock} className="me-1" /> Processing</Badge>;
-      case "PROCESSING_TRANSLATIONS":
-        return <Badge bg="info" text="light"><FontAwesomeIcon icon={faClock} className="me-1" /> Translating</Badge>;
-      case "PROCESSED":
-        return <Badge bg="success"><FontAwesomeIcon icon={faCheckCircle} className="me-1" /> Processed</Badge>;
-      case "FAILED":
-        return <Badge bg="danger"><FontAwesomeIcon icon={faExclamationTriangle} className="me-1" /> Failed</Badge>;
-      default:
-        return <Badge bg="secondary">{status}</Badge>;
-    }
-  };
-
   // Render tab content for a specific language
   const renderTabContent = (lang: string) => {
     const hasSummary = document.summaries && document.summaries[lang];
@@ -505,6 +484,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 ? t('summary.noSummary.message')
                 : t('summary.noTranslatedSummary.message')}
             </p>
+            <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+            </Button>
             {!isEnglishTab && (
               <div className="mt-3">
                 <p className="mb-2">{t('summary.reuploadSuggestion')}</p>
@@ -575,6 +561,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 ? t('summary.noSections.message')
                 : t('summary.noTranslatedSections.message')}
             </p>
+            <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+            </Button>
             {!isEnglishTab && (
               <div className="mt-3">
                 <p className="mb-2">{t('summary.reuploadSuggestion')}</p>
@@ -642,6 +635,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     );
   }
 
+
   if (!document) {
     return (
       <>
@@ -658,6 +652,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       </>
     );
   }
+
+if(document && document.message === "No document found for this child") {
+  navigate('/iep-documents');
+}
 
   // Processing Container - when document is being processed
   if (isProcessing) {
@@ -732,6 +730,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     );
   }
 
+  // If document fails the user is taken to the upload screen
+  if (document && document.status === "FAILED") {
+    navigate('/iep-documents');
+  }
+
   // Processed Container - when document is processed, failed, or in other states
   return (
     <>
@@ -760,7 +763,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           </div>
           
           {/* Language Dropdown - Only show if preferred language is not English and not processing */}
-          {shouldShowLanguageDropdown && !isProcessing && (
+          {shouldShowLanguageDropdown && !isProcessing && document && document.status === "PROCESSED" && (
             <Dropdown>
               <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
                 {languageOptions.find(option => option.value === selectedLanguage)?.label || 'English'}
@@ -799,7 +802,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         <h5>{t('summary.failed.title')}</h5>
                         <p>{t('summary.failed.message')}</p>
                       </Alert>
-                    ) : document.status === "PROCESSED" ? (
+                    ) : 
                       <>
                         {/* Only show content when document is fully processed */}
                         
@@ -856,17 +859,17 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           <Alert variant="info">
                             <h5>{t('summary.noContentAvailable.title')}</h5>
                             <p>{t('summary.noContentAvailable.message')}</p>
+                            <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+                </Button>
                           </Alert>
                         )}
                       </>
-                    ) : (
-                      <div className="text-center my-5">
-                        <Spinner animation="border" role="status">
-                          <span className="visually-hidden">Loading...</span>
-                        </Spinner>
-                        <p className="mt-3">Processing your document and translations...</p>
-                      </div>
-                    )}
+                  }
                   </Col>
                 </Row>
               </Card.Body>
