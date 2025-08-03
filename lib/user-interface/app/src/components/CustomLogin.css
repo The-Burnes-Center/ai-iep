@@ -53,6 +53,8 @@
 /* Background color for login container */
 .login-container {
   background-color: #F5F3EE;
+  /*margin-top: 5vh;*/
+  margin-top: 30px;
 }
 
 /* Primary button color override */
@@ -382,44 +384,6 @@ input[type="tel"]:focus {
   .btn-primary[type="submit"]:hover {
     transform: none;
   }
-}
-
-/* Dark mode styles - controlled by app theme, not system preference */
-[data-theme="dark"] .login-container,
-.awsui-dark-mode .login-container {
-  background-color: #1a1a1a !important;
-  color: #ffffff;
-}
-
-[data-theme="dark"] .form-control,
-.awsui-dark-mode .form-control {
-  background-color: #2d2d2d;
-  border-color: #404040;
-  color: #ffffff;
-}
-
-[data-theme="dark"] .form-control:focus,
-.awsui-dark-mode .form-control:focus {
-  background-color: #2d2d2d;
-  border-color: #0040BA;
-  color: #ffffff;
-}
-
-[data-theme="dark"] .mobile-consent-text,
-.awsui-dark-mode .mobile-consent-text {
-  color: #b0b0b0 !important;
-}
-
-[data-theme="dark"] .alert-success,
-.awsui-dark-mode .alert-success {
-  background-color: #1e3d2c;
-  color: #a7d4b4;
-}
-
-[data-theme="dark"] .alert-danger,
-.awsui-dark-mode .alert-danger {
-  background-color: #3d1e1e;
-  color: #d4a7a7;
 }
 
 /* Accessibility improvements */

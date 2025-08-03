@@ -623,7 +623,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show password change form if required
   if (passwordChangeRequired) {
     return (
-      <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
+      <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
             <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
@@ -696,7 +696,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show forgot password form
   if (showForgotPassword) {
     return (
-      <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
+      <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
             <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
@@ -813,7 +813,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show sign up form
   if (showSignUp) {
     return (
-      <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
+      <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
             <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
@@ -956,7 +956,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
   // Main login form with mobile login option
   return (
-    <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
+    <Container fluid className="login-container d-flex align-items-center justify-content-center">
       <Col xs={12} sm={8} md={6} lg={4}>
         <div className="text-center mb-4">
           <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
