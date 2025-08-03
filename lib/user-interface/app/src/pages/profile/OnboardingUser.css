@@ -36,19 +36,19 @@
 
 /* Individual slide colors */
 .swiper-slide:nth-child(1) {
-  background: #FFE4E1; /* Light pink for first slide */
+  background: #F03232; /* Light pink for first slide */
 }
 
 .swiper-slide:nth-child(2) {
-  background: #E1F5FE; /* Light blue for second slide */
+  background: #FF9BA3; /* Light blue for second slide */
 }
 
 .swiper-slide:nth-child(3) {
-  background: #E8F5E8; /* Light green for third slide */
+  background: #FFBF27; /* Light green for third slide */
 }
 
 .swiper-slide:nth-child(4) {
-  background: #FFF3E0; /* Light orange for fourth slide */
+  background: #007535; /* Light orange for fourth slide */
 }
 
 /* Swiper container */
@@ -113,8 +113,8 @@
 
 /* Make sure images maintain aspect ratio if added later */
 .swiper-slide img {
-  max-width: 80%;
-  max-height: 80%;
+  max-width: 95%;
+  max-height: 95%;
   object-fit: contain !important;
 }
 
