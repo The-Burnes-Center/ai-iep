@@ -270,5 +270,7 @@
     "appTutorial.slide5.title": "¿Qué estamos haciendo ahora?",
     "appTutorial.slide5.content": "Su documento IEP no será modificado. Puede descargar los resúmenes que estamos creando haciendo clic en el botón de descarga.",
     "appTutorial.slide6.title": "¿Qué estamos haciendo ahora?",
-    "appTutorial.slide6.content": "Estamos creando un glosario para ayudarle a entender el documento. Puede hacer clic sobre las palabras resaltadas y leer sus definiciones en el panel que aparecerá."
+    "appTutorial.slide6.content": "Estamos creando un glosario para ayudarle a entender el documento. Puede hacer clic sobre las palabras resaltadas y leer sus definiciones en el panel que aparecerá.",
+
+    "glossary.header": "Glosario"
   }

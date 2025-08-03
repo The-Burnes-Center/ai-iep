@@ -269,5 +269,7 @@
     "appTutorial.slide5.title": "我们现在在做什么？",
     "appTutorial.slide5.content": "您的IEP文档不会被更改。您可以通过点击下载按钮下载我们正在创建的摘要。",
     "appTutorial.slide6.title": "我们现在在做什么？",
-    "appTutorial.slide6.content": "我们正在创建一个词汇表来帮助您理解文档。您可以点击突出显示的词语，在弹出的面板中阅读它们的定义。"
+    "appTutorial.slide6.content": "我们正在创建一个词汇表来帮助您理解文档。您可以点击突出显示的词语，在弹出的面板中阅读它们的定义。",
+
+    "glossary.header": "词汇表"
 }

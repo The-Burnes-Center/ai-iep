@@ -895,9 +895,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           className="jargon-drawer"
         >
           <Offcanvas.Header closeButton>
-            <Offcanvas.Title>{selectedJargon?.term}</Offcanvas.Title>
+            <Offcanvas.Title>{t('glossary.header')}</Offcanvas.Title>
           </Offcanvas.Header>
           <Offcanvas.Body>
+            <h3>{selectedJargon?.term}</h3>
             <p>{selectedJargon?.definition}</p>
           </Offcanvas.Body>
         </Offcanvas>

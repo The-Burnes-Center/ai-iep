@@ -305,6 +305,9 @@ line-height: 1.6;
 margin: 0;
 }
 
+.jargon-drawer .offcanvas-body h3 {
+margin-bottom: 1rem;
+}
 .jargon-drawer .btn-close {
 --bs-btn-close-color: #F5F3EE;
 filter: invert(1) grayscale(100%) brightness(200%);
