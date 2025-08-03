@@ -674,7 +674,7 @@ if(document && document.message === "No document found for this child") {
                       variant="outline-secondary" 
                       onClick={handleBack}
                     >
-                      Back
+                      {t('common.back')}
                     </Button>
                   ) : (
                     <div></div>
@@ -685,7 +685,7 @@ if(document && document.message === "No document found for this child") {
                     variant="outline-secondary" 
                     onClick={handleSkip}
                   >
-                    Skip
+                    {t('common.skip')}
                   </Button>
                 </div>
               )}
@@ -695,8 +695,8 @@ if(document && document.message === "No document found for this child") {
                 <div className="text-center py-2">
                   <h3>
                     {tutorialPhase === 'app-tutorial' 
-                      ? 'What are we doing right now ?' 
-                      : 'Your rights as a parent:'
+                      ? t('tutorial.appTutorial.title')
+                      : t('tutorial.parentRights.title')
                     }
                   </h3>
                 </div>

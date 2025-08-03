@@ -32,6 +32,10 @@
     "common.cancel": "Hủy",
     "common.close": "Đóng",
     "common.save": "Lưu",
+    "common.skip": "Bỏ qua",
+
+    "tutorial.appTutorial.title": "Chúng ta đang làm gì bây giờ?",
+    "tutorial.parentRights.title": "Quyền của bạn với tư cách là phụ huynh:",
   
     "rights.title": "Quyền của bạn với tư cách là Phụ huynh",
     "rights.description": "Xin chào! Chúng tôi ở đây để giúp bạn hiểu rõ hơn về Chương trình Giáo dục Cá nhân hóa (IEP) của con bạn. Việc điều hướng quy trình này có thể khiến bạn cảm thấy quá tải, nhưng bạn có những quyền quan trọng với tư cách là phụ huynh. Dưới đây là một số điều bạn nên biết:",

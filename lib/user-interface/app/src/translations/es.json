@@ -32,6 +32,10 @@
     "common.cancel": "Cancelar",
     "common.close": "Cerrar",
     "common.save": "Guardar",
+    "common.skip": "Omitir",
+
+    "tutorial.appTutorial.title": "¿Qué estamos haciendo ahora mismo?",
+    "tutorial.parentRights.title": "Sus derechos como padre:",
 
     "rights.title": "Sus Derechos como Padre",
     "rights.description": "¡Hola! Estamos aquí para ayudarle a entender mejor el Programa de Educación Individualizada (IEP) de su hijo. Navegar por este proceso puede resultar abrumador, pero usted tiene derechos importantes como padre. Aquí hay algunas cosas que debe saber:",

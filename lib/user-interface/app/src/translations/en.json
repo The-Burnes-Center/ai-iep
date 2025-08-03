@@ -32,6 +32,10 @@
     "common.cancel": "Cancel",
     "common.close": "Close",
     "common.save": "Save",
+    "common.skip": "Skip",
+
+    "tutorial.appTutorial.title": "What are we doing right now ?",
+    "tutorial.parentRights.title": "Your rights as a parent:",
 
     "rights.title": "Your Rights as a Parent",
     "rights.description": "Hi! We're here to help you understand your child's Individualized Education Program (IEP) better. Navigating this process can feel overwhelming, but you have important rights as a parent. Here are some things you should know:",
