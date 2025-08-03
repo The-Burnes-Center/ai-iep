@@ -112,6 +112,7 @@
       "profile.parentName": "Parent Name",
           "profile.button.update": "Update Profile",
     "profile.button.updating": "Updating...",
+    "profile.button.logOut": "Log Out",
     "profile.button.revokeConsent": "Revoke Consent",
     "profile.button.deleteProfile": "Delete Account",
     "profile.button.changeLanguage": "Change Language",

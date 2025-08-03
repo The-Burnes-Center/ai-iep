@@ -113,6 +113,7 @@
     "profile.parentName": "Tên Phụ Huynh",
     "profile.button.update": "Cập Nhật Hồ Sơ",
     "profile.button.updating": "Đang Cập Nhật...",
+    "profile.button.logOut": "Đăng Xuất",
     "profile.button.revokeConsent": "Thu Hồi Sự Đồng Ý",
     "profile.button.deleteProfile": "Xóa Tài Khoản",
     "profile.button.changeLanguage": "Thay Đổi Ngôn Ngữ",

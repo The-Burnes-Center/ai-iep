@@ -108,6 +108,7 @@
     "profile.parentName": "Nombre del Padre/Madre",
     "profile.button.update": "Actualizar Perfil",
     "profile.button.updating": "Actualizando...",
+    "profile.button.logOut": "Cerrar Sesión",
     "profile.button.revokeConsent": "Revocar Consentimiento",
     "profile.button.deleteProfile": "Eliminar Cuenta",
     "profile.button.changeLanguage": "Cambiar Idioma",

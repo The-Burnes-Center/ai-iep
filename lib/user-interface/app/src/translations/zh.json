@@ -108,6 +108,7 @@
   "profile.parentName": "家长姓名",
       "profile.button.update": "更新资料",
     "profile.button.updating": "更新中...",
+    "profile.button.logOut": "退出登录",
     "profile.button.revokeConsent": "撤销同意",
     "profile.button.deleteProfile": "删除账户",
     "profile.button.changeLanguage": "更改语言",

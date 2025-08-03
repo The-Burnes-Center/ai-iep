@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { Auth } from "aws-amplify";
 import { AppContext } from '../../common/app-context';
+import { AuthContext } from '../../common/auth-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
@@ -19,6 +21,7 @@ const LANGUAGE_OPTIONS = [
 
 export default function UserProfileForm() {
   const appContext = useContext(AppContext);
+  const { setAuthenticated } = useContext(AuthContext);
   const apiClient = new ApiClient(appContext);
   const { addNotification } = useNotifications();
   const { t, setLanguage } = useLanguage();
@@ -88,6 +91,16 @@ export default function UserProfileForm() {
 
   const handleDeleteProfile = () => {
     setShowDeleteModal(true);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      navigate('/', { replace: true });
+      await Auth.signOut();
+      setAuthenticated(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   if (loading) {
@@ -164,6 +177,13 @@ export default function UserProfileForm() {
             disabled={saving || !hasChanges()}
           >
             {saving ? t('profile.button.updating') : t('profile.button.update')}
+          </Button>
+          <Button 
+            variant="outline-secondary" 
+            onClick={handleSignOut}
+            className="button-text"
+          >
+            {t('profile.button.logOut')}
           </Button>
           <Button 
             variant="danger" 
