@@ -43,6 +43,10 @@ const carouselParagraphs = useMemo(() => [
   t('onboarding.carousel.paragraph.advocate')
 ], [t, language]);
 
+const getStartedText = useMemo(() => [
+  t('parent.button.save'),
+], [t, language]);
+
     // Array of image data
 const slideImages = [
       {
@@ -114,7 +118,7 @@ const slideImages = [
         <div className="swiper-custom-pagination"></div>
         
         <div className="d-grid" >
-              <Button variant="primary" className="continue-onboarding" disabled={activeSlide < 3} onClick={() => navigate('/consent-form')}>CONTINUE</Button>
+              <Button variant="primary" className="continue-onboarding" disabled={activeSlide < 3} onClick={() => navigate('/consent-form')}>{getStartedText}</Button>
         </div>
 
       </div>

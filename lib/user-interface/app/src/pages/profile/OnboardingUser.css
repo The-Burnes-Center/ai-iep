@@ -4,7 +4,8 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  height: 100vh;
+  /* height: 100vh; */
+  margin-top: 3rem;
   position: relative;
 }
 
@@ -17,7 +18,6 @@
 .swiper-slide {
   text-align: center;
   font-size: 18px;
-  background: #EFECE5;
   border: 2px solid #1E1E1E;
   
   /* Make slides square with 1:1 ratio */
@@ -31,15 +31,29 @@
   
   /* Add border radius for better appearance */
   border-radius: 8px;
-  padding: 1rem;
   line-height: 1;
+}
+
+/* Individual slide colors */
+.swiper-slide:nth-child(1) {
+  background: #FFE4E1; /* Light pink for first slide */
+}
+
+.swiper-slide:nth-child(2) {
+  background: #E1F5FE; /* Light blue for second slide */
+}
+
+.swiper-slide:nth-child(3) {
+  background: #E8F5E8; /* Light green for third slide */
+}
+
+.swiper-slide:nth-child(4) {
+  background: #FFF3E0; /* Light orange for fourth slide */
 }
 
 /* Swiper container */
 .mySwiper {
   width: 100%;
-  height: 40vh; /* Reduced to make room for heading and pagination */
-  margin-top: 15vh;
   /* Center the carousel on the screen */
   display: flex;
   align-items: center;
@@ -71,6 +85,7 @@
   justify-content: center;
   width: 80%;
   height: 8rem;
+  margin-top: 1rem;
   margin-left: 8vw;
 }
 
