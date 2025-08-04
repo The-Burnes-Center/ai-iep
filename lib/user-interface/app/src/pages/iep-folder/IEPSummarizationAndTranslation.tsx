@@ -435,19 +435,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       });
       
       // Show success notification
-      addNotification({
-        type: 'success',
-        content: 'PDF generated successfully!'
-      });
+      addNotification('success', 'PDF generated successfully!');
     } catch (error) {
       console.error('PDF generation failed:', error);
       setPdfError(error instanceof Error ? error.message : 'Failed to generate PDF');
       
       // Show error notification
-      addNotification({
-        type: 'error',
-        content: `PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      });
+      addNotification('error', `PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGeneratingPDF(false);
     }
