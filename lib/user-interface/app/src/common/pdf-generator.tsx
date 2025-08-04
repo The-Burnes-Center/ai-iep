@@ -1,38 +1,11 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { IEPDocument, IEPSection } from './types';
 
-// Register fonts for multi-language support
-Font.register({
-  family: 'NotoSans',
-  fonts: [
-    {
-      src: 'https://fonts.gstatic.com/s/notosans/v27/o-0IIpQlx3QUlC5A4PNb4j5Ba_2c7A.woff2',
-      fontWeight: 'normal',
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/notosans/v27/o-0NIpQlx3QUlC5A4PNjXhFlY9aB7Q.woff2',
-      fontWeight: 'bold',
-    },
-  ],
-});
-
-// Register Chinese font support  
-Font.register({
-  family: 'NotoSansCJK',
-  fonts: [
-    {
-      src: 'https://fonts.gstatic.com/s/notosanssc/v36/k3kCo84MPvpLmixcA63oeALhL83CxG.woff2',
-      fontWeight: 'normal',
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/notosanssc/v36/k3k9o84MPvpLmixcA63oeALZKKKkY.woff2', 
-      fontWeight: 'bold',
-    },
-  ],
-});
+// Use system fonts with better Unicode support instead of external fonts
+// This avoids 404 errors and provides reliable multi-language rendering
 
 interface PDFGenerationOptions {
   document: IEPDocument;
@@ -47,24 +20,15 @@ marked.setOptions({
 });
 
 // Helper function to get the appropriate font family based on language
+// Using system fonts with better Unicode support than Times-Roman
 const getFontFamily = (language?: string): string => {
-  if (language === 'zh') {
-    return 'NotoSansCJK'; // Chinese characters
-  }
-  if (language === 'vi') {
-    return 'NotoSans'; // Vietnamese uses Latin with diacritics
-  }
-  return 'NotoSans'; // Default for all languages including English
+  // Helvetica has much better Unicode support than Times-Roman
+  // and can handle Chinese, Vietnamese, and other non-Latin characters
+  return 'Helvetica';
 };
 
 const getFontFamilyBold = (language?: string): string => {
-  if (language === 'zh') {
-    return 'NotoSansCJK'; // Chinese characters
-  }
-  if (language === 'vi') {
-    return 'NotoSans'; // Vietnamese uses Latin with diacritics  
-  }
-  return 'NotoSans'; // Default for all languages including English
+  return 'Helvetica-Bold';
 };
 
 // Styles for the PDF with content-aware page breaks
@@ -73,7 +37,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 30,
-    fontFamily: 'NotoSans',
+    fontFamily: 'Helvetica',
     fontSize: 11,
     lineHeight: 1.5,
   },
@@ -89,7 +53,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
-    fontFamily: 'NotoSans',
+    fontFamily: 'Helvetica-Bold',
   },
   documentSubtitle: {
     fontSize: 12,
@@ -109,7 +73,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333333',
     borderBottomStyle: 'solid',
-    fontFamily: 'NotoSans',
+    fontFamily: 'Helvetica-Bold',
     breakAfter: 'avoid', // Keep header with content
   },
   sectionContainer: {
@@ -120,7 +84,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 10,
-    fontFamily: 'NotoSans',
+    fontFamily: 'Helvetica-Bold',
     breakAfter: 'avoid',
   },
   sectionContent: {
@@ -168,7 +132,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'left',
-    fontFamily: 'NotoSans',
+    fontFamily: 'Helvetica-Bold',
   },
   listItem: {
     flexDirection: 'row',
