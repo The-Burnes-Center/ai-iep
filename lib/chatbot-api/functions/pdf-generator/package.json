@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "puppeteer-core": "^21.1.1",
-    "@sparticuz/chromium": "^116.0.0"
+    "puppeteer-core": "^21.11.0",
+    "@sparticuz/chromium": "^119.0.2"
   },
   "keywords": ["pdf", "puppeteer", "lambda", "iep"],
   "author": "",
