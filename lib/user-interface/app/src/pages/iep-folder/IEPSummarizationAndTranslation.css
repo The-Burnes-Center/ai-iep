@@ -17,7 +17,7 @@
   border: none;
   box-shadow: none;
   border-radius: 0;
-  height: 80vh;
+  height: 70vh;
   background-color: #F5f3EE;
 }
 
@@ -445,13 +445,25 @@ display: none !important;
 
 @media screen and (min-height: 740px) and (max-height: 880px) {
 
+   .tutorial-button-container {
+  margin-bottom: 0px !important; /* Override mb-3 */
+  padding-left: 1rem !important;    /* Override px-3 */
+  padding-right: 1rem !important;   /* Override px-3 */
+  padding-top: 0.75rem !important;  /* Override py-4 */
+  padding-bottom: 0.75rem !important; /* Override py-4 */
+}
+
   .processing-summary-parent-rights-card {
   height: 80vh;
 }
 
   .processing-summary-app-tutorial-card {
-    height: 80vh;
+    height: 70vh;
   }
+
+  .tutorial-title-container h3 {
+  font-size: 1.2rem !important;
+}
 
 }
 
@@ -489,11 +501,10 @@ display: none !important;
 }
 
 .processing-summary-app-tutorial-card {
-  height: 90vh !important;
+  height: 70vh !important;
 }
 
-
-  .slide-tutorial-content {
+.slide-tutorial-content {
     margin-bottom: 1rem;
   }
 }
