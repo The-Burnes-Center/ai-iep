@@ -182,9 +182,15 @@ const parseMarkdownContent = (markdown: string): React.ReactElement[] => {
   const flushTable = () => {
     if (currentTable.length > 0) {
       // Normalize table to ensure all rows have the same number of columns
-      const maxColumns = Math.max(...currentTable.map(row => row.length));
+      // Use reduce instead of spread operator to avoid "Invalid array length" for large tables
+      // Also limit max columns to prevent extremely wide tables
+      const maxColumns = Math.min(
+        currentTable.reduce((max, row) => Math.max(max, row.length), 0),
+        20 // Reasonable limit for PDF table width
+      );
       const normalizedTable = currentTable.map(row => {
-        const normalizedRow = [...row];
+        // Trim row to maxColumns limit, then pad if needed
+        const normalizedRow = [...row.slice(0, maxColumns)];
         // Pad shorter rows with empty cells
         while (normalizedRow.length < maxColumns) {
           normalizedRow.push('');
