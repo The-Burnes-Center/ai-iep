@@ -8,6 +8,7 @@ const SupportCenter: React.FC = () => {
       minHeight: '100vh',
       width: '100%'
     }}>
+      <h2>This page is under maintenance</h2>
       {/* Support Center content will go here */}
       <MobileBottomNavigation />
     </div>
