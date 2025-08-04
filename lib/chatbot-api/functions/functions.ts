@@ -328,7 +328,15 @@ export class LambdaFunctionStack extends cdk.Stack {
     // PDF Generator Lambda Function
     const pdfGeneratorFunction = createTaggedLambda('PDFGeneratorFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      code: lambda.Code.fromAsset(path.join(__dirname, 'pdf-generator')),
+      code: lambda.Code.fromAsset(path.join(__dirname, 'pdf-generator'), {
+        bundling: {
+          image: lambda.Runtime.NODEJS_20_X.bundlingImage,
+          command: [
+            'bash', '-c',
+            'npm --cache /tmp/.npm install && cp -au . /asset-output'
+          ],
+        },
+      }),
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(60),
       memorySize: 1024, // Puppeteer needs more memory
