@@ -181,9 +181,20 @@ const parseMarkdownContent = (markdown: string): React.ReactElement[] => {
 
   const flushTable = () => {
     if (currentTable.length > 0) {
+      // Normalize table to ensure all rows have the same number of columns
+      const maxColumns = Math.max(...currentTable.map(row => row.length));
+      const normalizedTable = currentTable.map(row => {
+        const normalizedRow = [...row];
+        // Pad shorter rows with empty cells
+        while (normalizedRow.length < maxColumns) {
+          normalizedRow.push('');
+        }
+        return normalizedRow;
+      });
+
       elements.push(
         <View key={`table-${elements.length}`} style={styles.tableContainer}>
-          {currentTable.map((row, rowIndex) => (
+          {normalizedTable.map((row, rowIndex) => (
             <View 
               key={rowIndex} 
               style={rowIndex === 0 ? styles.tableHeaderRow : styles.tableRow}
@@ -215,7 +226,9 @@ const parseMarkdownContent = (markdown: string): React.ReactElement[] => {
         inTable = true;
       }
       const cells = trimmedLine.split('|').map(cell => cell.trim()).filter(cell => cell);
-      if (cells.length > 0) {
+      // Skip table separator lines (e.g., | --- | --- |)
+      const isTableSeparator = cells.every(cell => /^-+$/.test(cell));
+      if (cells.length > 0 && !isTableSeparator) {
         currentTable.push(cells);
       }
       return;
@@ -383,15 +396,18 @@ const PDFDocumentComponent: React.FC<{ options: PDFGenerationOptions }> = ({ opt
     }
   });
 
-  const languageOrder = [preferredLanguage, 'en', 'es', 'vi', 'zh'];
-  const orderedLanguages = languageOrder.filter(lang => availableLanguages.has(lang));
+  // New simplified logic: max 2 languages, other language first, then English
+  const orderedLanguages: string[] = [];
   
-  // Add any remaining languages not in the predefined order
-  availableLanguages.forEach(lang => {
-    if (!orderedLanguages.includes(lang)) {
-      orderedLanguages.push(lang);
-    }
-  });
+  // If preferred language is not English and has content, add it first
+  if (preferredLanguage !== 'en' && availableLanguages.has(preferredLanguage)) {
+    orderedLanguages.push(preferredLanguage);
+  }
+  
+  // Always add English if it has content (unless we're at max 2 languages)
+  if (availableLanguages.has('en') && orderedLanguages.length < 2) {
+    orderedLanguages.push('en');
+  }
 
   // Generate content for each language
   orderedLanguages.forEach((language, index) => {
