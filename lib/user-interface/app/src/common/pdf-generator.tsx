@@ -4,8 +4,8 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { IEPDocument, IEPSection } from './types';
 
-// Use system fonts with better Unicode support instead of external fonts
-// This avoids 404 errors and provides reliable multi-language rendering
+// Use system fonts that React-PDF supports natively
+// No font registration needed - these work out of the box with Unicode support
 
 interface PDFGenerationOptions {
   document: IEPDocument;
@@ -19,17 +19,8 @@ marked.setOptions({
   gfm: true // GitHub Flavored Markdown includes table support
 });
 
-// Helper function to get the appropriate font family based on language
-// Using system fonts with better Unicode support than Times-Roman
-const getFontFamily = (language?: string): string => {
-  // Helvetica has much better Unicode support than Times-Roman
-  // and can handle Chinese, Vietnamese, and other non-Latin characters
-  return 'Helvetica';
-};
-
-const getFontFamilyBold = (language?: string): string => {
-  return 'Helvetica-Bold';
-};
+// Using React-PDF default fonts for maximum Unicode compatibility
+// Default fonts have built-in support for Chinese, Vietnamese, and other Unicode characters
 
 // Styles for the PDF with content-aware page breaks
 const styles = StyleSheet.create({
@@ -37,7 +28,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 30,
-    fontFamily: 'Helvetica',
     fontSize: 11,
     lineHeight: 1.5,
   },
@@ -53,13 +43,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
-    fontFamily: 'Helvetica-Bold',
   },
   documentSubtitle: {
     fontSize: 12,
     textAlign: 'center',
     color: '#666666',
-    fontStyle: 'italic',
+    // Removed fontStyle: 'italic' to avoid font resolution issues
   },
   languageSection: {
     marginBottom: 25,
@@ -73,7 +62,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333333',
     borderBottomStyle: 'solid',
-    fontFamily: 'Helvetica-Bold',
     breakAfter: 'avoid', // Keep header with content
   },
   sectionContainer: {
@@ -84,7 +72,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 10,
-    fontFamily: 'Helvetica-Bold',
     breakAfter: 'avoid',
   },
   sectionContent: {
@@ -132,7 +119,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'left',
-    fontFamily: 'Helvetica-Bold',
   },
   listItem: {
     flexDirection: 'row',
@@ -184,8 +170,8 @@ const parseMarkdownContent = (markdown: string, language: string = 'en'): React.
         <View key={`list-${elements.length}`} style={{ marginVertical: 10 }}>
           {currentList.map((item, index) => (
             <View key={index} style={styles.listItem}>
-              <Text style={[styles.listBullet, { fontFamily: getFontFamily(language) }]}>•</Text>
-              <Text style={[styles.listContent, { fontFamily: getFontFamily(language) }]}>{item.replace(/^[-*+]\s*/, '')}</Text>
+              <Text style={styles.listBullet}>•</Text>
+              <Text style={styles.listContent}>{item.replace(/^[-*+]\s*/, '')}</Text>
             </View>
           ))}
         </View>
@@ -225,7 +211,7 @@ const parseMarkdownContent = (markdown: string, language: string = 'en'): React.
                   key={cellIndex} 
                   style={[
                     rowIndex === 0 ? styles.tableCellHeader : styles.tableCell,
-                    { fontFamily: rowIndex === 0 ? getFontFamilyBold(language) : getFontFamily(language) }
+                    { fontWeight: rowIndex === 0 ? 'bold' : 'normal' }
                   ]}
                 >
                   {cell.trim()}
@@ -282,7 +268,7 @@ const parseMarkdownContent = (markdown: string, language: string = 'en'): React.
             { 
               fontSize, 
               marginTop: level === 1 ? 20 : 15,
-              fontFamily: getFontFamilyBold(language)
+              fontWeight: 'bold'
             }
           ]}
         >
@@ -300,7 +286,7 @@ const parseMarkdownContent = (markdown: string, language: string = 'en'): React.
         .replace(/\*(.*?)\*/g, '$1');   // Remove italic markers
       
       elements.push(
-        <Text key={index} style={[styles.sectionContent, { marginBottom: 8, fontFamily: getFontFamily(language) }]}>
+        <Text key={index} style={[styles.sectionContent, { marginBottom: 8 }]}>
           {content}
         </Text>
       );
@@ -324,7 +310,7 @@ const generateLanguageContent = (
   
   // Language header
   elements.push(
-    <Text key={`lang-header-${language}`} style={[styles.languageHeader, { fontFamily: getFontFamilyBold(language) }]}>
+    <Text key={`lang-header-${language}`} style={[styles.languageHeader, { fontWeight: 'bold' }]}>
       {isTranslation ? 'Translation - ' : ''}{getLanguageDisplayName(language)}
     </Text>
   );
@@ -334,7 +320,7 @@ const generateLanguageContent = (
   if (summary && summary.trim()) {
     elements.push(
       <View key={`summary-${language}`} style={styles.sectionContainer}>
-        <Text style={[styles.sectionHeader, { fontFamily: getFontFamilyBold(language) }]}>IEP Summary</Text>
+        <Text style={[styles.sectionHeader, { fontWeight: 'bold' }]}>IEP Summary</Text>
         {parseMarkdownContent(summary, language)}
       </View>
     );
@@ -346,7 +332,7 @@ const generateLanguageContent = (
   if (!languageSections || languageSections.length === 0) {
     if (!summary || !summary.trim()) {
       elements.push(
-        <Text key={`no-content-${language}`} style={[styles.emptyContent, { fontFamily: getFontFamily(language) }]}>
+        <Text key={`no-content-${language}`} style={styles.emptyContent}>
           No content available in {getLanguageDisplayName(language)}
         </Text>
       );
@@ -357,7 +343,7 @@ const generateLanguageContent = (
   // Add sections header if we have sections
   if (languageSections.length > 0) {
     elements.push(
-      <Text key={`sections-header-${language}`} style={[styles.sectionHeader, { fontFamily: getFontFamilyBold(language) }]}>
+      <Text key={`sections-header-${language}`} style={styles.sectionHeader}>
         Key Insights
       </Text>
     );
@@ -369,14 +355,14 @@ const generateLanguageContent = (
 
     elements.push(
       <View key={`section-${language}-${index}`} style={styles.sectionContainer}>
-        <Text style={[styles.sectionHeader, { fontFamily: getFontFamilyBold(language) }]}>
+        <Text style={[styles.sectionHeader, { fontWeight: 'bold' }]}>
           {section.displayName || section.name || `Section ${index + 1}`}
         </Text>
         
         {parseMarkdownContent(section.content, language)}
         
         {section.pageNumbers && section.pageNumbers.length > 0 && (
-          <Text style={[styles.pageReference, { fontFamily: getFontFamily(language) }]}>
+          <Text style={styles.pageReference}>
             Reference: Pages {section.pageNumbers.join(', ')} of original IEP document
           </Text>
         )}
@@ -396,10 +382,10 @@ const PDFDocumentComponent: React.FC<{ options: PDFGenerationOptions }> = ({ opt
   // Document header
   allElements.push(
     <View key="header" style={styles.documentHeader}>
-      <Text style={[styles.documentTitle, { fontFamily: getFontFamilyBold(preferredLanguage) }]}>
+      <Text style={[styles.documentTitle, { fontWeight: 'bold' }]}>
         IEP Document Summary and Translations
       </Text>
-      <Text style={[styles.documentSubtitle, { fontFamily: getFontFamily(preferredLanguage) }]}>
+      <Text style={styles.documentSubtitle}>
         Generated on {new Date().toLocaleDateString()}
       </Text>
     </View>
