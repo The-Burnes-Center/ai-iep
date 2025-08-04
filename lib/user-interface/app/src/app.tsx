@@ -19,8 +19,6 @@ import RightsAndOnboarding from './pages/RightsAndOnboarding';
 import ConsentForm from './pages/profile/ConsentForm';
 import WelcomeIntro from './pages/profile/WelcomeIntro';
 import AboutApp from './pages/profile/AboutApp';
-import ParentRights from './pages/ParentRights';
-import AppTutorial from './pages/AppTutorial';
 import SupportCenter from './components/SupportCenter';
 import AboutAIEP from './components/AboutAIEP';
 
@@ -28,7 +26,7 @@ function AppContent() {
   const location = useLocation();
   
   // Routes where header should be hidden
-  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/parent-rights","/profile","/app-tutorial","/support-center","/about-aiep"];
+  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/profile","/support-center","/about-aiep"];
   
   // Check if current location is in the list of routes where header should be hidden
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
@@ -66,8 +64,6 @@ function AppContent() {
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
             <Route path="/revoke-consent" element={<RevokeConsent />} />
-            <Route path="/parent-rights" element={<ParentRights />} />
-            <Route path="/app-tutorial" element={<AppTutorial />} />
             <Route path="/support-center" element={<SupportCenter />} />
             <Route path="/about-aiep" element={<AboutAIEP />} />
         </Routes>

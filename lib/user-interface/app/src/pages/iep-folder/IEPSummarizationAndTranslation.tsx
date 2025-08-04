@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
 import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload, faArrowsRotate, faForward } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
-import { IEPDocument, IEPSection, Language } from '../../common/types';
+import { IEPDocument, IEPSection, Language, UserProfile } from '../../common/types';
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
@@ -29,7 +29,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [pdfError, setPdfError] = useState<string | null>(null);
   
   // Profile-related state
-  const [profile, setProfile] = useState<Language | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState<boolean>(true);
   
   // Tutorial flow state management
@@ -653,8 +653,17 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     );
   }
 
+console.log("This is profile",profile);
+
+if(profile.showOnboarding){
+  navigate('/');
+  return null;
+}
+
+
+
 if(document && document.message === "No document found for this child") {
-  navigate('/iep-documents');
+    navigate('/iep-documents');
 }
 
   // Processing Container - when document is being processed

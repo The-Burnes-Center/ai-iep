@@ -75,6 +75,7 @@ export default function PreferredLanguage() {
 
         // If user has language and consent but missing parent data, go to parent form
         if (hasLanguage && hasConsent && !hasCompleteParentData) {
+          console.log("hasLanguage && hasConsent && !hasCompleteParentData");
           navigate('/view-and-add-parent');
           return;
         }
