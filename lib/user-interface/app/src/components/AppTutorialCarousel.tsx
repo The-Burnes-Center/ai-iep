@@ -29,7 +29,7 @@ const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, class
             <Carousel.Item key={slide.id}>
               <div className={`carousel-slide slide-${index + 1}`}>
                 <img src={slide.image} className="slide-image" alt="" />
-                <div className="slide-content">
+                <div className="slide-tutorial-content">
                   <p>{slide.content}</p>
                 </div>
               </div>
