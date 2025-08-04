@@ -103,11 +103,20 @@ export default function ViewAndAddParent() {
       // Check for existing documents after potentially creating child
       await checkForExistingDocument();
       
+      // Mark onboarding as completed since user has finished all required steps
+      try {
+        await apiClient.profile.updateProfile({ showOnboarding: false });
+        console.log('Onboarding completed - showOnboarding set to false');
+      } catch (onboardingError) {
+        console.error('Error updating onboarding status:', onboardingError);
+        // Don't fail the flow if this update fails
+      }
+      
       // Navigate based on whether user has existing documents
       if (hasExistingDocument) {
-        navigate('/welcome-page');
+        navigate('/iep-documents');
       } else {
-        navigate('/welcome-intro');
+        navigate('/iep-documents');
       }
     } catch (err) {
       console.error('Error saving parent name:', err);
@@ -119,6 +128,10 @@ export default function ViewAndAddParent() {
 
   const isFormValid = () => {
     return parentName.trim() !== '';
+  };
+
+  const handleBackClick = () => {
+    navigate('/consent-form');
   };
 
   if (loading) {
@@ -140,46 +153,54 @@ export default function ViewAndAddParent() {
   }
 
   return (
-    <Container 
-      fluid 
-      className="profile-form-container"
-    >
-      <Row style={{ width: '100%', justifyContent: 'center' }}>
-        <Col xs={12} md={8} lg={6}>
-          <div className="profile-form">
-            <h2 className="text-center profile-title">
-              {t('parent.title')}
-            </h2>
-            
-            <Form>
-              <Row className="mb-4">
-                <Col md={12}>
-                  <Form.Group controlId="formParentName">
-                    <Form.Label className="form-label">{t('parent.name.label')}</Form.Label>
-                    <Form.Control 
-                      type="text" 
-                      placeholder={t('parent.name.placeholder')}
-                      value={parentName} 
-                      onChange={(e) => setParentName(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
+    <div>
+      <div className="mt-3 text-start px-3 py-2">
+        <Button variant="outline-secondary" onClick={handleBackClick}>
+          {t('common.back')}
+        </Button>
+      </div>
+      
+      <Container 
+        fluid 
+        className="profile-form-container"
+      >
+        <Row style={{ width: '100%', justifyContent: 'center' }}>
+          <Col xs={12} md={8} lg={6}>
+            <div className="profile-form">
+              <h2 className="parent-name-title">
+                {t('parent.title')}
+              </h2>
+              
+              <Form>
+                <Row className="mb-4">
+                  <Col md={12}>
+                    <Form.Group controlId="formParentName">
+                      <Form.Label className="form-label">{t('parent.name.label')}</Form.Label>
+                      <Form.Control 
+                        type="text" 
+                        placeholder={t('parent.name.placeholder')}
+                        value={parentName} 
+                        onChange={(e) => setParentName(e.target.value)}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
 
-              <div className="d-grid">
-                <Button 
-                  variant="primary" 
-                  onClick={handleSaveAndContinue}
-                  disabled={!isFormValid() || saving}
-                  className="button-text"
-                >
-                  {saving ? t('parent.button.saving') : t('parent.button.save')}
-                </Button>
-              </div>
-            </Form>
-          </div>
-        </Col>
-      </Row>
-    </Container>
+                <div className="d-grid">
+                  <Button 
+                    variant="primary" 
+                    onClick={handleSaveAndContinue}
+                    disabled={!isFormValid() || saving}
+                    className="consent-button"
+                  >
+                    {saving ? t('parent.button.saving') : t('parent.button.save')}
+                  </Button>
+                </div>
+              </Form>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 }

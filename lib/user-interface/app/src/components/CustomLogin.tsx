@@ -77,20 +77,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     setLanguage(lang);
   };
 
-  // Handle successful authentication with smart routing
+  // Handle successful authentication
   const handleSuccessfulAuthentication = () => {
-    if (isNewUserSignup) {
-      console.log('New user signup detected, storing flag for onboarding flow');
-      // Set a flag in localStorage to indicate this is a new phone signup
-      // The PreferredLanguage component will check this flag
-      localStorage.setItem('isNewPhoneSignup', 'true');
-    } else {
-      console.log('Existing user signin detected, clearing any signup flags');
-      // Clear any existing signup flags
-      localStorage.removeItem('isNewPhoneSignup');
-    }
-    
-    // Always call onLoginSuccess to set authenticated state
+    console.log('User authentication successful');
+    // Authentication is handled, onboarding decisions will be made based on profile.showOnboarding
     onLoginSuccess();
   };
 
@@ -176,7 +166,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           setCognitoUserForSms(cognitoUser);
           setSmsCodeSent(true);
           setIsNewUserConfirmation(false);
-          setSuccessMessage(t('auth.smsCodeSent') || 'Verification code sent to your phone!');
+          setSuccessMessage(t('auth.smsCodeSent'));
           console.log('SMS code sent for existing user');
         } else {
           console.log('User authenticated successfully');
@@ -209,7 +199,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             setPendingPhoneNumber(formattedPhone);
             setIsNewUserSignup(true); // Mark as new user signup
             setSmsCodeSent(true);
-            setSuccessMessage('Account created! Please enter the verification code sent to your phone.');
+            setSuccessMessage(t('auth.smsCodeSentNewUser'));
             
           } catch (signUpError: any) {
             console.error('SignUp error:', signUpError);
@@ -221,7 +211,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 setCognitoUserForSms(cognitoUser);
                 setSmsCodeSent(true);
                 setIsNewUserConfirmation(false);
-                setSuccessMessage(t('auth.smsCodeSent') || 'Verification code sent to your phone!');
+                setSuccessMessage(t('auth.smsCodeSent'));
               } else {
                 onLoginSuccess();
               }
@@ -245,7 +235,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           setIsNewUserConfirmation(true);
           setPendingPhoneNumber(formattedPhone);
           setSmsCodeSent(true);
-          setSuccessMessage('Please enter the verification code sent to your phone to confirm your account.');
+          setSuccessMessage(t('auth.phoneAccountConfirmPrompt'));
         } else {
           throw signInError;
         }
@@ -317,12 +307,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             setIsNewUserConfirmation(false);
             setPendingPhoneNumber(null);
             setSmsCode(''); // Clear the confirmation code
-            setSuccessMessage(t('auth.accountConfirmedNewCode') || 'Great! You\'re confirmed. We will send you another code now so you can login for the first time.');
+            setSuccessMessage(t('auth.accountConfirmedNewCode'));
             console.log('Custom auth initiated after confirmation');
           } else if (cognitoUser.signInUserSession) {
             // User is fully authenticated (shouldn't happen with CUSTOM_AUTH but handle gracefully)
             console.log('User authenticated successfully after confirmation');
-            setSuccessMessage('Account confirmed and signed in successfully!');
+            setSuccessMessage(t('auth.accountConfirmedSuccess'));
             setTimeout(() => {
               handleSuccessfulAuthentication();
             }, 1000);
@@ -369,7 +359,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         // Check if authentication is complete
         if (result.signInUserSession) {
           console.log('Authentication successful!');
-          setSuccessMessage('Phone verification successful!');
+          setSuccessMessage(t('auth.phoneVerificationSuccess'));
           
           // Small delay to show success message, then redirect
           setTimeout(() => {
@@ -437,7 +427,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         
         console.log('Resending signup confirmation for:', pendingPhoneNumber);
         await Auth.resendSignUp(pendingPhoneNumber);
-        setSuccessMessage('New verification code sent to your phone!');
+        setSuccessMessage(t('auth.smsCodeResent'));
         setSmsCode(''); // Clear previous code
         
       } else {
@@ -466,7 +456,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           
           if (result.challengeName === 'CUSTOM_CHALLENGE') {
             setCognitoUserForSms(result);
-            setSuccessMessage(t('auth.smsCodeResent') || 'New verification code sent to your phone!');
+            setSuccessMessage(t('auth.smsCodeResent'));
             setSmsCode(''); // Clear previous code
           } else {
             setError('Failed to resend code. Please try again.');
@@ -633,7 +623,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show password change form if required
   if (passwordChangeRequired) {
     return (
-      <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
+      <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
             <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
@@ -706,7 +696,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show forgot password form
   if (showForgotPassword) {
     return (
-      <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
+      <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
             <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
@@ -823,7 +813,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show sign up form
   if (showSignUp) {
     return (
-      <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
+      <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
           <div className="text-center mb-4">
             <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
@@ -966,7 +956,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
   // Main login form with mobile login option
   return (
-    <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center">
+    <Container fluid className="login-container d-flex align-items-center justify-content-center">
       <Col xs={12} sm={8} md={6} lg={4}>
         <div className="text-center mb-4">
           <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />

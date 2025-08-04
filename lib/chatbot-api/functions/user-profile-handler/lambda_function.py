@@ -160,7 +160,8 @@ def get_user_profile(event: Dict) -> Dict:
                 'updatedAt': times['timestamp'],
                 'updatedAtISO': times['datetime'],
                 'children': [default_child],  # Initialize with default child
-                'consentGiven': False
+                'consentGiven': False,
+                'showOnboarding': True
             }
             user_profiles_table.put_item(Item=new_profile)
             return create_response(event, 200, {'profile': new_profile})
@@ -237,7 +238,8 @@ def update_user_profile(event: Dict) -> Dict:
             'primaryLanguage': 'primaryLanguage',
             'secondaryLanguage': 'secondaryLanguage',
             'consentGiven': 'consentGiven',
-            'parentName': 'parentName'
+            'parentName': 'parentName',
+            'showOnboarding': 'showOnboarding'
         }
 
         # If email is in the request, return an error
@@ -259,6 +261,12 @@ def update_user_profile(event: Dict) -> Dict:
                 if field == 'consentGiven' and not isinstance(body[field], bool):
                     return create_response(event, 400, {
                         'message': 'consentGiven must be a boolean value (true or false)'
+                    })
+                
+                # Validation for showOnboarding boolean field
+                if field == 'showOnboarding' and not isinstance(body[field], bool):
+                    return create_response(event, 400, {
+                        'message': 'showOnboarding must be a boolean value (true or false)'
                     })
                 
                 update_parts.append(f'{attr_name} = :{field}')
@@ -395,11 +403,7 @@ def get_child_documents(event: Dict) -> Dict:
         user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
         child_id = event['pathParameters']['childId']
         
-        # Check if we should include OCR data
-        query_params = event.get('queryStringParameters') or {}
-        include_ocr = query_params.get('include_ocr', 'true').lower() == 'true'
-        
-        print(f"Getting documents for childId: {child_id}, userId: {user_id}, include_ocr: {include_ocr}")
+        print(f"Getting documents for childId: {child_id}, userId: {user_id}")
         
         # Query documents by childId
         response = iep_documents_table.query(
@@ -448,12 +452,11 @@ def get_child_documents(event: Dict) -> Dict:
                     else:
                         latest_doc['document_index'] = {}
                     
-                    # Add OCR data if available and requested
-                    if include_ocr and 'ocrData' in doc:
-                        print(f"Including OCR data in response for document {doc['iepId']}")
-                        latest_doc['ocrData'] = doc['ocrData']
-                        if 'ocrCompletedAt' in doc:
-                            latest_doc['ocrCompletedAt'] = doc['ocrCompletedAt']
+                    # Handle abbreviations
+                    if 'abbreviations' in doc:
+                        latest_doc['abbreviations'] = clean_dynamodb_json(doc['abbreviations'])
+                    else:
+                        latest_doc['abbreviations'] = {}
         
         # If no document found
         if not latest_doc:
@@ -604,6 +607,129 @@ def delete_child_documents(event: Dict) -> Dict:
     except Exception as e:
         print(f"Error in delete_child_documents: {str(e)}")
         return create_response(event, 500, {'message': f'Error deleting IEP documents: {str(e)}'})
+
+def delete_user_profile(event: Dict) -> Dict:
+    """
+    Delete all user data and account completely.
+    This includes:
+    1. All S3 files for the user (all folders under userId/)
+    2. All IEP document records in IEP documents table
+    3. User profile record in user profiles table
+    4. Cognito user account
+    
+    Args:
+        event (Dict): API Gateway event object containing user context
+        
+    Returns:
+        Dict: API Gateway response indicating success or error
+        
+    Raises:
+        Exception: If there's an error during deletion process
+    """
+    try:
+        user_id = event['requestContext']['authorizer']['jwt']['claims']['sub']
+        
+        print(f"Processing request to delete complete user profile for userId: {user_id}")
+        
+        # Initialize result tracking
+        result = {
+            's3ObjectsDeleted': 0,
+            'documentsDeleted': 0,
+            'profileDeleted': False,
+            'cognitoUserDeleted': False
+        }
+        
+        # 1. Delete ALL S3 files for the user
+        try:
+            s3 = boto3.client('s3')
+            bucket_name = os.environ.get('BUCKET', '')
+            
+            # Create the S3 key prefix for this user (all objects under userId/)
+            prefix = f"{user_id}/"
+            
+            print(f"Listing S3 objects with prefix: {prefix} in bucket: {bucket_name}")
+            
+            # List all objects with this prefix
+            paginator = s3.get_paginator('list_objects_v2')
+            
+            for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
+                if 'Contents' in page:
+                    for obj in page['Contents']:
+                        s3.delete_object(Bucket=bucket_name, Key=obj['Key'])
+                        print(f"Deleted S3 object: {obj['Key']}")
+                        result['s3ObjectsDeleted'] += 1
+            
+            print(f"Deleted {result['s3ObjectsDeleted']} S3 objects for userId: {user_id}")
+            
+        except Exception as s3_error:
+            print(f"Error deleting S3 objects: {str(s3_error)}")
+            # Continue with other deletions even if S3 deletion fails
+        
+        # 2. Delete ALL IEP document records for the user
+        try:
+            # Query documents by userId using the GSI
+            response = iep_documents_table.query(
+                IndexName='byUserId',
+                KeyConditionExpression='userId = :userId',
+                ExpressionAttributeValues={':userId': user_id}
+            )
+            
+            # Delete each document record
+            for doc in response['Items']:
+                iep_documents_table.delete_item(
+                    Key={
+                        'iepId': doc['iepId'],
+                        'childId': doc['childId']
+                    }
+                )
+                print(f"Deleted IEP document record with iepId: {doc['iepId']}")
+                result['documentsDeleted'] += 1
+            
+            print(f"Deleted {result['documentsDeleted']} IEP document records for userId: {user_id}")
+            
+        except Exception as ddb_error:
+            print(f"Error deleting document records: {str(ddb_error)}")
+            # Continue with profile deletion even if document deletion fails
+        
+        # 3. Delete the user profile record
+        try:
+            user_profiles_table.delete_item(
+                Key={'userId': user_id}
+            )
+            result['profileDeleted'] = True
+            print(f"Deleted user profile for userId: {user_id}")
+            
+        except Exception as profile_error:
+            print(f"Error deleting user profile: {str(profile_error)}")
+            # Continue with Cognito deletion even if profile deletion fails
+        
+        # 4. Delete the Cognito user account
+        try:
+            cognito = boto3.client('cognito-idp')
+            user_pool_id = os.environ.get('USER_POOL_ID', '')
+            
+            # Delete the user from Cognito User Pool
+            cognito.admin_delete_user(
+                UserPoolId=user_pool_id,
+                Username=user_id
+            )
+            result['cognitoUserDeleted'] = True
+            print(f"Deleted Cognito user for userId: {user_id}")
+            
+        except Exception as cognito_error:
+            print(f"Error deleting Cognito user: {str(cognito_error)}")
+            # This is not a critical failure - user data is already deleted
+        
+        # Return success response with deletion summary
+        return create_response(event, 200, {
+            'message': 'User profile and all associated data successfully deleted',
+            'userId': user_id,
+            'deletionSummary': result
+        })
+        
+    except Exception as e:
+        print(f"Error in delete_user_profile: {str(e)}")
+        return create_response(event, 500, {'message': f'Error deleting user profile: {str(e)}'})
 
 def lambda_handler(event: Dict, context) -> Dict:
     """

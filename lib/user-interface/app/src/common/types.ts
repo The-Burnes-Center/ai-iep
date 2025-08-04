@@ -51,6 +51,7 @@ export interface UserProfile {
   createdAt: number;
   updatedAt: number;
   consentGiven: Boolean;
+  showOnboarding: Boolean;
 }
 
 export interface Language {
@@ -83,6 +84,7 @@ export interface IEPDocument {
   documentUrl?: string;
   status?: "PROCESSING" | "PROCESSING_TRANSLATIONS" | "PROCESSED" | "FAILED";
   createdAt?: string;
+  message?: string;
   
   // Document content by language
   summaries: {

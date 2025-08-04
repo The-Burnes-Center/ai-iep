@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { Auth } from "aws-amplify";
 import { AppContext } from '../../common/app-context';
+import { AuthContext } from '../../common/auth-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
-import { useLanguage } from '../../common/language-context';
+import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import DeleteProfileModal from './DeleteProfileModal';
+import './ProfileForms.css';
 
 const LANGUAGE_OPTIONS = [
   { value: 'en', label: 'English' },
@@ -17,14 +21,17 @@ const LANGUAGE_OPTIONS = [
 
 export default function UserProfileForm() {
   const appContext = useContext(AppContext);
+  const { setAuthenticated } = useContext(AuthContext);
   const apiClient = new ApiClient(appContext);
   const { addNotification } = useNotifications();
-  const { t } = useLanguage();
+  const { t, setLanguage } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,12 +43,22 @@ export default function UserProfileForm() {
       setLoading(true);
       const data = await apiClient.profile.getProfile();
       setProfile(data);
+      setOriginalProfile(data);
       setError(null);
     } catch (err) {
       setError(t('profile.error.serviceUnavailable'));
     } finally {
       setLoading(false);
     }
+  };
+
+  // Check if profile has changes
+  const hasChanges = () => {
+    if (!profile || !originalProfile) return false;
+    return (
+      profile.parentName !== originalProfile.parentName ||
+      profile.secondaryLanguage !== originalProfile.secondaryLanguage
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,6 +68,13 @@ export default function UserProfileForm() {
     try {
       setSaving(true);
       await apiClient.profile.updateProfile(profile);
+      
+      // Update language context if secondary language changed
+      if (profile.secondaryLanguage && profile.secondaryLanguage !== originalProfile?.secondaryLanguage) {
+        setLanguage(profile.secondaryLanguage as SupportedLanguage);
+      }
+      
+      setOriginalProfile(profile); // Update original profile after successful save
       addNotification('success', t('profile.success.update'));
     } catch (err) {
       addNotification('error', t('profile.error.update'));
@@ -59,15 +83,24 @@ export default function UserProfileForm() {
     }
   };
 
-  const handleLanguageSelectionClick = () => {
-    // Navigate to language selection page with state to indicate coming from profile
-    navigate('/', { state: { fromProfile: true } });
+  const handlePreferredLanguageChange = (languageCode: string) => {
+    setProfile(prev => prev ? {...prev, secondaryLanguage: languageCode} : null);
   };
 
-  // Helper function to get language label
-  const getLanguageLabel = (languageCode: string) => {
-    const option = LANGUAGE_OPTIONS.find(opt => opt.value === languageCode);
-    return option ? option.label : languageCode;
+
+
+  const handleDeleteProfile = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      navigate('/', { replace: true });
+      await Auth.signOut();
+      setAuthenticated(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   if (loading) {
@@ -89,7 +122,7 @@ export default function UserProfileForm() {
   }
 
   const handleBackClick = () => {
-    navigate('/welcome-page');
+    navigate('/summary-and-translations');
   };
 
   return (
@@ -118,56 +151,55 @@ export default function UserProfileForm() {
           </Col>
         </Row>
 
-        {/* Language Preferences Section */}
+        {/* Preferred Language Section */}
         <Row className="mb-4">
           <Col md={10}>
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <Form.Label className="small mb-0">{t('profile.languagePreferences')}</Form.Label>
-              <Button 
-                variant="outline-primary" 
-                size="sm"
-                onClick={handleLanguageSelectionClick}
+            <Form.Group controlId="formPreferredLanguage">
+              <Form.Label className="small">{t('profile.preferredLanguage')}</Form.Label>
+              <Form.Select 
+                value={profile?.secondaryLanguage || 'en'}
+                onChange={e => handlePreferredLanguageChange(e.target.value)}
               >
-                {t('profile.button.changeLanguage')}
-              </Button>
-            </div>
-            <div className="bg-light p-3 rounded">
-              <div className="mb-2">
-                <strong>{t('profile.primaryLanguage')}:</strong> {getLanguageLabel(profile?.primaryLanguage || 'en')}
-              </div>
-              {profile?.secondaryLanguage && (
-                <div>
-                  <strong>{t('profile.secondaryLanguage')}:</strong> {getLanguageLabel(profile.secondaryLanguage)}
-                </div>
-              )}
-              {!profile?.secondaryLanguage && (
-                <div className="text-muted">
-                  {t('profile.noSecondaryLanguage')}
-                </div>
-              )}
-            </div>
+                {LANGUAGE_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
           </Col>
         </Row>
 
-        <div className="mt-4 d-flex gap-2">
+        <div className="mt-4 profile-actions">
           <Button 
             variant="primary" 
             type="submit" 
-            disabled={saving}
+            disabled={saving || !hasChanges()}
           >
             {saving ? t('profile.button.updating') : t('profile.button.update')}
           </Button>
           <Button 
-            variant="outline-danger" 
-            onClick={() => navigate('/revoke-consent')}
+            variant="outline-secondary" 
+            onClick={handleSignOut}
             className="button-text"
           >
-            {t('profile.button.revokeConsent')}
+            {t('profile.button.logOut')}
+          </Button>
+          <Button 
+            variant="danger" 
+            onClick={handleDeleteProfile}
+            className="button-text"
+          >
+            {t('profile.button.deleteProfile')}
           </Button>
         </div>
       </Form>
     </Container>
-        <MobileBottomNavigation />
+    <DeleteProfileModal 
+      show={showDeleteModal} 
+      onHide={() => setShowDeleteModal(false)} 
+    />
+    <MobileBottomNavigation />
     </>
   );
 }

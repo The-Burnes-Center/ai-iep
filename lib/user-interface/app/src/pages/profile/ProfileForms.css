@@ -3,19 +3,26 @@
 
 /* Form container */
 .profile-form-container {
-  min-height: 100vh;
+  min-height: 80vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 64px;
 }
 
 /* Form title */
 .profile-title {
   font-family: 'Roboto', sans-serif;
   font-weight: 500;
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  padding-right: 1rem;
+}
+
+.parent-name-title {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+  font-size: 1.75rem;
+  padding-right: 1rem;
+  padding-bottom: 2rem;
 }
 
 /* Form label styles */
@@ -32,7 +39,6 @@
 
 /* Consent box styling */
 .consent-box {
-  background-color: #f8f9fa;
   border-radius: 10px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -43,9 +49,9 @@
   font-family: 'Lato', sans-serif;
   font-weight: 400;
   font-size: 1rem;
-  line-height: 1.6;
+  line-height: 2;
   margin-bottom: 1.5rem;
-  text-align: justify;
+  text-align: left;
 }
 
 /* Checkbox label style */
@@ -87,6 +93,7 @@
 .language-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: #F5F3EE !important;
 }
 
 /* Style for the selected language button */
@@ -136,4 +143,56 @@
 .btn-primary .language-name {
   font-weight: 500;
   opacity: 1;
+}
+
+/* Checkbox container for custom styling */
+.checkbox-container {
+  margin-bottom: 2rem;
+}
+
+/* Custom checkbox styles */
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Custom button group styles for profile actions */
+.profile-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.consent-button {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+}
+
+/* Disabled consent button styling */
+.consent-button:disabled {
+  background-color: #E7E4DC !important;
+  color: #A09E99 !important;
+  border-color: #E7E4DC !important;
+  opacity: 1 !important; /* Override Bootstrap's default opacity */
+}
+
+/* Remove hover effects when disabled */
+.consent-button:disabled:hover {
+  background-color: #E7E4DC !important;
+  color: #A09E99 !important;
+  border-color: #E7E4DC !important;
+  transform: none !important;
+}
+
+@media (max-width: 576px) {
+  .profile-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .profile-actions .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
 }

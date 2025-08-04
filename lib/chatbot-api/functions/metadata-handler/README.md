@@ -10,9 +10,9 @@ The document processing pipeline is orchestrated primarily by the `iep_processin
 
 - **Document Ingestion & OCR**: The document is downloaded from S3 and processed using the Mistral OCR API to extract text.
 - **PII Redaction**: The extracted text is scanned for PII (personally identifiable information) using AWS Comprehend, and sensitive data is redacted.
-- **Data Storage**: The redacted OCR results are stored in DynamoDB, and the original file is deleted from S3.
+- **S3 Cleanup**: The original file is deleted from S3 after successful OCR processing.
 - **Multi-Agent Analysis & Translation**: The redacted document is analyzed and summarized using a multi-agent system built on top of OpenAI models, with translation into multiple languages.
-- **Final Storage**: The structured, validated, and translated results are stored back in DynamoDB.
+- **Structured Data Storage**: The final structured results including summaries, sections, document index, and abbreviations are stored in DynamoDB.
 
 ---
 
@@ -31,10 +31,7 @@ The document processing pipeline is orchestrated primarily by the `iep_processin
 - This uses AWS Comprehend to detect and redact PII, except for names.
 - Redaction statistics are added to the OCR result for tracking.
 
-### D. Storing Redacted OCR Data
-- The redacted OCR data is converted to a DynamoDB-compatible format and stored using `update_iep_document_status`.
-
-### E. Multi-Agent Document Analysis & Translation
+### D. Multi-Agent Document Analysis & Translation
 
 #### Agent Architecture
 - The core of the multi-agent system is implemented in `open_ai_agent.py` via the `OpenAIAgent` class.
@@ -62,13 +59,14 @@ The document processing pipeline is orchestrated primarily by the `iep_processin
 #### Agent Execution Flow
 - The main agent is responsible for:
   - Analyzing the IEP document (using OCR tools and section info).
-  - Structuring the content into summaries, sections, and document indices.
+  - Structuring the content into summaries, sections, document indices, and extracting abbreviations.
   - Calling the translation agent as a tool to translate the structured English output into Spanish, Vietnamese, and Chinese.
 - The translation agent, when invoked, uses its own tool to fetch language context and performs the translation.
 - The agent system supports **parallel tool calls** (as specified in `ModelSettings`), allowing for efficient multi-step reasoning and tool use.
 
 #### Validation and Output
 - The output from the agent is validated against the `IEPData` schema (from `data_model.py`).
+- The schema includes four main components: summaries, sections, document_index, and abbreviations for all supported languages.
 - If validation fails, errors are logged and the document status is updated accordingly.
 - The final, validated, and translated output is formatted for DynamoDB and stored.
 
@@ -99,11 +97,36 @@ The document processing pipeline is orchestrated primarily by the `iep_processin
 
 ## 5. Data Flow Summary
 
-S3 Event → OCR (Mistral) → PII Redaction (Comprehend) → Store Redacted OCR in DynamoDB → Multi-Agent Analysis & Translation (OpenAI) → Validation & Formatting → Store Final Output in DynamoDB
+S3 Event → OCR (Mistral) → PII Redaction (Comprehend) → S3 Cleanup → Multi-Agent Analysis & Translation (OpenAI) → Validation & Formatting → Store Structured Output in DynamoDB
+
+### Key Output Components
+- **Summaries**: Parent-friendly explanations in all supported languages (en, es, vi, zh)
+- **Sections**: Detailed IEP sections in Markdown format for all languages
+- **Document Index**: Table of contents with page references for all languages  
+- **Abbreviations**: Centralized legend of all abbreviations and their full forms for all languages
 
 ---
 
-## 6. Extensibility
+## 6. Abbreviations Feature
+
+The system automatically extracts and organizes abbreviations found throughout IEP documents:
+
+### Key Benefits
+- **Centralized**: All abbreviations collected in one place instead of scattered across sections
+- **Multi-language**: Abbreviations translated and available in all supported languages
+- **Comprehensive**: Extracts from both summaries and all sections
+- **Parent-friendly**: Helps parents understand educational terminology and acronyms
+
+### Technical Implementation
+- Abbreviations are extracted during document analysis using structured prompts
+- Each abbreviation includes the acronym and its full form (e.g., "IEP" → "Individualized Education Program")
+- Data is stored in JSON format in DynamoDB for easy frontend consumption
+- API responses include the abbreviations field alongside summaries, sections, and document index
+
+---
+
+## 7. Extensibility
 
 - The agent-tool abstraction allows for easy addition of new tools (e.g., new language translation, new section analyzers).
-- The multi-agent setup (agents calling agents as tools) supports complex workflows and modularity. 
+- The multi-agent setup (agents calling agents as tools) supports complex workflows and modularity.
+- The modular data model supports easy addition of new output components alongside existing summaries, sections, document index, and abbreviations. 

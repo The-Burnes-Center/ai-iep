@@ -1,17 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas} from 'react-bootstrap';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
+import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Accordion, Tabs, Tab, Offcanvas, Dropdown} from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
-import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload } from '@fortawesome/free-solid-svg-icons';
+import { faFileAlt, faClock, faCheckCircle, faExclamationTriangle, faLanguage, faDownload, faArrowsRotate, faForward } from '@fortawesome/free-solid-svg-icons';
 import './IEPSummarizationAndTranslation.css';
-import { IEPDocument, IEPSection } from '../../common/types';
-import { useLanguage } from '../../common/language-context';
+import { IEPDocument, IEPSection, Language, UserProfile } from '../../common/types';
+import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { generatePDF, canGeneratePDF } from '../../common/pdf-generator.tsx';
+import ParentRightsCarousel from '../../components/ParentRightsCarousel';
+import AppTutorialCarousel from '../../components/AppTutorialCarousel';
+import { ApiClient } from '../../common/api-client/api-client';
+import { AppContext } from '../../common/app-context';
+import { useNotifications } from '../../components/notif-manager';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
-  const { t, language, translationsLoaded } = useLanguage();
+  const { t, language, setLanguage, translationsLoaded } = useLanguage();
+  const appContext = useContext(AppContext);
+  const { addNotification } = useNotifications();
+  const apiClient = new ApiClient(appContext);
   
   const [initialLoading, setInitialLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,11 +27,19 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [selectedJargon, setSelectedJargon] = useState<{term: string, definition: string} | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  
+  // Profile-related state
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState<boolean>(true);
+  
+  // Tutorial flow state management
+  const [tutorialPhase, setTutorialPhase] = useState<'app-tutorial' | 'parent-rights' | 'completed'>('app-tutorial');
 
   const [document, setDocument] = useState<IEPDocument>({
     documentId: undefined,
     documentUrl: undefined,
     status: undefined,
+    message: '',
     summaries: {
       en: '',
       es: '',
@@ -45,9 +61,179 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   });
   
   const [activeTab, setActiveTab] = useState<string>('en');
+  // Add state for dropdown language selection (separate from global language preference)
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
   const navigate = useNavigate();
   
-  const preferredLanguage = language || 'en';
+  // Get preferred language from profile API, fallback to context language, then to 'en'
+  const preferredLanguage = profile?.secondaryLanguage || language || 'en';
+
+  // Load profile data on component mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setProfileLoading(true);
+        const profileData = await apiClient.profile.getProfile();
+        setProfile(profileData);
+        
+        // Sync the language context if profile has a different secondary language
+        if (profileData?.secondaryLanguage && profileData.secondaryLanguage !== language) {
+          setLanguage(profileData.secondaryLanguage as SupportedLanguage);
+        }
+      } catch (err) {
+        console.error('Error loading profile:', err);
+        // Profile loading failure is not critical, continue with context language
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+  // Initialize selectedLanguage and activeTab after document loads
+  useEffect(() => {
+    // Don't initialize until initial loading is complete
+    if (initialLoading) return;
+    
+    if (preferredLanguage !== 'en' && hasContent(preferredLanguage)) {
+      setSelectedLanguage(preferredLanguage);
+      setActiveTab(preferredLanguage);
+    } else {
+      setSelectedLanguage('en');
+      setActiveTab('en');
+    }
+  }, [preferredLanguage, initialLoading, document.summaries, document.sections]);
+
+  // Dynamic language options - only show English and preferred language
+  const allLanguageOptions = [
+    { value: 'en', label: 'English' },
+    { value: 'es', label: 'Español' },
+    { value: 'zh', label: '中文' },
+    { value: 'vi', label: 'Tiếng Việt' }
+  ];
+
+  const languageOptions = preferredLanguage === 'en' 
+    ? [{ value: 'en', label: 'English' }] 
+    : [
+        { value: 'en', label: 'English' },
+        allLanguageOptions.find(option => option.value === preferredLanguage)!
+      ].filter(Boolean);
+
+  // Don't show dropdown if preferred language is English
+  const shouldShowLanguageDropdown = preferredLanguage !== 'en' && document.status && document.status === "PROCESSED" && Object.keys(document.summaries).length > 1;
+
+  // Handle language change - now just controls tab content, no API calls
+  const handleLanguageChange = (lang: SupportedLanguage) => {
+    // Update dropdown selection and active tab immediately
+    setSelectedLanguage(lang);
+    setActiveTab(lang);
+  };
+
+
+  // Unified skip handler for the external button
+  const handleSkip = () => {
+    if (tutorialPhase === 'app-tutorial') {
+      setTutorialPhase('parent-rights');
+    } else if (tutorialPhase === 'parent-rights') {
+      setTutorialPhase('completed');
+    }
+  };
+
+  // Back button handler
+  const handleBack = () => {
+    if (tutorialPhase === 'parent-rights') {
+      setTutorialPhase('app-tutorial');
+    }
+  };
+
+  // Parent Rights carousel data - internationalized using useLanguage hook
+  const parentRightsSlideData = useMemo(() => {
+    if (!translationsLoaded) return [];
+    
+    return [
+      {
+        id: 'slide-1',
+        title: t('rights.slide1.title'),
+        content: t('rights.slide1.content'),
+        image: '/images/carousel/surprised.png'
+      },
+      {
+        id: 'slide-2',
+        title: t('rights.slide2.title'),
+        content: t('rights.slide2.content'),
+        image: '/images/carousel/blissful.png'
+      },
+      {
+        id: 'slide-3',
+        title: t('rights.slide3.title'),
+        content: t('rights.slide3.content'),
+        image: '/images/carousel/joyful.png'
+      },
+      {
+        id: 'slide-4',
+        title: t('rights.slide4.title'),
+        content: t('rights.slide4.content'),
+        image: '/images/carousel/surprised.png'
+      },
+      {
+        id: 'slide-5',
+        title: t('rights.slide5.title'),
+        content: t('rights.slide5.content'),
+        image: '/images/carousel/blissful.png'
+      },
+      {
+        id: 'slide-6',
+        title: t('rights.slide6.title'),
+        content: t('rights.slide6.content'),
+        image: '/images/carousel/confident.png'
+      }
+    ];
+  }, [t, translationsLoaded]);
+
+      // AppTutorial carousel data - internationalized using useLanguage hook
+  const appTutorialSlideData = useMemo(() => {
+    if (!translationsLoaded) return [];
+    
+    return [
+      {
+        id: 'slide-1',
+        title: t('appTutorial.slide1.title'),
+        content: t('appTutorial.slide1.content'),
+        image: '/images/Opening_Section_Accordion.gif'
+      },
+      {
+        id: 'slide-2',
+        title: t('appTutorial.slide2.title'),
+        content: t('appTutorial.slide2.content'),
+        image: '/images/Highlighting_Page_Numbers.gif'
+      },
+      {
+        id: 'slide-3',
+        title: t('appTutorial.slide3.title'),
+        content: t('appTutorial.slide3.content'),
+        image: '/images/Language_Switch.gif'
+      },
+      {
+        id: 'slide-4',
+        title: t('appTutorial.slide4.title'),
+        content: t('appTutorial.slide4.content'),
+        image: '/images/Opening_Section_Accordion.gif'
+      },
+      {
+        id: 'slide-5',
+        title: t('appTutorial.slide5.title'),
+        content: t('appTutorial.slide5.content'),
+        image: '/images/Opening_Section_Accordion.gif'
+      },
+      {
+        id: 'slide-6',
+        title: t('appTutorial.slide6.title'),
+        content: t('appTutorial.slide6.content'),
+        image: '/images/Jargon_Drawer.gif'
+      }
+    ];
+  }, [t, translationsLoaded]);
 
   // Handle jargon click
   const handleContentClick = (e: React.MouseEvent) => {
@@ -111,8 +297,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Process document sections for a specific language
   const processLanguageSections = (doc: any, lang: string) => {
-    // Process sections for PROCESSED status (all languages) or PROCESSING_TRANSLATIONS status (English only)
-    if (!doc || (doc.status !== "PROCESSED" && !(doc.status === "PROCESSING_TRANSLATIONS" && lang === 'en'))) return;
+    // Only process sections when document is fully PROCESSED
+    if (!doc || doc.status !== "PROCESSED") return;
     
     if (doc.sections && doc.sections[lang]) {
       try {
@@ -197,34 +383,39 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     return hasSummary || hasSections || hasDocumentIndex;
   };
 
-  // Check if document is processing (only initial processing, not translations)
-  const isProcessing = document && document.status === "PROCESSING";
+  // Check if document is processing (includes both initial processing and translations)
+  const isProcessing = document && (document.status === "PROCESSING" || document.status === "PROCESSING_TRANSLATIONS");
   
-  // Check if translations are being processed (English content should be available)
-  const isTranslating = document && document.status === "PROCESSING_TRANSLATIONS";
+  // Remove the separate isTranslating check since we're treating translation as part of processing
 
-  // Set active tab based on language preference and content availability
+  // Reset tutorial phase when document status changes from processing
   useEffect(() => {
-    // During translation, force English tab since only English content is available
-    if (isTranslating) {
-      setActiveTab('en');
+    if (!isProcessing) {
+      setTutorialPhase('completed');
+    } else {
+      // Reset to app-tutorial when processing starts
+      setTutorialPhase('app-tutorial');
+    }
+  }, [isProcessing]);
+
+
+
+  // Set active tab based on selected language and content availability
+  useEffect(() => {
+    // Don't set active tab during any processing phase
+    if (isProcessing) {
       return;
     }
     
-    // Default to English tab
-    let tabToShow = 'en';
-    
-    // If user prefers another language and content exists for that language, show it
-    if (preferredLanguage !== 'en' && hasContent(preferredLanguage)) {
-      tabToShow = preferredLanguage;
+    // Set active tab to selected language if content exists, otherwise fall back to English
+    if (hasContent(selectedLanguage)) {
+      setActiveTab(selectedLanguage);
+    } else {
+      setActiveTab('en');
+      setSelectedLanguage('en');
     }
-    
-    setActiveTab(tabToShow);
-  }, [language, document.summaries, document.sections, preferredLanguage, isTranslating]);
+  }, [selectedLanguage, document.summaries, document.sections, isProcessing]);
 
-  const handleBackClick = () => {
-    navigate('/welcome-page');
-  };
 
   // Handle PDF download
   const handleDownloadPDF = async () => {
@@ -250,28 +441,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
-  // Extract filename from document URL
-  const getFileName = (documentUrl: string) => {
-    if (!documentUrl) return 'Document';
-    return documentUrl.split('/').pop() || 'Document';
-  };
-
-  // Render status badge
-  const renderStatusBadge = (status: string) => {
-    switch(status) {
-      case "PROCESSING":
-        return <Badge bg="warning" text="dark"><FontAwesomeIcon icon={faClock} className="me-1" /> Processing</Badge>;
-      case "PROCESSING_TRANSLATIONS":
-        return <Badge bg="info" text="light"><FontAwesomeIcon icon={faClock} className="me-1" /> Translating</Badge>;
-      case "PROCESSED":
-        return <Badge bg="success"><FontAwesomeIcon icon={faCheckCircle} className="me-1" /> Processed</Badge>;
-      case "FAILED":
-        return <Badge bg="danger"><FontAwesomeIcon icon={faExclamationTriangle} className="me-1" /> Failed</Badge>;
-      default:
-        return <Badge bg="secondary">{status}</Badge>;
-    }
-  };
-
   // Render tab content for a specific language
   const renderTabContent = (lang: string) => {
     const hasSummary = document.summaries && document.summaries[lang];
@@ -288,7 +457,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Summary Section */}
         {hasSummary ? (
           <>
-            <h4 className="mt-4 mb-3">
+            <h4 className="summary-header mt-4 mb-3">
               {isEnglishTab ? 'IEP Summary' : t('summary.iepSummary')}
             </h4>
             <Card className="summary-content mb-3">
@@ -315,6 +484,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 ? t('summary.noSummary.message')
                 : t('summary.noTranslatedSummary.message')}
             </p>
+            <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+            </Button>
             {!isEnglishTab && (
               <div className="mt-3">
                 <p className="mb-2">{t('summary.reuploadSuggestion')}</p>
@@ -344,12 +520,17 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   </Accordion.Header>
                   <Accordion.Body>
                     {section.pageNumbers && section.pageNumbers.length > 0 && (
-                      <p className="text-muted mb-2">
+                      <p className="text-muted mb-2 page-numbers-text">
                         <small>
-                          {isEnglishTab ? 'The original content for this section can be found in your IEP document on Pages: ' : 'Páginas: '}
-                          {Array.isArray(section.pageNumbers) 
-                            ? section.pageNumbers.join(', ') 
-                            : section.pageNumbers}
+                          <span className="page-numbers-label">
+                            {isEnglishTab ? 'Found in ' : t('sections.foundIn') + ' '}
+                          </span>
+                          <span className="page-numbers-value">
+                            {isEnglishTab ? 'pages ' : t('sections.pages') + ' '}
+                            {Array.isArray(section.pageNumbers) 
+                              ? section.pageNumbers.join(', ') 
+                              : section.pageNumbers}
+                          </span>
                         </small>
                       </p>
                     )}
@@ -380,6 +561,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                 ? t('summary.noSections.message')
                 : t('summary.noTranslatedSections.message')}
             </p>
+            <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+            </Button>
             {!isEnglishTab && (
               <div className="mt-3">
                 <p className="mb-2">{t('summary.reuploadSuggestion')}</p>
@@ -409,118 +597,227 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
-  // Loading state while translations are being loaded
-  if (!translationsLoaded) {
+  // Handle initial loading and no document states first
+  if (!translationsLoaded || profileLoading) {
     return (
       <Container className="summary-container mt-4 mb-5">
         <div className="text-center my-5">
           <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading translations...</span>
+            <span className="visually-hidden">Loading...</span>
           </Spinner>
-          <p className="mt-3">Loading translations...</p>
+          <p className="mt-3">
+            {!translationsLoaded && profileLoading ? 'Loading translations and profile...' :
+             !translationsLoaded ? 'Loading translations...' : 
+             'Loading profile...'}
+          </p>
         </div>
       </Container>
     );
   }
 
+  if (initialLoading) {
+    return (
+      <>
+        <Container className="summary-container mt-3 mb-3">
+          <Row className="mt-2">
+            <Col>
+              <div className="text-center my-5">
+                <Spinner animation="border" role="status">
+                  <span className="visually-hidden">{t('summary.loading')}</span>
+                </Spinner>
+                <p className="mt-3">{t('summary.loading')}</p>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+        <MobileBottomNavigation />
+      </>
+    );
+  }
+
+
+  if (!document) {
+    return (
+      <>
+        <Container className="summary-container mt-3 mb-3">
+          <Row className="mt-2">
+            <Col>
+              <Alert variant="info">
+                {t('summary.noDocuments')}
+              </Alert>
+            </Col>
+          </Row>
+        </Container>
+        <MobileBottomNavigation />
+      </>
+    );
+  }
+
+
+if(profile.showOnboarding){
+  navigate('/');
+  return null;
+}
+
+
+
+if(document && document.message === "No document found for this child") {
+    navigate('/iep-documents');
+}
+
+  // Processing Container - when document is being processed
+  if (isProcessing) {
+    return (
+      <>
+        <Container className="processing-summary-container">
+
+              {error && <Alert variant="danger">{error}</Alert>}
+              
+              {/* Button container - only shown during tutorial phases */}
+              {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
+                <div className="d-flex justify-content-between align-items-center mb-3 px-3 py-4 tutorial-button-container">
+                  {/* Back button - only shown during parent-rights phase */}
+                  {tutorialPhase === 'parent-rights' ? (
+                    <Button 
+                      variant="outline-secondary" 
+                      onClick={handleBack}
+                    >
+                      {t('common.back')}
+                    </Button>
+                  ) : (
+                    <div></div>
+                  )}
+                  
+                  {/* Skip button */}
+                  <Button 
+                    variant="outline-secondary" 
+                    onClick={handleSkip}
+                  >
+                    {t('common.skip')}
+                  </Button>
+                </div>
+              )}
+              
+              {/* Title div - only shown during tutorial phases */}
+              {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
+                <div className="text-center py-2 tutorial-title-container">
+                  <h3>
+                    {tutorialPhase === 'app-tutorial' 
+                      ? t('tutorial.appTutorial.title')
+                      : t('tutorial.parentRights.title')
+                    }
+                  </h3>
+                </div>
+              )}
+              
+              {tutorialPhase === 'app-tutorial' ? (
+                <Card className="processing-summary-app-tutorial-card">
+                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
+                    <div className="carousel-with-button">
+                      <AppTutorialCarousel slides={appTutorialSlideData} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              ) : tutorialPhase === 'parent-rights' ? (
+                <Card className="processing-summary-parent-rights-card">
+                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
+                    <div className="carousel-with-button">
+                      <ParentRightsCarousel slides={parentRightsSlideData} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              ) : (
+                <Card className="processing-summary-loader-card">
+                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
+                  </Card.Body>
+                </Card>
+              )}
+        </Container>
+        <MobileBottomNavigation tutorialPhaseEnabled={true} tutorialPhase={tutorialPhase}/>
+      </>
+    );
+  }
+
+  // If document fails the user is taken to the upload screen
+  if (document && document.status === "FAILED") {
+    navigate('/iep-documents');
+  }
+
+  // Processed Container - when document is processed, failed, or in other states
   return (
     <>
-    <Container className="summary-container mt-3 mb-3">
-      <div className="mt-2 text-start button-container d-flex gap-2 align-items-center">
-        <Button variant="outline-secondary" onClick={handleBackClick}>
-          {t('summary.back')}
-        </Button>
-        {canGeneratePDF(document) && (
-          <Button 
-            variant="primary" 
-            onClick={handleDownloadPDF}
-            disabled={isGeneratingPDF || isProcessing}
-          >
-            {isGeneratingPDF ? (
-              <>
-                <Spinner animation="border" size="sm" className="me-2" />
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <FontAwesomeIcon icon={faDownload} className="me-2" />
-                Save
-              </>
+      <Container className="summary-container mt-3 mb-3">
+        <div className="mt-2 text-start button-container d-flex justify-content-between align-items-center">
+          <div className="d-flex gap-2 align-items-center">
+            {canGeneratePDF(document) && (
+              <Button 
+                variant="primary" 
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF || isProcessing}
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-2" />
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faDownload} className="me-2" />
+                    {t('common.save')}
+                  </>
+                )}
+              </Button>
             )}
-          </Button>
-        )}
-      </div>
-      {pdfError && (
-        <Alert variant="danger" className="mt-2" dismissible onClose={() => setPdfError(null)}>
-          <strong>PDF Generation Failed:</strong> {pdfError}
-        </Alert>
-      )}
-      <Row className="mt-2">
-        <Col>
-          {error && <Alert variant="danger">{error}</Alert>}
+          </div>
           
-          {initialLoading ? (
-            <div className="text-center my-5">
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">{t('summary.loading')}</span>
-              </Spinner>
-              <p className="mt-3">{t('summary.loading')}</p>
-            </div>
-          ) : !document ? (
-            <Alert variant="info">
-              {t('summary.noDocuments')}
-            </Alert>
-          ) : (
+          {/* Language Dropdown - Only show if preferred language is not English and not processing */}
+          {shouldShowLanguageDropdown && !isProcessing && document && document.status === "PROCESSED" && (
+            <Dropdown>
+              <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
+                {languageOptions.find(option => option.value === selectedLanguage)?.label || 'English'}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                {languageOptions.map(option => (
+                  <Dropdown.Item 
+                    key={option.value} 
+                    onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
+                    active={selectedLanguage === option.value}
+                  >
+                    {option.label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+          )}
+        </div>
+        
+        {pdfError && (
+          <Alert variant="danger" className="mt-2" dismissible onClose={() => setPdfError(null)}>
+            <strong>PDF Generation Failed:</strong> {pdfError}
+          </Alert>
+        )}
+        
+        <Row className="mt-2">
+          <Col>
+            {error && <Alert variant="danger">{error}</Alert>}
+            
             <Card className="summary-card">
               <Card.Body className="summary-card-body pt-2 pb-0">
                 <Row>
                   <Col md={12}>
-                    {isProcessing ? (
-                      <div className="text-center my-5">
-                        <Spinner animation="border" variant="warning" role="status">
-                          <span className="visually-hidden">Processing document...</span>
-                        </Spinner>
-                        <Alert variant="warning" className="mt-3">
-                          <h5>{t('summary.processing.title')}</h5>
-                          <p>{t('summary.processing.message')}</p>
-                          <div className="text-start">
-                            <p>{t('rights.description')}</p>
-                            <ul className="mt-3 text-start">
-                              <li className="mb-2">{t('rights.bulletPoints.1')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.2')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.3')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.4')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.5')}</li>
-                              <li className="mb-2">{t('rights.bulletPoints.6')}</li>
-                            </ul>
-                          </div>
-                        </Alert>
-                      </div>
-                    ) : document.status === "FAILED" ? (
+                    {document.status === "FAILED" ? (
                       <Alert variant="danger">
                         <h5>{t('summary.failed.title')}</h5>
                         <p>{t('summary.failed.message')}</p>
                       </Alert>
-                    ) : (
+                    ) : 
                       <>
-                        {/* Show translation progress notification */}
-                        {isTranslating && (
-                          <Alert variant="info" className="mb-3">
-                            <div className="d-flex align-items-center">
-                              <Spinner animation="border" size="sm" className="me-2" />
-                              <div>
-                                <strong>Translations in progress...</strong>
-                                <br />
-                                <small>English content is available below. Translated version will be available soon.</small>
-                              </div>
-                            </div>
-                          </Alert>
-                        )}
+                        {/* Only show content when document is fully processed */}
                         
                         <Tabs
                           activeKey={activeTab}
                           onSelect={(k) => k && setActiveTab(k)}
-                          className="mb-2 mt-2 summary-tabs"
+                          className="mb-2 mt-2 summary-tabs hidden-tab-nav"
                         >
                           {/* Always show English tab */}
                           <Tab 
@@ -570,42 +867,55 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                           <Alert variant="info">
                             <h5>{t('summary.noContentAvailable.title')}</h5>
                             <p>{t('summary.noContentAvailable.message')}</p>
+                            <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => navigate('/iep-documents')}
+                >
+                  {t('summary.reuploadButton')}
+                </Button>
                           </Alert>
                         )}
                       </>
-                    )}
+                  }
                   </Col>
                 </Row>
               </Card.Body>
-              <Card.Header className="summary-card-header d-flex justify-content-between align-items-center">
-                <div>
-                  <FontAwesomeIcon icon={faFileAlt} className="me-2" />
-                  {document.documentUrl ? getFileName(document.documentUrl) : 'Document'}
-                </div>
-                {document.status && renderStatusBadge(document.status)}
-              </Card.Header>
+            
+              {document.status === "PROCESSED" && (
+                <Card.Header 
+                  className="summary-card-header d-flex justify-content-center align-items-center" 
+                  onClick={() => navigate('/iep-documents')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div>
+                    <FontAwesomeIcon icon={faArrowsRotate} className="me-2" />
+                    {t('upload.replaceDocument')}
+                  </div>
+                </Card.Header>
+              )}
             </Card>
-          )}
-        </Col>
-      </Row>
-      
-      {/* Jargon Drawer */}
-      <Offcanvas 
-        show={showJargonDrawer} 
-        onHide={() => setShowJargonDrawer(false)}
-        placement="end"
-        className="jargon-drawer"
-      >
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>{selectedJargon?.term}</Offcanvas.Title>
-        </Offcanvas.Header>
-        <Offcanvas.Body>
-          <p>{selectedJargon?.definition}</p>
-        </Offcanvas.Body>
-      </Offcanvas>
-    </Container>
+          </Col>
+        </Row>
+        
+        {/* Jargon Drawer */}
+        <Offcanvas 
+          show={showJargonDrawer} 
+          onHide={() => setShowJargonDrawer(false)}
+          placement="end"
+          className="jargon-drawer"
+        >
+          <Offcanvas.Header closeButton>
+            <Offcanvas.Title>{t('glossary.header')}</Offcanvas.Title>
+          </Offcanvas.Header>
+          <Offcanvas.Body>
+            <h3>{selectedJargon?.term}</h3>
+            <p>{selectedJargon?.definition}</p>
+          </Offcanvas.Body>
+        </Offcanvas>
+      </Container>
       <MobileBottomNavigation />
-        </>
+    </>
   );
 };
 

@@ -28,6 +28,7 @@ The main Lambda handler implements a REST API with the following endpoints:
 
 - **GET /profile**: Retrieves a user's profile
 - **PUT /profile**: Updates a user's profile information
+- **DELETE /profile**: Deletes the entire user profile and all associated data
 - **POST /profile/children**: Adds a child to a user's profile
 - **GET /profile/children/{childId}/documents**: Gets documents for a specific child
 - **DELETE /profile/children/{childId}/documents/{documentId}**: Deletes a document
@@ -130,6 +131,7 @@ The function implements robust error handling:
 - `USER_PROFILES_TABLE`: DynamoDB table for user profiles
 - `IEP_DOCUMENTS_TABLE`: DynamoDB table for IEP document metadata
 - `BUCKET`: S3 bucket for IEP documents
+- `USER_POOL_ID`: Cognito User Pool ID for user account deletion
 
 ### Permissions
 
@@ -138,6 +140,7 @@ The Lambda function requires:
 - DynamoDB read/write access to user profiles table
 - DynamoDB read/write access to IEP documents table
 - S3 read/delete access to documents bucket
+- Cognito admin permissions for user deletion (`cognito-idp:AdminDeleteUser`)
 
 ## Development Guidelines
 
@@ -199,6 +202,7 @@ User identity information (email, etc.) is managed exclusively through Amazon Co
   secondaryLanguage?: string, // Optional secondary language
   city: string,           // User's city of residence
   consentGiven: boolean,    // User's consent status (defaults to false)
+  showOnboarding: boolean,  // Whether to show onboarding flow (defaults to true)
   children: [                 // Array of children
     {
       childId: string,      // Unique identifier for child
@@ -318,6 +322,7 @@ Returns the user's profile information. Creates a default profile if none exists
     "secondaryLanguage": "string",
     "city": "string",
     "consentGiven": boolean,
+    "showOnboarding": boolean,
     "children": [
       {
         "childId": "string",
@@ -343,6 +348,7 @@ Content-Type: application/json
   "secondaryLanguage": "string",
   "city": "string",
   "consentGiven": boolean,
+  "showOnboarding": boolean,
   "children": [
     {
       "childId": "string",
@@ -353,7 +359,7 @@ Content-Type: application/json
 }
 ```
 
-**Note**: Email updates must be performed through Cognito user management, not through this API. The consentGiven field must be a valid JSON boolean value (true or false, lowercase without quotes).
+**Note**: Email updates must be performed through Cognito user management, not through this API. The consentGiven and showOnboarding fields must be valid JSON boolean values (true or false, lowercase without quotes).
 
 **Response (200)**
 ```json
@@ -362,14 +368,56 @@ Content-Type: application/json
 }
 ```
 
-**Response (400) - Invalid consentGiven type**
+**Response (400) - Invalid boolean field type**
 ```json
 {
   "message": "consentGiven must be a boolean value (true or false)"
 }
 ```
 
-### 3. Add Child
+**Response (400) - Invalid showOnboarding type**
+```json
+{
+  "message": "showOnboarding must be a boolean value (true or false)"
+}
+```
+
+### 3. Delete User Profile
+```http
+DELETE /profile
+Authorization: Bearer <jwt-token>
+```
+
+Deletes the entire user profile and all associated data permanently. This operation:
+1. Deletes all S3 files for the user (all folders under `userId/`)
+2. Deletes all IEP document records in the database
+3. Deletes the user profile record
+4. Deletes the Cognito user account
+
+**⚠️ WARNING: This operation is irreversible and will completely remove all user data.**
+
+**Response (200)**
+```json
+{
+  "message": "User profile and all associated data successfully deleted",
+  "userId": "string",
+  "deletionSummary": {
+    "s3ObjectsDeleted": number,
+    "documentsDeleted": number,
+    "profileDeleted": boolean,
+    "cognitoUserDeleted": boolean
+  }
+}
+```
+
+**Response (500)**
+```json
+{
+  "message": "Error deleting user profile: [error details]"
+}
+```
+
+### 4. Add Child
 ```http
 POST /profile/children
 Authorization: Bearer <jwt-token>
@@ -419,33 +467,28 @@ Query Parameters:
     "zh": "string",
     "vi": "string"
   },
+  "abbreviations": {
+    "en": [
+      {
+        "abbreviation": "IEP",
+        "full_form": "Individualized Education Program"
+      }
+    ],
+    "es": [
+      {
+        "abbreviation": "IEP",
+        "full_form": "Programa de Educación Individualizada"
+      }
+    ],
+    "zh": [...],
+    "vi": [...]
+  },
   "sections": {
     "en": {
       "section1": "string",
       "section2": "string"
     }
   },
-  "ocrData": {
-    "pages": [
-      {
-        "index": 0,
-        "markdown": "string",
-        "images": [],
-        "dimensions": {
-          "dpi": number,
-          "height": number,
-          "width": number
-        }
-      }
-    ],
-    "model": "string",
-    "usage": {
-      "pages_processed": number,
-      "document_size_bytes": number
-    },
-    "success": boolean
-  },
-  "ocrCompletedAt": "string",
   "createdAt": number,
   "updatedAt": number
 }
@@ -459,7 +502,7 @@ Query Parameters:
 }
 ```
 
-**Note**: Only the most recent document for a child is returned. When a new document is uploaded for a child, any existing documents for that child are automatically deleted. The document response now includes OCR data that provides detailed text extraction from the IEP document in markdown format, organized by page.
+**Note**: Only the most recent document for a child is returned. When a new document is uploaded for a child, any existing documents for that child are automatically deleted.
 
 ### 5. Delete Child's IEP Documents
 ```http

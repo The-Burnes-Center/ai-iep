@@ -85,6 +85,10 @@ export default function ConsentForm() {
     </Tooltip>
   );
 
+  const handleBackClick = () => {
+    navigate('/onboarding-user');
+  };
+
   if (loading) {
     return (
       <Container className="text-center profile-form-container">
@@ -109,56 +113,64 @@ export default function ConsentForm() {
   }
 
   return (
-    <Container 
-      fluid 
-      className="profile-form-container"
-    >
-      <Row style={{ width: '100%', justifyContent: 'center' }}>
-        <Col xs={12} md={8} lg={6}>
-          <div className="profile-form">
-            <h2 className="text-center profile-title">{t('consent.title')}</h2>
-            
-            <div className="consent-box">
-              <p className="consent-text">
-              {t('consent.text')}
-              </p>
+    <div>
+      <div className="mt-3 text-start px-3 py-2">
+        <Button variant="outline-secondary" onClick={handleBackClick}>
+          {t('common.back')}
+        </Button>
+      </div>
+      
+      <Container 
+        fluid 
+        className="profile-form-container"
+      >
+        <Row style={{ width: '100%', justifyContent: 'center' }}>
+          <Col xs={12} md={8} lg={6}>
+            <div className="profile-form">
+              <h2 className="text-center profile-title">{t('consent.title')}</h2>
               
-              <Form.Group controlId="consentCheckbox">
-                <OverlayTrigger
-                  placement="right"
-                  overlay={renderTooltip}
-                  show={showTooltip}
-                >
-                  <Form.Check 
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={handleChange}
-                    label={<span className="checkbox-label">{t('consent.checkbox')}</span>}
-                  />
-                </OverlayTrigger>
-              </Form.Group>
-            </div>
+              <div className="consent-box">
+                <p className="consent-text">
+                {t('consent.text')}
+                </p>
+                
+                <Form.Group controlId="consentCheckbox">
+                  <OverlayTrigger
+                    placement="right"
+                    overlay={renderTooltip}
+                    show={showTooltip}
+                  >
+                    <Form.Check 
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={handleChange}
+                      label={<span className="checkbox-label">{t('consent.checkbox')}</span>}
+                    />
+                  </OverlayTrigger>
+                </Form.Group>
+              </div>
 
-            <div className="d-grid">
-              <Button 
-                variant="primary" 
-                onClick={handleContinue}
-                disabled={!isChecked || saving}
-                className="button-text"
-              >
-                {saving ? (
-                  <>
-                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                    Saving...
-                  </>
-                ) : (
-                  t('consent.button')
-                )}
-              </Button>
+              <div className="d-grid">
+                <Button 
+                  variant="primary" 
+                  onClick={handleContinue}
+                  disabled={!isChecked || saving}
+                  className="consent-button"
+                >
+                  {saving ? (
+                    <>
+                      <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                      Saving...
+                    </>
+                  ) : (
+                    t('consent.button')
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
-        </Col>
-      </Row>
-    </Container>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 }

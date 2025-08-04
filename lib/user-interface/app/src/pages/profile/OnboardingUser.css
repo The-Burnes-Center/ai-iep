@@ -1,0 +1,160 @@
+/* Container for the entire carousel section */
+.carousel-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  /* height: 100vh; */
+  margin-top: 3rem;
+  position: relative;
+}
+
+/* Basic Swiper styles */
+.swiper {
+  width: 100%;
+}
+
+/* Slide styling */
+.swiper-slide {
+  text-align: center;
+  font-size: 18px;
+  border: 2px solid #1E1E1E;
+  
+  /* Make slides square with 1:1 ratio */
+  width: 35vh !important;
+  height: 35vh !important;
+  
+  /* Center slide text vertically */
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  
+  /* Add border radius for better appearance */
+  border-radius: 8px;
+  line-height: 1;
+}
+
+/* Individual slide colors */
+.swiper-slide:nth-child(1) {
+  background: #F03232; /* Light pink for first slide */
+}
+
+.swiper-slide:nth-child(2) {
+  background: #FF9BA3; /* Light blue for second slide */
+}
+
+.swiper-slide:nth-child(3) {
+  background: #FFBF27; /* Light green for third slide */
+}
+
+.swiper-slide:nth-child(4) {
+  background: #007535; /* Light orange for fourth slide */
+}
+
+/* Swiper container */
+.mySwiper {
+  width: 100%;
+  /* Center the carousel on the screen */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Center the swiper wrapper */
+.mySwiper .swiper-wrapper {
+  align-items: center;
+}
+
+/* Heading below the slider */
+.carousel-heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  align-self: flex-start;
+  width: -webkit-fill-available;
+}
+
+.carousel-paragraph {
+  font-size: 1rem;
+  align-self: flex-start;
+}
+
+.heading-paragraph-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 80%;
+  height: 8rem;
+  margin-top: 1rem;
+  margin-left: 8vw;
+}
+
+/* Custom pagination styling */
+.swiper-custom-pagination {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Pagination bullets */
+.swiper-custom-pagination .swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+  background: #EFECE5;
+  opacity: 1;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.swiper-custom-pagination .swiper-pagination-bullet-active {
+  background: #1E1E1E !important;
+  opacity: 1;
+}
+
+/* Make sure images maintain aspect ratio if added later */
+.swiper-slide img {
+  max-width: 99.5%;
+  max-height: 99.5%;
+  object-fit: contain !important;
+}
+
+
+.continue-onboarding {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+}
+
+/* Disabled consent button styling */
+.continue-onboarding:disabled {
+  background-color: #E7E4DC !important;
+  color: #A09E99 !important;
+  border-color: #E7E4DC !important;
+  opacity: 1 !important; /* Override Bootstrap's default opacity */
+}
+
+/* Remove hover effects when disabled */
+.continue-onboarding:disabled:hover {
+  background-color: #E7E4DC !important;
+  color: #A09E99 !important;
+  border-color: #E7E4DC !important;
+  transform: none !important;
+}
+
+
+.carousel-container .d-grid {
+  width: 85%;
+  margin-top: 2rem;
+}
+
+/* Media query for smaller screens */
+@media (max-height: 600px) {
+  .mySwiper {
+    height: 50vh;
+  }
+  
+  .swiper-slide {
+    width: 30vh !important;
+    height: 30vh !important;
+  }
+
+}

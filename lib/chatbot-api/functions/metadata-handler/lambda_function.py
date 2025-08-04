@@ -164,7 +164,7 @@ def convert_dict_floats_to_decimal(d):
             result[k] = v
     return result
 
-def update_iep_document_status(iep_id, status, error_message=None, child_id=None, summaries=None, user_id=None, object_key=None, ocr_data=None):
+def update_iep_document_status(iep_id, status, error_message=None, child_id=None, summaries=None, user_id=None, object_key=None):
     """
     Update the status of a document in the DynamoDB table.
     
@@ -176,7 +176,6 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
         summaries (dict, optional): Document summaries to store
         user_id (str, optional): The user ID associated with the document
         object_key (str, optional): The S3 object key for extracting user_id if not provided directly
-        ocr_data (dict, optional): OCR data from Mistral to store
     """
     try:
         # Check if iep_id is valid
@@ -184,9 +183,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
             print(f"Invalid iep_id: {iep_id}. Cannot update document status.")
             return
             
-        # Convert any float values in ocr_data to Decimal for DynamoDB compatibility
-        if ocr_data and isinstance(ocr_data, dict):
-            ocr_data = convert_dict_floats_to_decimal(ocr_data)
+
             
         # Print the values we're using for debugging
         print(f"Updating document status for iep_id: {iep_id}, status: {status}")
@@ -248,29 +245,27 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     update_expr += ", errorMessage = :error_message"
                     expr_attr_values[':error_message'] = error_message
                 
-                # Add OCR data if provided
-                if ocr_data:
-                    update_expr += ", ocrData = :ocr_data, ocrCompletedAt = :ocr_completed_at"
-                    expr_attr_values[':ocr_data'] = ocr_data
-                    expr_attr_values[':ocr_completed_at'] = current_time
-                    print(f"Adding OCR data to document")
+
                 
                 if (status == 'PROCESSED' or status == 'PROCESSING_TRANSLATIONS') and summaries:
                     # The data from LLM is already in DynamoDB format, so we can use it directly
                     formatted_summaries = summaries.get('summaries', {})
                     formatted_sections = summaries.get('sections', {})
                     formatted_document_index = summaries.get('document_index', {})
+                    formatted_abbreviations = summaries.get('abbreviations', {})
                     
-                    update_expr += ", summaries = :summaries, sections = :sections, document_index = :document_index"
+                    update_expr += ", summaries = :summaries, sections = :sections, document_index = :document_index, abbreviations = :abbreviations"
                     expr_attr_values[':summaries'] = formatted_summaries
                     expr_attr_values[':sections'] = formatted_sections
                     expr_attr_values[':document_index'] = formatted_document_index
+                    expr_attr_values[':abbreviations'] = formatted_abbreviations
                     
-                    print(f"Updating document with formatted summaries, sections, and document_index")
+                    print(f"Updating document with formatted summaries, sections, document_index, and abbreviations")
                     # Add detailed logging for troubleshooting
                     print(f"Formatted summaries structure: {json.dumps(formatted_summaries, default=str)}")
                     print(f"Formatted sections structure: {json.dumps(formatted_sections, default=str)}")
                     print(f"Formatted document_index structure: {json.dumps(formatted_document_index, default=str)}")
+                    print(f"Formatted abbreviations structure: {json.dumps(formatted_abbreviations, default=str)}")
                 
                 # Update the item
                 update_params = {
@@ -306,11 +301,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                 if user_id:
                     item['userId'] = user_id
                 
-                # Add OCR data if provided
-                if ocr_data:
-                    item['ocrData'] = ocr_data
-                    item['ocrCompletedAt'] = current_time
-                    print(f"Adding OCR data to new document")
+
                     
                 # Add document URL field
                 bucket_name = os.environ.get('BUCKET', '')
@@ -325,6 +316,7 @@ def update_iep_document_status(iep_id, status, error_message=None, child_id=None
                     item['summaries'] = summaries.get('summaries', {})
                     item['sections'] = summaries.get('sections', {})
                     item['document_index'] = summaries.get('document_index', {})
+                    item['abbreviations'] = summaries.get('abbreviations', {})
                 
                 # Use numeric timestamp for createdAt to match expected GSI key type
                 item['createdAt'] = epoch_time
@@ -918,26 +910,16 @@ def iep_processing_pipeline(event):
             ocr_result['pii_redaction_stats'] = pii_stats
             print(f"PII redaction complete - redacted {pii_stats.get('redacted_entities', 0)} entities")
             
-            # Convert any floats to Decimal to avoid DynamoDB errors
-            ocr_data = convert_dict_floats_to_decimal(ocr_result)
-        
-        # Store the redacted OCR results in DynamoDB
-        update_iep_document_status(
-            iep_id=iep_id,
-            status="PROCESSING",
-            child_id=child_id,
-            user_id=user_id,
-            object_key=key,
-            ocr_data=ocr_data
-        )
+
+
         
         # Delete the original file from S3 after successful processing
         # Only delete if OCR was successful, meaning we were able to find and process the file
-        if ocr_data and "error" not in ocr_data:
+        if ocr_result and "error" not in ocr_result:
             delete_s3_object(bucket, key)
         
         # Create OpenAIAgent instance with redacted OCR data
-        agent = OpenAIAgent(ocr_data=ocr_data)
+        agent = OpenAIAgent(ocr_data=ocr_result)
         
         try:
             # STEP 1: Analyze the document in English only
@@ -978,7 +960,17 @@ def iep_processing_pipeline(event):
                         } for section in english_result.get('sections', [])
                     ]}
                 },
-                'document_index': {'en': {'S': english_result.get('document_index', '')}}
+                'document_index': {'en': {'S': english_result.get('document_index', '')}},
+                'abbreviations': {
+                    'en': {'L': [
+                        {
+                            'M': {
+                                'abbreviation': {'S': abbrev.get('abbreviation', '')},
+                                'full_form': {'S': abbrev.get('full_form', '')}
+                            }
+                        } for abbrev in english_result.get('abbreviations', [])
+                    ]}
+                }
             }
             
             # Save English data to DynamoDB with status "PROCESSING_TRANSLATIONS"
@@ -989,8 +981,7 @@ def iep_processing_pipeline(event):
                 child_id=child_id, 
                 summaries=english_formatted,
                 user_id=user_id,
-                object_key=key,
-                ocr_data=ocr_data
+                object_key=key
             )
             
             print("English analysis complete. Checking translation requirements...")
@@ -1014,7 +1005,17 @@ def iep_processing_pipeline(event):
                             } for section in english_result.get('sections', [])
                         ]}
                     },
-                    'document_index': {'en': {'S': english_result.get('document_index', '')}}
+                    'document_index': {'en': {'S': english_result.get('document_index', '')}},
+                    'abbreviations': {
+                        'en': {'L': [
+                            {
+                                'M': {
+                                    'abbreviation': {'S': abbrev.get('abbreviation', '')},
+                                    'full_form': {'S': abbrev.get('full_form', '')}
+                                }
+                            } for abbrev in english_result.get('abbreviations', [])
+                        ]}
+                    }
                 }
                 
                 # Save English-only data to DynamoDB
@@ -1025,8 +1026,7 @@ def iep_processing_pipeline(event):
                     child_id=child_id, 
                     summaries=formatted_result,
                     user_id=user_id,
-                    object_key=key,
-                    ocr_data=ocr_data
+                    object_key=key
                 )
                 
                 print(f"Document processed successfully (English-only): {iep_id}")
@@ -1067,7 +1067,8 @@ def iep_processing_pipeline(event):
             formatted_result = {
                 'summaries': {},
                 'sections': {},
-                'document_index': {}
+                'document_index': {},
+                'abbreviations': {}
             }
             
             # Format summaries for DynamoDB
@@ -1094,6 +1095,19 @@ def iep_processing_pipeline(event):
             if translation_result.get('document_index'):
                 formatted_result['document_index'] = {
                     lang: {'S': index} for lang, index in translation_result['document_index'].items()
+                }
+            
+            # Format abbreviations for DynamoDB
+            if translation_result.get('abbreviations'):
+                formatted_result['abbreviations'] = {
+                    lang: {'L': [
+                        {
+                            'M': {
+                                'abbreviation': {'S': abbrev.get('abbreviation', '')},
+                                'full_form': {'S': abbrev.get('full_form', '')}
+                            }
+                        } for abbrev in translation_result['abbreviations'][lang]
+                    ]} for lang, abbreviations in translation_result['abbreviations'].items()
                 }
             
             # Clean up any timestamps or log markers in the data
@@ -1167,8 +1181,7 @@ def iep_processing_pipeline(event):
                 child_id=child_id, 
                 summaries=formatted_result,
                 user_id=user_id,
-                object_key=key,
-                ocr_data=ocr_data
+                object_key=key
             )
             
             print(f"Document processed successfully: {iep_id}")

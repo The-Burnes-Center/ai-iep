@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Container, Button, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { AppContext } from '../../common/app-context';
+import { ApiClient } from '../../common/api-client/api-client';
 import './ProfileForms.css';
 
 const WelcomeIntro: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const appContext = useContext(AppContext);
+  const apiClient = new ApiClient(appContext);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     setLoading(true);
-    // Navigate to welcome page
+    
+    // Mark onboarding as completed since user is continuing to main app
+    try {
+      await apiClient.profile.updateProfile({ showOnboarding: false });
+      console.log('Onboarding completed from WelcomeIntro - showOnboarding set to false');
+    } catch (onboardingError) {
+      console.error('Error updating onboarding status:', onboardingError);
+      // Don't fail the flow if this update fails
+    }
+    
+    // Navigate to IEP documents page
     navigate('/iep-documents');
   };
 

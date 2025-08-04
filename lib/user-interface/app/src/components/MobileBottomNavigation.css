@@ -5,14 +5,38 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  background-color: #ffffff;
-  border-top: 1px solid #e9ecef;
+  background-color: #00682F;
+  border-top: 1px solid #1e1e1e;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   padding: 8px 0;
   /* Hidden by default - only show on mobile */
   display: none;
   /* Safe area support for modern mobile devices */
   padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.processing-header {
+  text-align: left;
+  color: #F5F3EE;
+  padding: 6px 12px;
+  background-color: #00682F;
+  margin-bottom: 4px;
+}
+
+.processing-header h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.processing-line {
+  text-align: center;
+  color: #F5F3EE;
+  font-size: 0.8rem;
+  padding: 4px 0;
+  background-color: #00682F;
+  margin-bottom: 4px;
 }
 
 .navigation-container {
@@ -30,7 +54,7 @@
   justify-content: center;
   background: none;
   border: none;
-  color: #6c757d;
+  color: #7AAD8E;
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 6px 8px;
@@ -41,7 +65,7 @@
 }
 
 .nav-item:hover {
-  color: #0040BA;
+  color: #F5F3EE;
   background-color: rgba(0, 64, 186, 0.05);
 }
 
@@ -50,13 +74,13 @@
 }
 
 .nav-item:focus {
-  outline: 2px solid #0040BA;
+  outline: 2px solid #F5F3EE;
   outline-offset: 2px;
 }
 
 .nav-item.active {
-  color: #0040BA;
-  background-color: rgba(0, 64, 186, 0.1);
+  color: #F5F3EE;
+  background-color: #00682F;
 }
 
 .nav-item i {
@@ -98,6 +122,19 @@
   .nav-label {
     font-size: 0.65rem;
   }
+  
+  .processing-header {
+    padding: 4px 10px;
+  }
+  
+  .processing-header h3 {
+    font-size: 1.5rem;
+  }
+  
+  .processing-line {
+    font-size: 0.7rem;
+    padding: 3px 0;
+  }
 }
 
 /* Tablet portrait - hide navigation */
@@ -107,55 +144,5 @@
   }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .mobile-bottom-navigation {
-    background-color: #1f1f1f;
-    border-top-color: #404040;
-  }
-  
-  .nav-item {
-    color: #b0b0b0;
-  }
-  
-  .nav-item:hover {
-    color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  
-  .nav-item.active {
-    color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.15);
-  }
-}
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .mobile-bottom-navigation {
-    border-top-width: 2px;
-  }
-  
-  .nav-item {
-    border: 1px solid transparent;
-  }
-  
-  .nav-item:focus {
-    outline: 3px solid #0040BA;
-    outline-offset: 2px;
-  }
-  
-  .nav-item.active {
-    border-color: #0040BA;
-  }
-}
 
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .nav-item {
-    transition: none;
-  }
-  
-  .nav-item:active {
-    transform: none;
-  }
-}

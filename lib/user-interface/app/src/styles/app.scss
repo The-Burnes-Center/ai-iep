@@ -16,8 +16,10 @@ div[data-amplify-theme] {
 }
 
 body {
-  background-color: #ffffff;
+  background-color: #F5F3EE;
   overflow-y: scroll;
+  min-height: initial !important;
+  height: 100% !important;
 }
 
 body.awsui-dark-mode {

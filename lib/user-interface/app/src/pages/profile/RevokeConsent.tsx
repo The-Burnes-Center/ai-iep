@@ -5,7 +5,6 @@ import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { Auth } from 'aws-amplify';
 import { AuthContext } from '../../common/auth-context';
-import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context';
 import '../profile/ProfileForms.css';
 
@@ -16,7 +15,6 @@ const RevokeConsent: React.FC = () => {
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
   const { setAuthenticated } = useContext(AuthContext);
-  const { addNotification } = useNotifications();
   const { t } = useLanguage();
 
   const handleRevokeConsent = async () => {

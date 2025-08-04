@@ -231,7 +231,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       environment: {
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-        "BUCKET": props.knowledgeBucket.bucketName
+        "BUCKET": props.knowledgeBucket.bucketName,
+        "USER_POOL_ID": props.userPool.userPoolId
       },
       timeout: cdk.Duration.seconds(300),
       logRetention: logs.RetentionDays.ONE_YEAR
@@ -268,6 +269,15 @@ export class LambdaFunctionStack extends cdk.Stack {
         props.knowledgeBucket.bucketArn,
         props.knowledgeBucket.bucketArn + "/*"
       ]
+    }));
+
+    // Add Cognito permissions for user deletion
+    userProfileHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'cognito-idp:AdminDeleteUser'
+      ],
+      resources: [props.userPool.userPoolArn]
     }));
 
     this.userProfileFunction = userProfileHandlerFunction;

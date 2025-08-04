@@ -26,7 +26,7 @@ const IEPDocumentView: React.FC = () => {
   };
 
   const handleBackClick = () => {
-    navigate('/welcome-page');
+    navigate('/summary-and-translations');
   };
 
   const { t } = useLanguage();

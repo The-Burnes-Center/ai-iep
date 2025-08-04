@@ -94,4 +94,9 @@ class UserProfileRouter:
     @route('/profile/children/{childId}/documents', 'DELETE')
     def delete_child_documents(self, event: Dict) -> Dict:
         from lambda_function import delete_child_documents
-        return delete_child_documents(event) 
+        return delete_child_documents(event)
+    
+    @route('/profile', 'DELETE')
+    def delete_user_profile(self, event: Dict) -> Dict:
+        from lambda_function import delete_user_profile
+        return delete_user_profile(event) 

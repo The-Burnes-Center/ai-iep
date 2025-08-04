@@ -4,6 +4,9 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { IEPDocument, IEPSection } from './types';
 
+// Use system fonts that React-PDF supports natively
+// No font registration needed - these work out of the box with Unicode support
+
 interface PDFGenerationOptions {
   document: IEPDocument;
   preferredLanguage: string;
@@ -16,13 +19,15 @@ marked.setOptions({
   gfm: true // GitHub Flavored Markdown includes table support
 });
 
+// Using React-PDF default fonts for maximum Unicode compatibility
+// Default fonts have built-in support for Chinese, Vietnamese, and other Unicode characters
+
 // Styles for the PDF with content-aware page breaks
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 30,
-    fontFamily: 'Times-Roman',
     fontSize: 11,
     lineHeight: 1.5,
   },
@@ -38,13 +43,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
-    fontFamily: 'Times-Bold',
   },
   documentSubtitle: {
     fontSize: 12,
     textAlign: 'center',
     color: '#666666',
-    fontStyle: 'italic',
+    // Removed fontStyle: 'italic' to avoid font resolution issues
   },
   languageSection: {
     marginBottom: 25,
@@ -58,7 +62,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333333',
     borderBottomStyle: 'solid',
-    fontFamily: 'Times-Bold',
     breakAfter: 'avoid', // Keep header with content
   },
   sectionContainer: {
@@ -69,7 +72,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 10,
-    fontFamily: 'Times-Bold',
     breakAfter: 'avoid',
   },
   sectionContent: {
@@ -117,7 +119,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'left',
-    fontFamily: 'Times-Bold',
   },
   listItem: {
     flexDirection: 'row',
@@ -154,7 +155,7 @@ const getLanguageDisplayName = (language: string): string => {
 };
 
 // Convert markdown to React-PDF components
-const parseMarkdownContent = (markdown: string): React.ReactElement[] => {
+const parseMarkdownContent = (markdown: string, language: string = 'en'): React.ReactElement[] => {
   if (!markdown || typeof markdown !== 'string') return [];
 
   const elements: React.ReactElement[] = [];
@@ -181,9 +182,26 @@ const parseMarkdownContent = (markdown: string): React.ReactElement[] => {
 
   const flushTable = () => {
     if (currentTable.length > 0) {
+      // Normalize table to ensure all rows have the same number of columns
+      // Use reduce instead of spread operator to avoid "Invalid array length" for large tables
+      // Also limit max columns to prevent extremely wide tables
+      const maxColumns = Math.min(
+        currentTable.reduce((max, row) => Math.max(max, row.length), 0),
+        20 // Reasonable limit for PDF table width
+      );
+      const normalizedTable = currentTable.map(row => {
+        // Trim row to maxColumns limit, then pad if needed
+        const normalizedRow = [...row.slice(0, maxColumns)];
+        // Pad shorter rows with empty cells
+        while (normalizedRow.length < maxColumns) {
+          normalizedRow.push('');
+        }
+        return normalizedRow;
+      });
+
       elements.push(
         <View key={`table-${elements.length}`} style={styles.tableContainer}>
-          {currentTable.map((row, rowIndex) => (
+          {normalizedTable.map((row, rowIndex) => (
             <View 
               key={rowIndex} 
               style={rowIndex === 0 ? styles.tableHeaderRow : styles.tableRow}
@@ -191,7 +209,10 @@ const parseMarkdownContent = (markdown: string): React.ReactElement[] => {
               {row.map((cell, cellIndex) => (
                 <Text 
                   key={cellIndex} 
-                  style={rowIndex === 0 ? styles.tableCellHeader : styles.tableCell}
+                  style={[
+                    rowIndex === 0 ? styles.tableCellHeader : styles.tableCell,
+                    { fontWeight: rowIndex === 0 ? 'bold' : 'normal' }
+                  ]}
                 >
                   {cell.trim()}
                 </Text>
@@ -215,7 +236,9 @@ const parseMarkdownContent = (markdown: string): React.ReactElement[] => {
         inTable = true;
       }
       const cells = trimmedLine.split('|').map(cell => cell.trim()).filter(cell => cell);
-      if (cells.length > 0) {
+      // Skip table separator lines (e.g., | --- | --- |)
+      const isTableSeparator = cells.every(cell => /^-+$/.test(cell));
+      if (cells.length > 0 && !isTableSeparator) {
         currentTable.push(cells);
       }
       return;
@@ -242,7 +265,11 @@ const parseMarkdownContent = (markdown: string): React.ReactElement[] => {
           key={index} 
           style={[
             styles.sectionHeader, 
-            { fontSize, marginTop: level === 1 ? 20 : 15 }
+            { 
+              fontSize, 
+              marginTop: level === 1 ? 20 : 15,
+              fontWeight: 'bold'
+            }
           ]}
         >
           {text}
@@ -283,7 +310,7 @@ const generateLanguageContent = (
   
   // Language header
   elements.push(
-    <Text key={`lang-header-${language}`} style={styles.languageHeader}>
+    <Text key={`lang-header-${language}`} style={[styles.languageHeader, { fontWeight: 'bold' }]}>
       {isTranslation ? 'Translation - ' : ''}{getLanguageDisplayName(language)}
     </Text>
   );
@@ -293,8 +320,8 @@ const generateLanguageContent = (
   if (summary && summary.trim()) {
     elements.push(
       <View key={`summary-${language}`} style={styles.sectionContainer}>
-        <Text style={styles.sectionHeader}>IEP Summary</Text>
-        {parseMarkdownContent(summary)}
+        <Text style={[styles.sectionHeader, { fontWeight: 'bold' }]}>IEP Summary</Text>
+        {parseMarkdownContent(summary, language)}
       </View>
     );
   }
@@ -328,11 +355,11 @@ const generateLanguageContent = (
 
     elements.push(
       <View key={`section-${language}-${index}`} style={styles.sectionContainer}>
-        <Text style={styles.sectionHeader}>
+        <Text style={[styles.sectionHeader, { fontWeight: 'bold' }]}>
           {section.displayName || section.name || `Section ${index + 1}`}
         </Text>
         
-        {parseMarkdownContent(section.content)}
+        {parseMarkdownContent(section.content, language)}
         
         {section.pageNumbers && section.pageNumbers.length > 0 && (
           <Text style={styles.pageReference}>
@@ -355,7 +382,7 @@ const PDFDocumentComponent: React.FC<{ options: PDFGenerationOptions }> = ({ opt
   // Document header
   allElements.push(
     <View key="header" style={styles.documentHeader}>
-      <Text style={styles.documentTitle}>
+      <Text style={[styles.documentTitle, { fontWeight: 'bold' }]}>
         IEP Document Summary and Translations
       </Text>
       <Text style={styles.documentSubtitle}>
@@ -383,15 +410,18 @@ const PDFDocumentComponent: React.FC<{ options: PDFGenerationOptions }> = ({ opt
     }
   });
 
-  const languageOrder = [preferredLanguage, 'en', 'es', 'vi', 'zh'];
-  const orderedLanguages = languageOrder.filter(lang => availableLanguages.has(lang));
+  // New simplified logic: max 2 languages, other language first, then English
+  const orderedLanguages: string[] = [];
   
-  // Add any remaining languages not in the predefined order
-  availableLanguages.forEach(lang => {
-    if (!orderedLanguages.includes(lang)) {
-      orderedLanguages.push(lang);
-    }
-  });
+  // If preferred language is not English and has content, add it first
+  if (preferredLanguage !== 'en' && availableLanguages.has(preferredLanguage)) {
+    orderedLanguages.push(preferredLanguage);
+  }
+  
+  // Always add English if it has content (unless we're at max 2 languages)
+  if (availableLanguages.has('en') && orderedLanguages.length < 2) {
+    orderedLanguages.push('en');
+  }
 
   // Generate content for each language
   orderedLanguages.forEach((language, index) => {
