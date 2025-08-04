@@ -113,8 +113,8 @@
 
 /* Make sure images maintain aspect ratio if added later */
 .swiper-slide img {
-  max-width: 95%;
-  max-height: 95%;
+  max-width: 99.5%;
+  max-height: 99.5%;
   object-fit: contain !important;
 }
 
@@ -156,7 +156,5 @@
     width: 30vh !important;
     height: 30vh !important;
   }
-
-  
 
 }

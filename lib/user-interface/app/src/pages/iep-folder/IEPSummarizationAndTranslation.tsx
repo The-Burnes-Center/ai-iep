@@ -667,7 +667,7 @@ if(document && document.message === "No document found for this child") {
               
               {/* Button container - only shown during tutorial phases */}
               {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
-                <div className="d-flex justify-content-between align-items-center mb-3 px-3 py-4">
+                <div className="d-flex justify-content-between align-items-center mb-3 px-3 py-4 tutorial-button-container">
                   {/* Back button - only shown during parent-rights phase */}
                   {tutorialPhase === 'parent-rights' ? (
                     <Button 
@@ -692,7 +692,7 @@ if(document && document.message === "No document found for this child") {
               
               {/* Title div - only shown during tutorial phases */}
               {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
-                <div className="text-center py-2">
+                <div className="text-center py-2 tutorial-title-container">
                   <h3>
                     {tutorialPhase === 'app-tutorial' 
                       ? t('tutorial.appTutorial.title')
