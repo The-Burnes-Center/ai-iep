@@ -121,7 +121,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       ].filter(Boolean);
 
   // Don't show dropdown if preferred language is English
-  const shouldShowLanguageDropdown = preferredLanguage !== 'en';
+  const shouldShowLanguageDropdown = preferredLanguage !== 'en' && document.status && document.status === "PROCESSED" && Object.keys(document.summaries).length > 1;
 
   // Handle language change - now just controls tab content, no API calls
   const handleLanguageChange = (lang: SupportedLanguage) => {
@@ -523,10 +523,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                       <p className="text-muted mb-2 page-numbers-text">
                         <small>
                           <span className="page-numbers-label">
-                            {isEnglishTab ? 'Found in ' : t('sections.foundIn')}
+                            {isEnglishTab ? 'Found in ' : t('sections.foundIn') + ' '}
                           </span>
                           <span className="page-numbers-value">
-                            {isEnglishTab ? 'pages ' : t('sections.pages')}
+                            {isEnglishTab ? 'pages ' : t('sections.pages') + ' '}
                             {Array.isArray(section.pageNumbers) 
                               ? section.pageNumbers.join(', ') 
                               : section.pageNumbers}
@@ -653,7 +653,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     );
   }
 
-console.log("This is profile",profile);
 
 if(profile.showOnboarding){
   navigate('/');

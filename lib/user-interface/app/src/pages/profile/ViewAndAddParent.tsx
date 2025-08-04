@@ -167,7 +167,7 @@ export default function ViewAndAddParent() {
         <Row style={{ width: '100%', justifyContent: 'center' }}>
           <Col xs={12} md={8} lg={6}>
             <div className="profile-form">
-              <h2 className="profile-title">
+              <h2 className="parent-name-title">
                 {t('parent.title')}
               </h2>
               

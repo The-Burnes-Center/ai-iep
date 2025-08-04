@@ -80,7 +80,7 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
           </div>
         ) : documentName ? (
         <>
-        <h4 className="document-title">{t('current.title')}</h4>
+        <h6 className="document-title">{t('current.title')}</h6>
           <Alert 
             variant="info" 
             className="document-info-alert d-flex align-items-center"
