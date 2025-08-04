@@ -435,6 +435,11 @@ display: none !important;
   color: #1E1E1E;
 }
 
+.example-video-text {
+  padding-left: 3rem;
+  margin-top: 1rem;
+}
+
 /* Mobile responsive drawer */
 @media (max-width: 768px) {
 .jargon-drawer {

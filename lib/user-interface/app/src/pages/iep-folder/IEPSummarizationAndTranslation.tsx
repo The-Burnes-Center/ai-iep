@@ -8,7 +8,7 @@ import { IEPDocument, IEPSection, Language, UserProfile } from '../../common/typ
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
-import { generatePDF, canGeneratePDF } from '../../common/pdf-generator.tsx';
+// PDF generation now handled by API client
 import ParentRightsCarousel from '../../components/ParentRightsCarousel';
 import AppTutorialCarousel from '../../components/AppTutorialCarousel';
 import { ApiClient } from '../../common/api-client/api-client';
@@ -144,6 +144,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const handleBack = () => {
     if (tutorialPhase === 'parent-rights') {
       setTutorialPhase('app-tutorial');
+    }
+  };
+
+  // Handle when user reaches the last slide in app tutorial
+  const handleLastSlideReached = () => {
+    if (tutorialPhase === 'app-tutorial') {
+      setTutorialPhase('parent-rights');
     }
   };
 
@@ -419,7 +426,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Handle PDF download
   const handleDownloadPDF = async () => {
-    if (!canGeneratePDF(document)) {
+    if (!apiClient.pdf.canGeneratePDF(document)) {
       setPdfError('No content available for PDF generation');
       return;
     }
@@ -428,14 +435,20 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     setPdfError(null);
 
     try {
-      await generatePDF({
+      await apiClient.pdf.generatePDF({
         document,
-        preferredLanguage
-        // Let the PDF generator handle the filename automatically
+        preferredLanguage,
+        fileName: 'IEP_Summary_and_Translations'
       });
+      
+      // Show success notification
+      addNotification('success', 'PDF generated successfully!');
     } catch (error) {
       console.error('PDF generation failed:', error);
       setPdfError(error instanceof Error ? error.message : 'Failed to generate PDF');
+      
+      // Show error notification
+      addNotification('error', `PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -701,12 +714,19 @@ if(document && document.message === "No document found for this child") {
               {/* Title div - only shown during tutorial phases */}
               {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
                 <div className="text-center py-2 tutorial-title-container">
+
+
                   <h3>
                     {tutorialPhase === 'app-tutorial' 
                       ? t('tutorial.appTutorial.title')
                       : t('tutorial.parentRights.title')
                     }
                   </h3>
+                  {
+                    tutorialPhase === 'app-tutorial' && (
+                      <p className="text-muted text-start example-video-text">{t('tutorial.exampleVideo')}</p>
+                    )
+                  }             
                 </div>
               )}
               
@@ -714,7 +734,7 @@ if(document && document.message === "No document found for this child") {
                 <Card className="processing-summary-app-tutorial-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
                     <div className="carousel-with-button">
-                      <AppTutorialCarousel slides={appTutorialSlideData} />
+                      <AppTutorialCarousel slides={appTutorialSlideData} onLastSlideReached={handleLastSlideReached} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -749,7 +769,7 @@ if(document && document.message === "No document found for this child") {
       <Container className="summary-container mt-3 mb-3">
         <div className="mt-2 text-start button-container d-flex justify-content-between align-items-center">
           <div className="d-flex gap-2 align-items-center">
-            {canGeneratePDF(document) && (
+            {apiClient.pdf.canGeneratePDF(document) && (
               <Button 
                 variant="primary" 
                 onClick={handleDownloadPDF}

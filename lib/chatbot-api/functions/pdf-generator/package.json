@@ -1,0 +1,16 @@
+{
+  "name": "pdf-generator",
+  "version": "1.0.0",
+  "description": "Lambda function for generating PDFs from IEP documents using Puppeteer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "puppeteer-core": "^21.11.0",
+    "@sparticuz/chromium": "^119.0.2"
+  },
+  "keywords": ["pdf", "puppeteer", "lambda", "iep"],
+  "author": "",
+  "license": "ISC"
+}
