@@ -338,11 +338,14 @@ export class LambdaFunctionStack extends cdk.Stack {
         },
       }),
       handler: 'index.handler',
-      timeout: cdk.Duration.seconds(60),
-      memorySize: 1024, // Puppeteer needs more memory
+      timeout: cdk.Duration.seconds(120), // Increase timeout for PDF generation
+      memorySize: 1536, // Increase memory for Chromium
       logRetention: logs.RetentionDays.ONE_YEAR,
       environment: {
-        ...commonEnvVars
+        ...commonEnvVars,
+        AWS_LAMBDA_EXEC_WRAPPER: '/opt/bootstrap',
+        FONTCONFIG_PATH: '/opt/fonts',
+        LD_LIBRARY_PATH: '/opt/lib'
       }
     });
 
