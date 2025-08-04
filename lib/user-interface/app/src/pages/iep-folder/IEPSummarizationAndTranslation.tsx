@@ -733,7 +733,7 @@ if(document && document.message === "No document found for this child") {
                 </Card>
               )}
         </Container>
-        <MobileBottomNavigation tutorialPhase={true} />
+        <MobileBottomNavigation tutorialPhaseEnabled={true} tutorialPhase={tutorialPhase}/>
       </>
     );
   }

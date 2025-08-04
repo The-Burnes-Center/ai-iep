@@ -4,11 +4,13 @@ import { useLanguage } from '../common/language-context';
 import './MobileBottomNavigation.css';
 
 interface MobileBottomNavigationProps {
-  tutorialPhase?: boolean;
+  tutorialPhaseEnabled?: boolean;
+  tutorialPhase?:string;
 }
 
 const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ 
-  tutorialPhase = false,
+  tutorialPhaseEnabled = false,
+  tutorialPhase =''
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,10 +45,32 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
 
   return (
     <div className="mobile-bottom-navigation">
-      {tutorialPhase ? (
+      {tutorialPhaseEnabled ?
+      (
+
+        tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights' ? (
         <div className="processing-line">
           {t('navigation.processing') || 'Your document is being processed...'}
         </div>
+        ) :
+        (<>
+        <div className="processing-header">
+          {t('navigation.processing') || 'Your document is being processed...'}
+        </div>
+        <div className="navigation-container">
+          {navigationItems.map((item, index) => (
+            <button
+              key={index}
+              className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
+              onClick={() => handleNavigation(item.route)}
+              aria-label={`Navigate to ${item.label}`}
+            >
+              <i className={`bi ${item.icon}`}></i>
+              <span className="nav-label">{item.label}</span>
+            </button>
+          ))}
+        </div>
+        </>)
       ) : (
         <div className="navigation-container">
           {navigationItems.map((item, index) => (
