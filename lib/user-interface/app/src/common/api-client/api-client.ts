@@ -4,6 +4,7 @@ import { KnowledgeManagementClient } from "./knowledge-management-client";
 import { UserFeedbackClient } from "./user-feedback-client";
 import { EvaluationsClient } from "./evaluations-client";
 import { ProfileClient } from "./profile-client";
+import { PDFClient } from "./pdf-client";
 
 export class ApiClient {
 
@@ -13,6 +14,7 @@ export class ApiClient {
   private _userFeedbackClient: UserFeedbackClient | undefined;
   private _evaluationsClient: EvaluationsClient | undefined;
   private _profileClient: ProfileClient | undefined;
+  private _pdfClient: PDFClient | undefined;
  
 
   /** Construct the Knowledge Management sub-client */
@@ -57,6 +59,15 @@ export class ApiClient {
     }
 
     return this._evaluationsClient;
+  }
+
+  /** Construct the PDF sub-client */
+  public get pdf() {
+    if (!this._pdfClient) {
+      this._pdfClient = new PDFClient(this._appConfig);
+    }
+
+    return this._pdfClient;
   }
 
   constructor(protected _appConfig: AppConfig) {}

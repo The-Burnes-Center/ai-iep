@@ -137,6 +137,14 @@ export class ChatBotApi extends Construct {
       authorizer: httpAuthorizer,
     });
 
+    const pdfGeneratorAPIIntegration = new HttpLambdaIntegration('PDFGeneratorAPIIntegration', this.lambdaFunctions.pdfGeneratorFunction);
+    this.httpAPI.restAPI.addRoutes({
+      path: "/generate-pdf",
+      methods: [apigwv2.HttpMethod.POST],
+      integration: pdfGeneratorAPIIntegration,
+      authorizer: httpAuthorizer,
+    });
+
     // Prints out the AppSync GraphQL API key to the terminal
     new cdk.CfnOutput(this, "HTTP-API - apiEndpoint", {
       value: this.httpAPI.restAPI.apiEndpoint || "",
