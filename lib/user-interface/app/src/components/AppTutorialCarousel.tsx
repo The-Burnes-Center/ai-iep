@@ -22,7 +22,7 @@ const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, class
       // Add a small delay to ensure the slide transition completes
       setTimeout(() => {
         onLastSlideReached();
-      }, 1500);
+      }, 4000);
     }
   };
 
