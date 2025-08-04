@@ -147,6 +147,13 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
+  // Handle when user reaches the last slide in app tutorial
+  const handleLastSlideReached = () => {
+    if (tutorialPhase === 'app-tutorial') {
+      setTutorialPhase('parent-rights');
+    }
+  };
+
   // Parent Rights carousel data - internationalized using useLanguage hook
   const parentRightsSlideData = useMemo(() => {
     if (!translationsLoaded) return [];
@@ -701,12 +708,19 @@ if(document && document.message === "No document found for this child") {
               {/* Title div - only shown during tutorial phases */}
               {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
                 <div className="text-center py-2 tutorial-title-container">
+
+
                   <h3>
                     {tutorialPhase === 'app-tutorial' 
                       ? t('tutorial.appTutorial.title')
                       : t('tutorial.parentRights.title')
                     }
                   </h3>
+                  {
+                    tutorialPhase === 'app-tutorial' && (
+                      <p className="text-muted text-start example-video-text">{t('tutorial.exampleVideo')}</p>
+                    )
+                  }             
                 </div>
               )}
               
@@ -714,7 +728,7 @@ if(document && document.message === "No document found for this child") {
                 <Card className="processing-summary-app-tutorial-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
                     <div className="carousel-with-button">
-                      <AppTutorialCarousel slides={appTutorialSlideData} />
+                      <AppTutorialCarousel slides={appTutorialSlideData} onLastSlideReached={handleLastSlideReached} />
                     </div>
                   </Card.Body>
                 </Card>
