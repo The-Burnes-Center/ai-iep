@@ -31,6 +31,7 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly metadataHandlerFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
   public readonly cognitoTriggerFunction : lambda.Function;
+  public readonly pdfGeneratorFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
@@ -318,18 +319,33 @@ export class LambdaFunctionStack extends cdk.Stack {
 
     this.cognitoTriggerFunction = cognitoTriggerFunction;
 
+    // Common environment variables for all functions
+    const commonEnvVars = {
+      LOG_GROUP_NAME: props.logGroup.logGroupName,
+      ENVIRONMENT: process.env.ENVIRONMENT || 'development',
+    };
+
+    // PDF Generator Lambda Function
+    const pdfGeneratorFunction = createTaggedLambda('PDFGeneratorFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'pdf-generator')),
+      handler: 'index.handler',
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 1024, // Puppeteer needs more memory
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      environment: {
+        ...commonEnvVars
+      }
+    });
+
+    this.pdfGeneratorFunction = pdfGeneratorFunction;
+
     // Create a layer for logging
     const loggingLayer = new lambda.LayerVersion(this, 'LoggingLayer', {
       code: lambda.Code.fromAsset('lib/chatbot-api/logging'),
       compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
       description: 'Layer for logging functionality',
     });
-
-    // Common environment variables for all functions
-    const commonEnvVars = {
-      LOG_GROUP_NAME: props.logGroup.logGroupName,
-      ENVIRONMENT: process.env.ENVIRONMENT || 'development',
-    };
 
     // Common IAM permissions for logging
     const loggingPolicy = new iam.PolicyStatement({
@@ -343,5 +359,6 @@ export class LambdaFunctionStack extends cdk.Stack {
 
     // Add logging permissions to each function
     this.userProfileFunction.addToRolePolicy(loggingPolicy);
+    this.pdfGeneratorFunction.addToRolePolicy(loggingPolicy);
   }
 }
