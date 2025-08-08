@@ -57,11 +57,15 @@ export class LoggingStack extends Construct {
 
     // If a KMS key is provided, allow CloudWatch Logs service to use it for this log group
     if (props?.kmsKey) {
+      const region = cdk.Stack.of(this).region;
+      const account = cdk.Stack.of(this).account;
+      const logsArnPattern = `arn:${cdk.Aws.PARTITION}:logs:${region}:${account}:log-group:/ai-iep/*`;
+
       props.kmsKey.addToResourcePolicy(new iam.PolicyStatement({
         sid: 'AllowCloudWatchLogsUseOfKms',
         effect: iam.Effect.ALLOW,
         principals: [
-          new iam.ServicePrincipal(`logs.${cdk.Aws.REGION}.amazonaws.com`)
+          new iam.ServicePrincipal(`logs.${region}.amazonaws.com`)
         ],
         actions: [
           'kms:Encrypt',
@@ -72,8 +76,8 @@ export class LoggingStack extends Construct {
         ],
         resources: ['*'],
         conditions: {
-          ArnEquals: {
-            'kms:EncryptionContext:aws:logs:arn': this.logGroup.logGroupArn,
+          ArnLike: {
+            'kms:EncryptionContext:aws:logs:arn': logsArnPattern,
           },
         },
       }));

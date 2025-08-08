@@ -36,13 +36,14 @@ export class ChatBotApi extends Construct {
       enableKeyRotation: true,
       description: 'Customer-managed CMK for S3, DynamoDB, Lambda env vars, and logs',
     });
-    new kms.Alias(this, 'AppKmsAlias', {
+    const appKmsAlias = new kms.Alias(this, 'AppKmsAlias', {
       aliasName: 'alias/aiep/app',
       targetKey: appKmsKey,
     });
 
     // Initialize logging (encrypted with CMK)
     this.logging = new LoggingStack(this, "Logging", { kmsKey: appKmsKey });
+    this.logging.node.addDependency(appKmsAlias);
 
     this.tables = new TableStack(this, "TableStack", { kmsKey: appKmsKey });
     this.buckets = new S3BucketStack(this, "BucketStack", { encryptionKey: appKmsKey });
