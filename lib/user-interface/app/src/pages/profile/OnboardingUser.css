@@ -158,3 +158,39 @@
   }
 
 }
+
+/* Media query for desktop screens */
+@media (min-width: 992px) {
+  .carousel-container {
+    width: 60%;
+    border: solid 2px black;
+    border-radius: 25px;
+    padding: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .carousel-container .d-grid {
+  width: 55%;
+  margin-top: 2rem;
+  }
+
+  /* Apply blur to all slides */
+  .swiper-slide {
+    filter: blur(4px);
+    opacity: 0.8;
+    transition: filter 0.3s ease, opacity 0.3s ease;
+  }
+  
+  /* Remove blur from active slide */
+  .swiper-slide-active {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+/* Media query for larger desktop screens */
+/* Larger desktop styles go here */
+/* @media (min-width: 1200px) {
+  
+} */
