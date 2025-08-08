@@ -55,6 +55,30 @@ export class LoggingStack extends Construct {
     // Create log group with default encryption for all environments
     this.logGroup = new logs.LogGroup(this, 'LogGroup', baseProps);
 
+    // If a KMS key is provided, allow CloudWatch Logs service to use it for this log group
+    if (props?.kmsKey) {
+      props.kmsKey.addToResourcePolicy(new iam.PolicyStatement({
+        sid: 'AllowCloudWatchLogsUseOfKms',
+        effect: iam.Effect.ALLOW,
+        principals: [
+          new iam.ServicePrincipal(`logs.${cdk.Aws.REGION}.amazonaws.com`)
+        ],
+        actions: [
+          'kms:Encrypt',
+          'kms:Decrypt',
+          'kms:ReEncrypt*',
+          'kms:GenerateDataKey*',
+          'kms:Describe*'
+        ],
+        resources: ['*'],
+        conditions: {
+          ArnEquals: {
+            'kms:EncryptionContext:aws:logs:arn': this.logGroup.logGroupArn,
+          },
+        },
+      }));
+    }
+
     // Add permissions to the role
     this.logRole.addToPolicy(
       new iam.PolicyStatement({
