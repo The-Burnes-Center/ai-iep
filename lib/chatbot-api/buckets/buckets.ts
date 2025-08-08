@@ -3,11 +3,16 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from "constructs";
 import { createBucketPolicy } from './bucket-policy';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as kms from 'aws-cdk-lib/aws-kms';
+
+export interface S3BucketStackProps extends cdk.StackProps {
+  encryptionKey?: kms.IKey;
+}
 
 export class S3BucketStack extends cdk.Stack {
   public readonly knowledgeBucket: s3.Bucket;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: S3BucketStackProps) {
     super(scope, id, props);
 
     // Create a new S3 bucket
@@ -17,7 +22,8 @@ export class S3BucketStack extends cdk.Stack {
       autoDeleteObjects: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
-      encryption: s3.BucketEncryption.S3_MANAGED,
+      encryption: props?.encryptionKey ? s3.BucketEncryption.KMS : s3.BucketEncryption.S3_MANAGED,
+      encryptionKey: props?.encryptionKey,
       cors: [{
         allowedMethods: [s3.HttpMethods.GET,s3.HttpMethods.POST,s3.HttpMethods.PUT,s3.HttpMethods.DELETE],
         allowedOrigins: ['*'],      

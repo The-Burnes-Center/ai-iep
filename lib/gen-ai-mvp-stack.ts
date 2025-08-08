@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { ChatBotApi } from "./chatbot-api";
+import * as kms from 'aws-cdk-lib/aws-kms';
 import { cognitoDomainName } from "./constants"
 import { NewAuthorizationStack } from "./authorization/new-auth"
 import { UserInterface } from "./user-interface"
@@ -43,7 +44,8 @@ export class GenAiMvpStack extends cdk.Stack {
      {userPoolId : authentication.userPool.userPoolId,
       userPoolClientId : authentication.userPoolClient.userPoolClientId,
       cognitoDomain : getResourceName(cognitoDomainName) + '-new',
-      api : chatbotAPI
+      api : chatbotAPI,
+      kmsKey: chatbotAPI.kmsKey
     });
     
     // Update callback URLs for Cognito User Pool Client after CloudFront distribution is created

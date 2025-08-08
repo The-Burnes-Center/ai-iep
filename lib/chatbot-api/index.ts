@@ -12,6 +12,7 @@ import { aws_apigatewayv2 as apigwv2 } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { NewAuthorizationStack } from "../authorization/new-auth";
+import * as kms from 'aws-cdk-lib/aws-kms';
 
 
 export interface ChatBotApiProps {
@@ -25,15 +26,27 @@ export class ChatBotApi extends Construct {
   private lambdaFunctions: LambdaFunctionStack;
   private tables: TableStack;
   private buckets: S3BucketStack;
+  public readonly kmsKey: kms.IKey;
 
   constructor(scope: Construct, id: string, props: ChatBotApiProps) {
     super(scope, id);
 
-    // Initialize logging
-    this.logging = new LoggingStack(this, "Logging");
+    // Create a single customer-managed KMS key for application encryption
+    const appKmsKey = new kms.Key(this, 'AppKmsKey', {
+      enableKeyRotation: true,
+      description: 'Customer-managed CMK for S3, DynamoDB, Lambda env vars, and logs',
+    });
+    new kms.Alias(this, 'AppKmsAlias', {
+      aliasName: 'alias/aiep/app',
+      targetKey: appKmsKey,
+    });
 
-    this.tables = new TableStack(this, "TableStack");
-    this.buckets = new S3BucketStack(this, "BucketStack");
+    // Initialize logging (encrypted with CMK)
+    this.logging = new LoggingStack(this, "Logging", { kmsKey: appKmsKey });
+
+    this.tables = new TableStack(this, "TableStack", { kmsKey: appKmsKey });
+    this.buckets = new S3BucketStack(this, "BucketStack", { encryptionKey: appKmsKey });
+    this.kmsKey = appKmsKey;
     
     // Expose user profiles table
     this.userProfilesTable = this.tables.userProfilesTable;
@@ -43,7 +56,7 @@ export class ChatBotApi extends Construct {
 
     // If authentication is provided, set up the full API
     if (props.authentication) {
-      this.setupApiWithAuthentication(props.authentication);
+      this.setupApiWithAuthentication(props.authentication, appKmsKey);
     }
   }
 
@@ -51,13 +64,13 @@ export class ChatBotApi extends Construct {
    * Set authentication and set up the API routes
    */
   public setAuthentication(authentication: NewAuthorizationStack) {
-    this.setupApiWithAuthentication(authentication);
+    this.setupApiWithAuthentication(authentication, this.kmsKey);
   }
 
   /**
    * Set up API routes with authentication
    */
-  private setupApiWithAuthentication(authentication: NewAuthorizationStack) {
+  private setupApiWithAuthentication(authentication: NewAuthorizationStack, appKmsKey: kms.IKey) {
     this.lambdaFunctions = new LambdaFunctionStack(this, "LambdaFunctions",
       {
         knowledgeBucket: this.buckets.knowledgeBucket,
@@ -65,7 +78,8 @@ export class ChatBotApi extends Construct {
         iepDocumentsTable: this.tables.iepDocumentsTable,
         userPool: authentication.userPool,
         logGroup: this.logging.logGroup,
-        logRole: this.logging.logRole
+        logRole: this.logging.logRole,
+        kmsKey: appKmsKey,
       })
 
     const httpAuthorizer = new HttpJwtAuthorizer('HTTPAuthorizer', authentication.userPool.userPoolProviderUrl,{
