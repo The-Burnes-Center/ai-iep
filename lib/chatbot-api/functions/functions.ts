@@ -14,6 +14,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
+import * as kms from 'aws-cdk-lib/aws-kms';
 
 export interface LambdaFunctionStackProps {
   readonly knowledgeBucket : s3.Bucket;
@@ -22,6 +23,7 @@ export interface LambdaFunctionStackProps {
   readonly userPool: cognito.UserPool;
   readonly logGroup: logs.LogGroup;
   readonly logRole: iam.Role;
+  readonly kmsKey?: kms.IKey;
 }
 
 export class LambdaFunctionStack extends cdk.Stack {  
@@ -60,7 +62,8 @@ export class LambdaFunctionStack extends cdk.Stack {
         "BUCKET" : props.knowledgeBucket.bucketName,        
       },
       timeout: cdk.Duration.seconds(30),
-      logRetention: logs.RetentionDays.ONE_YEAR
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
     });
 
     deleteS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -81,7 +84,8 @@ export class LambdaFunctionStack extends cdk.Stack {
         "BUCKET" : props.knowledgeBucket.bucketName,        
       },
       timeout: cdk.Duration.seconds(30),
-      logRetention: logs.RetentionDays.ONE_YEAR
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
     });
 
     getS3APIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -104,7 +108,8 @@ export class LambdaFunctionStack extends cdk.Stack {
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName
       },
       timeout: cdk.Duration.seconds(300),
-      logRetention: logs.RetentionDays.ONE_YEAR
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
     });
 
     uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -166,7 +171,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       },
       timeout: cdk.Duration.seconds(900),
       memorySize: 2048,
-      logRetention: logs.RetentionDays.ONE_YEAR
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
     });
 
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
@@ -233,10 +239,12 @@ export class LambdaFunctionStack extends cdk.Stack {
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "BUCKET": props.knowledgeBucket.bucketName,
-        "USER_POOL_ID": props.userPool.userPoolId
+        "USER_POOL_ID": props.userPool.userPoolId,
+        "AIEP_KMS_KEY_ALIAS": 'alias/aiep/app'
       },
       timeout: cdk.Duration.seconds(300),
-      logRetention: logs.RetentionDays.ONE_YEAR
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
     });
 
     // Add permissions for DynamoDB tables
@@ -292,7 +300,8 @@ export class LambdaFunctionStack extends cdk.Stack {
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName
       },
       timeout: cdk.Duration.seconds(30),
-      logRetention: logs.RetentionDays.ONE_YEAR
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
     });
 
     // Grant DynamoDB permissions to Cognito trigger
@@ -343,7 +352,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       logRetention: logs.RetentionDays.ONE_YEAR,
       environment: {
         ...commonEnvVars
-      }
+      },
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
     });
 
     this.pdfGeneratorFunction = pdfGeneratorFunction;
@@ -368,5 +378,27 @@ export class LambdaFunctionStack extends cdk.Stack {
     // Add logging permissions to each function
     this.userProfileFunction.addToRolePolicy(loggingPolicy);
     this.pdfGeneratorFunction.addToRolePolicy(loggingPolicy);
+
+    // Grant KMS permissions to functions when a CMK is supplied
+    if (props.kmsKey) {
+      const kmsPolicy = new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'kms:Encrypt',
+          'kms:Decrypt',
+          'kms:ReEncrypt*',
+          'kms:GenerateDataKey*',
+          'kms:DescribeKey'
+        ],
+        resources: [props.kmsKey.keyArn]
+      });
+
+      deleteS3APIHandlerFunction.addToRolePolicy(kmsPolicy);
+      getS3APIHandlerFunction.addToRolePolicy(kmsPolicy);
+      uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(kmsPolicy);
+      metadataHandlerFunction.addToRolePolicy(kmsPolicy);
+      userProfileHandlerFunction.addToRolePolicy(kmsPolicy);
+      // Cognito trigger and PDF generator don't need direct KMS usage beyond env, skip
+    }
   }
 }

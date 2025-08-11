@@ -4,11 +4,16 @@ import { Attribute, AttributeType, Table, ProjectionType } from 'aws-cdk-lib/aws
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { getTagProps, tagResource } from '../../tags';
+import * as kms from 'aws-cdk-lib/aws-kms';
+
+export interface TableStackProps extends StackProps {
+  kmsKey?: kms.IKey;
+}
 
 export class TableStack extends Stack {
   public readonly userProfilesTable: dynamodb.Table;
   public readonly iepDocumentsTable: dynamodb.Table;
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props?: TableStackProps) {
     super(scope, id, props);
 
     // Helper function to tag tables with standard tags plus table-specific tags
@@ -26,6 +31,8 @@ export class TableStack extends Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       timeToLiveAttribute: 'ttl',
+      encryption: props?.kmsKey ? dynamodb.TableEncryption.CUSTOMER_MANAGED : dynamodb.TableEncryption.AWS_MANAGED,
+      ...(props?.kmsKey ? { encryptionKey: props.kmsKey } : {}),
     });
     tagTable(this.userProfilesTable, 'UserProfilesTable');
 
@@ -36,6 +43,8 @@ export class TableStack extends Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       timeToLiveAttribute: 'ttl',
+      encryption: props?.kmsKey ? dynamodb.TableEncryption.CUSTOMER_MANAGED : dynamodb.TableEncryption.AWS_MANAGED,
+      ...(props?.kmsKey ? { encryptionKey: props.kmsKey } : {}),
     });
     tagTable(this.iepDocumentsTable, 'IepDocumentsTable');
 
