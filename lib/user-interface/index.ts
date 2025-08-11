@@ -14,14 +14,12 @@ import { Website } from "./generate-app"
 import { NagSuppressions } from "cdk-nag";
 import { Utils } from "../shared/utils"
 import { OIDCIntegrationName } from "../constants";
-import * as kms from 'aws-cdk-lib/aws-kms';
 
 export interface UserInterfaceProps {
   readonly userPoolId: string;
   readonly userPoolClientId: string;
   readonly api: ChatBotApi;
   readonly cognitoDomain : string;
-  readonly kmsKey?: kms.IKey;
 }
 
 export class UserInterface extends Construct {
@@ -39,7 +37,6 @@ export class UserInterface extends Construct {
       autoDeleteObjects: false,
       enforceSSL: true,
       versioned: true,
-      ...(props.kmsKey ? { encryption: s3.BucketEncryption.KMS, encryptionKey: props.kmsKey } : {}),
     });
 
     const websiteBucket = new s3.Bucket(this, "WebsiteBucket", {
@@ -51,14 +48,13 @@ export class UserInterface extends Construct {
       enforceSSL: true,
       versioned: true,
       serverAccessLogsBucket: uploadLogsBucket,
-      ...(props.kmsKey ? { encryption: s3.BucketEncryption.KMS, encryptionKey: props.kmsKey } : {}),
     });
 
     // Deploy either Private (only accessible within VPC) or Public facing website
     let apiEndpoint: string;
     let distribution;
 
-    const publicWebsite = new Website(this, "Website", { ...props, websiteBucket: websiteBucket, kmsKey: props.kmsKey });
+    const publicWebsite = new Website(this, "Website", { ...props, websiteBucket: websiteBucket });
     distribution = publicWebsite.distribution
     this.websiteDistribution = distribution;
 
