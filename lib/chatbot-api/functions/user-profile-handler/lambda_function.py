@@ -12,8 +12,13 @@ from botocore.exceptions import ClientError
 dynamodb = boto3.resource('dynamodb')
 user_profiles_table = dynamodb.Table(os.environ['USER_PROFILES_TABLE'])
 iep_documents_table = dynamodb.Table(os.environ['IEP_DOCUMENTS_TABLE'])
-kms_client = boto3.client('kms')
+
+# Initialize KMS client with explicit region
+region = os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')
+kms_client = boto3.client('kms', region_name=region)
 kms_key_alias = os.environ.get('AIEP_KMS_KEY_ALIAS', 'alias/aiep/app')
+
+print(f"KMS client initialized for region: {region}, using key alias: {kms_key_alias}")
 
 SUPPORTED_LANGUAGES = ['en', 'zh', 'es', 'vi']
 DEFAULT_LANGUAGE = 'en'
@@ -109,26 +114,49 @@ def kms_encrypt_string(plaintext: str) -> str:
     if not plaintext:
         return plaintext
     try:
+        # Try to encrypt with KMS
         resp = kms_client.encrypt(
             KeyId=kms_key_alias,
             Plaintext=plaintext.encode('utf-8'),
         )
-        return base64.b64encode(resp['CiphertextBlob']).decode('utf-8')
+        encrypted = base64.b64encode(resp['CiphertextBlob']).decode('utf-8')
+        print(f"Successfully encrypted field with KMS")
+        return encrypted
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        print(f"KMS encrypt failed with {error_code}: {str(e)}")
+        if error_code in ['UnrecognizedClientException', 'AccessDeniedException', 'NotFoundException']:
+            print("KMS key not available - storing as plaintext (encryption disabled)")
+        return plaintext
     except Exception as e:
-        # Fallback to plaintext if KMS unavailable to avoid breaking UX
-        print(f"KMS encrypt failed: {str(e)}")
+        print(f"KMS encrypt failed with unexpected error: {str(e)}")
         return plaintext
 
 def kms_decrypt_string(ciphertext_b64: str) -> str:
     if not ciphertext_b64:
         return ciphertext_b64
+    
+    # Quick check if this looks like base64 (encrypted data)
+    try:
+        base64.b64decode(ciphertext_b64)
+    except:
+        # Not base64, probably plaintext
+        return ciphertext_b64
+        
     try:
         blob = base64.b64decode(ciphertext_b64)
         resp = kms_client.decrypt(CiphertextBlob=blob)
-        return resp['Plaintext'].decode('utf-8')
+        decrypted = resp['Plaintext'].decode('utf-8')
+        print(f"Successfully decrypted field with KMS")
+        return decrypted
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        print(f"KMS decrypt failed with {error_code}: {str(e)}")
+        if error_code in ['UnrecognizedClientException', 'AccessDeniedException', 'InvalidCiphertextException']:
+            print("Assuming plaintext data (encryption may be disabled)")
+        return ciphertext_b64
     except Exception as e:
-        # If value is plaintext or decrypt fails, return original
-        print(f"KMS decrypt failed or value is plaintext: {str(e)}")
+        print(f"KMS decrypt failed with unexpected error: {str(e)}")
         return ciphertext_b64
 
 def get_timestamps() -> Dict[str, any]:
