@@ -44,8 +44,7 @@ export class GenAiMvpStack extends cdk.Stack {
      {userPoolId : authentication.userPool.userPoolId,
       userPoolClientId : authentication.userPoolClient.userPoolClientId,
       cognitoDomain : getResourceName(cognitoDomainName) + '-new',
-      api : chatbotAPI,
-      kmsKey: chatbotAPI.kmsKey
+      api : chatbotAPI
     });
     
     // Update callback URLs for Cognito User Pool Client after CloudFront distribution is created
