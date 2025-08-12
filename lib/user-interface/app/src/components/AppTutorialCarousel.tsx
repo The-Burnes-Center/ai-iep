@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Carousel } from 'react-bootstrap';
 import './AppTutorialCarousel.css';
 
@@ -16,13 +16,29 @@ interface AppTutorialCarouselProps {
 }
 
 const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, className = '', onLastSlideReached }) => {
-  const handleSlideChange = (selectedIndex: number) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleSelect = (selectedIndex: number) => {
+    setActiveIndex(selectedIndex);
+    
     // Check if we've reached the last slide (0-indexed, so slides.length - 1)
     if (selectedIndex === slides.length - 1 && onLastSlideReached) {
       // Add a small delay to ensure the slide transition completes
       setTimeout(() => {
         onLastSlideReached();
       }, 4000);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (activeIndex > 0) {
+      setActiveIndex(activeIndex - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (activeIndex < slides.length - 1) {
+      setActiveIndex(activeIndex + 1);
     }
   };
 
@@ -34,7 +50,8 @@ const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, class
           indicators={true}
           interval={null}
           pause="hover"
-          onSlide={handleSlideChange}
+          activeIndex={activeIndex}
+          onSelect={handleSelect}
           className={`app-tutorial-carousel ${className}`}
         >
           {slides.map((slide, index) => (
@@ -48,9 +65,26 @@ const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, class
             </Carousel.Item>
           ))}
         </Carousel>
+        
+        <div className="carousel-desktop-navigation">
+          <button 
+            className="carousel-nav-btn prev-btn" 
+            onClick={handlePrevious}
+            disabled={activeIndex === 0}
+          >
+            PREVIOUS
+          </button>
+          <button 
+            className="carousel-nav-btn next-btn" 
+            onClick={handleNext}
+            disabled={activeIndex === slides.length - 1}
+          >
+            NEXT
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
-export default AppTutorialCarousel; 
+export default AppTutorialCarousel;

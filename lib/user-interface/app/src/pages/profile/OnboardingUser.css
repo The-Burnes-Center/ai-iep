@@ -183,7 +183,7 @@
   }
 
   /* Hide mobile CTA button on desktop */
-  .d-grid {
+  .mobile-cta {
     display: none !important;
   }
   

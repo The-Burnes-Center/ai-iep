@@ -724,7 +724,7 @@ if(document && document.message === "No document found for this child") {
                   </h3>
                   {
                     tutorialPhase === 'app-tutorial' && (
-                      <p className="text-muted text-start example-video-text">{t('tutorial.exampleVideo')}</p>
+                      <p className="text-muted text-center example-video-text">{t('tutorial.exampleVideo')}</p>
                     )
                   }             
                 </div>

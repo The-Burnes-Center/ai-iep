@@ -440,6 +440,13 @@ display: none !important;
   margin-top: 1rem;
 }
 
+@media (min-width: 992px) { 
+.slide-tutorial-content{
+}
+
+}
+
+
 /* Mobile responsive drawer */
 @media (max-width: 768px) {
 .jargon-drawer {

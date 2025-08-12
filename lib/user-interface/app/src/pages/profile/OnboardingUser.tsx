@@ -159,7 +159,7 @@ const OnboardingUser: React.FC = () => {
             disabled={isFirstSlide}
             onClick={handlePrevClick}
           >
-            Previous
+            PREVIOUS
           </Button>
           
           {isLastSlide ? (
@@ -176,7 +176,7 @@ const OnboardingUser: React.FC = () => {
               className="nav-btn next-btn" 
               onClick={handleNextClick}
             >
-              Next
+              NEXT
             </Button>
           )}
         </div>
