@@ -118,6 +118,19 @@
   object-fit: contain !important;
 }
 
+/* Desktop navigation buttons - hidden on mobile */
+.desktop-navigation {
+  display: none;
+  width: 85%;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.nav-btn {
+  min-width: 120px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
 
 .continue-onboarding {
   font-family: 'Roboto', sans-serif;
@@ -140,8 +153,8 @@
   transform: none !important;
 }
 
-
-.carousel-container .d-grid {
+/* Mobile CTA button container */
+.mobile-cta {
   width: 85%;
   margin-top: 2rem;
 }
@@ -156,7 +169,6 @@
     width: 30vh !important;
     height: 30vh !important;
   }
-
 }
 
 /* Media query for desktop screens */
@@ -170,9 +182,16 @@
     margin-right: auto;
   }
 
-  .carousel-container .d-grid {
-  width: 55%;
-  margin-top: 2rem;
+  /* Hide mobile CTA button on desktop */
+  .d-grid {
+    display: none !important;
+  }
+  
+  /* Show desktop navigation on desktop */
+  .desktop-navigation {
+    display: flex;
+    width: 30%;
+    margin-top: 2rem;
   }
 
   /* Apply blur to all slides */
@@ -186,5 +205,13 @@
   .swiper-slide-active {
     filter: blur(0);
     opacity: 1;
+  }
+  
+  /* Style for the disabled previous button */
+  .nav-btn:disabled {
+    background-color: #E7E4DC !important;
+    color: #A09E99 !important;
+    border-color: #E7E4DC !important;
+    opacity: 1 !important;
   }
 }
