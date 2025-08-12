@@ -85,6 +85,7 @@ const slideImages = [
           slidesPerView="auto"
           spaceBetween={15}
           centeredSlides={true}
+          threshold={5} 
           pagination={{
             clickable: true,
             el: '.swiper-custom-pagination',
