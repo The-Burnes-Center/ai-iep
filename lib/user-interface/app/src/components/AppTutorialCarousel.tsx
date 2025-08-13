@@ -31,12 +31,19 @@ const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, class
   };
 
   const handlePrevious = () => {
+    console.log("Active Index",activeIndex);
     if (activeIndex > 0) {
       setActiveIndex(activeIndex - 1);
     }
   };
 
   const handleNext = () => {
+    if(activeIndex === 4){
+      setTimeout(() => {
+        onLastSlideReached();
+      }, 4000);
+    }
+
     if (activeIndex < slides.length - 1) {
       setActiveIndex(activeIndex + 1);
     }
