@@ -88,7 +88,7 @@ const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, class
           >
             NEXT
           </button>
-        </div>
+         </div>
       </div>
     </div>
   );

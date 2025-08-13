@@ -42,6 +42,15 @@
   background-position: center;
   background-repeat: no-repeat;
 }
+
+.processing-summary-loader-card .spinner-border {
+  display: none;
+}
+
+.processing-summary-loader-card .desktop-processing-spinner-text {
+  display: none;
+}
+
 .processing-summary-card-body {
   padding: 0;
   border: none;
@@ -441,7 +450,38 @@ display: none !important;
 }
 
 @media (min-width: 992px) { 
-.slide-tutorial-content{
+
+  .processing-summary-loader-card {
+    background-image: none !important;
+    background-color: #F5f3EE;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .processing-summary-loader-card .processing-summary-card-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  
+.processing-summary-loader-card .spinner-border {
+  display: inline-block;
+}
+
+.processing-summary-loader-card .desktop-processing-spinner-text {
+  display: inline-block;
+}
+
+.processing-summary-parent-rights-card {
+  background-image: none !important;
+  background-color: #F5F3EE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 }
