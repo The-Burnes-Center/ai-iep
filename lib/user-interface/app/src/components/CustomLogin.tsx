@@ -17,7 +17,7 @@ import { useLanguage, SupportedLanguage } from '../common/language-context';
 import AuthHeader from './AuthHeader';
 import PasswordInput from './PasswordInput';
 import PasswordRequirements from './PasswordRequirements';
-
+import AlertMessages from './AlertMessages';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -691,8 +691,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 />
               </Form.Group>
               
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+              <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
                 <Button variant="primary" type="submit" disabled={loading} className="button-text">
@@ -741,8 +740,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               required
             />
 
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+            <AlertMessages error={error} successMessage={successMessage} />
 
               <div className="d-grid gap-2">
                 <Button variant="primary" type="submit" disabled={loading} className="button-text">
@@ -813,8 +811,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 secondRequirement={t('auth.passwordRequirement2')}
               />
               
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+              <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
                 <Button variant="primary" type="submit" disabled={loading} className="button-text">
@@ -849,8 +846,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 />
               </Form.Group>
               
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+              <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
                 <Button variant="primary" type="submit" disabled={loading} className="button-text">
@@ -956,8 +952,9 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     autoFocus
                   />
                 </Form.Group>
-                {error && <Alert variant="danger">{error}</Alert>}
-                {successMessage && <Alert variant="success">{successMessage}</Alert>}
+                
+                <AlertMessages error={error} successMessage={successMessage} />
+                
                 <div className="d-grid gap-2">
                   <Button 
                     variant="primary" 
@@ -1076,8 +1073,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   />
                 </Form.Group>
                 
-                {error && <Alert variant="danger">{error}</Alert>}
-                {successMessage && <Alert variant="success">{successMessage}</Alert>}
+                <AlertMessages error={error} successMessage={successMessage} />
                 
                 <div className="d-grid gap-2">
                   <Button variant="primary" type="submit" disabled={mobileLoading} className="button-text">
@@ -1116,8 +1112,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 required
               />
               
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+              <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
                 <Button variant="primary" type="submit" disabled={loading} className="button-text">
