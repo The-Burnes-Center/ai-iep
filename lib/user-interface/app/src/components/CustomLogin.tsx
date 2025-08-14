@@ -19,6 +19,7 @@ import PasswordInput from './PasswordInput';
 import PasswordRequirements from './PasswordRequirements';
 import AlertMessages from './AlertMessages';
 import SubmitButton from './SubmitButton';
+import LinkButton from './LinkButton';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -700,14 +701,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     loading={loading}
                     buttonText={t('auth.sendResetCode')}
                   />
-                <Button 
-                  variant="link" 
+                <LinkButton
                   onClick={() => setShowForgotPassword(false)}
                   disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.backToLogin')}
-                </Button>
+                  buttonText={t('auth.backToLogin')}
+                />
               </div>
             </Form>
           ) : (
@@ -750,17 +748,14 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     loading={loading}
                     buttonText={t('auth.resetPassword')}
                   />
-                <Button 
-                  variant="link" 
+                <LinkButton
                   onClick={() => {
                     setShowForgotPassword(false);
                     setResetSent(false);
                   }}
                   disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.backToLogin')}
-                </Button>
+                  buttonText={t('auth.backToLogin')}
+                />
               </div>
             </Form>
           )}
@@ -822,18 +817,15 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     loading={loading}
                     buttonText={t('auth.signUp')}
                   />
-                <Button 
-                  variant="link" 
+                <LinkButton
                   onClick={() => {
                     setShowSignUp(false);
                     setError(null);
                     setSuccessMessage(null);
                   }}
                   disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.backToLogin')}
-                </Button>
+                  buttonText={t('auth.backToLogin')}
+                />
               </div>
             </Form>
           ) : (
@@ -858,16 +850,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     loading={loading}
                     buttonText={t('auth.verify')}
                   />
-                <Button 
-                  variant="link"
+                <LinkButton
                   onClick={handleResendConfirmation}
                   disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.resendCode')}
-                </Button>
-                <Button 
-                  variant="link" 
+                  buttonText={t('auth.resendCode')}
+                />
+                <LinkButton
                   onClick={() => {
                     setShowSignUp(false);
                     setIsSignUpComplete(false);
@@ -875,10 +863,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     setSuccessMessage(null);
                   }}
                   disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.backToLogin')}
-                </Button>
+                  buttonText={t('auth.backToLogin')}
+                />
               </div>
             </Form>
           )}
@@ -975,8 +961,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   >
                     {loading ? <Spinner animation="border" size="sm" /> : t('auth.resendSmsCode')}
                   </Button>
-                  <Button 
-                    variant="link" 
+                  <LinkButton
                     onClick={() => {
                       setSmsCodeSent(false);
                       setCognitoUserForSms(null);
@@ -989,10 +974,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                       setIsNewUserSignup(false);
                     }}
                     disabled={loading}
-                    className="forgot-password-link"
-                  >
-                    {t('auth.backToLogin')}
-                  </Button>
+                    buttonText={t('auth.backToLogin')}
+                  />
                 </div>
               </div>
             </Form>
@@ -1124,26 +1107,20 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     buttonText={t('auth.signIn')}
                   />
                 <div className="d-flex justify-content-between">
-                  <Button 
-                    variant="link" 
+                  <LinkButton
                     onClick={() => setShowForgotPassword(true)}
                     disabled={loading}
-                    className="forgot-password-link"
-                  >
-                    {t('auth.forgotPassword')}
-                  </Button>
-                  <Button 
-                    variant="link" 
+                    buttonText={t('auth.forgotPassword')}
+                  />
+                  <LinkButton
                     onClick={() => {
                       setShowSignUp(true);
                       setError(null);
                       setSuccessMessage(null);
                     }}
                     disabled={loading}
-                    className="forgot-password-link"
-                  >
-                    {t('auth.signUp')}
-                  </Button>
+                    buttonText={t('auth.signUp')}
+                  />
                 </div>
 
                 <p className="text-muted mt-3" style={{ fontSize: '0.8rem', textAlign: 'center' }}>
