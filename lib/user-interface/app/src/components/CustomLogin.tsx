@@ -15,6 +15,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './CustomLogin.css'; // Import the custom CSS file
 import { useLanguage, SupportedLanguage } from '../common/language-context';
 import AuthHeader from './AuthHeader';
+import PasswordInput from './PasswordInput';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -629,24 +630,15 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           <AuthHeader title={t('auth.changePassword')} />
           
           <Form onSubmit={handleCompleteNewPassword}>
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label-bold">{t('auth.newPassword')}</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder={t('auth.enterNewPassword')}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-                <Button 
-                  variant="outline-secondary"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                </Button>
-              </InputGroup>
-            </Form.Group>
+            <PasswordInput
+              label={t('auth.newPassword')}
+              placeholder={t('auth.enterNewPassword')}
+              value={newPassword}
+              onChange={setNewPassword}
+              showPassword={showNewPassword}
+              onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
+              required
+            />
             
             {/* Password requirements container */}
             <Container className="mt-3 mb-3 p-3 border rounded bg-light">
@@ -659,24 +651,15 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               </Form.Text>
             </Container>
             
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label-bold">{t('auth.passwordConfirm')}</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder={t('auth.passwordConfirm')}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <Button 
-                  variant="outline-secondary"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                </Button>
-              </InputGroup>
-            </Form.Group>
+            <PasswordInput
+              label={t('auth.passwordConfirm')}
+              placeholder={t('auth.passwordConfirm')}
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              showPassword={showConfirmPassword}
+              onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
+              required
+            />
 
             {error && <Alert variant="danger">{error}</Alert>}
             
@@ -741,43 +724,25 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 />
               </Form.Group>
               
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.newPassword')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder={t('auth.newPassword')}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
+              <PasswordInput
+                label={t('auth.newPassword')}
+                placeholder={t('auth.newPassword')}
+                value={newPassword}
+                onChange={setNewPassword}
+                showPassword={showNewPassword}
+                onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
+                required
+              />
 
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.passwordConfirm')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder={t('auth.passwordConfirm')}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
+            <PasswordInput
+              label={t('auth.passwordConfirm')}
+              placeholder={t('auth.passwordConfirm')}
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              showPassword={showConfirmPassword}
+              onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
+              required
+            />
 
               {error && <Alert variant="danger">{error}</Alert>}
               {successMessage && <Alert variant="success">{successMessage}</Alert>}
@@ -825,43 +790,25 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 />
               </Form.Group>
               
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.password')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showSignUpPassword ? "text" : "password"}
-                    placeholder={t('auth.enterPassword')}
-                    value={signUpPassword}
-                    onChange={(e) => setSignUpPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowSignUpPassword(!showSignUpPassword)}
-                  >
-                    <i className={`bi ${showSignUpPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
+              <PasswordInput
+                label={t('auth.password')}
+                placeholder={t('auth.enterPassword')}
+                value={signUpPassword}
+                onChange={setSignUpPassword}
+                showPassword={showSignUpPassword}
+                onToggleVisibility={() => setShowSignUpPassword(!showSignUpPassword)}
+                required
+              />
               
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.passwordConfirm')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showSignUpConfirmPassword ? "text" : "password"}
-                    placeholder={t('auth.passwordConfirm')}
-                    value={signUpConfirmPassword}
-                    onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
-                  >
-                    <i className={`bi ${showSignUpConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
+              <PasswordInput
+                label={t('auth.passwordConfirm')}
+                placeholder={t('auth.passwordConfirm')}
+                value={signUpConfirmPassword}
+                onChange={setSignUpConfirmPassword}
+                showPassword={showSignUpConfirmPassword}
+                onToggleVisibility={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                required
+              />
               
               {/* Password requirements container */}
               <Container className="mt-3 mb-3 p-3 border rounded bg-light">
@@ -1167,24 +1114,15 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 />
               </Form.Group>
               
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.password')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showMainPassword ? "text" : "password"}
-                    placeholder={t('auth.enterPassword')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowMainPassword(!showMainPassword)}
-                  >
-                    <i className={`bi ${showMainPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
+              <PasswordInput
+                label={t('auth.password')}
+                placeholder={t('auth.enterPassword')}
+                value={password}
+                onChange={setPassword}
+                showPassword={showMainPassword}
+                onToggleVisibility={() => setShowMainPassword(!showMainPassword)}
+                required
+              />
               
               {error && <Alert variant="danger">{error}</Alert>}
               {successMessage && <Alert variant="success">{successMessage}</Alert>}
