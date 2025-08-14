@@ -11,7 +11,6 @@ import { AuthContext } from "../common/auth-context";
 import { Alert, StatusIndicator } from "@cloudscape-design/components";
 import { StorageHelper } from "../common/helpers/storage-helper";
 import { Mode } from "@cloudscape-design/global-styles";
-import "@aws-amplify/ui-react/styles.css";
 import CustomLogin from "./CustomLogin";
 
 export default function AppConfigured() {
