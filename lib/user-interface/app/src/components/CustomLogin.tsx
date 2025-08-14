@@ -20,6 +20,7 @@ import PasswordRequirements from './PasswordRequirements';
 import AlertMessages from './AlertMessages';
 import SubmitButton from './SubmitButton';
 import LinkButton from './LinkButton';
+import EmailInput from './EmailInput';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -683,16 +684,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           
           {!resetSent ? (
             <Form onSubmit={handleForgotPassword}>
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
-                <Form.Control
-                  type="email"
-                  placeholder={t('auth.enterEmail')}
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  required
-                />
-              </Form.Group>
+              <EmailInput
+                label={t('auth.email')}
+                placeholder={t('auth.enterEmail')}
+                value={resetEmail}
+                onChange={setResetEmail}
+              />
               
               <AlertMessages error={error} successMessage={successMessage} />
               
@@ -773,16 +770,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           
           {!isSignUpComplete ? (
             <Form onSubmit={handleSignUp}>
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
-                <Form.Control
-                  type="email"
-                  placeholder={t('auth.enterEmail')}
-                  value={signUpEmail}
-                  onChange={(e) => setSignUpEmail(e.target.value)}
-                  required
-                />
-              </Form.Group>
+              <EmailInput
+                label={t('auth.email')}
+                placeholder={t('auth.enterEmail')}
+                value={signUpEmail}
+                onChange={setSignUpEmail}
+              />
               
               <PasswordInput
                 label={t('auth.password')}
@@ -1078,16 +1071,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           // Email Login Form
           <Form onSubmit={handleSignIn}>
             <div className="email-form-container">
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
-                <Form.Control
-                  type="email"
-                  placeholder={t('auth.enterEmail')}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </Form.Group>
+              <EmailInput
+                label={t('auth.email')}
+                placeholder={t('auth.enterEmail')}
+                value={username}
+                onChange={setUsername}
+              />
               
               <PasswordInput
                 label={t('auth.password')}
