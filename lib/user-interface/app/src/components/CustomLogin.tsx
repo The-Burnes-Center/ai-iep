@@ -16,6 +16,8 @@ import './CustomLogin.css'; // Import the custom CSS file
 import { useLanguage, SupportedLanguage } from '../common/language-context';
 import AuthHeader from './AuthHeader';
 import PasswordInput from './PasswordInput';
+import PasswordRequirements from './PasswordRequirements';
+
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -639,17 +641,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
               required
             />
-            
-            {/* Password requirements container */}
-            <Container className="mt-3 mb-3 p-3 border rounded bg-light">
-              <Form.Text className="text-muted">
-                {t('auth.passwordRequirements')}
-                <ul>
-                  <li>{t('auth.passwordRequirement1')}</li>
-                  <li>{t('auth.passwordRequirement2')}</li>
-                </ul>
-              </Form.Text>
-            </Container>
+
+            <PasswordRequirements 
+              title={t('auth.passwordRequirements')}
+              firstRequirement={t('auth.passwordRequirement1')}
+              secondRequirement={t('auth.passwordRequirement2')}
+            />
             
             <PasswordInput
               label={t('auth.passwordConfirm')}
@@ -809,17 +806,12 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 onToggleVisibility={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
                 required
               />
-              
-              {/* Password requirements container */}
-              <Container className="mt-3 mb-3 p-3 border rounded bg-light">
-                <Form.Text className="text-muted">
-                  {t('auth.passwordRequirements')}
-                  <ul>
-                    <li>{t('auth.passwordRequirement1')}</li>
-                    <li>{t('auth.passwordRequirement2')}</li>
-                  </ul>
-                </Form.Text>
-              </Container>
+
+              <PasswordRequirements 
+                title={t('auth.passwordRequirements')}
+                firstRequirement={t('auth.passwordRequirement1')}
+                secondRequirement={t('auth.passwordRequirement2')}
+              />
               
               {error && <Alert variant="danger">{error}</Alert>}
               {successMessage && <Alert variant="success">{successMessage}</Alert>}
