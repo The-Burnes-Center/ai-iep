@@ -14,6 +14,7 @@ import {
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './CustomLogin.css'; // Import the custom CSS file
 import { useLanguage, SupportedLanguage } from '../common/language-context';
+import AuthHeader from './AuthHeader';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -625,10 +626,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
-          <div className="text-center mb-4">
-            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
-            <h4>{t('auth.changePassword')}</h4>
-          </div>
+          <AuthHeader title={t('auth.changePassword')} />
           
           <Form onSubmit={handleCompleteNewPassword}>
             <Form.Group className="mb-3">
@@ -698,10 +696,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
-          <div className="text-center mb-4">
-            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
-            <h4>{t('auth.resetPassword')}</h4>
-          </div>
+          <AuthHeader title={t('auth.resetPassword')} />
           
           {!resetSent ? (
             <Form onSubmit={handleForgotPassword}>
@@ -815,10 +810,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
-          <div className="text-center mb-4">
-            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
-            <h4>{isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')}</h4>
-          </div>
+          <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} />
           
           {!isSignUpComplete ? (
             <Form onSubmit={handleSignUp}>
@@ -958,10 +950,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   return (
     <Container fluid className="login-container d-flex align-items-center justify-content-center">
       <Col xs={12} sm={8} md={6} lg={4}>
-        <div className="text-center mb-4">
-          <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
-          <h4>{t('auth.signInHeader')}</h4>
-        </div>
+        <AuthHeader title={t('auth.signInHeader')} />
 
         {/* Language dropdown */}
         <div className="text-end mb-3">

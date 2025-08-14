@@ -1,0 +1,25 @@
+/* AIEP logo style */
+.aiep-logo {
+  max-width: 200px;
+  height: auto;
+  animation: fadeIn 1.2s ease-in;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .aiep-logo {
+    animation: none;
+  }
+}
