@@ -18,6 +18,7 @@ import AuthHeader from './AuthHeader';
 import PasswordInput from './PasswordInput';
 import PasswordRequirements from './PasswordRequirements';
 import AlertMessages from './AlertMessages';
+import SubmitButton from './SubmitButton';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -661,9 +662,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             {error && <Alert variant="danger">{error}</Alert>}
             
             <div className="d-grid gap-2">
-              <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                {loading ? <Spinner animation="border" size="sm" /> : t('auth.changePassword')}
-              </Button>
+                <SubmitButton 
+                  loading={loading}
+                  buttonText={t('auth.changePassword')}
+                />              
             </div>
           </Form>
         </Col>
@@ -694,9 +696,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.sendResetCode')}
-                </Button>
+                  <SubmitButton 
+                    loading={loading}
+                    buttonText={t('auth.sendResetCode')}
+                  />
                 <Button 
                   variant="link" 
                   onClick={() => setShowForgotPassword(false)}
@@ -743,9 +746,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             <AlertMessages error={error} successMessage={successMessage} />
 
               <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.resetPassword')}
-                </Button>
+                  <SubmitButton 
+                    loading={loading}
+                    buttonText={t('auth.resetPassword')}
+                  />
                 <Button 
                   variant="link" 
                   onClick={() => {
@@ -814,9 +818,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.signUp')}
-                </Button>
+                  <SubmitButton 
+                    loading={loading}
+                    buttonText={t('auth.signUp')}
+                  />
                 <Button 
                   variant="link" 
                   onClick={() => {
@@ -849,9 +854,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.verify')}
-                </Button>
+                  <SubmitButton 
+                    loading={loading}
+                    buttonText={t('auth.verify')}
+                  />
                 <Button 
                   variant="link"
                   onClick={handleResendConfirmation}
@@ -956,14 +962,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 <AlertMessages error={error} successMessage={successMessage} />
                 
                 <div className="d-grid gap-2">
-                  <Button 
-                    variant="primary" 
-                    type="submit" 
-                    disabled={loading || smsCode.length !== 6} 
-                    className="button-text"
-                  >
-                    {loading ? <Spinner animation="border" size="sm" /> : t('auth.verifySmsCode')}
-                  </Button>
+                    <SubmitButton 
+                      loading={loading}
+                      buttonText={t('auth.verifySmsCode')}
+                      disabled={loading || smsCode.length !== 6}
+                    />
                   <Button 
                     variant="outline-secondary"
                     onClick={handleResendSmsCode}
@@ -1076,9 +1079,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 <AlertMessages error={error} successMessage={successMessage} />
                 
                 <div className="d-grid gap-2">
-                  <Button variant="primary" type="submit" disabled={mobileLoading} className="button-text">
-                    {mobileLoading ? <Spinner animation="border" size="sm" /> : t('auth.sendSmsCode')}
-                  </Button>
+                    <SubmitButton 
+                      loading={mobileLoading}
+                      buttonText={t('auth.sendSmsCode')}
+                    />
                   
                   <p className="text-muted mt-3 mobile-consent-text">
                     {t('auth.smsConsentMobile')}
@@ -1115,9 +1119,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.signIn')}
-                </Button>
+                  <SubmitButton 
+                    loading={loading}
+                    buttonText={t('auth.signIn')}
+                  />
                 <div className="d-flex justify-content-between">
                   <Button 
                     variant="link" 

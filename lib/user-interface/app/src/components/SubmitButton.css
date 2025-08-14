@@ -1,0 +1,44 @@
+/* Button text style */
+.button-text {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+}
+
+/* Primary button color override */
+.btn-primary {
+  background-color: #00682F !important;
+  border-color: #1E1E1E !important;
+  color: #F5F3EE !important;
+}
+
+/* Button hover effect */
+.btn-primary:hover {
+  background-color: #00682F !important;
+  border-color: #00682F !important;
+  color: #F5F3EE !important;
+}
+
+/* Enhanced button styling for mobile login */
+.btn-primary[type="submit"] {
+  padding: 12px 20px;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 64, 186, 0.2);
+}
+
+.btn-primary[type="submit"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 64, 186, 0.3);
+}
+
+.btn-primary[type="submit"]:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 64, 186, 0.2);
+}
+
+/* Loading spinner in buttons */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
