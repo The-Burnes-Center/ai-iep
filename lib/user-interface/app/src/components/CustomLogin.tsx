@@ -21,6 +21,7 @@ import AlertMessages from './AlertMessages';
 import SubmitButton from './SubmitButton';
 import LinkButton from './LinkButton';
 import EmailInput from './EmailInput';
+import ForgotPassword from './ForgotPassword';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -678,86 +679,29 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show forgot password form
   if (showForgotPassword) {
     return (
-      <Container fluid className="login-container d-flex align-items-center justify-content-center">
-        <Col xs={12} sm={8} md={6} lg={4}>
-          <AuthHeader title={t('auth.resetPassword')} />
-          
-          {!resetSent ? (
-            <Form onSubmit={handleForgotPassword}>
-              <EmailInput
-                label={t('auth.email')}
-                placeholder={t('auth.enterEmail')}
-                value={resetEmail}
-                onChange={setResetEmail}
-              />
-              
-              <AlertMessages error={error} successMessage={successMessage} />
-              
-              <div className="d-grid gap-2">
-                  <SubmitButton 
-                    loading={loading}
-                    buttonText={t('auth.sendResetCode')}
-                  />
-                <LinkButton
-                  onClick={() => setShowForgotPassword(false)}
-                  disabled={loading}
-                  buttonText={t('auth.backToLogin')}
-                />
-              </div>
-            </Form>
-          ) : (
-            <Form onSubmit={handleResetPassword}>
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.resetCode')}</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder={t('auth.enterResetCode')}
-                  value={resetCode}
-                  onChange={(e) => setResetCode(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              
-              <PasswordInput
-                label={t('auth.newPassword')}
-                placeholder={t('auth.newPassword')}
-                value={newPassword}
-                onChange={setNewPassword}
-                showPassword={showNewPassword}
-                onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
-                required
-              />
-
-            <PasswordInput
-              label={t('auth.passwordConfirm')}
-              placeholder={t('auth.passwordConfirm')}
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              showPassword={showConfirmPassword}
-              onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
-              required
-            />
-
-            <AlertMessages error={error} successMessage={successMessage} />
-
-              <div className="d-grid gap-2">
-                  <SubmitButton 
-                    loading={loading}
-                    buttonText={t('auth.resetPassword')}
-                  />
-                <LinkButton
-                  onClick={() => {
-                    setShowForgotPassword(false);
-                    setResetSent(false);
-                  }}
-                  disabled={loading}
-                  buttonText={t('auth.backToLogin')}
-                />
-              </div>
-            </Form>
-          )}
-        </Col>
-      </Container>
+        <ForgotPassword
+          t={t}
+          loading={loading}
+          error={error}
+          successMessage={successMessage}
+          resetSent={resetSent}
+          resetEmail={resetEmail}
+          resetCode={resetCode}
+          newPassword={newPassword}
+          confirmPassword={confirmPassword}
+          showNewPassword={showNewPassword}
+          showConfirmPassword={showConfirmPassword}
+          setResetEmail={setResetEmail}
+          setResetCode={setResetCode}
+          setNewPassword={setNewPassword}
+          setConfirmPassword={setConfirmPassword}
+          setShowNewPassword={setShowNewPassword}
+          setShowConfirmPassword={setShowConfirmPassword}
+          setShowForgotPassword={setShowForgotPassword}
+          setResetSent={setResetSent}
+          handleForgotPassword={handleForgotPassword}
+          handleResetPassword={handleResetPassword}
+        />
     );
   }
 
