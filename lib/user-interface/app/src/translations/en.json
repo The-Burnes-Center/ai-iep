@@ -27,7 +27,8 @@
     "welcome.rights.description": "Learn about your rights and the IEP process",
     "welcome.update.profile": "Update Profile",
   
-    "common.back": "← Back",
+    "common.back": "Back",
+    "common.previous": "Previous",
     "common.next": "Next",
     "common.cancel": "Cancel",
     "common.close": "Close",

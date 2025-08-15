@@ -2,32 +2,23 @@ import React, { useMemo, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { useNavigate } from 'react-router-dom';
-// Add this import at the top
 import { useLanguage } from '../../common/language-context';
-
-// Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
-
-// import required modules
 import { Pagination } from 'swiper/modules';
-
-// Import component-specific styles
 import './OnboardingUser.css';
 
 const OnboardingUser: React.FC = () => {
-  // Track the active slide to show dynamic content
+
   const [activeSlide, setActiveSlide] = useState(0);
   const { t, language } = useLanguage();
-  // Define total slides for easier reference
+
   const totalSlides = 4;
   const isLastSlide = activeSlide === totalSlides - 1;
   const isFirstSlide = activeSlide === 0;
 
   const navigate = useNavigate();
-  // Array of four strings for the carousel headings
 
-  // Replace the carouselHeadings array with:
   const carouselHeadings = useMemo(() => [
     t('onboarding.carousel.heading.accessible'),
     t('onboarding.carousel.heading.summarize'), 
@@ -91,17 +82,25 @@ const OnboardingUser: React.FC = () => {
   };
   
   return (
-    <div>
-      <div className="mt-3 text-start px-3 py-2">
+    <div className="page modal-wrapper">
+      <div className="modal-overlay"></div>
+      <div className="modal-container">
+        <div className="modal-navigation right">
         <Button variant="outline-secondary" onClick={handleBackClick}>
-          {t('common.back')}
+          <img 
+                  src="/images/arrow-back.svg" 
+                  alt=""
+                  className="btn-icon"
+                />
+            {t('common.back')}
         </Button>
-      </div>
-      
-      <div className="carousel-container">
-        {/* Swiper component */}
+          <Button variant="outline-secondary" onClick={handleGetStarted}>
+            {t('common.skip')}
+          </Button>
+        </div>
+              <div className="carousel-container">
         <Swiper
-          slidesPerView="auto"
+          slidesPerView={1}
           spaceBetween={15}
           centeredSlides={true}
           threshold={20}
@@ -136,30 +135,16 @@ const OnboardingUser: React.FC = () => {
           </p>
         </div>
 
-        {/* Custom pagination element */}
         <div className="swiper-custom-pagination"></div>
         
-        {/* Mobile "Get Started" button */}
-        <div className="d-grid mobile-cta">
-          <Button 
-            variant="primary" 
-            className="continue-onboarding" 
-            disabled={activeSlide < 3} 
-            onClick={handleGetStarted}
-          >
-            {getStartedText}
-          </Button>
-        </div>
-        
-        {/* Desktop navigation buttons */}
-        <div className="desktop-navigation">
+        <div className="carousel-navigation">
           <Button 
             variant="outline-primary" 
-            className="nav-btn prev-btn" 
+            className="prev-btn" 
             disabled={isFirstSlide}
             onClick={handlePrevClick}
           >
-            PREVIOUS
+            {t('common.previous')}
           </Button>
           
           {isLastSlide ? (
@@ -176,11 +161,15 @@ const OnboardingUser: React.FC = () => {
               className="nav-btn next-btn" 
               onClick={handleNextClick}
             >
-              NEXT
+              {t('common.next')}
             </Button>
           )}
         </div>
       </div>
+      </div>
+      
+      
+
     </div>
   );
 };

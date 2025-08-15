@@ -1,92 +1,65 @@
-/* Container for the entire carousel section */
 .carousel-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  /* height: 100vh; */
-  margin-top: 3rem;
-  position: relative;
+  background-color: #F5F3EE;
 }
 
-/* Basic Swiper styles */
 .swiper {
   width: 100%;
 }
 
-/* Slide styling */
 .swiper-slide {
   text-align: center;
   font-size: 18px;
-  border: 2px solid #1E1E1E;
-  
-  /* Make slides square with 1:1 ratio */
   width: 35vh !important;
   height: 35vh !important;
-  
-  /* Center slide text vertically */
   display: flex !important;
   justify-content: center;
   align-items: center;
-  
-  /* Add border radius for better appearance */
-  border-radius: 8px;
-  line-height: 1;
+  border-radius: 5px;
 }
 
-/* Individual slide colors */
-.swiper-slide:nth-child(1) {
-  background: #F03232; /* Light pink for first slide */
-}
-
-.swiper-slide:nth-child(2) {
-  background: #FF9BA3; /* Light blue for second slide */
-}
-
-.swiper-slide:nth-child(3) {
-  background: #FFBF27; /* Light green for third slide */
-}
-
-.swiper-slide:nth-child(4) {
-  background: #007535; /* Light orange for fourth slide */
-}
-
-/* Swiper container */
 .mySwiper {
   width: 100%;
-  /* Center the carousel on the screen */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Center the swiper wrapper */
 .mySwiper .swiper-wrapper {
   align-items: center;
 }
 
-/* Heading below the slider */
+.carousel-image {
+  border: 1px solid #1E1E1E;
+  border-radius: 5px;
+  background-size: contain; 
+}
+
+.heading-paragraph-container {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 70%;
+  height: 8rem;
+  margin: 2rem 0;
+  text-align: center;
+}
+
 .carousel-heading {
+  line-height: 1.5rem;
+  font-weight: 500;
   font-size: 1.25rem;
-  font-weight: 600;
-  align-self: flex-start;
   width: -webkit-fill-available;
 }
 
 .carousel-paragraph {
+  font-weight: 400;
   font-size: 1rem;
   align-self: flex-start;
-}
-
-.heading-paragraph-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  width: 80%;
-  height: 8rem;
-  margin-top: 1rem;
-  margin-left: 8vw;
 }
 
 /* Custom pagination styling */
@@ -107,29 +80,22 @@
 }
 
 .swiper-custom-pagination .swiper-pagination-bullet-active {
-  background: #1E1E1E !important;
+  background: #00682F !important;
   opacity: 1;
 }
 
-/* Make sure images maintain aspect ratio if added later */
 .swiper-slide img {
   max-width: 99.5%;
   max-height: 99.5%;
   object-fit: contain !important;
 }
 
-/* Desktop navigation buttons - hidden on mobile */
-.desktop-navigation {
-  display: none;
-  width: 85%;
+.carousel-navigation {
+  display: flex;
+  width: 100%;
   justify-content: space-between;
   margin-top: 2rem;
-}
-
-.nav-btn {
-  min-width: 120px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  max-width: 400px;
 }
 
 .continue-onboarding {
@@ -142,8 +108,8 @@
   background-color: #E7E4DC !important;
   color: #A09E99 !important;
   border-color: #E7E4DC !important;
-  opacity: 1 !important; /* Override Bootstrap's default opacity */
-}
+  opacity: 1 !important;
+ }
 
 /* Remove hover effects when disabled */
 .continue-onboarding:disabled:hover {
@@ -174,24 +140,12 @@
 /* Media query for desktop screens */
 @media (min-width: 992px) {
   .carousel-container {
-    width: 60%;
-    border: solid 2px black;
-    border-radius: 25px;
-    padding: 1rem;
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
   }
 
   /* Hide mobile CTA button on desktop */
   .mobile-cta {
     display: none !important;
-  }
-  
-  /* Show desktop navigation on desktop */
-  .desktop-navigation {
-    display: flex;
-    width: 30%;
-    margin-top: 2rem;
   }
 
   /* Apply blur to all slides */
@@ -206,12 +160,8 @@
     filter: blur(0);
     opacity: 1;
   }
-  
-  /* Style for the disabled previous button */
-  .nav-btn:disabled {
-    background-color: #E7E4DC !important;
-    color: #A09E99 !important;
-    border-color: #E7E4DC !important;
-    opacity: 1 !important;
+
+  .heading-paragraph-container {
+    height: 5rem;
   }
 }
