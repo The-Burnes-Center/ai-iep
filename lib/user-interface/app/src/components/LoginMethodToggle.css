@@ -1,0 +1,42 @@
+/* Login method toggle buttons styling */
+.login-method-toggle-container .btn-group {
+    border-radius: 5rem;
+    overflow: hidden;
+  }
+  
+  .login-method-toggle-container .btn-group .btn {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    border-radius: 0;
+    transition: all 0.3s ease;
+  }
+  
+  .login-method-toggle-container .btn-group .btn:first-child {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+  }
+  
+  .login-method-toggle-container .btn-group .btn:last-child {
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+  }
+  
+  /* Mobile responsive styling */
+  @media (max-width: 767px) {
+    .login-method-toggle-container .btn-group {
+      width: 100%;
+    }
+    
+    .login-method-toggle-container .btn-group .btn {
+      flex: 1;
+      padding: 10px 8px;
+      font-size: 0.9rem;
+    }
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .login-method-toggle-container .btn-group .btn {
+      transition: none;
+    }
+  }

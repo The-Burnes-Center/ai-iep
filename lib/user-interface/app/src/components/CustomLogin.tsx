@@ -23,6 +23,7 @@ import LinkButton from './LinkButton';
 import EmailInput from './EmailInput';
 import ForgotPassword from './ForgotPassword';
 import LanguageDropdown from './LanguageDropdown';
+import LoginMethodToggle from './LoginMethodToggle';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -823,25 +824,13 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         onLanguageChange={handleLanguageChange}
       />
 
-        {/* Login method toggle buttons */}
-        <div className="d-grid gap-2 mb-4">
-          <div className="btn-group" role="group">
-            <Button 
-              variant={showMobileLogin ? "primary" : "outline-primary"}
-              onClick={() => setShowMobileLogin(true)}
-              className="button-text"
-            >
-              {t('auth.mobileLogin')}
-            </Button>
-            <Button 
-              variant={!showMobileLogin ? "primary" : "outline-primary"}
-              onClick={() => setShowMobileLogin(false)}
-              className="button-text"
-            >
-              {t('auth.emailLogin')}
-            </Button>
-          </div>
-        </div>
+      <LoginMethodToggle
+        showMobileLogin={showMobileLogin}
+        onMobileLoginClick={() => setShowMobileLogin(true)}
+        onEmailLoginClick={() => setShowMobileLogin(false)}
+        mobileLoginText={t('auth.mobileLogin')}
+        emailLoginText={t('auth.emailLogin')}
+      />
         
         {showMobileLogin ? (
           // Mobile Login Form
