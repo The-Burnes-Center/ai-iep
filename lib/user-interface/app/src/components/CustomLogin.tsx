@@ -8,8 +8,6 @@ import {
   Button, 
   Alert, 
   Spinner,
-  InputGroup,
-  Dropdown
 } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './CustomLogin.css'; // Import the custom CSS file
@@ -24,6 +22,7 @@ import EmailInput from './EmailInput';
 import ForgotPassword from './ForgotPassword';
 import LanguageDropdown from './LanguageDropdown';
 import LoginMethodToggle from './LoginMethodToggle';
+import FormLabel from './FormLabel';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -772,7 +771,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               <Alert variant="info">{t('auth.checkEmailForCode')}</Alert>
               
               <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.verificationCode')}</Form.Label>
+                <FormLabel label={t('auth.verificationCode')} />
                 <Form.Control
                   type="text"
                   placeholder={t('auth.enterVerificationCode')}
@@ -845,7 +844,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   </p>
                 </div>
                 <Form.Group className="mb-3">
-                  <Form.Label className="form-label-bold">{t('auth.verificationCodeSms')}</Form.Label>
+                  <FormLabel label={t('auth.verificationCodeSms')} />
                   <Form.Control
                     type="text"
                     placeholder={t('auth.enterSmsCode')}
@@ -897,7 +896,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             <Form onSubmit={handleMobileLogin}>
               <div className="mobile-form-container">
                 <Form.Group className="mb-3">
-                  <Form.Label className="form-label-bold">{t('auth.phoneNumber')}</Form.Label>
+                  <FormLabel label={t('auth.phoneNumber')} />
                   <Form.Control
                     type="tel"
                     placeholder="(xxx) xxx-xxxx"

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form, InputGroup, Button } from 'react-bootstrap';
+import FormLabel from './FormLabel';
 
 interface PasswordInputProps {
   label: string;
@@ -22,7 +23,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 }) => {
   return (
     <Form.Group className="mb-3">
-      <Form.Label className="form-label-bold">{label}</Form.Label>
+      <FormLabel label={label} />
       <InputGroup>
         <Form.Control
           type={showPassword ? "text" : "password"}

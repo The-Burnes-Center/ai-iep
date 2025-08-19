@@ -1,6 +1,7 @@
 import React from 'react';
 import { Form } from 'react-bootstrap';
 import './EmailInput.css';
+import FormLabel from './FormLabel';
 
 interface EmailInputProps {
   label: string;
@@ -19,7 +20,7 @@ const EmailInput = ({
 }: EmailInputProps) => {
   return (
     <Form.Group className="mb-3">
-      <Form.Label className="form-label-bold">{label}</Form.Label>
+      <FormLabel label={label} />
       <Form.Control
         type="email"
         placeholder={placeholder}
