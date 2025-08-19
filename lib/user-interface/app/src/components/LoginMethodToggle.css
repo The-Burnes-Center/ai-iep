@@ -2,6 +2,7 @@
 .login-method-toggle-container .btn-group {
     border-radius: 5rem;
     overflow: hidden;
+    border: 1.75px solid #00682F;
   }
   
   .login-method-toggle-container .btn-group .btn {
@@ -11,14 +12,16 @@
     transition: all 0.3s ease;
   }
   
-  .login-method-toggle-container .btn-group .btn:first-child {
+  .login-method-toggle-container .btn-group .btn {
     border-top-left-radius: 0.5rem;
     border-bottom-left-radius: 0.5rem;
-  }
-  
-  .login-method-toggle-container .btn-group .btn:last-child {
-    border-top-right-radius: 0.5rem;
-    border-bottom-right-radius: 0.5rem;
+    --bs-btn-border-width: none;
+    font-family: 'salford-sans-variable', sans-serif !important;
+    font-size: 1.2rem !important;
+    font-variation-settings: "slnt" 0, "wght" 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    border-radius: 0%;
   }
   
   /* Mobile responsive styling */
