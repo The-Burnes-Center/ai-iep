@@ -1,4 +1,5 @@
 .carousel-container {
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -7,13 +8,14 @@
 
 .swiper {
   width: 100%;
+  height: 100%;
 }
 
 .swiper-slide {
   text-align: center;
   font-size: 18px;
-  width: 35vh !important;
-  height: 35vh !important;
+  width: auto;
+  /* height: 50%; */
   display: flex !important;
   justify-content: center;
   align-items: center;
@@ -22,19 +24,24 @@
 
 .mySwiper {
   width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.mySwiper .swiper-wrapper {
-  align-items: center;
+.image-container {
+  width: 100%;
+  background-size: contain; 
 }
 
-.carousel-image {
+.image-container img {
+  min-height: 200px;
+  aspect-ratio: 1;
+  max-height: 40vh;
+  width: auto;
   border: 1px solid #1E1E1E;
   border-radius: 5px;
-  background-size: contain; 
 }
 
 .heading-paragraph-container {
@@ -45,7 +52,7 @@
   justify-content: center;
   width: 70%;
   height: 8rem;
-  margin: 2rem 0;
+  margin: 3rem 0 2rem 0;
   text-align: center;
 }
 
@@ -57,19 +64,16 @@
 }
 
 .carousel-paragraph {
-  font-weight: 400;
-  font-size: 1rem;
-  align-self: flex-start;
+  max-width: 400px;
+  margin-top: 1rem;
 }
 
-/* Custom pagination styling */
 .swiper-custom-pagination {
   display: flex;
   justify-content: center;
   width: 100%;
 }
 
-/* Pagination bullets */
 .swiper-custom-pagination .swiper-pagination-bullet {
   width: 10px;
   height: 10px;
@@ -85,8 +89,8 @@
 }
 
 .swiper-slide img {
-  max-width: 99.5%;
-  max-height: 99.5%;
+  /* max-width: 99.5%;
+  max-height: 99.5%; */
   object-fit: contain !important;
 }
 
@@ -98,68 +102,8 @@
   max-width: 400px;
 }
 
-.continue-onboarding {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
-}
-
-/* Disabled consent button styling */
-.continue-onboarding:disabled {
-  background-color: #E7E4DC !important;
-  color: #A09E99 !important;
-  border-color: #E7E4DC !important;
-  opacity: 1 !important;
- }
-
-/* Remove hover effects when disabled */
-.continue-onboarding:disabled:hover {
-  background-color: #E7E4DC !important;
-  color: #A09E99 !important;
-  border-color: #E7E4DC !important;
-  transform: none !important;
-}
-
-/* Mobile CTA button container */
-.mobile-cta {
-  width: 85%;
-  margin-top: 2rem;
-}
-
-/* Media query for smaller screens */
-@media (max-height: 600px) {
-  .mySwiper {
-    height: 50vh;
-  }
-  
-  .swiper-slide {
-    width: 30vh !important;
-    height: 30vh !important;
-  }
-}
-
 /* Media query for desktop screens */
 @media (min-width: 992px) {
-  .carousel-container {
-    width: 100%;
-  }
-
-  /* Hide mobile CTA button on desktop */
-  .mobile-cta {
-    display: none !important;
-  }
-
-  /* Apply blur to all slides */
-  .swiper-slide {
-    filter: blur(4px);
-    opacity: 0.8;
-    transition: filter 0.3s ease, opacity 0.3s ease;
-  }
-  
-  /* Remove blur from active slide */
-  .swiper-slide-active {
-    filter: blur(0);
-    opacity: 1;
-  }
 
   .heading-paragraph-container {
     height: 5rem;

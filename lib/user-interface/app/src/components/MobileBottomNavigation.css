@@ -101,10 +101,7 @@
     display: block;
   }
   
-  /* Add padding to body to prevent content from being hidden behind nav */
-  body {
-    padding-bottom: 80px;
-  }
+  
 }
 
 /* Extra small screens */

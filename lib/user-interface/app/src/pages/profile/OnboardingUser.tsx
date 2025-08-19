@@ -86,46 +86,46 @@ const OnboardingUser: React.FC = () => {
       <div className="modal-overlay"></div>
       <div className="modal-container">
         <div className="modal-navigation right">
-        <Button variant="outline-secondary" onClick={handleBackClick}>
-          <img 
-                  src="/images/arrow-back.svg" 
-                  alt=""
-                  className="btn-icon"
-                />
-            {t('common.back')}
-        </Button>
+          <Button variant="outline-secondary" onClick={handleBackClick}>
+            <img 
+                    src="/images/arrow-back.svg" 
+                    alt=""
+                    className="btn-icon"
+                  />
+              {t('common.back')}
+          </Button>
           <Button variant="outline-secondary" onClick={handleGetStarted}>
             {t('common.skip')}
           </Button>
         </div>
-              <div className="carousel-container">
-        <Swiper
-          slidesPerView={1}
-          spaceBetween={15}
-          centeredSlides={true}
-          threshold={20}
-          pagination={{
-            clickable: true,
-            el: '.swiper-custom-pagination',
-          }}
-          onSlideChange={(swiper) => setActiveSlide(swiper.activeIndex)}
-          modules={[Pagination]}
-          className="mySwiper"
-          onSwiper={(swiper) => {
-            swiperRef.current = swiper;
-          }}
-        >
-          {slideImages.map((image, index) => (
-            <SwiperSlide key={index}>
-              <img 
-                src={image.src} 
-                alt={image.alt}
-                className="carousel-image"
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-        
+        <div className="carousel-container">
+          <Swiper
+            slidesPerView={1}
+            spaceBetween={100}
+            centeredSlides={true}
+            threshold={20}
+            pagination={{
+              clickable: true,
+              el: '.swiper-custom-pagination',
+            }}
+            onSlideChange={(swiper) => setActiveSlide(swiper.activeIndex)}
+            modules={[Pagination]}
+            className="mySwiper"
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+            }}
+          >
+            {slideImages.map((image, index) => (
+              <SwiperSlide key={index}>
+                <div className="image-container">
+                  <img 
+                  src={image.src} 
+                  alt={image.alt}
+                />
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
         <div className='heading-paragraph-container'>
           <h5 className="carousel-heading">
             {carouselHeadings[activeSlide]}
@@ -164,12 +164,9 @@ const OnboardingUser: React.FC = () => {
               {t('common.next')}
             </Button>
           )}
+          </div>
         </div>
       </div>
-      </div>
-      
-      
-
     </div>
   );
 };
