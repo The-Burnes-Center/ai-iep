@@ -20,7 +20,7 @@ const SubmitButton = ({
       variant="primary" 
       type={type} 
       disabled={disabled} 
-      className="button-text"
+      className="submit-button-login"
     >
       {loading ? <Spinner animation="border" size="sm" /> : buttonText}
     </Button>

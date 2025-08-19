@@ -1,44 +1,51 @@
-/* Button text style */
-.button-text {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
+.submit-button-login {
+  margin: 0 5px;
+  padding-left: 1.2rem !important;
+  padding-right: 1.2rem !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-family: 'salford-sans-variable', sans-serif !important;
+  font-size: 1.2rem !important;
+  font-variation-settings: "slnt" 0, "wght" 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #00682F;
+  border: none;
+  border-radius: 20px !important;
+  transition: all 0.1s ease !important;
+  min-width: 120px;
 }
 
-/* Primary button color override */
-.btn-primary {
-  background-color: #00682F !important;
-  border-color: #1E1E1E !important;
-  color: #F5F3EE !important;
+.submit-button-login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Button hover effect */
-.btn-primary:hover {
-  background-color: #00682F !important;
-  border-color: #00682F !important;
-  color: #F5F3EE !important;
+.submit-button-login:disabled {
+  border: 1px solid #CBC6BC !important;
+  box-shadow: none;
+  color: #b3ada9 !important;
+  background-color: #F5F3EE;
+  cursor: not-allowed !important;
 }
 
-/* Enhanced button styling for mobile login */
-.btn-primary[type="submit"] {
-  padding: 12px 20px;
-  font-size: 1rem;
-  border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 64, 186, 0.2);
+.submit-button-login .btn-icon {
+  margin-right: 10px;
 }
 
-.btn-primary[type="submit"]:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 64, 186, 0.3);
+/* Secondary outline button styles for submit-button-login */
+.submit-button-login.btn-outline-secondary {
+  color: #1e1e1e;
+  border: 1px solid #CBC6BC;
+  background-color: #F5F3EE;
+  box-shadow: none;
 }
 
-.btn-primary[type="submit"]:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 64, 186, 0.2);
-}
-
-/* Loading spinner in buttons */
-.spinner-border-sm {
-  width: 1rem;
-  height: 1rem;
+.submit-button-login.btn-outline-secondary:hover {
+  color: #1e1e1e;
+  border: 1px solid #CBC6BC;
+  background-color: #E7E4DC;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
