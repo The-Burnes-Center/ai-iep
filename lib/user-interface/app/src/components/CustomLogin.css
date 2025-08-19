@@ -224,49 +224,6 @@ input[type="tel"]:focus {
   height: 1rem;
 }
 
-/* Language dropdown styling */
-.dropdown-toggle {
-  border-radius: 0.5rem;
-  font-family: 'Roboto', sans-serif;
-  font-size: 0.875rem;
-  background-color: #E7E4DC !important;
-  color: #1E1E1E !important;
-  border: 2px solid #e9ecef !important;
-  transition: all 0.3s ease;
-}
-
-.dropdown-toggle:hover,
-.dropdown-toggle:focus {
-  background-color: #E7E4DC !important;
-  color: #1E1E1E !important;
-  border-color: #FFB522 !important;
-  box-shadow: 0 0 0 0.25rem rgba(255, 181, 34, 0.15) !important;
-}
-
-.dropdown-menu {
-  border-radius: 0.5rem;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  background-color: #E7E4DC;
-}
-
-.dropdown-item {
-  font-family: 'Roboto', sans-serif;
-  padding: 8px 16px;
-  color: #1E1E1E;
-  background-color: transparent;
-}
-
-.dropdown-item:hover {
-  background-color: #FFB522;
-  color: #1E1E1E;
-}
-
-.dropdown-item.active {
-  background-color: #EFECE5;
-  color: #1E1E1E;
-  font-weight: 600;
-}
 
 /* Mobile responsive styling */
 @media (max-width: 767px) {
