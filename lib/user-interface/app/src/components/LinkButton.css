@@ -1,8 +1,6 @@
-/* Forgot Password link style */
-.forgot-password-link {
-  font-family: 'salford-sans-variable', sans-serif !important;
-  font-size: 1.2rem !important;
-  font-variation-settings: "slnt" 0, "wght" 500;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+.link-button {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  color: #1e1e1e !important;
 }

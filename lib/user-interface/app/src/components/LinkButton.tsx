@@ -14,7 +14,7 @@ const LinkButton = ({ onClick, disabled, buttonText }: LinkButtonProps) => {
       variant="link" 
       onClick={onClick}
       disabled={disabled}
-      className="forgot-password-link"
+      className="link-button"
     >
       {buttonText}
     </Button>

@@ -8,14 +8,6 @@
   font-weight: 500;
 }
 
-/* Forgot Password link style */
-.forgot-password-link {
-  color: #1E1E1E !important;
-  text-decoration: none !important; 
-  font-family: 'Roboto', sans-serif;
-  font-weight: 700;
-}
-
 /* Apply styles to form controls for placeholder text */
 .form-control::placeholder {
   font-family: 'Roboto', sans-serif;
