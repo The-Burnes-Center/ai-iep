@@ -1,4 +1,6 @@
-/* button {
+/* LanguageDropdown.css */
+
+.language-dropdown .dropdown-toggle {
   margin: 0 5px;
   padding-left: 1.2rem !important;
   padding-right: 1.2rem !important;
@@ -18,12 +20,12 @@
   min-width: 120px;
 }
 
-button:hover {
+.language-dropdown .dropdown-toggle:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-button:disabled {
+.language-dropdown .dropdown-toggle:disabled {
   border: 1px solid #CBC6BC !important;
   box-shadow: none;
   color: #b3ada9 !important;
@@ -31,20 +33,20 @@ button:disabled {
   cursor: not-allowed !important;
 }
 
-.btn-icon {
+.language-dropdown .btn-icon {
   margin-right: 10px;
 }
 
-.btn-outline-secondary {
+.language-dropdown .btn-outline-secondary {
   color: #1e1e1e;
   border: 1px solid #CBC6BC;
   background-color: #F5F3EE;
   box-shadow: none;
 }
 
-.btn-outline-secondary:hover {
+.language-dropdown .btn-outline-secondary:hover {
   color: #1e1e1e;
   border: 1px solid #CBC6BC;
   background-color: #E7E4DC;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-} */
+}

@@ -22,6 +22,7 @@ import SubmitButton from './SubmitButton';
 import LinkButton from './LinkButton';
 import EmailInput from './EmailInput';
 import ForgotPassword from './ForgotPassword';
+import LanguageDropdown from './LanguageDropdown';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -816,25 +817,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       <Col xs={12} sm={8} md={6} lg={4}>
         <AuthHeader title={t('auth.signInHeader')} />
 
-        {/* Language dropdown */}
-        <div className="text-end mb-3">
-          <Dropdown>
-            <Dropdown.Toggle variant="outline-secondary" id="language-dropdown" size="sm">
-              {languageOptions.find(opt => opt.value === language)?.label || 'Language'}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              {languageOptions.map((option) => (
-                <Dropdown.Item 
-                  key={option.value}
-                  onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
-                  active={language === option.value}
-                >
-                  {option.label}
-                </Dropdown.Item>
-              ))}
-            </Dropdown.Menu>
-          </Dropdown>
-        </div>
+      <LanguageDropdown 
+        language={language}
+        languageOptions={languageOptions}
+        onLanguageChange={handleLanguageChange}
+      />
 
         {/* Login method toggle buttons */}
         <div className="d-grid gap-2 mb-4">
