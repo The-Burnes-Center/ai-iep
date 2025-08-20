@@ -4,47 +4,42 @@
   font-weight: 500;
 }
 
-/* Apply styles to form controls for placeholder text */
-.form-control::placeholder {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 300;
-  color: #1E1E1E;
-  opacity: 0.35;
-}
-
-/* Form control focus */
-.form-control:focus {
-  border-color: #0040BA;
-  box-shadow: 0 0 0 0.25rem rgba(0, 64, 186, 0.25);
-}
-
-/* Enhanced form control styling */
-.form-control {
+/* Enhanced form control styling - scoped to email input */
+.email-input-control {
   padding: 12px 16px;
   font-size: 1rem;
-  border-radius: 0.5rem;
+  border-radius: 30px;  /* Custom border radius */
   border: 2px solid #e9ecef;
   transition: all 0.3s ease;
   background-color: #E7E4DC;
   color: #1E1E1E;
 }
 
-.form-control:focus {
-  border-color: #0040BA;
+/* Placeholder styling for email input */
+.email-input-control::placeholder {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  color: #1E1E1E;
+  opacity: 0.35;
+}
+
+/* Focus state for email input */
+.email-input-control:focus {
+  border-color: #1E1E1E;
   box-shadow: 0 0 0 0.25rem rgba(0, 64, 186, 0.15);
   transform: translateY(-1px);
 }
 
 /* Mobile responsive styling */
 @media (max-width: 767px) {
-  .form-control {
+  .email-input-control {
     font-size: 16px; /* Prevents zoom on iOS */
   }
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .form-control {
+  .email-input-control {
     transition: none;
   }
 }

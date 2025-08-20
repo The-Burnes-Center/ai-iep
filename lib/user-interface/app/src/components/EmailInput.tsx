@@ -27,6 +27,7 @@ const EmailInput = ({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
+        className="email-input-control" 
       />
     </Form.Group>
   );

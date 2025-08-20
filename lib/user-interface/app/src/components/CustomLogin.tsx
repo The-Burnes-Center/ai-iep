@@ -23,6 +23,7 @@ import ForgotPassword from './ForgotPassword';
 import LanguageDropdown from './LanguageDropdown';
 import LoginMethodToggle from './LoginMethodToggle';
 import FormLabel from './FormLabel';
+import MobileInput from './MobileInput';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -843,19 +844,14 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     <span className="phone-display">{phoneNumber}</span>
                   </p>
                 </div>
-                <Form.Group className="mb-3">
-                  <FormLabel label={t('auth.verificationCodeSms')} />
-                  <Form.Control
-                    type="text"
-                    placeholder={t('auth.enterSmsCode')}
-                    value={smsCode}
-                    onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    maxLength={6}
-                    required
-                    className="sms-code-input"
-                    autoFocus
-                  />
-                </Form.Group>
+                <MobileInput
+                  label={t('auth.verificationCodeSms')}
+                  placeholder={t('auth.enterSmsCode')}
+                  value={smsCode}
+                  onChange={setSmsCode}
+                  required
+                  autoFocus
+                />
                 
                 <AlertMessages error={error} successMessage={successMessage} />
                 
