@@ -1,9 +1,9 @@
 import React from 'react';
 import { Form } from 'react-bootstrap';
 import FormLabel from './FormLabel';
-import './MobileInput.css';
+import './VerificationCodeInput.css';
 
-interface MobileInputProps {
+interface VerificationCodeInputProps {
   label: string;
   placeholder: string;
   value: string;
@@ -12,7 +12,7 @@ interface MobileInputProps {
   autoFocus?: boolean;
 }
 
-const MobileInput: React.FC<MobileInputProps> = ({
+const VerificationCodeInput: React.FC<VerificationCodeInputProps> = ({
   label,
   placeholder,
   value,
@@ -43,4 +43,4 @@ const MobileInput: React.FC<MobileInputProps> = ({
   );
 };
 
-export default MobileInput;
+export default VerificationCodeInput;

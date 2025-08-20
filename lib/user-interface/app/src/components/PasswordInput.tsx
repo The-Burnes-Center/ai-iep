@@ -1,6 +1,7 @@
 import React from 'react';
 import { Form, InputGroup, Button } from 'react-bootstrap';
 import FormLabel from './FormLabel';
+import './PasswordInput.css';
 
 interface PasswordInputProps {
   label: string;
@@ -22,7 +23,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   required = false
 }) => {
   return (
-    <Form.Group className="mb-3">
+    <Form.Group className="password-input-container mb-3">
       <FormLabel label={label} />
       <InputGroup>
         <Form.Control
@@ -31,6 +32,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           required={required}
+          className="password-input-control" 
         />
         <Button 
           variant="outline-secondary"

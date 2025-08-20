@@ -23,7 +23,7 @@ import ForgotPassword from './ForgotPassword';
 import LanguageDropdown from './LanguageDropdown';
 import LoginMethodToggle from './LoginMethodToggle';
 import FormLabel from './FormLabel';
-import MobileInput from './MobileInput';
+import VerificationCodeInput from './VerificationCodeInput';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -844,7 +844,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     <span className="phone-display">{phoneNumber}</span>
                   </p>
                 </div>
-                <MobileInput
+                <VerificationCodeInput
                   label={t('auth.verificationCodeSms')}
                   placeholder={t('auth.enterSmsCode')}
                   value={smsCode}
@@ -964,6 +964,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                       }, 0);
                     }}
                     required
+                    className='mobile-input'
                   />
                 </Form.Group>
                 

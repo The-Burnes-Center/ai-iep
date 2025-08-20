@@ -117,15 +117,6 @@ input[type="tel"]:focus {
   padding: 0 10px;
 }
 
-/* SMS verification code input styling */
-.sms-code-input {
-  text-align: center;
-  font-size: 1.2rem;
-  letter-spacing: 0.3rem;
-  font-weight: 600;
-  font-family: 'Roboto', monospace;
-}
-
 /* SMS verification info text */
 .sms-verification-info {
   font-family: 'Roboto', sans-serif;
@@ -304,4 +295,10 @@ input[type="tel"]:focus {
 .btn:focus {
   outline: 2px solid #0040BA;
   outline-offset: 2px;
+}
+
+/*To be moved in individual styling pages */
+
+.mobile-input {
+  border-radius: 30px;
 }

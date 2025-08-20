@@ -1,0 +1,9 @@
+/* SMS verification code input styling */
+.sms-code-input {
+  text-align: center;
+  font-size: 1.2rem;
+  letter-spacing: 0.3rem;
+  font-weight: 600;
+  font-family: 'Roboto', monospace;
+  border-radius: 30px;
+}
