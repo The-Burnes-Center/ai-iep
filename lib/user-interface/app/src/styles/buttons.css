@@ -1,6 +1,4 @@
-/* LanguageDropdown.css */
-
-.language-dropdown .dropdown-toggle {
+/* button {
   margin: 0 5px;
   padding-left: 1.2rem !important;
   padding-right: 1.2rem !important;
@@ -13,37 +11,40 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #1E1E1E !important;
+  border: 1px solid #00682F;
+  border: none;
   border-radius: 20px !important;
   transition: all 0.1s ease !important;
   min-width: 120px;
 }
 
-.language-dropdown .dropdown-toggle:hover {
+button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.language-dropdown .dropdown-toggle:disabled {
+button:disabled {
+  border: 1px solid #CBC6BC !important;
   box-shadow: none;
   color: #b3ada9 !important;
   background-color: #F5F3EE;
   cursor: not-allowed !important;
 }
 
-.language-dropdown .btn-icon {
+.btn-icon {
   margin-right: 10px;
 }
 
-.language-dropdown .btn-outline-secondary {
+.btn-outline-secondary {
   color: #1e1e1e;
   border: 1px solid #CBC6BC;
   background-color: #F5F3EE;
   box-shadow: none;
 }
 
-.language-dropdown .btn-outline-secondary:hover {
+.btn-outline-secondary:hover {
   color: #1e1e1e;
+  border: 1px solid #CBC6BC;
   background-color: #E7E4DC;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+} */
