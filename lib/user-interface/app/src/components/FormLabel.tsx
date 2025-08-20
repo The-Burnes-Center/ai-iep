@@ -1,4 +1,5 @@
 import { Form } from 'react-bootstrap';
+import './FormLabel.css';
 
 interface FormLabelProps {
   label: string;
