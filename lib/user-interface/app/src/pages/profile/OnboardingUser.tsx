@@ -86,7 +86,7 @@ const OnboardingUser: React.FC = () => {
       <div className="modal-overlay"></div>
       <div className="modal-container">
         <div className="modal-navigation right">
-          <Button variant="outline-secondary" onClick={handleBackClick}>
+          <Button variant="outline-secondary" onClick={handleBackClick} className="aiep-button">
             <img 
                     src="/images/arrow-back.svg" 
                     alt=""
@@ -94,7 +94,7 @@ const OnboardingUser: React.FC = () => {
                   />
               {t('common.back')}
           </Button>
-          <Button variant="outline-secondary" onClick={handleGetStarted}>
+          <Button variant="outline-secondary" className="aiep-button" onClick={handleGetStarted}>
             {t('common.skip')}
           </Button>
         </div>
@@ -140,7 +140,7 @@ const OnboardingUser: React.FC = () => {
         <div className="carousel-navigation">
           <Button 
             variant="outline-primary" 
-            className="prev-btn" 
+            className="aiep-button prev-btn" 
             disabled={isFirstSlide}
             onClick={handlePrevClick}
           >
@@ -150,7 +150,7 @@ const OnboardingUser: React.FC = () => {
           {isLastSlide ? (
             <Button 
               variant="primary" 
-              className="nav-btn next-btn" 
+              className="aiep-button nav-btn next-btn" 
               onClick={handleGetStarted}
             >
               {getStartedText}
@@ -158,7 +158,7 @@ const OnboardingUser: React.FC = () => {
           ) : (
             <Button 
               variant="primary" 
-              className="nav-btn next-btn" 
+              className="aiep-button nav-btn next-btn" 
               onClick={handleNextClick}
             >
               {t('common.next')}

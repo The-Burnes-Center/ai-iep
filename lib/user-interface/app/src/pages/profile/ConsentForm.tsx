@@ -105,7 +105,7 @@ export default function ConsentForm() {
         <Row style={{ width: '100%', justifyContent: 'center' }}>
           <Col xs={12} md={8} lg={6}>
             <div className="alert alert-danger">{error}</div>
-            <Button onClick={loadProfile} variant="primary">Try Again</Button>
+            <Button onClick={loadProfile} variant="primary" className="aiep-button">Try Again</Button>
           </Col>
         </Row>
       </Container>
@@ -115,7 +115,7 @@ export default function ConsentForm() {
   return (
     <div>
       <div className="mt-3 text-start px-3 py-2">
-        <Button variant="outline-secondary" onClick={handleBackClick}>
+        <Button variant="outline-secondary" onClick={handleBackClick} className="aiep-button">
           {t('common.back')}
         </Button>
       </div>
@@ -155,7 +155,7 @@ export default function ConsentForm() {
                   variant="primary" 
                   onClick={handleContinue}
                   disabled={!isChecked || saving}
-                  className="consent-button"
+                  className="consent-button aiep-button"
                 >
                   {saving ? (
                     <>
