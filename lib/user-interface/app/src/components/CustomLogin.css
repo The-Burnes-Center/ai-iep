@@ -19,7 +19,6 @@
 /* Background color for login container */
 .login-container {
   background-color: #F5F3EE;
-  /*margin-top: 5vh;*/
   margin-top: 30px;
 }
 
@@ -171,29 +170,6 @@ input[type="tel"]:focus {
   border-color: #0040BA;
   box-shadow: 0 0 0 0.25rem rgba(0, 64, 186, 0.15);
   transform: translateY(-1px);
-}
-
-/* Alert styling enhancements */
-.alert {
-  border-radius: 0.5rem;
-  border: none;
-  font-family: 'Roboto', sans-serif;
-  margin-bottom: 1rem;
-}
-
-.alert-success {
-  background-color: #d1e7dd;
-  color: #0f5132;
-}
-
-.alert-danger {
-  background-color: #f8d7da;
-  color: #842029;
-}
-
-.alert-info {
-  background-color: #d1ecf1;
-  color: #055160;
 }
 
 /* Loading spinner in buttons */

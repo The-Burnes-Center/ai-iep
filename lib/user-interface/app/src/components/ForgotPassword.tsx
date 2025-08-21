@@ -6,7 +6,8 @@ import PasswordInput from './PasswordInput';
 import AlertMessages from './AlertMessages';
 import SubmitButton from './SubmitButton';
 import LinkButton from './LinkButton';
-import './ForgotPassword.css';
+import './CustomLogin.css';
+import FormLabel from './FormLabel';
 
 interface ForgotPasswordProps {
   t: (key: string) => string;
@@ -86,7 +87,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
         ) : (
           <Form onSubmit={handleResetPassword}>
             <Form.Group className="mb-3">
-              <Form.Label className="form-label-bold">{t('auth.resetCode')}</Form.Label>
+              <FormLabel label={t('auth.resetCode')} />
               <Form.Control
                 type="text"
                 placeholder={t('auth.enterResetCode')}

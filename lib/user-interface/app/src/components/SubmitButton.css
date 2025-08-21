@@ -2,8 +2,8 @@
   margin: 0 5px;
   padding-left: 1.2rem !important;
   padding-right: 1.2rem !important;
-  padding-top: 0.5rem !important;
-  padding-bottom: 0.5rem !important;
+  padding-top: 0.5rem !important; /* Additional to button styling */
+  padding-bottom: 0.5rem !important; /* Additional to button styling */
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -15,7 +15,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 1px solid #00682F;
   border: none;
-  border-radius: 30px !important;
+  border-radius: 30px !important; /* Changed from 20px to 30px */
   transition: all 0.1s ease !important;
   min-width: 120px;
 }
