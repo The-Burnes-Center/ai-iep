@@ -7,10 +7,18 @@ from decimal import Decimal
 from typing import Dict, List, Optional, Literal
 from router import Router, UserProfileRouter, RouteNotFoundException
 import base64
+from botocore.exceptions import ClientError
 
 dynamodb = boto3.resource('dynamodb')
 user_profiles_table = dynamodb.Table(os.environ['USER_PROFILES_TABLE'])
 iep_documents_table = dynamodb.Table(os.environ['IEP_DOCUMENTS_TABLE'])
+
+# Initialize KMS client using Lambda's region from AWS_REGION (provided by runtime)
+region = os.environ.get('AWS_REGION', 'us-east-1')
+kms_client = boto3.client('kms', region_name=region)
+kms_key_alias = os.environ.get('AIEP_KMS_KEY_ALIAS', 'alias/aiep/app')
+
+print(f"KMS client initialized for region: {region}, using key alias: {kms_key_alias}")
 
 SUPPORTED_LANGUAGES = ['en', 'zh', 'es', 'vi']
 DEFAULT_LANGUAGE = 'en'
@@ -102,6 +110,55 @@ def validate_language(lang: str) -> bool:
     """
     return lang in SUPPORTED_LANGUAGES
 
+def kms_encrypt_string(plaintext: str) -> str:
+    if not plaintext:
+        return plaintext
+    try:
+        # Try to encrypt with KMS
+        resp = kms_client.encrypt(
+            KeyId=kms_key_alias,
+            Plaintext=plaintext.encode('utf-8'),
+        )
+        encrypted = base64.b64encode(resp['CiphertextBlob']).decode('utf-8')
+        print(f"Successfully encrypted field with KMS")
+        return encrypted
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        print(f"KMS encrypt failed with {error_code}: {str(e)}")
+        if error_code in ['UnrecognizedClientException', 'AccessDeniedException', 'NotFoundException']:
+            print("KMS key not available - storing as plaintext (encryption disabled)")
+        return plaintext
+    except Exception as e:
+        print(f"KMS encrypt failed with unexpected error: {str(e)}")
+        return plaintext
+
+def kms_decrypt_string(ciphertext_b64: str) -> str:
+    if not ciphertext_b64:
+        return ciphertext_b64
+    
+    # Quick check if this looks like base64 (encrypted data)
+    try:
+        base64.b64decode(ciphertext_b64)
+    except:
+        # Not base64, probably plaintext
+        return ciphertext_b64
+        
+    try:
+        blob = base64.b64decode(ciphertext_b64)
+        resp = kms_client.decrypt(CiphertextBlob=blob)
+        decrypted = resp['Plaintext'].decode('utf-8')
+        print(f"Successfully decrypted field with KMS")
+        return decrypted
+    except ClientError as e:
+        error_code = e.response['Error']['Code']
+        print(f"KMS decrypt failed with {error_code}: {str(e)}")
+        if error_code in ['UnrecognizedClientException', 'AccessDeniedException', 'InvalidCiphertextException']:
+            print("Assuming plaintext data (encryption may be disabled)")
+        return ciphertext_b64
+    except Exception as e:
+        print(f"KMS decrypt failed with unexpected error: {str(e)}")
+        return ciphertext_b64
+
 def get_timestamps() -> Dict[str, any]:
     """
     Generate both Unix timestamp in milliseconds and human-readable ISO format.
@@ -167,6 +224,11 @@ def get_user_profile(event: Dict) -> Dict:
             return create_response(event, 200, {'profile': new_profile})
         
         existing_profile = response['Item']
+
+        # Decrypt selected PII fields before returning
+        for pii_field in ['phone', 'city', 'parentName']:
+            if pii_field in existing_profile and isinstance(existing_profile[pii_field], str):
+                existing_profile[pii_field] = kms_decrypt_string(existing_profile[pii_field])
         
         # Check if existing profile has no children and add default child if needed
         if 'children' not in existing_profile or not existing_profile['children']:
@@ -269,8 +331,12 @@ def update_user_profile(event: Dict) -> Dict:
                         'message': 'showOnboarding must be a boolean value (true or false)'
                     })
                 
+                # Encrypt selected PII fields at rest
+                value_to_store = body[field]
+                if field in ['phone', 'city', 'parentName'] and isinstance(value_to_store, str):
+                    value_to_store = kms_encrypt_string(value_to_store)
                 update_parts.append(f'{attr_name} = :{field}')
-                expr_values[f':{field}'] = body[field]
+                expr_values[f':{field}'] = value_to_store
             
         # Handle children array if present
         if 'children' in body:

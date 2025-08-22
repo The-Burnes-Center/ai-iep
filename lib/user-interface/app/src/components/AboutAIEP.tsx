@@ -1,3 +1,4 @@
+/*Move this component to the pages folder*/
 import React from 'react';
 import MobileBottomNavigation from './MobileBottomNavigation';
 

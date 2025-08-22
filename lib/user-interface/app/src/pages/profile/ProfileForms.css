@@ -1,7 +1,3 @@
-/* Google font imports */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
-
-/* Form container */
 .profile-form-container {
   min-height: 80vh;
   display: flex;
@@ -9,44 +5,39 @@
   justify-content: center;
 }
 
-/* Form title */
 .profile-title {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
+  font-family: 'salford-sans-variable', sans-serif;
+  font-variation-settings: "slnt" 0, "wght" 600;
   font-size: 1.75rem;
   padding-right: 1rem;
 }
 
 .parent-name-title {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
+  font-family: 'salford-sans-variable', sans-serif;
+  font-variation-settings: "slnt" 0, "wght" 600;
   font-size: 1.75rem;
   padding-right: 1rem;
   padding-bottom: 2rem;
 }
 
-/* Form label styles */
 .form-label {
   font-family: 'Roboto', sans-serif;
   font-weight: 500;
 }
 
-/* Button text style */
 .button-text {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
+  font-family: 'salford-sans-variable', sans-serif;
+  font-variation-settings: "slnt" 0, "wght" 600;
 }
 
-/* Consent box styling */
 .consent-box {
   border-radius: 10px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
-/* Consent text style */
 .consent-text {
-  font-family: 'Lato', sans-serif;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
   font-weight: 400;
   font-size: 1rem;
   line-height: 2;
@@ -54,21 +45,18 @@
   text-align: left;
 }
 
-/* Checkbox label style */
 .checkbox-label {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
   font-weight: 400;
   padding-left: 0.5rem;
 }
 
-/* Apply styles to form controls for placeholder text */
 .form-control::placeholder {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 300;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
   opacity: 0.7;
 }
 
-/* Remove box styling */
 .profile-form {
   background: transparent;
   padding: 0;
@@ -76,72 +64,43 @@
   box-shadow: none;
 }
 
-/* Tooltip styling */
 .consent-tooltip {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 300;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
 }
 
 .language-button {
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 500;
+  border: 1px solid #1e1e1e !important;
+  border-radius: 20px;
+  font-size: 1.2rem;
+  text-align: left;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif !important;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: unset;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .language-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   color: #F5F3EE !important;
 }
 
-/* Style for the selected language button */
 .btn-primary.language-button {
-  border-width: 2px;
+  border-width: 0px;
   position: relative;
 }
 
-.btn-primary.language-button::after {
-  content: "✓";
-  position: absolute;
-  right: 15px;
-  font-weight: bold;
-}
-
-/* Add these styles to your existing ProfileForms.css file */
-
-.language-button {
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-align: left;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-}
-
-.language-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Style for the selected language button */
-.btn-primary.language-button {
-  border-width: 2px;
-  position: relative;
+.language-button.btn-outline-primary:hover {
+  border-color: #00682F;
 }
 
 .language-name {
-  font-weight: 400;
   opacity: 0.8;
   font-size: 0.9rem;
 }
 
 /* Style for selected language */
 .btn-primary .language-name {
-  font-weight: 500;
   opacity: 1;
 }
 
@@ -165,8 +124,9 @@
 }
 
 .consent-button {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
+  font-family: 'salford-sans-variable', sans-serif;
+  font-variation-settings: "slnt" 0, "wght" 600;
+  text-transform: uppercase;
 }
 
 /* Disabled consent button styling */

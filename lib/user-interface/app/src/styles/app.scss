@@ -26,12 +26,19 @@ body.awsui-dark-mode {
   background-color: #0e1b2a;
 }
 
+.page {
+  height: 100%;
+  width: 100%;
+}
+
+
 .header-container {
   display: flex;
   grid-template-columns: 1fr auto;
   justify-content: space-between;
-  align-items: center; /* Ensures vertical alignment if needed */
+  align-items: center;
 }
+
 
 .matrix-table {
   border: 1px solid #d6d6d6;
@@ -64,46 +71,45 @@ body.awsui-dark-mode {
   }
 }
 
+// .new-session-button {
+//  margin-left: auto; 
+// }
 
-.new-session-button {
- margin-left: auto; 
-}
+// new-chat-button[data-alignment = "right"] {
+//  align-items: center;
+// }
 
-new-chat-button[data-alignment = "right"] {
- align-items: center;
-}
+// .new-session-button:hover {
+//   background-color: #45a049; /* Darker green on hover */
+// }
 
-.new-session-button:hover {
-  background-color: #45a049; /* Darker green on hover */
-}
+// .jsonContainer {
+//   font-family: "Open Sans", sans-serif;
+//   font-size: 1em;
+//   background-color: #0e1b2ac3;
+// }
 
-.jsonContainer {
-  font-family: "Open Sans", sans-serif;
-  font-size: 1em;
-  background-color: #0e1b2ac3;
-}
+// .internal-use-only{
+//   color: red;
+// }
 
-.internal-use-only{
-  color: red;
-}
-
-.jsonStrings {
-  color: rgb(74, 234, 167);
+// .jsonStrings {
+//   color: rgb(74, 234, 167);
   
-}
+// }
 
-.jsonNumbers {
-  color: rgb(255, 223, 60);
-}
+// .jsonNumbers {
+//   color: rgb(255, 223, 60);
+// }
 
-.jsonBool {
-  color: rgb(252, 178, 250);
-  font-weight: 600;
-}
+// .jsonBool {
+//   color: rgb(252, 178, 250);
+//   font-weight: 600;
+// }
 
-.jsonNull {
-  color:rgb(74, 205, 234);
-  font-weight: 600;
-}
+// .jsonNull {
+//   color:rgb(74, 205, 234);
+//   font-weight: 600;
+// }
 
 

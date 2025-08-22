@@ -7,6 +7,8 @@ import {
 import GlobalHeader from "./components/global-header";
 import WelcomePage from "./pages/WelcomePage";
 import "./styles/app.scss";
+import "./styles/modal.css";
+import "./styles/buttons.css";
 import PreferredLanguage  from './pages/profile/PreferredLanguage'; 
 import OnboardingUser from './pages/profile/OnboardingUser';
 import UserProfileForm from './pages/profile/UserProfileForm';
@@ -39,7 +41,7 @@ function AppContent() {
         backgroundColor: shouldShowHeader ? "#000716" : "transparent" 
       }}>&nbsp;</div>
       
-      <div>
+      {/* <div> */}
         <Routes>    
           <Route path="/" element={<PreferredLanguage  />} />
           <Route path="/onboarding-user" element={<OnboardingUser />} />
@@ -67,7 +69,7 @@ function AppContent() {
             <Route path="/support-center" element={<SupportCenter />} />
             <Route path="/about-aiep" element={<AboutAIEP />} />
         </Routes>
-      </div>
+      {/* </div> */}
     </div>
   );
 }

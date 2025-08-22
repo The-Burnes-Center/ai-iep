@@ -1,45 +1,11 @@
 /* Google font imports */
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
-/* AIEP title style */
-.aiep-title {
-  font-family: 'Fredoka', sans-serif;
-  font-weight: 600;
-  font-size: 4rem;
-  animation: fadeIn 1.2s ease-in;
-}
-
-/* AIEP logo style */
-.aiep-logo {
-  max-width: 200px;
-  height: auto;
-  animation: fadeIn 1.2s ease-in;
-}
-
-/* Fade-in animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Form label styles */
-.form-label-bold {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
-}
 
 /* Button text style */
 .button-text {
   font-family: 'Roboto', sans-serif;
   font-weight: 500;
-}
-
-/* Forgot Password link style */
-.forgot-password-link {
-  color: #1E1E1E !important;
-  text-decoration: none !important; 
-  font-family: 'Roboto', sans-serif;
-  font-weight: 700;
 }
 
 /* Apply styles to form controls for placeholder text */
@@ -53,7 +19,6 @@
 /* Background color for login container */
 .login-container {
   background-color: #F5F3EE;
-  /*margin-top: 5vh;*/
   margin-top: 30px;
 }
 
@@ -151,15 +116,6 @@ input[type="tel"]:focus {
   padding: 0 10px;
 }
 
-/* SMS verification code input styling */
-.sms-code-input {
-  text-align: center;
-  font-size: 1.2rem;
-  letter-spacing: 0.3rem;
-  font-weight: 600;
-  font-family: 'Roboto', monospace;
-}
-
 /* SMS verification info text */
 .sms-verification-info {
   font-family: 'Roboto', sans-serif;
@@ -216,78 +172,12 @@ input[type="tel"]:focus {
   transform: translateY(-1px);
 }
 
-/* Alert styling enhancements */
-.alert {
-  border-radius: 0.5rem;
-  border: none;
-  font-family: 'Roboto', sans-serif;
-  margin-bottom: 1rem;
-}
-
-.alert-success {
-  background-color: #d1e7dd;
-  color: #0f5132;
-}
-
-.alert-danger {
-  background-color: #f8d7da;
-  color: #842029;
-}
-
-.alert-info {
-  background-color: #d1ecf1;
-  color: #055160;
-}
-
 /* Loading spinner in buttons */
 .spinner-border-sm {
   width: 1rem;
   height: 1rem;
 }
 
-/* Language dropdown styling */
-.dropdown-toggle {
-  border-radius: 0.5rem;
-  font-family: 'Roboto', sans-serif;
-  font-size: 0.875rem;
-  background-color: #E7E4DC !important;
-  color: #1E1E1E !important;
-  border: 2px solid #e9ecef !important;
-  transition: all 0.3s ease;
-}
-
-.dropdown-toggle:hover,
-.dropdown-toggle:focus {
-  background-color: #E7E4DC !important;
-  color: #1E1E1E !important;
-  border-color: #FFB522 !important;
-  box-shadow: 0 0 0 0.25rem rgba(255, 181, 34, 0.15) !important;
-}
-
-.dropdown-menu {
-  border-radius: 0.5rem;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  background-color: #E7E4DC;
-}
-
-.dropdown-item {
-  font-family: 'Roboto', sans-serif;
-  padding: 8px 16px;
-  color: #1E1E1E;
-  background-color: transparent;
-}
-
-.dropdown-item:hover {
-  background-color: #FFB522;
-  color: #1E1E1E;
-}
-
-.dropdown-item.active {
-  background-color: #EFECE5;
-  color: #1E1E1E;
-  font-weight: 600;
-}
 
 /* Mobile responsive styling */
 @media (max-width: 767px) {
@@ -295,10 +185,6 @@ input[type="tel"]:focus {
   .email-form-container {
     width: 90%;
     padding: 0 10px;
-  }
-  
-  .aiep-title {
-    font-size: 3rem;
   }
   
   .btn-group {
@@ -329,10 +215,6 @@ input[type="tel"]:focus {
 @media (max-width: 575px) {
   .login-container {
     padding: 20px 15px;
-  }
-  
-  .aiep-title {
-    font-size: 2.5rem;
   }
   
   .mobile-form-container,
@@ -369,9 +251,6 @@ input[type="tel"]:focus {
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .aiep-title {
-    animation: none;
-  }
   
   .btn-primary[type="submit"] {
     transition: none;
@@ -387,11 +266,15 @@ input[type="tel"]:focus {
 }
 
 /* Accessibility improvements */
-.form-label-bold {
-  cursor: pointer;
-}
+
 
 .btn:focus {
   outline: 2px solid #0040BA;
   outline-offset: 2px;
+}
+
+/*To be moved in individual styling pages */
+
+.mobile-input {
+  border-radius: 30px;
 }

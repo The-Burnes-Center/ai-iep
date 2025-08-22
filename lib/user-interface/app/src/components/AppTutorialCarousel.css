@@ -133,16 +133,65 @@
   display: none !important;
 }
 
-/* Tablet and larger screens - 70% width as requested */
-@media (min-width: 768px) {
+/* Desktop Navigation Buttons - Only visible on desktop */
+.carousel-desktop-navigation {
+  display: none; /* Hidden by default on mobile */
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  width: 50%;
+  position: relative;
+  z-index: 3;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.carousel-nav-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: #EFECE5;
+  color: #1E1E1E;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.05em;
+}
+
+.carousel-nav-btn:hover:not(:disabled) {
+  background-color: #E7E4DC;
+}
+
+.carousel-nav-btn:disabled {
+  background-color: #E7E4DC;
+  color:#A09E99;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+@media (min-width: 992px) {
+  /* Show desktop navigation and hide indicators */
+  .carousel-desktop-navigation {
+    display: flex;
+    align-items: center;
+  }
+
+  .app-tutorial-carousel .carousel-indicators {
+    display: none;
+  }
+
+  .slide-image {
+    max-width: 50%;
+    max-width: 50%;
+  }
+
   .app-tutorial-carousel-wrapper {
     width: 70%;
     max-width: 70%;
   }
 
   .slide-tutorial-content {
-    max-width: 75%;
-    padding: 3rem;
+    max-width: 55%;
+    padding: 1rem;
   }
 
   .slide-tutorial-content h2 {

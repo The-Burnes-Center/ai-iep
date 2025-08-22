@@ -8,12 +8,22 @@ import {
   Button, 
   Alert, 
   Spinner,
-  InputGroup,
-  Dropdown
 } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './CustomLogin.css'; // Import the custom CSS file
 import { useLanguage, SupportedLanguage } from '../common/language-context';
+import AuthHeader from './AuthHeader';
+import PasswordInput from './PasswordInput';
+import PasswordRequirements from './PasswordRequirements';
+import AlertMessages from './AlertMessages';
+import SubmitButton from './SubmitButton';
+import LinkButton from './LinkButton';
+import EmailInput from './EmailInput';
+import ForgotPassword from './ForgotPassword';
+import LanguageDropdown from './LanguageDropdown';
+import LoginMethodToggle from './LoginMethodToggle';
+import FormLabel from './FormLabel';
+import VerificationCodeInput from './VerificationCodeInput';
 
 interface CustomLoginProps {
   onLoginSuccess: () => void;
@@ -625,67 +635,42 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
-          <div className="text-center mb-4">
-            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
-            <h4>{t('auth.changePassword')}</h4>
-          </div>
+          <AuthHeader title={t('auth.changePassword')} />
           
           <Form onSubmit={handleCompleteNewPassword}>
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label-bold">{t('auth.newPassword')}</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type={showNewPassword ? "text" : "password"}
-                  placeholder={t('auth.enterNewPassword')}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-                <Button 
-                  variant="outline-secondary"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                </Button>
-              </InputGroup>
-            </Form.Group>
+            <PasswordInput
+              label={t('auth.newPassword')}
+              placeholder={t('auth.enterNewPassword')}
+              value={newPassword}
+              onChange={setNewPassword}
+              showPassword={showNewPassword}
+              onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
+              required
+            />
+
+            <PasswordRequirements 
+              title={t('auth.passwordRequirements')}
+              firstRequirement={t('auth.passwordRequirement1')}
+              secondRequirement={t('auth.passwordRequirement2')}
+            />
             
-            {/* Password requirements container */}
-            <Container className="mt-3 mb-3 p-3 border rounded bg-light">
-              <Form.Text className="text-muted">
-                {t('auth.passwordRequirements')}
-                <ul>
-                  <li>{t('auth.passwordRequirement1')}</li>
-                  <li>{t('auth.passwordRequirement2')}</li>
-                </ul>
-              </Form.Text>
-            </Container>
-            
-            <Form.Group className="mb-3">
-              <Form.Label className="form-label-bold">{t('auth.passwordConfirm')}</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder={t('auth.passwordConfirm')}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <Button 
-                  variant="outline-secondary"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                </Button>
-              </InputGroup>
-            </Form.Group>
+            <PasswordInput
+              label={t('auth.passwordConfirm')}
+              placeholder={t('auth.passwordConfirm')}
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              showPassword={showConfirmPassword}
+              onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
+              required
+            />
 
             {error && <Alert variant="danger">{error}</Alert>}
             
             <div className="d-grid gap-2">
-              <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                {loading ? <Spinner animation="border" size="sm" /> : t('auth.changePassword')}
-              </Button>
+                <SubmitButton 
+                  loading={loading}
+                  buttonText={t('auth.changePassword')}
+                />              
             </div>
           </Form>
         </Col>
@@ -696,117 +681,29 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show forgot password form
   if (showForgotPassword) {
     return (
-      <Container fluid className="login-container d-flex align-items-center justify-content-center">
-        <Col xs={12} sm={8} md={6} lg={4}>
-          <div className="text-center mb-4">
-            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
-            <h4>{t('auth.resetPassword')}</h4>
-          </div>
-          
-          {!resetSent ? (
-            <Form onSubmit={handleForgotPassword}>
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
-                <Form.Control
-                  type="email"
-                  placeholder={t('auth.enterEmail')}
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
-              
-              <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.sendResetCode')}
-                </Button>
-                <Button 
-                  variant="link" 
-                  onClick={() => setShowForgotPassword(false)}
-                  disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.backToLogin')}
-                </Button>
-              </div>
-            </Form>
-          ) : (
-            <Form onSubmit={handleResetPassword}>
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.resetCode')}</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder={t('auth.enterResetCode')}
-                  value={resetCode}
-                  onChange={(e) => setResetCode(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.newPassword')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder={t('auth.newPassword')}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    <i className={`bi ${showNewPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.passwordConfirm')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder={t('auth.passwordConfirm')}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    <i className={`bi ${showConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
-
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
-
-              <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.resetPassword')}
-                </Button>
-                <Button 
-                  variant="link" 
-                  onClick={() => {
-                    setShowForgotPassword(false);
-                    setResetSent(false);
-                  }}
-                  disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.backToLogin')}
-                </Button>
-              </div>
-            </Form>
-          )}
-        </Col>
-      </Container>
+        <ForgotPassword
+          t={t}
+          loading={loading}
+          error={error}
+          successMessage={successMessage}
+          resetSent={resetSent}
+          resetEmail={resetEmail}
+          resetCode={resetCode}
+          newPassword={newPassword}
+          confirmPassword={confirmPassword}
+          showNewPassword={showNewPassword}
+          showConfirmPassword={showConfirmPassword}
+          setResetEmail={setResetEmail}
+          setResetCode={setResetCode}
+          setNewPassword={setNewPassword}
+          setConfirmPassword={setConfirmPassword}
+          setShowNewPassword={setShowNewPassword}
+          setShowConfirmPassword={setShowConfirmPassword}
+          setShowForgotPassword={setShowForgotPassword}
+          setResetSent={setResetSent}
+          handleForgotPassword={handleForgotPassword}
+          handleResetPassword={handleResetPassword}
+        />
     );
   }
 
@@ -815,92 +712,59 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     return (
       <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Col xs={12} sm={8} md={6} lg={4}>
-          <div className="text-center mb-4">
-            <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
-            <h4>{isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')}</h4>
-          </div>
+          <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} />
           
           {!isSignUpComplete ? (
             <Form onSubmit={handleSignUp}>
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
-                <Form.Control
-                  type="email"
-                  placeholder={t('auth.enterEmail')}
-                  value={signUpEmail}
-                  onChange={(e) => setSignUpEmail(e.target.value)}
-                  required
-                />
-              </Form.Group>
+              <EmailInput
+                label={t('auth.email')}
+                placeholder={t('auth.enterEmail')}
+                value={signUpEmail}
+                onChange={setSignUpEmail}
+              />
               
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.password')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showSignUpPassword ? "text" : "password"}
-                    placeholder={t('auth.enterPassword')}
-                    value={signUpPassword}
-                    onChange={(e) => setSignUpPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowSignUpPassword(!showSignUpPassword)}
-                  >
-                    <i className={`bi ${showSignUpPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
+              <PasswordInput
+                label={t('auth.password')}
+                placeholder={t('auth.enterPassword')}
+                value={signUpPassword}
+                onChange={setSignUpPassword}
+                showPassword={showSignUpPassword}
+                onToggleVisibility={() => setShowSignUpPassword(!showSignUpPassword)}
+                required
+              />
               
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.passwordConfirm')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showSignUpConfirmPassword ? "text" : "password"}
-                    placeholder={t('auth.passwordConfirm')}
-                    value={signUpConfirmPassword}
-                    onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
-                  >
-                    <i className={`bi ${showSignUpConfirmPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
+              <PasswordInput
+                label={t('auth.passwordConfirm')}
+                placeholder={t('auth.passwordConfirm')}
+                value={signUpConfirmPassword}
+                onChange={setSignUpConfirmPassword}
+                showPassword={showSignUpConfirmPassword}
+                onToggleVisibility={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                required
+              />
+
+              <PasswordRequirements 
+                title={t('auth.passwordRequirements')}
+                firstRequirement={t('auth.passwordRequirement1')}
+                secondRequirement={t('auth.passwordRequirement2')}
+              />
               
-              {/* Password requirements container */}
-              <Container className="mt-3 mb-3 p-3 border rounded bg-light">
-                <Form.Text className="text-muted">
-                  {t('auth.passwordRequirements')}
-                  <ul>
-                    <li>{t('auth.passwordRequirement1')}</li>
-                    <li>{t('auth.passwordRequirement2')}</li>
-                  </ul>
-                </Form.Text>
-              </Container>
-              
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+              <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.signUp')}
-                </Button>
-                <Button 
-                  variant="link" 
+                  <SubmitButton 
+                    loading={loading}
+                    buttonText={t('auth.signUp')}
+                  />
+                <LinkButton
                   onClick={() => {
                     setShowSignUp(false);
                     setError(null);
                     setSuccessMessage(null);
                   }}
                   disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.backToLogin')}
-                </Button>
+                  buttonText={t('auth.backToLogin')}
+                />
               </div>
             </Form>
           ) : (
@@ -908,7 +772,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               <Alert variant="info">{t('auth.checkEmailForCode')}</Alert>
               
               <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.verificationCode')}</Form.Label>
+                <FormLabel label={t('auth.verificationCode')} />
                 <Form.Control
                   type="text"
                   placeholder={t('auth.enterVerificationCode')}
@@ -918,23 +782,19 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 />
               </Form.Group>
               
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+              <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.verify')}
-                </Button>
-                <Button 
-                  variant="link"
+                  <SubmitButton 
+                    loading={loading}
+                    buttonText={t('auth.verify')}
+                  />
+                <LinkButton
                   onClick={handleResendConfirmation}
                   disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.resendCode')}
-                </Button>
-                <Button 
-                  variant="link" 
+                  buttonText={t('auth.resendCode')}
+                />
+                <LinkButton
                   onClick={() => {
                     setShowSignUp(false);
                     setIsSignUpComplete(false);
@@ -942,10 +802,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     setSuccessMessage(null);
                   }}
                   disabled={loading}
-                  className="forgot-password-link"
-                >
-                  {t('auth.backToLogin')}
-                </Button>
+                  buttonText={t('auth.backToLogin')}
+                />
               </div>
             </Form>
           )}
@@ -958,50 +816,21 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   return (
     <Container fluid className="login-container d-flex align-items-center justify-content-center">
       <Col xs={12} sm={8} md={6} lg={4}>
-        <div className="text-center mb-4">
-          <img src="/images/AIEP_Logo.png" alt="AIEP Logo" className="aiep-logo mb-3" />
-          <h4>{t('auth.signInHeader')}</h4>
-        </div>
+        <AuthHeader title={t('auth.signInHeader')} />
 
-        {/* Language dropdown */}
-        <div className="text-end mb-3">
-          <Dropdown>
-            <Dropdown.Toggle variant="outline-secondary" id="language-dropdown" size="sm">
-              {languageOptions.find(opt => opt.value === language)?.label || 'Language'}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              {languageOptions.map((option) => (
-                <Dropdown.Item 
-                  key={option.value}
-                  onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
-                  active={language === option.value}
-                >
-                  {option.label}
-                </Dropdown.Item>
-              ))}
-            </Dropdown.Menu>
-          </Dropdown>
-        </div>
+      <LanguageDropdown 
+        language={language}
+        languageOptions={languageOptions}
+        onLanguageChange={handleLanguageChange}
+      />
 
-        {/* Login method toggle buttons */}
-        <div className="d-grid gap-2 mb-4">
-          <div className="btn-group" role="group">
-            <Button 
-              variant={showMobileLogin ? "primary" : "outline-primary"}
-              onClick={() => setShowMobileLogin(true)}
-              className="button-text"
-            >
-              {t('auth.mobileLogin')}
-            </Button>
-            <Button 
-              variant={!showMobileLogin ? "primary" : "outline-primary"}
-              onClick={() => setShowMobileLogin(false)}
-              className="button-text"
-            >
-              {t('auth.emailLogin')}
-            </Button>
-          </div>
-        </div>
+      <LoginMethodToggle
+        showMobileLogin={showMobileLogin}
+        onMobileLoginClick={() => setShowMobileLogin(true)}
+        onEmailLoginClick={() => setShowMobileLogin(false)}
+        mobileLoginText={t('auth.mobileLogin')}
+        emailLoginText={t('auth.emailLogin')}
+      />
         
         {showMobileLogin ? (
           // Mobile Login Form
@@ -1015,30 +844,23 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                     <span className="phone-display">{phoneNumber}</span>
                   </p>
                 </div>
-                <Form.Group className="mb-3">
-                  <Form.Label className="form-label-bold">{t('auth.verificationCodeSms')}</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder={t('auth.enterSmsCode')}
-                    value={smsCode}
-                    onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    maxLength={6}
-                    required
-                    className="sms-code-input"
-                    autoFocus
-                  />
-                </Form.Group>
-                {error && <Alert variant="danger">{error}</Alert>}
-                {successMessage && <Alert variant="success">{successMessage}</Alert>}
+                <VerificationCodeInput
+                  label={t('auth.verificationCodeSms')}
+                  placeholder={t('auth.enterSmsCode')}
+                  value={smsCode}
+                  onChange={setSmsCode}
+                  required
+                  autoFocus
+                />
+                
+                <AlertMessages error={error} successMessage={successMessage} />
+                
                 <div className="d-grid gap-2">
-                  <Button 
-                    variant="primary" 
-                    type="submit" 
-                    disabled={loading || smsCode.length !== 6} 
-                    className="button-text"
-                  >
-                    {loading ? <Spinner animation="border" size="sm" /> : t('auth.verifySmsCode')}
-                  </Button>
+                    <SubmitButton 
+                      loading={loading}
+                      buttonText={t('auth.verifySmsCode')}
+                      disabled={loading || smsCode.length !== 6}
+                    />
                   <Button 
                     variant="outline-secondary"
                     onClick={handleResendSmsCode}
@@ -1047,8 +869,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                   >
                     {loading ? <Spinner animation="border" size="sm" /> : t('auth.resendSmsCode')}
                   </Button>
-                  <Button 
-                    variant="link" 
+                  <LinkButton
                     onClick={() => {
                       setSmsCodeSent(false);
                       setCognitoUserForSms(null);
@@ -1061,10 +882,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                       setIsNewUserSignup(false);
                     }}
                     disabled={loading}
-                    className="forgot-password-link"
-                  >
-                    {t('auth.backToLogin')}
-                  </Button>
+                    buttonText={t('auth.backToLogin')}
+                  />
                 </div>
               </div>
             </Form>
@@ -1073,7 +892,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             <Form onSubmit={handleMobileLogin}>
               <div className="mobile-form-container">
                 <Form.Group className="mb-3">
-                  <Form.Label className="form-label-bold">{t('auth.phoneNumber')}</Form.Label>
+                  <FormLabel label={t('auth.phoneNumber')} />
                   <Form.Control
                     type="tel"
                     placeholder="(xxx) xxx-xxxx"
@@ -1145,16 +964,17 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                       }, 0);
                     }}
                     required
+                    className='mobile-input'
                   />
                 </Form.Group>
                 
-                {error && <Alert variant="danger">{error}</Alert>}
-                {successMessage && <Alert variant="success">{successMessage}</Alert>}
+                <AlertMessages error={error} successMessage={successMessage} />
                 
                 <div className="d-grid gap-2">
-                  <Button variant="primary" type="submit" disabled={mobileLoading} className="button-text">
-                    {mobileLoading ? <Spinner animation="border" size="sm" /> : t('auth.sendSmsCode')}
-                  </Button>
+                    <SubmitButton 
+                      loading={mobileLoading}
+                      buttonText={t('auth.sendSmsCode')}
+                    />
                   
                   <p className="text-muted mt-3 mobile-consent-text">
                     {t('auth.smsConsentMobile')}
@@ -1167,64 +987,45 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           // Email Login Form
           <Form onSubmit={handleSignIn}>
             <div className="email-form-container">
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.email')}</Form.Label>
-                <Form.Control
-                  type="email"
-                  placeholder={t('auth.enterEmail')}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </Form.Group>
+              <EmailInput
+                label={t('auth.email')}
+                placeholder={t('auth.enterEmail')}
+                value={username}
+                onChange={setUsername}
+              />
               
-              <Form.Group className="mb-3">
-                <Form.Label className="form-label-bold">{t('auth.password')}</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showMainPassword ? "text" : "password"}
-                    placeholder={t('auth.enterPassword')}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={() => setShowMainPassword(!showMainPassword)}
-                  >
-                    <i className={`bi ${showMainPassword ? "bi-eye-slash" : "bi-eye"}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
+              <PasswordInput
+                label={t('auth.password')}
+                placeholder={t('auth.enterPassword')}
+                value={password}
+                onChange={setPassword}
+                showPassword={showMainPassword}
+                onToggleVisibility={() => setShowMainPassword(!showMainPassword)}
+                required
+              />
               
-              {error && <Alert variant="danger">{error}</Alert>}
-              {successMessage && <Alert variant="success">{successMessage}</Alert>}
+              <AlertMessages error={error} successMessage={successMessage} />
               
               <div className="d-grid gap-2">
-                <Button variant="primary" type="submit" disabled={loading} className="button-text">
-                  {loading ? <Spinner animation="border" size="sm" /> : t('auth.signIn')}
-                </Button>
+                  <SubmitButton 
+                    loading={loading}
+                    buttonText={t('auth.signIn')}
+                  />
                 <div className="d-flex justify-content-between">
-                  <Button 
-                    variant="link" 
+                  <LinkButton
                     onClick={() => setShowForgotPassword(true)}
                     disabled={loading}
-                    className="forgot-password-link"
-                  >
-                    {t('auth.forgotPassword')}
-                  </Button>
-                  <Button 
-                    variant="link" 
+                    buttonText={t('auth.forgotPassword')}
+                  />
+                  <LinkButton
                     onClick={() => {
                       setShowSignUp(true);
                       setError(null);
                       setSuccessMessage(null);
                     }}
                     disabled={loading}
-                    className="forgot-password-link"
-                  >
-                    {t('auth.signUp')}
-                  </Button>
+                    buttonText={t('auth.signUp')}
+                  />
                 </div>
 
                 <p className="text-muted mt-3" style={{ fontSize: '0.8rem', textAlign: 'center' }}>

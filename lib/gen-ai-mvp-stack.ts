@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { ChatBotApi } from "./chatbot-api";
+import * as kms from 'aws-cdk-lib/aws-kms';
 import { cognitoDomainName } from "./constants"
 import { NewAuthorizationStack } from "./authorization/new-auth"
 import { UserInterface } from "./user-interface"

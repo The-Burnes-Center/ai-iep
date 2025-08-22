@@ -155,7 +155,7 @@ export default function ViewAndAddParent() {
   return (
     <div>
       <div className="mt-3 text-start px-3 py-2">
-        <Button variant="outline-secondary" onClick={handleBackClick}>
+        <Button variant="outline-secondary" onClick={handleBackClick} className='aiep-button'>
           {t('common.back')}
         </Button>
       </div>
@@ -191,7 +191,7 @@ export default function ViewAndAddParent() {
                     variant="primary" 
                     onClick={handleSaveAndContinue}
                     disabled={!isFormValid() || saving}
-                    className="consent-button"
+                    className="consent-button aiep-button"
                   >
                     {saving ? t('parent.button.saving') : t('parent.button.save')}
                   </Button>

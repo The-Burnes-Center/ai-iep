@@ -27,7 +27,8 @@
     "welcome.rights.description": "了解您作为家长的权利和IEP流程",
     "welcome.update.profile": "更新个人资料",
   
-    "common.back": "← 返回",
+    "common.back": "返回",
+    "common.previous": "返回",
     "common.next": "下一步",
     "common.cancel": "取消",
     "common.close": "关闭",

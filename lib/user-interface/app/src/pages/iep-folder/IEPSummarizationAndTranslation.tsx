@@ -40,6 +40,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     documentUrl: undefined,
     status: undefined,
     message: '',
+    abbreviations: {
+      en: []
+    },
     summaries: {
       en: '',
       es: '',
@@ -281,6 +284,18 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     return useTranslation ? config.displayName : config.englishName;
   };
 
+  // Helper function to convert abbreviations to markdown table
+  const convertAbbreviationsToMarkdown = (abbreviations: Array<{ abbreviation: string; full_form: string }>) => {
+    if (!abbreviations || abbreviations.length === 0) return '';
+    
+    let markdown = '| Abbreviation | Full Form |\n| --- | --- |\n';
+    abbreviations.forEach(item => {
+      markdown += `| ${item.abbreviation} | ${item.full_form} |\n`;
+    });
+    
+    return markdown;
+  };
+
   // Function to sort sections by predefined order
   const sortSections = (sections: IEPSection[]) => {
     return [...sections].sort((a, b) => {
@@ -325,6 +340,25 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         }
         
         const orderedSections = sortSections(extractedSections);
+
+        const translatedAbbreviations = {
+          "en": "Abbreviations",
+          "es": "Abreviaturas",
+          "vi": "Chữ viết tắt",
+          "zh": "缩写"
+        };
+        
+        if ( doc.abbreviations && doc.abbreviations[lang] && doc.abbreviations.en && doc.abbreviations.en.length > 0) {
+          const abbreviationsMarkdown = convertAbbreviationsToMarkdown(doc.abbreviations[lang]);
+          orderedSections.push({
+            name: 'Abbreviations',
+            displayName: translatedAbbreviations[lang],
+            content: abbreviationsMarkdown,
+            pageNumbers: []
+          });
+        }
+        
+        console.log("orderedSections", orderedSections);
         
         setDocument(prev => ({
           ...prev, 
@@ -724,7 +758,7 @@ if(document && document.message === "No document found for this child") {
                   </h3>
                   {
                     tutorialPhase === 'app-tutorial' && (
-                      <p className="text-muted text-start example-video-text">{t('tutorial.exampleVideo')}</p>
+                      <p className="text-muted text-center example-video-text">{t('tutorial.exampleVideo')}</p>
                     )
                   }             
                 </div>
@@ -749,6 +783,12 @@ if(document && document.message === "No document found for this child") {
               ) : (
                 <Card className="processing-summary-loader-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
+                    <div className="d-flex flex-column align-items-center">
+                      <Spinner animation="border" role="status">
+                        <span className="visually-hidden">{t('summary.loading')}</span>
+                      </Spinner>
+                      <p className="desktop-processing-spinner-text mt-3">Processing Summary ...</p>
+                    </div>
                   </Card.Body>
                 </Card>
               )}

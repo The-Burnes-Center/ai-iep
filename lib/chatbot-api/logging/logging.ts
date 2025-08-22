@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import { getEnvironment } from '../../tags';
 
 export interface LogEvent {
@@ -22,11 +23,15 @@ export interface LogEvent {
   };
 }
 
+export interface LoggingStackProps {
+  kmsKey?: kms.IKey;
+}
+
 export class LoggingStack extends Construct {
   public readonly logGroup: logs.LogGroup;
   public readonly logRole: iam.Role;
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props?: LoggingStackProps) {
     super(scope, id);
 
     // Create a dedicated IAM role for logging
@@ -40,14 +45,43 @@ export class LoggingStack extends Construct {
     
     // Create CloudWatch Log Group with compliance-focused settings
     // Base properties for all environments
-    const baseProps = {
+    const baseProps: logs.LogGroupProps = {
       logGroupName: `/ai-iep/${environment}/logs`,
       retention: logs.RetentionDays.ONE_YEAR, // Adjust based on compliance requirements
       removalPolicy: cdk.RemovalPolicy.RETAIN, // Retain logs even if stack is destroyed
+      ...(props?.kmsKey ? { encryptionKey: props.kmsKey } : {}),
     };
     
     // Create log group with default encryption for all environments
     this.logGroup = new logs.LogGroup(this, 'LogGroup', baseProps);
+
+    // If a KMS key is provided, allow CloudWatch Logs service to use it for this log group
+    if (props?.kmsKey) {
+      const region = cdk.Stack.of(this).region;
+      const account = cdk.Stack.of(this).account;
+      const logsArnPattern = `arn:${cdk.Aws.PARTITION}:logs:${region}:${account}:log-group:/ai-iep/*`;
+
+      props.kmsKey.addToResourcePolicy(new iam.PolicyStatement({
+        sid: 'AllowCloudWatchLogsUseOfKms',
+        effect: iam.Effect.ALLOW,
+        principals: [
+          new iam.ServicePrincipal(`logs.${region}.amazonaws.com`)
+        ],
+        actions: [
+          'kms:Encrypt',
+          'kms:Decrypt',
+          'kms:ReEncrypt*',
+          'kms:GenerateDataKey*',
+          'kms:Describe*'
+        ],
+        resources: ['*'],
+        conditions: {
+          ArnLike: {
+            'kms:EncryptionContext:aws:logs:arn': logsArnPattern,
+          },
+        },
+      }));
+    }
 
     // Add permissions to the role
     this.logRole.addToPolicy(
