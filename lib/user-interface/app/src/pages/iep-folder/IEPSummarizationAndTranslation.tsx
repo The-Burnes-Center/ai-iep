@@ -341,9 +341,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         
         const orderedSections = sortSections(extractedSections);
         
-        // Add abbreviations as the last section for English only
-        if (lang === 'en' && doc.abbreviations && doc.abbreviations.en && doc.abbreviations.en.length > 0) {
-          const abbreviationsMarkdown = convertAbbreviationsToMarkdown(doc.abbreviations.en);
+        if ((lang === 'en' || lang === 'es') && doc.abbreviations && doc.abbreviations.en && doc.abbreviations.en.length > 0) {
+          const abbreviationsMarkdown = lang === 'es' ? convertAbbreviationsToMarkdown(doc.abbreviations.es) : convertAbbreviationsToMarkdown(doc.abbreviations.en);
           orderedSections.push({
             name: 'Abbreviations',
             displayName: 'Abbreviations',
