@@ -13,6 +13,7 @@ import { Construct } from "constructs";
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { NewAuthorizationStack } from "../authorization/new-auth";
 import * as kms from 'aws-cdk-lib/aws-kms';
+import { getEnvironment } from '../tags';
 
 
 export interface ChatBotApiProps {
@@ -36,8 +37,10 @@ export class ChatBotApi extends Construct {
       enableKeyRotation: true,
       description: 'Customer-managed CMK for S3, DynamoDB, Lambda env vars, and logs',
     });
+    const environment = getEnvironment();
+    const kmsAliasName = environment === 'staging' ? 'alias/aiep/app' : 'alias/aiep/app-prod';
     const appKmsAlias = new kms.Alias(this, 'AppKmsAlias', {
-      aliasName: 'alias/aiep/app',
+      aliasName: kmsAliasName,
       targetKey: appKmsKey,
     });
 

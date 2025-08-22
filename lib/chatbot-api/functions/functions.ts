@@ -15,6 +15,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as kms from 'aws-cdk-lib/aws-kms';
+import { getEnvironment } from '../../tags';
 
 export interface LambdaFunctionStackProps {
   readonly knowledgeBucket : s3.Bucket;
@@ -240,7 +241,10 @@ export class LambdaFunctionStack extends cdk.Stack {
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "BUCKET": props.knowledgeBucket.bucketName,
         "USER_POOL_ID": props.userPool.userPoolId,
-        "AIEP_KMS_KEY_ALIAS": 'alias/aiep/app'
+        "AIEP_KMS_KEY_ALIAS": ((): string => {
+          const env = getEnvironment();
+          return env === 'staging' ? 'alias/aiep/app' : 'alias/aiep/app-prod';
+        })()
       },
       timeout: cdk.Duration.seconds(300),
       logRetention: logs.RetentionDays.ONE_YEAR,
