@@ -340,12 +340,19 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         }
         
         const orderedSections = sortSections(extractedSections);
+
+        const translatedAbbreviations = {
+          "en": "Abbreviations",
+          "es": "Abreviaturas",
+          "vi": "Chữ viết tắt",
+          "zh": "缩写"
+        };
         
-        if ((lang === 'en' || lang === 'es') && doc.abbreviations && doc.abbreviations.en && doc.abbreviations.en.length > 0) {
-          const abbreviationsMarkdown = lang === 'es' ? convertAbbreviationsToMarkdown(doc.abbreviations.es) : convertAbbreviationsToMarkdown(doc.abbreviations.en);
+        if ( doc.abbreviations && doc.abbreviations[lang] && doc.abbreviations.en && doc.abbreviations.en.length > 0) {
+          const abbreviationsMarkdown = convertAbbreviationsToMarkdown(doc.abbreviations[lang]);
           orderedSections.push({
             name: 'Abbreviations',
-            displayName: 'Abbreviations',
+            displayName: translatedAbbreviations[lang],
             content: abbreviationsMarkdown,
             pageNumbers: []
           });

@@ -23,19 +23,9 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
       route: '/summary-and-translations'
     },
     {
-      icon: 'bi-question-circle-fill',
-      label: t('navigation.support') || 'Support',
-      route: '/support-center'
-    },
-    {
       icon: 'bi-person-fill',
       label: t('navigation.account') || 'Account',
       route: '/profile'
-    },
-    {
-      icon: 'bi-info-circle-fill',
-      label: t('navigation.about') || 'About',
-      route: '/about-aiep'
     }
   ];
 

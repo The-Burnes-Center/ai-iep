@@ -8,9 +8,6 @@
   background-color: #00682F;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
   padding: 8px 0;
-  /* Hidden by default - only show on mobile */
-  display: none;
-  /* Safe area support for modern mobile devices */
   padding-bottom: max(8px, env(safe-area-inset-bottom));
 }
 
@@ -136,7 +133,7 @@
 /* Tablet portrait - hide navigation */
 @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
   .mobile-bottom-navigation {
-    display: none;
+    display: block;
   }
 }
 
