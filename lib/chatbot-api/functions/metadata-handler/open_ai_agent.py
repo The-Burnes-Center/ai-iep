@@ -220,7 +220,9 @@ class OpenAIAgent:
         english_input = {
             "summaries": {"en": english_data["summary"]},
             "sections": {"en": english_data["sections"]},
-            "document_index": {"en": english_data["document_index"]}
+            "document_index": {"en": english_data["document_index"]},
+            # Pass English abbreviations so the translation agent can translate them
+            "abbreviations": {"en": english_data.get("abbreviations", [])}
         }
 
         try:
@@ -260,7 +262,9 @@ class OpenAIAgent:
             final_data = {
                 "summaries": {"en": english_data["summary"]},
                 "sections": {"en": english_data["sections"]},
-                "document_index": {"en": english_data["document_index"]}
+                "document_index": {"en": english_data["document_index"]},
+                # Always include English abbreviations
+                "abbreviations": {"en": english_data.get("abbreviations", [])}
             }
             
             # Add translations for target languages
@@ -271,6 +275,8 @@ class OpenAIAgent:
                     final_data["sections"][lang] = translation_data["sections"][lang]
                 if lang in translation_data.get("document_index", {}):
                     final_data["document_index"][lang] = translation_data["document_index"][lang]
+                if lang in translation_data.get("abbreviations", {}):
+                    final_data["abbreviations"][lang] = translation_data["abbreviations"][lang]
 
             # Return the final data without strict validation since we have dynamic languages
             # The data structure will be validated when it's stored in DynamoDB
