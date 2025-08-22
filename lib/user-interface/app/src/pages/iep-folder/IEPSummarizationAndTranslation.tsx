@@ -40,6 +40,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     documentUrl: undefined,
     status: undefined,
     message: '',
+    abbreviations: {
+      en: []
+    },
     summaries: {
       en: '',
       es: '',
@@ -281,6 +284,18 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     return useTranslation ? config.displayName : config.englishName;
   };
 
+  // Helper function to convert abbreviations to markdown table
+  const convertAbbreviationsToMarkdown = (abbreviations: Array<{ abbreviation: string; full_form: string }>) => {
+    if (!abbreviations || abbreviations.length === 0) return '';
+    
+    let markdown = '| Abbreviation | Full Form |\n| --- | --- |\n';
+    abbreviations.forEach(item => {
+      markdown += `| ${item.abbreviation} | ${item.full_form} |\n`;
+    });
+    
+    return markdown;
+  };
+
   // Function to sort sections by predefined order
   const sortSections = (sections: IEPSection[]) => {
     return [...sections].sort((a, b) => {
@@ -325,6 +340,19 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         }
         
         const orderedSections = sortSections(extractedSections);
+        
+        // Add abbreviations as the last section for English only
+        if (lang === 'en' && doc.abbreviations && doc.abbreviations.en && doc.abbreviations.en.length > 0) {
+          const abbreviationsMarkdown = convertAbbreviationsToMarkdown(doc.abbreviations.en);
+          orderedSections.push({
+            name: 'Abbreviations',
+            displayName: 'Abbreviations',
+            content: abbreviationsMarkdown,
+            pageNumbers: []
+          });
+        }
+        
+        console.log("orderedSections", orderedSections);
         
         setDocument(prev => ({
           ...prev, 

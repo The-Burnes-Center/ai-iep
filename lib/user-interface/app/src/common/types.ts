@@ -87,6 +87,12 @@ export interface IEPDocument {
   message?: string;
   
   // Document content by language
+  abbreviations?: {
+    en?: Array<{
+      abbreviation: string;
+      full_form: string;
+    }>;
+  };
   summaries: {
     en?: string;
     vi?:string;
