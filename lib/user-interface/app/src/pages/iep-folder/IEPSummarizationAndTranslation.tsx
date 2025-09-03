@@ -504,11 +504,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Summary Section */}
         {hasSummary ? (
           <>
-            <h4 className="summary-header mt-4 mb-3">
+            <h4 className="summary-header mt-4 px-4">
               {isEnglishTab ? 'IEP Summary' : t('summary.iepSummary')}
             </h4>
             <Card className="summary-content mb-3">
-              <Card.Body className="py-3">
+              <Card.Body className="py-3 px-4">
                 <div 
                   className="markdown-content"
                   onClick={handleContentClick}
@@ -556,7 +556,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Sections Accordion */}
         {hasSections ? (
           <>
-            <h4 className="mt-4 mb-3">
+            <h4 className="key-insights-header mt-4 mb-3 px-3">
               {isEnglishTab ? 'Key Insights' : t('summary.keyInsights')}
             </h4>
             <Accordion className="mb-3 summary-accordion">
@@ -863,8 +863,8 @@ if(document && document.message === "No document found for this child") {
             
             <Card className="summary-card">
               <Card.Body className="summary-card-body pt-2 pb-0">
-                <Row>
-                  <Col md={12}>
+                <Row className="g-0">
+                  <Col md={12} className="no-padding-inherit">
                     {document.status === "FAILED" ? (
                       <Alert variant="danger">
                         <h5>{t('summary.failed.title')}</h5>
