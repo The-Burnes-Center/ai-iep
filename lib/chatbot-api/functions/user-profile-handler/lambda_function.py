@@ -523,6 +523,15 @@ def get_child_documents(event: Dict) -> Dict:
                         latest_doc['abbreviations'] = clean_dynamodb_json(doc['abbreviations'])
                     else:
                         latest_doc['abbreviations'] = {}
+
+                    # Include missingInfo list (parent-focused insights)
+                    if 'missingInfo' in doc:
+                        try:
+                            latest_doc['missingInfo'] = clean_dynamodb_json(doc['missingInfo'])
+                        except Exception:
+                            latest_doc['missingInfo'] = doc.get('missingInfo', [])
+                    else:
+                        latest_doc['missingInfo'] = []
         
         # If no document found
         if not latest_doc:
