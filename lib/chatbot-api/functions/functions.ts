@@ -32,6 +32,7 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly getS3KnowledgeFunction : lambda.Function;
   public readonly uploadS3KnowledgeFunction : lambda.Function;
   public readonly metadataHandlerFunction : lambda.Function;
+  public readonly identifyMissingInfoFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
   public readonly cognitoTriggerFunction : lambda.Function;
   public readonly pdfGeneratorFunction : lambda.Function;
@@ -231,6 +232,64 @@ export class LambdaFunctionStack extends cdk.Stack {
     metadataHandlerFunction.addEventSource(new S3EventSource(props.knowledgeBucket, {
       events: [s3.EventType.OBJECT_CREATED],
     }));
+
+    // Identify Missing Info Lambda - reads OCR from DynamoDB and calls OpenAI
+    const identifyMissingInfoFunction = new lambda.Function(scope, 'IdentifyMissingInfoFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'identify-missing-info'), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
+      }),
+      handler: 'lambda_function.lambda_handler',
+      environment: {
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+      },
+      timeout: cdk.Duration.seconds(300),
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
+    });
+
+    // Allow reading/updating IEP documents from DynamoDB
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:Query',
+        'dynamodb:UpdateItem',
+        'dynamodb:Scan'
+      ],
+      resources: [
+        props.iepDocumentsTable.tableArn,
+        props.iepDocumentsTable.tableArn + '/index/*'
+      ]
+    }));
+
+    // Allow SSM read for OpenAI API key
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['ssm:GetParameter'],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
+      ]
+    }));
+
+    this.identifyMissingInfoFunction = identifyMissingInfoFunction;
+
+    // Allow metadata handler to invoke the identify-missing-info function
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['lambda:InvokeFunction'],
+      resources: [identifyMissingInfoFunction.functionArn]
+    }));
+
+    // Pass the target Lambda function name to the metadata handler via env var
+    metadataHandlerFunction.addEnvironment('IDENTIFY_MISSING_INFO_FUNCTION_NAME', identifyMissingInfoFunction.functionName);
 
     const userProfileHandlerFunction = new lambda.Function(scope, 'UserProfileHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
