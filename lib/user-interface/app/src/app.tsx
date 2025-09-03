@@ -1,3 +1,4 @@
+import React from "react";
 import {
   BrowserRouter,
   Route,
@@ -9,6 +10,7 @@ import WelcomePage from "./pages/WelcomePage";
 import "./styles/app.scss";
 import "./styles/modal.css";
 import "./styles/buttons.css";
+import { trackPageView } from './common/helpers/analytics-helper';
 import PreferredLanguage  from './pages/profile/PreferredLanguage'; 
 import OnboardingUser from './pages/profile/OnboardingUser';
 import UserProfileForm from './pages/profile/UserProfileForm';
@@ -26,6 +28,11 @@ import AboutAIEP from './components/AboutAIEP';
 
 function AppContent() {
   const location = useLocation();
+  
+  // Track page views when location changes
+  React.useEffect(() => {
+    trackPageView(location.pathname + location.search);
+  }, [location]);
   
   // Routes where header should be hidden
   const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/profile","/support-center","/about-aiep"];
