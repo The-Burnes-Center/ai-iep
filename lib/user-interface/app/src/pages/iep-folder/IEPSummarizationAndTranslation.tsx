@@ -814,6 +814,7 @@ if(document && document.message === "No document found for this child") {
                 variant="primary" 
                 onClick={handleDownloadPDF}
                 disabled={isGeneratingPDF || isProcessing}
+                className="download-button"
               >
                 {isGeneratingPDF ? (
                   <>

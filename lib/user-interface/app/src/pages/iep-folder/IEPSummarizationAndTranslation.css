@@ -79,6 +79,8 @@
   margin-bottom: 6.5rem;
   width: 90%;
   align-self: center;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 420;
 }
 
 .summary-card-body {
@@ -402,9 +404,13 @@ line-height: 1.2;
 }
 
 .button-container {
-padding: 1rem;
+padding: 0 1rem;
 }
 
+.download-button {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  border-radius: 15px;
+}
 /* Language dropdown styling in button-container */
 .button-container .dropdown .dropdown-toggle {
 background-color: #F5F3EE;
