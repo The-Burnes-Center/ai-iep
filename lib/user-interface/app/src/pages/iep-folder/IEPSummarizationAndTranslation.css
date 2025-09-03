@@ -198,7 +198,7 @@ background-color: #F5f3EE;
 /* Markdown content styling */
 .markdown-content {
   font-size: 1.125rem;
-  font-weight: 400;
+  font-weight: 350;
   line-height: 2;
   line-height: 1.6;
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
@@ -326,7 +326,9 @@ background-color: #007AD1;
 
 .jargon-drawer .offcanvas-title {
 color: #F5F3EE;
-font-weight: 600;
+font-weight: 420;
+font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+
 }
 
 .jargon-drawer .offcanvas-body {
@@ -336,11 +338,17 @@ padding: 1.5rem;
 .jargon-drawer .offcanvas-body p {
 line-height: 1.6;
 margin: 0;
+font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+font-weight: 350;
 }
 
 .jargon-drawer .offcanvas-body h3 {
-margin-bottom: 1rem;
+font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+font-weight: 420;
+font-size: 1.2rem;
+line-height: 2;
 }
+
 .jargon-drawer .btn-close {
 --bs-btn-close-color: #F5F3EE;
 filter: invert(1) grayscale(100%) brightness(200%);
