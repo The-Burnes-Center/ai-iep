@@ -461,6 +461,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(kmsPolicy);
       metadataHandlerFunction.addToRolePolicy(kmsPolicy);
       userProfileHandlerFunction.addToRolePolicy(kmsPolicy);
+      // Ensure IdentifyMissingInfoFunction can decrypt KMS-encrypted DynamoDB items
+      identifyMissingInfoFunction.addToRolePolicy(kmsPolicy);
       // Cognito trigger and PDF generator don't need direct KMS usage beyond env, skip
     }
   }
