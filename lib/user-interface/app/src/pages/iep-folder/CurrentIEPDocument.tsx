@@ -14,7 +14,6 @@ export interface CurrentIEPDocumentProps {
 const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded, onDocumentStateChange }) => {
   const appContext = useContext(AppContext);
   const apiClient = new IEPDocumentClient(appContext);
-  const navigate = useNavigate();
   
   const [documentName, setDocumentName] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -61,10 +60,6 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
     }
   }, [onRefreshNeeded]);
 
-  const handleAlertClick = () => {
-    navigate('/summary-and-translations');
-  };
-
   return (
     <Card className="current-document-container">
       <Card.Body>        
@@ -79,25 +74,19 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
             </Spinner>
           </div>
         ) : documentName ? (
-        <>
-        <h6 className="document-title">{t('current.title')}</h6>
-          <Alert 
-            variant="info" 
-            className="document-info-alert d-flex align-items-center"
-            onClick={handleAlertClick}
-            style={{ cursor: 'pointer' }}
-          >
-            <i className="bi bi-file-earmark-text me-3" style={{ fontSize: '1.5rem' }}></i>
-            <div>
-              <p className="mb-0 fw-bold">{documentName}</p>
-              <small>{t('current.documentOnFile')}</small>
-            </div>
-          </Alert>
-          </>
+        <div className='upload-info'>
+          <h3>Important</h3>
+          <p>
+            This action will replace your current IEP document and generate a new summary.
+          </p>
+        </div>
         ) : (
-          <Alert variant="info" className="document-info-alert">
-            {t('current.noDocument')}
-          </Alert>
+        <div className='upload-info'>
+          <h3>Your document was not processed</h3>
+          <p>
+            There was an error while processing your IEP. Please try uploading it again.
+          </p>
+        </div>
         )}
       </Card.Body>
     </Card>
