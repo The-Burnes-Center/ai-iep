@@ -26,6 +26,11 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
       icon: 'bi-person-fill',
       label: t('navigation.account') || 'Account',
       route: '/profile'
+    },
+        {
+      icon: 'bi-question-circle-fill',
+      label: t('navigation.support') || 'Support',
+      route: '/support-center'
     }
   ];
 
