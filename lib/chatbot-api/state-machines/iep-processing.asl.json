@@ -1,0 +1,163 @@
+{
+  "Comment": "IEP Document Processing State Machine - breaks down monolithic lambda into orchestrated steps",
+  "StartAt": "UpdateDDBStart",
+  "States": {
+    "UpdateDDBStart": {
+      "Type": "Task",
+      "Resource": "${UpdateDDBStartArn}",
+      "Comment": "Initialize processing status and progress tracking",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "MistralOCR"
+    },
+    "MistralOCR": {
+      "Type": "Task", 
+      "Resource": "${MistralOCRArn}",
+      "Comment": "Extract text from document using Mistral OCR API",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "RedactOCR"
+    },
+    "RedactOCR": {
+      "Type": "Task",
+      "Resource": "${RedactOCRArn}",
+      "Comment": "Redact PII from OCR text using AWS Comprehend",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "DeleteOriginal"
+    },
+    "DeleteOriginal": {
+      "Type": "Task",
+      "Resource": "${DeleteOriginalArn}",
+      "Comment": "Delete original uploaded file from S3",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "ParallelWork"
+    },
+    "ParallelWork": {
+      "Type": "Parallel",
+      "Comment": "Run parsing and missing info extraction concurrently",
+      "Branches": [
+        {
+          "StartAt": "ParsingAgent",
+          "States": {
+            "ParsingAgent": {
+              "Type": "Task",
+              "Resource": "${ParsingAgentArn}",
+              "Comment": "Generate English summary, sections, and document index using OpenAI",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "MissingInfoAgent",
+          "States": {
+            "MissingInfoAgent": {
+              "Type": "Task",
+              "Resource": "${MissingInfoAgentArn}",
+              "Comment": "Extract missing information insights for parents",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "SaveEnglish",
+      "ResultPath": "$.parallel_results"
+    },
+    "SaveEnglish": {
+      "Type": "Task",
+      "Resource": "${SaveEnglishArn}",
+      "Comment": "Save English results and update status to PROCESSING_TRANSLATIONS",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "TransformAgent"
+    },
+    "TransformAgent": {
+      "Type": "Task",
+      "Resource": "${TransformAgentArn}",
+      "Comment": "Translate content based on user language preferences",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "SaveFinal"
+    },
+    "SaveFinal": {
+      "Type": "Task",
+      "Resource": "${SaveFinalArn}",
+      "Comment": "Save final multilingual results and mark as PROCESSED",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    },
+    "RecordFailure": {
+      "Type": "Task",
+      "Resource": "${RecordFailureArn}",
+      "Comment": "Record failure state and error information",
+      "End": true
+    }
+  },
+  "Catch": [
+    {
+      "ErrorEquals": ["States.ALL"],
+      "Next": "RecordFailure",
+      "ResultPath": "$.error"
+    }
+  ]
+}
