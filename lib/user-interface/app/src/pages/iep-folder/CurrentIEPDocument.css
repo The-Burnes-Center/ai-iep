@@ -20,3 +20,25 @@
     margin-bottom: 0.5rem;
   }
 
+.upload-info {
+  border: 1px solid #1E1E1E;
+  border-radius: 25px !important;
+  padding: 12px 16px;
+}
+
+.upload-info h3 {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 420;
+  font-size: 1.5rem;
+  line-height: 2;
+  text-align: left;
+  color: #1E1E1E;
+}
+
+.upload-info p {
+  font-size: 1.125rem;
+  font-weight: 350;
+  line-height: 2;
+  line-height: 1.6;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+}
