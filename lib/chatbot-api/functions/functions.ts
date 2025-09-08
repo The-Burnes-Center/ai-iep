@@ -417,7 +417,7 @@ export class LambdaFunctionStack extends cdk.Stack {
     // Note: Lambda invoke permission for missing info agent will be added after identifyMissingInfoFunction is created
 
     // Load and customize the ASL definition
-    const aslPath = path.join(__dirname, '../../state-machines/iep-processing.asl.json');
+    const aslPath = path.join(__dirname, '../state-machines/iep-processing.asl.json');
     let aslDefinition = JSON.parse(fs.readFileSync(aslPath, 'utf8'));
     
     // Replace ARN placeholders with actual Lambda ARNs
