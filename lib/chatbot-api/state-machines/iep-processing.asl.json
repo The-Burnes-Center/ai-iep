@@ -14,6 +14,13 @@
           "BackoffRate": 2
         }
       ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
       "Next": "MistralOCR"
     },
     "MistralOCR": {
@@ -26,6 +33,13 @@
           "MaxAttempts": 3,
           "IntervalSeconds": 2,
           "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
         }
       ],
       "Next": "RedactOCR"
@@ -42,6 +56,13 @@
           "BackoffRate": 2
         }
       ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
       "Next": "DeleteOriginal"
     },
     "DeleteOriginal": {
@@ -54,6 +75,13 @@
           "MaxAttempts": 3,
           "IntervalSeconds": 2,
           "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
         }
       ],
       "Next": "ParallelWork"
@@ -101,6 +129,13 @@
           }
         }
       ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
       "Next": "SaveEnglish",
       "ResultPath": "$.parallel_results"
     },
@@ -114,6 +149,13 @@
           "MaxAttempts": 3,
           "IntervalSeconds": 2,
           "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
         }
       ],
       "Next": "TransformAgent"
@@ -130,6 +172,13 @@
           "BackoffRate": 2
         }
       ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
       "Next": "SaveFinal"
     },
     "SaveFinal": {
@@ -144,6 +193,13 @@
           "BackoffRate": 2
         }
       ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
       "End": true
     },
     "RecordFailure": {
@@ -152,12 +208,5 @@
       "Comment": "Record failure state and error information",
       "End": true
     }
-  },
-  "Catch": [
-    {
-      "ErrorEquals": ["States.ALL"],
-      "Next": "RecordFailure",
-      "ResultPath": "$.error"
-    }
-  ]
+  }
 }
