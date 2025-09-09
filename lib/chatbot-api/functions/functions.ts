@@ -481,16 +481,13 @@ export class LambdaFunctionStack extends cdk.Stack {
       });
 
       [
-        this.updateDDBStartFunction,
+        this.ddbServiceFunction,
         this.mistralOCRFunction,
         this.redactOCRFunction,
         this.deleteOriginalFunction,
         this.parsingAgentFunction,
         this.missingInfoAgentFunction,
-        this.saveEnglishFunction,
         this.transformAgentFunction,
-        this.saveFinalFunction,
-        this.recordFailureFunction,
         this.orchestratorFunction
       ].forEach(func => func.addToRolePolicy(kmsPolicy));
     }
