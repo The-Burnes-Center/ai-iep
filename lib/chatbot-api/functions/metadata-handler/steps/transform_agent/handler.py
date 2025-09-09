@@ -1,5 +1,5 @@
 """
-Translate content based on user language preferences
+Translate content based on user language preferences - Core business logic only
 """
 import json
 import traceback
@@ -7,7 +7,6 @@ import boto3
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-from shared_utils import update_progress, create_step_function_response, handle_step_error
 from open_ai_agent import OpenAIAgent
 
 def get_user_language_preferences(user_id):
@@ -48,95 +47,84 @@ def get_user_language_preferences(user_id):
             # Convert set to list
             target_languages = list(target_languages)
             
-            # If no languages specified or only English, return empty list (no translation needed)
+            # If no non-English languages found, default to all
             if not target_languages:
-                print("No non-English languages specified in user profile, skipping translation")
-                return []
+                print(f"No non-English languages found for user {user_id}, defaulting to all")
+                return ['zh', 'es', 'vi']
             
-            print(f"User {user_id} target languages for translation: {target_languages}")
+            print(f"User {user_id} target languages: {target_languages}")
             return target_languages
             
-        except Exception as db_error:
-            print(f"Error accessing user profile: {str(db_error)}")
-            return ['zh', 'es', 'vi']  # All non-English languages as fallback
+        except Exception as e:
+            print(f"Error accessing user profile for {user_id}: {str(e)}")
+            return ['zh', 'es', 'vi']  # Default to all languages on error
             
     except Exception as e:
-        print(f"Error getting user language preferences: {str(e)}")
-        print("Defaulting to all languages")
-        return ['zh', 'es', 'vi']  # All non-English languages as fallback
+        print(f"Error setting up DynamoDB connection: {str(e)}")
+        return ['zh', 'es', 'vi']  # Default to all languages on error
 
 def lambda_handler(event, context):
     """
     Translate content based on user language preferences.
-    Updates progress=85, current_step="translations"
+    Core translation logic only - DDB operations handled by centralized service.
     """
     print(f"TransformAgent handler received: {json.dumps(event)}")
     
     try:
-        iep_id = event['iep_id']
         user_id = event['user_id']
-        child_id = event['child_id']
-        english_result = event.get('english_result')
-        missing_info = event.get('missing_info', [])
+        english_result = event['english_result']
+        missing_info_result = event.get('missing_info_result', {})
         
-        print(f"Starting translation for iepId: {iep_id}")
+        print("Starting translation process")
         
-        # Update progress to translations stage
-        update_progress(
-            iep_id=iep_id,
-            child_id=child_id,
-            progress=85,
-            current_step="translations"
-        )
-        
-        # Get user's language preferences for efficient translation
+        # Get user's language preferences
         target_languages = get_user_language_preferences(user_id)
         
         if not target_languages:
-            print("No translation needed - user only requires English")
-            # Skip translation and prepare English-only result
-            final_result = {
-                "summaries": {"en": english_result.get('summary', '')},
-                "sections": {"en": english_result.get('sections', [])},
-                "document_index": {"en": english_result.get('document_index', '')},
-                "abbreviations": {"en": english_result.get('abbreviations', [])}
+            print("No target languages found, returning English-only result")
+            return {
+                **event,
+                'final_result': {
+                    'en': english_result,
+                    'missing_info': missing_info_result
+                }
             }
-        else:
-            print(f"Starting translations to user's preferred languages: {target_languages}")
-            
-            # Create OpenAI Agent for translation (no OCR data needed for translation)
-            agent = OpenAIAgent()
-            
-            # Translate the English data to user's preferred languages
-            translation_result = agent.translate_document(english_result, target_languages=target_languages)
-            
-            # Check for error in the translation
-            if "error" in translation_result:
-                error_message = f"Translation failed: {translation_result.get('error')}"
-                print(error_message)
-                raise Exception(error_message)
-            
-            final_result = translation_result
         
-        # Add missing info to the final result if available
-        if missing_info:
-            final_result['missing_info'] = missing_info
+        print(f"Translating to languages: {target_languages}")
         
-        print(f"Translation completed for iepId: {iep_id}")
+        # Create OpenAI agent for translation
+        agent = OpenAIAgent()
         
-        # Return event with final translation results
-        response = create_step_function_response(event)
-        response['final_result'] = final_result
-        response['progress'] = 85
-        response['current_step'] = "translations"
+        # Translate English result to target languages
+        translated_results = {'en': english_result}  # Always include English
         
-        return response
+        for lang in target_languages:
+            print(f"Translating content to {lang}")
+            
+            translated_content = agent.translate_content(english_result, lang)
+            
+            if "error" in translated_content:
+                print(f"Translation to {lang} failed: {translated_content['error']}")
+                # Continue with other languages instead of failing completely
+                continue
+            
+            translated_results[lang] = translated_content
+            print(f"Translation to {lang} completed successfully")
+        
+        print(f"Translation completed for {len(translated_results)} languages")
+        
+        # Combine with missing info results
+        final_result = {
+            **translated_results,
+            'missing_info': missing_info_result
+        }
+        
+        return {
+            **event,  # Pass through all input data
+            'final_result': final_result
+        }
         
     except Exception as e:
-        print(f"Error in TransformAgent: {str(e)}")
+        print(f"TransformAgent error: {str(e)}")
         print(traceback.format_exc())
-        
-        iep_id = event.get('iep_id', 'unknown')
-        child_id = event.get('child_id', 'unknown')
-        
-        return handle_step_error(iep_id, child_id, "TransformAgent", e, 85)
+        raise  # Let Step Functions retry policy handle the error

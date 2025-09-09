@@ -45,16 +45,13 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly iepProcessingStateMachine : stepfunctions.StateMachine;
   
   // Step function Lambda handlers
-  public readonly updateDDBStartFunction : lambda.Function;
+  public readonly ddbServiceFunction : lambda.Function;
   public readonly mistralOCRFunction : lambda.Function;
   public readonly redactOCRFunction : lambda.Function;
   public readonly deleteOriginalFunction : lambda.Function;
   public readonly parsingAgentFunction : lambda.Function;
   public readonly missingInfoAgentFunction : lambda.Function;
-  public readonly saveEnglishFunction : lambda.Function;
   public readonly transformAgentFunction : lambda.Function;
-  public readonly saveFinalFunction : lambda.Function;
-  public readonly recordFailureFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
@@ -352,12 +349,15 @@ export class LambdaFunctionStack extends cdk.Stack {
       return func;
     };
 
-    // Create all step function handlers
-    this.updateDDBStartFunction = createStepFunctionLambda(
-      'UpdateDDBStartFunction',
-      'metadata-handler/steps/update_ddb_start',
+    // Create DDB service function for centralized database operations
+    this.ddbServiceFunction = createStepFunctionLambda(
+      'DDBServiceFunction',
+      'metadata-handler/ddb-service',
       60
     );
+
+    // Create core business logic step functions (no more individual DDB operations)
+    // Note: Removed updateDDBStartFunction - replaced by DDB service calls
 
     this.mistralOCRFunction = createStepFunctionLambda(
       'MistralOCRFunction', 
@@ -389,28 +389,12 @@ export class LambdaFunctionStack extends cdk.Stack {
       300
     );
 
-    this.saveEnglishFunction = createStepFunctionLambda(
-      'SaveEnglishFunction',
-      'metadata-handler/steps/save_english',
-      120
-    );
+    // Note: Removed saveEnglishFunction, saveFinalFunction, recordFailureFunction - replaced by DDB service calls
 
     this.transformAgentFunction = createStepFunctionLambda(
       'TransformAgentFunction',
       'metadata-handler/steps/transform_agent',
       900
-    );
-
-    this.saveFinalFunction = createStepFunctionLambda(
-      'SaveFinalFunction',
-      'metadata-handler/steps/save_final',
-      120
-    );
-
-    this.recordFailureFunction = createStepFunctionLambda(
-      'RecordFailureFunction',
-      'metadata-handler/steps/record_failure',
-      60
     );
 
     // Note: Lambda invoke permission for missing info agent will be added after identifyMissingInfoFunction is created
@@ -419,18 +403,15 @@ export class LambdaFunctionStack extends cdk.Stack {
     const aslPath = path.join(__dirname, '../state-machines/iep-processing.asl.json');
     let aslDefinition = JSON.parse(fs.readFileSync(aslPath, 'utf8'));
     
-    // Replace ARN placeholders with actual Lambda ARNs
+    // Replace ARN placeholders with actual Lambda ARNs  
     const aslString = JSON.stringify(aslDefinition)
-      .replace('${UpdateDDBStartArn}', this.updateDDBStartFunction.functionArn)
+      .replace('${DDBServiceArn}', this.ddbServiceFunction.functionArn)
       .replace('${MistralOCRArn}', this.mistralOCRFunction.functionArn)
       .replace('${RedactOCRArn}', this.redactOCRFunction.functionArn)
       .replace('${DeleteOriginalArn}', this.deleteOriginalFunction.functionArn)
       .replace('${ParsingAgentArn}', this.parsingAgentFunction.functionArn)
       .replace('${MissingInfoAgentArn}', this.missingInfoAgentFunction.functionArn)
-      .replace('${SaveEnglishArn}', this.saveEnglishFunction.functionArn)
-      .replace('${TransformAgentArn}', this.transformAgentFunction.functionArn)
-      .replace('${SaveFinalArn}', this.saveFinalFunction.functionArn)
-      .replace('${RecordFailureArn}', this.recordFailureFunction.functionArn);
+      .replace('${TransformAgentArn}', this.transformAgentFunction.functionArn);
     
     aslDefinition = JSON.parse(aslString);
 
@@ -443,16 +424,13 @@ export class LambdaFunctionStack extends cdk.Stack {
 
     // Grant the state machine permission to invoke all step functions
     const stepFunctionsList = [
-      this.updateDDBStartFunction,
+      this.ddbServiceFunction,
       this.mistralOCRFunction,
       this.redactOCRFunction,
       this.deleteOriginalFunction,
       this.parsingAgentFunction,
       this.missingInfoAgentFunction,
-      this.saveEnglishFunction,
-      this.transformAgentFunction,
-      this.saveFinalFunction,
-      this.recordFailureFunction
+      this.transformAgentFunction
     ];
     
     stepFunctionsList.forEach(func => {

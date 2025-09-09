@@ -1,11 +1,23 @@
 {
-  "Comment": "IEP Document Processing State Machine - breaks down monolithic lambda into orchestrated steps",
-  "StartAt": "UpdateDDBStart",
+  "Comment": "IEP Document Processing State Machine - orchestrated steps with centralized DDB service",
+  "StartAt": "InitializeProcessing",
   "States": {
-    "UpdateDDBStart": {
+    "InitializeProcessing": {
       "Type": "Task",
-      "Resource": "${UpdateDDBStartArn}",
-      "Comment": "Initialize processing status and progress tracking",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Initialize processing status and progress tracking using DDB service",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "start",
+          "progress": 5
+        }
+      },
+      "ResultPath": "$.ddb_result",
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -27,6 +39,40 @@
       "Type": "Task", 
       "Resource": "${MistralOCRArn}",
       "Comment": "Extract text from document using Mistral OCR API",
+      "ResultPath": "$.ocr_result",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateOCRProgress"
+    },
+    "UpdateOCRProgress": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after OCR completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "ocr_complete",
+          "progress": 15
+        }
+      },
+      "ResultPath": "$.ddb_result",
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -48,6 +94,40 @@
       "Type": "Task",
       "Resource": "${RedactOCRArn}",
       "Comment": "Redact PII from OCR text using AWS Comprehend",
+      "ResultPath": "$.redact_result",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateRedactionProgress"
+    },
+    "UpdateRedactionProgress": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after PII redaction completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "pii_redaction_complete",
+          "progress": 20
+        }
+      },
+      "ResultPath": "$.ddb_result",
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -69,6 +149,40 @@
       "Type": "Task",
       "Resource": "${DeleteOriginalArn}",
       "Comment": "Delete original uploaded file from S3",
+      "ResultPath": "$.delete_result",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateCleanupProgress"
+    },
+    "UpdateCleanupProgress": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after file cleanup completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "cleanup_complete",
+          "progress": 22
+        }
+      },
+      "ResultPath": "$.ddb_result",
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -136,13 +250,57 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "SaveEnglish",
+      "Next": "UpdateAnalysisProgress",
       "ResultPath": "$.parallel_results"
     },
-    "SaveEnglish": {
+    "UpdateAnalysisProgress": {
       "Type": "Task",
-      "Resource": "${SaveEnglishArn}",
-      "Comment": "Save English results and update status to PROCESSING_TRANSLATIONS",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after parallel analysis completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "analysis_complete",
+          "progress": 65
+        }
+      },
+      "ResultPath": "$.ddb_result",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "SaveEnglishResults"
+    },
+    "SaveEnglishResults": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Save English analysis results to DDB",
+      "Parameters": {
+        "operation": "save_results",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "results.$": "$.parallel_results[0].english_result",
+          "result_type": "english_analysis"
+        }
+      },
+      "ResultPath": "$.save_result",
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -164,6 +322,14 @@
       "Type": "Task",
       "Resource": "${TransformAgentArn}",
       "Comment": "Translate content based on user language preferences",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id", 
+        "user_id.$": "$.user_id",
+        "english_result.$": "$.parallel_results[0].english_result",
+        "missing_info_result.$": "$.parallel_results[1].missing_info_result"
+      },
+      "ResultPath": "$.transform_result",
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -179,12 +345,88 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "SaveFinal"
+      "Next": "UpdateTranslationProgress"
     },
-    "SaveFinal": {
+    "UpdateTranslationProgress": {
       "Type": "Task",
-      "Resource": "${SaveFinalArn}",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after translation completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "translation_complete",
+          "progress": 85
+        }
+      },
+      "ResultPath": "$.ddb_result",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "SaveFinalResults"
+    },
+    "SaveFinalResults": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
       "Comment": "Save final multilingual results and mark as PROCESSED",
+      "Parameters": {
+        "operation": "save_results",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "results.$": "$.transform_result.final_result",
+          "result_type": "final_analysis"
+        }
+      },
+      "ResultPath": "$.save_result",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "MarkCompleted"
+    },
+    "MarkCompleted": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Mark processing as completed with 100% progress",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSED",
+          "current_step": "completed",
+          "progress": 100
+        }
+      },
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -204,8 +446,26 @@
     },
     "RecordFailure": {
       "Type": "Task",
-      "Resource": "${RecordFailureArn}",
-      "Comment": "Record failure state and error information",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Record processing failure using DDB service",
+      "Parameters": {
+        "operation": "record_failure",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "error_message.$": "$.error.Cause",
+          "failed_step.$": "$$.State.Name"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
       "End": true
     }
   }

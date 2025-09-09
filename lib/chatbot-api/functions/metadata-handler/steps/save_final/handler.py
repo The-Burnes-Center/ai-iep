@@ -5,10 +5,6 @@ import json
 import traceback
 import boto3
 import re
-import sys
-import os
-from datetime import datetime
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from shared_utils import update_progress, create_step_function_response, handle_step_error
 
 def update_user_profile_with_summary(child_id, iep_id, user_id, s3_bucket):

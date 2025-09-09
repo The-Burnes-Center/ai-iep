@@ -3,9 +3,6 @@ Initialize DynamoDB record and set processing status
 """
 import json
 import traceback
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from shared_utils import update_progress, create_step_function_response, handle_step_error
 
 def lambda_handler(event, context):
