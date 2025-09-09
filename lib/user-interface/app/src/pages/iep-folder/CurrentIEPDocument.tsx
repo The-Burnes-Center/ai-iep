@@ -75,16 +75,16 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
           </div>
         ) : documentName ? (
         <div className='upload-info'>
-          <h3>Important</h3>
+          <h3>{t('current.header1')}</h3>
           <p>
-            This action will replace your current IEP document and generate a new summary.
+            {t('current.paragraph1')}
           </p>
         </div>
         ) : (
         <div className='upload-info'>
-          <h3>Your document was not processed</h3>
+          <h3>{t('current.header2')}</h3>
           <p>
-            There was an error while processing your IEP. Please try uploading it again.
+            {t('current.paragraph2')}
           </p>
         </div>
         )}
