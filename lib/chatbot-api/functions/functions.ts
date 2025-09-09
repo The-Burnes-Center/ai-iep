@@ -343,7 +343,6 @@ export class LambdaFunctionStack extends cdk.Stack {
         environment: stepFunctionEnvVars,
         timeout: cdk.Duration.seconds(timeout),
         memorySize: 1024,
-        logRetention: logs.RetentionDays.ONE_YEAR,
         ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
       });
       
@@ -439,15 +438,11 @@ export class LambdaFunctionStack extends cdk.Stack {
     this.iepProcessingStateMachine = new stepfunctions.StateMachine(scope, 'IEPProcessingStateMachine', {
       definitionBody: stepfunctions.DefinitionBody.fromString(JSON.stringify(aslDefinition)),
       stateMachineType: stepfunctions.StateMachineType.STANDARD,
-      timeout: cdk.Duration.minutes(30),
-      logs: {
-        level: stepfunctions.LogLevel.ALL,
-        destination: props.logGroup
-      }
+      timeout: cdk.Duration.minutes(30)
     });
 
     // Grant the state machine permission to invoke all step functions
-    [
+    const stepFunctionsList = [
       this.updateDDBStartFunction,
       this.mistralOCRFunction,
       this.redactOCRFunction,
@@ -458,8 +453,9 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.transformAgentFunction,
       this.saveFinalFunction,
       this.recordFailureFunction
-    ].forEach(func => {
-      this.iepProcessingStateMachine.grantTaskResponse(func);
+    ];
+    
+    stepFunctionsList.forEach(func => {
       func.grantInvoke(this.iepProcessingStateMachine.role);
     });
 
@@ -481,7 +477,6 @@ export class LambdaFunctionStack extends cdk.Stack {
         STATE_MACHINE_ARN: this.iepProcessingStateMachine.stateMachineArn
       },
       timeout: cdk.Duration.seconds(60),
-      logRetention: logs.RetentionDays.ONE_YEAR,
       ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
     });
 
