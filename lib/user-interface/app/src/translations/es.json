@@ -105,6 +105,10 @@
     "current.title": "Para ver el resumen de su documento IEP existente, haga clic a continuación",
     "current.documentOnFile": "Documento IEP actual en archivo",
     "current.noDocument": "No se encontró ningún documento IEP. Por favor, suba un documento para comenzar.",
+    "current.header1": "Importante",
+    "current.paragraph1": "Esta acción reemplazará su documento IEP actual y generará un nuevo resumen.",
+    "current.header2": "¿No tienes tu IEP?",
+    "current.paragraph2": "Puedes solicitarlo a tu trabajador social en cualquier momento.",
     
     "document.back": "← Atrás",
     "document.updateAlert": "El documento ha sido actualizado. La información de su documento actual se actualizará.",

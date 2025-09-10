@@ -105,6 +105,10 @@
     "current.title": "点击下方查看现有IEP文档的摘要",
     "current.documentOnFile": "当前存档的IEP文档",
     "current.noDocument": "未找到IEP文档。请上传文档以开始。",
+    "current.header1": "重要提示",
+    "current.paragraph1": "此操作将替换您当前的IEP文档并生成新的摘要。",
+    "current.header2": "没有您的IEP吗？",
+    "current.paragraph2": "您可以随时向您的个案工作者申请。",
     
     "document.back": "← 返回",
     "document.updateAlert": "文档已更新。您当前的文档信息将会刷新。",

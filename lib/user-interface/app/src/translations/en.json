@@ -109,6 +109,10 @@
     "current.title": "To view summary of your existing IEP document click below",
     "current.documentOnFile": "Current IEP document on file",
     "current.noDocument": "No IEP document found. Please upload a document to get started.",
+    "current.header1": "Important",
+    "current.paragraph1":"This action will replace your current IEP document and generate a new summary.",
+    "current.header2": "Don’t have your IEP?",
+    "current.paragraph2":"You can request it from your case worker at any time.",
     
     "document.back": "← Back",
     "document.updateAlert": "Document has been updated. Your current document information will refresh.",
