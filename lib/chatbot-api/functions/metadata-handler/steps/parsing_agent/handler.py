@@ -2,6 +2,7 @@
 Generate English summary, sections, and document index using OpenAI - Core business logic only
 """
 import json
+import os
 import traceback
 from open_ai_agent import OpenAIAgent
 
@@ -24,7 +25,7 @@ def lambda_handler(event, context):
         import boto3
         
         lambda_client = boto3.client('lambda')
-        ddb_service_name = event.get('ddb_service_arn', 'DDBService')
+        ddb_service_name = event.get('ddb_service_arn') or os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
         
         ddb_payload = {
             'operation': 'get_ocr_data',

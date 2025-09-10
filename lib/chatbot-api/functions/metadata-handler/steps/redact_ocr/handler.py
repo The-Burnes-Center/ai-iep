@@ -2,6 +2,7 @@
 Redact PII from OCR text using AWS Comprehend - Core business logic only
 """
 import json
+import os
 import traceback
 import boto3
 from comprehend_redactor import redact_pii_from_texts
@@ -23,7 +24,7 @@ def lambda_handler(event, context):
         
         # Get OCR result from DynamoDB via centralized DDB service
         lambda_client = boto3.client('lambda')
-        ddb_service_name = event.get('ddb_service_arn', 'DDBService')
+        ddb_service_name = event.get('ddb_service_arn') or os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
         
         ddb_payload = {
             'operation': 'get_ocr_data',
@@ -128,7 +129,7 @@ def lambda_handler(event, context):
             
             if redacted_texts:
                 # Create redacted OCR result maintaining original structure
-                redacted_ocr_result = {**ocr_result}  # Copy original structure
+                redacted_ocr_result = {**actual_ocr_result}  # Copy original structure
                 
                 # Get reference to the actual OCR data to update
                 target_ocr_result = redacted_ocr_result

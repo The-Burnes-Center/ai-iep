@@ -249,13 +249,40 @@ export class LambdaFunctionStack extends cdk.Stack {
     // STEP FUNCTIONS REFACTORED METADATA HANDLER
     // ==========================================
 
+    // Create DDB service function first so we can reference it in environment variables
+    this.ddbServiceFunction = createTaggedLambda('DDBServiceFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler/ddb-service'), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
+      }),
+      handler: 'handler.lambda_handler',
+      environment: {
+        "BUCKET": props.knowledgeBucket.bucketName,
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+      },
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 1024,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
+    });
+
+
     // Common environment variables for step functions
     const stepFunctionEnvVars = {
       "BUCKET": props.knowledgeBucket.bucketName,
       "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
       "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
       "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
-      "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+      "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+      "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName
     };
 
     // Common permissions for step function Lambdas
@@ -349,12 +376,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       return func;
     };
 
-    // Create DDB service function for centralized database operations
-    this.ddbServiceFunction = createStepFunctionLambda(
-      'DDBServiceFunction',
-      'metadata-handler/ddb-service',
-      60
-    );
+    // DDB service function already created above with proper environment variables
 
     // Create core business logic step functions (no more individual DDB operations)
     // Note: Removed updateDDBStartFunction - replaced by DDB service calls
@@ -396,6 +418,9 @@ export class LambdaFunctionStack extends cdk.Stack {
       'metadata-handler/steps/transform_agent',
       900
     );
+
+    // Add step function policies to DDB service function (created before stepFunctionPolicies were defined)
+    stepFunctionPolicies.forEach(policy => this.ddbServiceFunction.addToRolePolicy(policy));
 
     // Grant step functions permission to invoke DDB service
     const functionsNeedingDDBAccess = [

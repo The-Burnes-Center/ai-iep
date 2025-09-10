@@ -2,6 +2,7 @@
 Process document with Mistral OCR API - Core business logic only
 """
 import json
+import os
 import traceback
 import boto3
 from mistral_ocr import process_document_with_mistral_ocr
@@ -34,7 +35,7 @@ def lambda_handler(event, context):
         
         # Save OCR result to DynamoDB via centralized DDB service
         lambda_client = boto3.client('lambda')
-        ddb_service_name = event.get('ddb_service_arn', 'DDBService')
+        ddb_service_name = event.get('ddb_service_arn') or os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
         
         ddb_payload = {
             'operation': 'save_ocr_data',
