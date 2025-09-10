@@ -3,9 +3,6 @@ Generate English summary, sections, and document index using OpenAI - Core busin
 """
 import json
 import traceback
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from open_ai_agent import OpenAIAgent
 
 def lambda_handler(event, context):

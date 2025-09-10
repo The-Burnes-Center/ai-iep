@@ -4,9 +4,6 @@ Translate content based on user language preferences - Core business logic only
 import json
 import traceback
 import boto3
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from open_ai_agent import OpenAIAgent
 
 def get_user_language_preferences(user_id):

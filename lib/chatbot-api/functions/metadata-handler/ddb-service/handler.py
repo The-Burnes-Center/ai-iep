@@ -3,6 +3,7 @@ DynamoDB Service Lambda - Centralized database operations for Step Functions wor
 Handles all DynamoDB read/write operations with standardized interface
 """
 import json
+import os
 import boto3
 import traceback
 from datetime import datetime
@@ -10,7 +11,7 @@ from decimal import Decimal
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('IEP-Documents')
+table = dynamodb.Table(os.environ['IEP_DOCUMENTS_TABLE'])
 
 def lambda_handler(event, context):
     """
@@ -107,11 +108,10 @@ def get_user_preferences(params):
     """Get user language preferences from profile"""
     user_id = params['user_id']
     
-    response = table.get_item(
-        Key={
-            'PK': f'USER#{user_id}',
-            'SK': 'PROFILE'
-        }
+    # Use the user profiles table instead of documents table
+    user_table = dynamodb.Table(os.environ['USER_PROFILES_TABLE'])
+    response = user_table.get_item(
+        Key={'userId': user_id}
     )
     
     if 'Item' not in response:

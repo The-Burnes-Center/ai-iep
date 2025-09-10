@@ -3,9 +3,6 @@ Redact PII from OCR text using AWS Comprehend - Core business logic only
 """
 import json
 import traceback
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from comprehend_redactor import redact_pii_from_texts
 
 def lambda_handler(event, context):

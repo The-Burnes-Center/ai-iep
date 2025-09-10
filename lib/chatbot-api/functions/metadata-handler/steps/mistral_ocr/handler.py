@@ -3,9 +3,6 @@ Process document with Mistral OCR API - Core business logic only
 """
 import json
 import traceback
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from mistral_ocr import process_document_with_mistral_ocr
 
 def lambda_handler(event, context):
