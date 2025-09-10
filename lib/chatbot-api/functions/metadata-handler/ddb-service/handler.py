@@ -292,12 +292,12 @@ def get_ocr_data(params):
             'body': json.dumps({'error': f'{data_type} not found'})
         }
     
-        return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'data': item[data_type]
-            }, default=str)
-        }
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'data': item[data_type]
+        }, default=str)
+    }
 
 def get_analysis_data(params):
     """Get analysis data from DynamoDB (english_result, missing_info_result, etc.)"""
