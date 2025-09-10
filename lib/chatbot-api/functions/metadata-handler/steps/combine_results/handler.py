@@ -23,14 +23,13 @@ def lambda_handler(event, context):
         lambda_client = boto3.client('lambda')
         ddb_service_name = os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
         
-        # Initialize final mega JSON structure
-        mega_json = {
-            'iep_id': iep_id,
-            'user_id': user_id,
-            'child_id': child_id,
-            'languages_available': ['en'] + target_languages,
-            'analysis': {},
-            'missing_info': {}
+        # Initialize final result structure (same format as API expects)
+        final_result = {
+            'summaries': {},
+            'sections': {},
+            'document_index': {},
+            'abbreviations': {},
+            'missingInfo': []
         }
         
         # 1. Get English parsing result
@@ -65,11 +64,20 @@ def lambda_handler(event, context):
         
         if english_ddb_result.get('statusCode') == 200:
             english_result = json.loads(english_ddb_result['body'])['data']
-            mega_json['analysis']['en'] = english_result
-            print("Added English parsing result to mega JSON")
+            
+            # Extract and store in API-compatible format
+            final_result['summaries']['en'] = english_result.get('summaries', '')
+            final_result['sections']['en'] = english_result.get('sections', [])
+            final_result['document_index']['en'] = english_result.get('document_index', '')
+            final_result['abbreviations']['en'] = english_result.get('abbreviations', [])
+            
+            print("Added English parsing result to final result")
         else:
             print("English parsing result not found")
-            mega_json['analysis']['en'] = {}
+            final_result['summaries']['en'] = ''
+            final_result['sections']['en'] = []
+            final_result['document_index']['en'] = ''
+            final_result['abbreviations']['en'] = []
         
         # 2. Get English missing info result
         missing_info_payload = {
@@ -103,11 +111,14 @@ def lambda_handler(event, context):
         
         if missing_info_ddb_result.get('statusCode') == 200:
             missing_info_result = json.loads(missing_info_ddb_result['body'])['data']
-            mega_json['missing_info']['en'] = missing_info_result
-            print("Added English missing info result to mega JSON")
+            
+            # Store missing info as array (API expects this format)
+            final_result['missingInfo'] = missing_info_result if isinstance(missing_info_result, list) else []
+            
+            print("Added English missing info result to final result")
         else:
             print("English missing info result not found")
-            mega_json['missing_info']['en'] = {}
+            final_result['missingInfo'] = []
         
         # 3. Get parsing translations if they exist
         if target_languages:
@@ -142,8 +153,14 @@ def lambda_handler(event, context):
             
             if parsing_translations_result.get('statusCode') == 200:
                 parsing_translations = json.loads(parsing_translations_result['body'])['data']
+                
                 for lang, content in parsing_translations.items():
-                    mega_json['analysis'][lang] = content
+                    # Add translated parsing data to API-compatible format
+                    final_result['summaries'][lang] = content.get('summaries', '')
+                    final_result['sections'][lang] = content.get('sections', [])
+                    final_result['document_index'][lang] = content.get('document_index', '')
+                    final_result['abbreviations'][lang] = content.get('abbreviations', [])
+                    
                 print(f"Added parsing translations for {list(parsing_translations.keys())}")
             else:
                 print("Parsing translations not found")
@@ -181,20 +198,20 @@ def lambda_handler(event, context):
             
             if missing_info_translations_result.get('statusCode') == 200:
                 missing_info_translations = json.loads(missing_info_translations_result['body'])['data']
-                for lang, content in missing_info_translations.items():
-                    mega_json['missing_info'][lang] = content
-                print(f"Added missing info translations for {list(missing_info_translations.keys())}")
+                
+                # Note: For now, we only store English missing info in the main missingInfo field
+                # Translated versions could be stored separately if needed in the future
+                print(f"Retrieved missing info translations for {list(missing_info_translations.keys())} (currently only English is stored)")
             else:
                 print("Missing info translations not found")
         
-        print(f"Mega JSON created with analysis in {len(mega_json['analysis'])} languages and missing info in {len(mega_json['missing_info'])} languages")
+        print(f"Final result created with summaries in {len(final_result['summaries'])} languages, sections in {len(final_result['sections'])} languages, and {len(final_result['missingInfo'])} missing info items")
         
         # Don't pass through progress/current_step as they're managed by state machine
         event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
         return {
             **event_copy,
-            'mega_json': mega_json,
-            'final_result': mega_json,
+            'final_result': final_result,
             'combine_completed': True
         }
         

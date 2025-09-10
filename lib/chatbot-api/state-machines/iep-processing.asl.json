@@ -445,13 +445,12 @@
       "Resource": "${DDBServiceArn}",
       "Comment": "Save final multilingual results and mark as PROCESSED",
       "Parameters": {
-        "operation": "save_results",
+        "operation": "save_final_results",
         "params": {
           "iep_id.$": "$.iep_id",
           "child_id.$": "$.child_id", 
           "user_id.$": "$.user_id",
-          "results.$": "$.final_result",
-          "result_type": "final_analysis"
+          "final_result.$": "$.final_result"
         }
       },
       "ResultPath": null,
