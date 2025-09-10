@@ -2,6 +2,7 @@
 Translate content based on user language preferences - Core business logic only
 """
 import json
+import os
 import traceback
 import boto3
 from open_ai_agent import OpenAIAgent
@@ -68,9 +69,64 @@ def lambda_handler(event, context):
     print(f"TransformAgent handler received: {json.dumps(event)}")
     
     try:
+        iep_id = event['iep_id']
         user_id = event['user_id']
-        english_result = event['english_result']
-        missing_info_result = event.get('missing_info_result', {})
+        child_id = event['child_id']
+        
+        print("Retrieving analysis results from DynamoDB...")
+        
+        # Get English analysis result from DynamoDB via centralized DDB service
+        import boto3
+        
+        lambda_client = boto3.client('lambda')
+        ddb_service_name = os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
+        
+        # Get English analysis result
+        english_payload = {
+            'operation': 'get_analysis_data',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'data_type': 'english_result'
+            }
+        }
+        
+        english_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(english_payload)
+        )
+        
+        english_ddb_result = json.loads(english_response['Payload'].read())
+        if english_ddb_result.get('statusCode') != 200:
+            raise Exception(f"Failed to get English analysis data from DDB: {english_ddb_result}")
+        
+        english_result = json.loads(english_ddb_result['body'])['data']
+        
+        # Get missing info result 
+        missing_info_payload = {
+            'operation': 'get_analysis_data',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'data_type': 'missing_info_result'
+            }
+        }
+        
+        missing_info_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(missing_info_payload)
+        )
+        
+        missing_info_ddb_result = json.loads(missing_info_response['Payload'].read())
+        missing_info_result = {}
+        if missing_info_ddb_result.get('statusCode') == 200:
+            missing_info_result = json.loads(missing_info_ddb_result['body'])['data']
+        else:
+            print("Missing info result not found, proceeding without it")
         
         print("Starting translation process")
         

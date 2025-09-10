@@ -2,6 +2,7 @@
 Extract missing information insights for parents - Core business logic only
 """
 import json
+import os
 import traceback
 import boto3
 
@@ -29,7 +30,7 @@ def lambda_handler(event, context):
         
         # Invoke the existing identify-missing-info Lambda function
         lambda_client = boto3.client('lambda')
-        missing_info_function_name = f"GenAiMvpStack-IdentifyMissingInfoFunction-{user_id.split('#')[-1] if '#' in user_id else 'default'}"
+        missing_info_function_name = os.environ.get('IDENTIFY_MISSING_INFO_FUNCTION_NAME', 'IdentifyMissingInfoFunction')
         
         print(f"Invoking missing info function: {missing_info_function_name}")
         

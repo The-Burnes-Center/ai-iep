@@ -17,7 +17,7 @@
           "progress": 5
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -39,7 +39,7 @@
       "Type": "Task", 
       "Resource": "${MistralOCRArn}",
       "Comment": "Extract text from document using Mistral OCR API",
-      "ResultPath": "$.ocr_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -72,7 +72,7 @@
           "progress": 15
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -94,7 +94,7 @@
       "Type": "Task",
       "Resource": "${RedactOCRArn}",
       "Comment": "Redact PII from OCR text using AWS Comprehend",
-      "ResultPath": "$.redact_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -127,7 +127,7 @@
           "progress": 20
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -149,7 +149,7 @@
       "Type": "Task",
       "Resource": "${DeleteOriginalArn}",
       "Comment": "Delete original uploaded file from S3",
-      "ResultPath": "$.delete_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -182,7 +182,7 @@
           "progress": 22
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -251,7 +251,7 @@
         }
       ],
       "Next": "UpdateAnalysisProgress",
-      "ResultPath": "$.parallel_results"
+      "ResultPath": null
     },
     "UpdateAnalysisProgress": {
       "Type": "Task",
@@ -268,7 +268,7 @@
           "progress": 65
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -300,7 +300,7 @@
           "result_type": "english_analysis"
         }
       },
-      "ResultPath": "$.save_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -326,10 +326,10 @@
         "iep_id.$": "$.iep_id",
         "child_id.$": "$.child_id", 
         "user_id.$": "$.user_id",
-        "english_result.$": "$.parallel_results[0].english_result",
-        "missing_info_result.$": "$.parallel_results[1].missing_info_result"
+        "s3_bucket.$": "$.s3_bucket",
+        "s3_key.$": "$.s3_key"
       },
-      "ResultPath": "$.transform_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -362,7 +362,7 @@
           "progress": 85
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -394,7 +394,7 @@
           "result_type": "final_analysis"
         }
       },
-      "ResultPath": "$.save_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
