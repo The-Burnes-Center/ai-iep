@@ -70,8 +70,10 @@ def lambda_handler(event, context):
         print(f"English analysis completed. Generated {len(english_result.get('sections', []))} sections")
         
         # Return event with English analysis results
+        # Note: Don't pass through progress/current_step as they're managed by state machine
+        event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
         return {
-            **event,  # Pass through all input data
+            **event_copy,  # Pass through input data except progress tracking
             'english_result': english_result
         }
         

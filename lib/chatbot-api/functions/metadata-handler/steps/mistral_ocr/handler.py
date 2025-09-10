@@ -63,8 +63,10 @@ def lambda_handler(event, context):
         print(f"Successfully saved OCR data to DynamoDB for iepId: {iep_id}")
         
         # Return minimal metadata (no large OCR data in Step Functions)
+        # Note: Don't pass through progress/current_step as they're managed by state machine
+        event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
         return {
-            **event,  # Pass through all input data
+            **event_copy,  # Pass through input data except progress tracking
             'ocr_status': 'completed',
             'page_count': len(ocr_result.get('pages', [])),
             'ddb_save_result': ddb_result

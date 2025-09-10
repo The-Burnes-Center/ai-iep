@@ -163,8 +163,10 @@ def lambda_handler(event, context):
             
             print("English-only result saved successfully")
             
+            # Don't pass through progress/current_step as they're managed by state machine
+            event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
             return {
-                **event,
+                **event_copy,
                 'translation_skipped': True,
                 'languages_processed': ['en'],
                 'final_result': {
@@ -226,8 +228,10 @@ def lambda_handler(event, context):
             
         print("Final multilingual result saved successfully")
         
+        # Don't pass through progress/current_step as they're managed by state machine
+        event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
         return {
-            **event,  # Pass through all input data
+            **event_copy,  # Pass through input data except progress tracking
             'translation_completed': True,
             'languages_processed': list(translated_results.keys()),
             'final_result': final_result
