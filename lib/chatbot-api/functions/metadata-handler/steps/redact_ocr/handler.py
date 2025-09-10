@@ -42,10 +42,21 @@ def lambda_handler(event, context):
             Payload=json.dumps(ddb_payload)
         )
         
-        ddb_result = json.loads(ddb_response['Payload'].read())
-        print(f"DDB get result: {ddb_result}")
+        # Handle Lambda invoke response safely
+        payload_response = ddb_response['Payload'].read()
+        print(f"DDB raw response: {payload_response}")
         
-        if ddb_result.get('statusCode') != 200:
+        if not payload_response:
+            raise Exception("Empty response from DDB service")
+        
+        try:
+            ddb_result = json.loads(payload_response)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Failed to parse DDB service response as JSON: {e}. Response: {payload_response}")
+        
+        print(f"DDB parsed result: {ddb_result}")
+        
+        if not ddb_result or ddb_result.get('statusCode') != 200:
             raise Exception(f"Failed to get OCR data from DDB: {ddb_result}")
         
         # Extract OCR data from DDB response

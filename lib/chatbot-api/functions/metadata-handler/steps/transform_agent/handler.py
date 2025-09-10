@@ -98,8 +98,21 @@ def lambda_handler(event, context):
             Payload=json.dumps(english_payload)
         )
         
-        english_ddb_result = json.loads(english_response['Payload'].read())
-        if english_ddb_result.get('statusCode') != 200:
+        # Handle Lambda invoke response safely
+        english_payload_response = english_response['Payload'].read()
+        print(f"DDB raw response: {english_payload_response}")
+        
+        if not english_payload_response:
+            raise Exception("Empty response from DDB service")
+        
+        try:
+            english_ddb_result = json.loads(english_payload_response)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Failed to parse DDB service response as JSON: {e}. Response: {english_payload_response}")
+        
+        print(f"DDB parsed result: {english_ddb_result}")
+        
+        if not english_ddb_result or english_ddb_result.get('statusCode') != 200:
             raise Exception(f"Failed to get English analysis data from DDB: {english_ddb_result}")
         
         english_result = json.loads(english_ddb_result['body'])['data']
@@ -121,7 +134,18 @@ def lambda_handler(event, context):
             Payload=json.dumps(missing_info_payload)
         )
         
-        missing_info_ddb_result = json.loads(missing_info_response['Payload'].read())
+        # Handle Lambda invoke response safely
+        missing_info_payload_response = missing_info_response['Payload'].read()
+        
+        if not missing_info_payload_response:
+            print("Empty response from DDB service for missing info")
+            missing_info_ddb_result = {'statusCode': 404}
+        else:
+            try:
+                missing_info_ddb_result = json.loads(missing_info_payload_response)
+            except json.JSONDecodeError as e:
+                print(f"Failed to parse missing info DDB service response as JSON: {e}. Response: {missing_info_payload_response}")
+                missing_info_ddb_result = {'statusCode': 500}
         missing_info_result = {}
         if missing_info_ddb_result.get('statusCode') == 200:
             missing_info_result = json.loads(missing_info_ddb_result['body'])['data']

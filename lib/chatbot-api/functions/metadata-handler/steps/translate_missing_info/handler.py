@@ -50,7 +50,18 @@ def lambda_handler(event, context):
             Payload=json.dumps(missing_info_payload)
         )
         
-        missing_info_ddb_result = json.loads(missing_info_response['Payload'].read())
+        # Handle Lambda invoke response safely
+        missing_info_payload_response = missing_info_response['Payload'].read()
+        
+        if not missing_info_payload_response:
+            print("Empty response from DDB service for missing info")
+            missing_info_ddb_result = {'statusCode': 404}
+        else:
+            try:
+                missing_info_ddb_result = json.loads(missing_info_payload_response)
+            except json.JSONDecodeError as e:
+                print(f"Failed to parse missing info DDB service response as JSON: {e}. Response: {missing_info_payload_response}")
+                missing_info_ddb_result = {'statusCode': 500}
         
         # Missing info might not exist, handle gracefully
         if missing_info_ddb_result.get('statusCode') != 200:
@@ -104,8 +115,18 @@ def lambda_handler(event, context):
             Payload=json.dumps(save_payload)
         )
         
-        save_result = json.loads(save_response['Payload'].read())
-        if save_result.get('statusCode') != 200:
+        # Handle Lambda invoke response safely
+        save_payload_response = save_response['Payload'].read()
+        
+        if not save_payload_response:
+            raise Exception("Empty response from DDB service during save")
+        
+        try:
+            save_result = json.loads(save_payload_response)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Failed to parse save DDB service response as JSON: {e}. Response: {save_payload_response}")
+        
+        if not save_result or save_result.get('statusCode') != 200:
             raise Exception(f"Failed to save missing info translations to DDB: {save_result}")
         
         print("Missing info translations saved successfully")
