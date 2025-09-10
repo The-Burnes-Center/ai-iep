@@ -19,14 +19,21 @@ def lambda_handler(event, context):
         print(f"OCR result type: {type(ocr_result)}")
         print(f"OCR result keys: {list(ocr_result.keys()) if isinstance(ocr_result, dict) else 'Not a dict'}")
         
+        # Handle Step Functions nested structure - the actual OCR result may be nested
+        actual_ocr_result = ocr_result
+        if isinstance(ocr_result, dict) and 'ocr_result' in ocr_result:
+            print("Found nested OCR result from Step Functions")
+            actual_ocr_result = ocr_result['ocr_result']
+            print(f"Nested OCR result keys: {list(actual_ocr_result.keys()) if isinstance(actual_ocr_result, dict) else 'Not a dict'}")
+        
         # Handle different OCR result formats
         page_texts = []
         
         # Format 1: OCR format with 'pages' array (Mistral and legacy)
-        if ocr_result and 'pages' in ocr_result and isinstance(ocr_result['pages'], list):
-            print(f"Processing OCR format with {len(ocr_result['pages'])} pages")
+        if actual_ocr_result and 'pages' in actual_ocr_result and isinstance(actual_ocr_result['pages'], list):
+            print(f"Processing OCR format with {len(actual_ocr_result['pages'])} pages")
             
-            for page in ocr_result['pages']:
+            for page in actual_ocr_result['pages']:
                 # Follow original monolithic lambda priority: content → text → markdown → fallback
                 if 'content' in page and page.get('content'):
                     page_texts.append(page.get('content', ''))
@@ -44,9 +51,9 @@ def lambda_handler(event, context):
                         page_texts.append('')
         
         # Format 2: Mistral OCR format with 'document' structure
-        elif ocr_result and 'document' in ocr_result:
+        elif actual_ocr_result and 'document' in actual_ocr_result:
             print("Processing Mistral OCR format")
-            document = ocr_result['document']
+            document = actual_ocr_result['document']
             
             if 'pages' in document and isinstance(document['pages'], list):
                 print(f"Found {len(document['pages'])} pages in document format")
@@ -71,18 +78,18 @@ def lambda_handler(event, context):
                 page_texts.append(document['text'])
         
         # Format 3: Direct text content (fallback)
-        elif ocr_result and 'text' in ocr_result:
+        elif actual_ocr_result and 'text' in actual_ocr_result:
             print("Processing direct text format")
-            page_texts.append(ocr_result['text'])
+            page_texts.append(actual_ocr_result['text'])
         
         # Format 4: Check if it's a string directly
-        elif isinstance(ocr_result, str):
+        elif isinstance(actual_ocr_result, str):
             print("Processing string format")
-            page_texts.append(ocr_result)
+            page_texts.append(actual_ocr_result)
         
         else:
-            print(f"Unrecognized OCR format. Available keys: {list(ocr_result.keys()) if isinstance(ocr_result, dict) else 'N/A'}")
-            print(f"OCR result sample: {str(ocr_result)[:500]}")
+            print(f"Unrecognized OCR format. Available keys: {list(actual_ocr_result.keys()) if isinstance(actual_ocr_result, dict) else 'N/A'}")
+            print(f"OCR result sample: {str(actual_ocr_result)[:500]}")
             raise Exception("Invalid OCR result format for redaction")
         
         if page_texts:
@@ -95,10 +102,15 @@ def lambda_handler(event, context):
                 # Create redacted OCR result maintaining original structure
                 redacted_ocr_result = {**ocr_result}  # Copy original structure
                 
+                # Get reference to the actual OCR data to update
+                target_ocr_result = redacted_ocr_result
+                if 'ocr_result' in redacted_ocr_result:
+                    target_ocr_result = redacted_ocr_result['ocr_result']
+                
                 # Update based on detected format
-                if 'pages' in ocr_result and isinstance(ocr_result['pages'], list):
+                if 'pages' in actual_ocr_result and isinstance(actual_ocr_result['pages'], list):
                     # Follow original monolithic lambda priority: content → text → markdown
-                    for i, page in enumerate(redacted_ocr_result['pages']):
+                    for i, page in enumerate(target_ocr_result['pages']):
                         if i < len(redacted_texts):
                             if 'content' in page:
                                 page['content'] = redacted_texts[i]
@@ -106,10 +118,10 @@ def lambda_handler(event, context):
                                 page['text'] = redacted_texts[i]
                             elif 'markdown' in page:
                                 page['markdown'] = redacted_texts[i]
-                elif 'document' in ocr_result:
+                elif 'document' in actual_ocr_result:
                     # Document format
-                    if 'pages' in ocr_result['document']:
-                        for i, page in enumerate(redacted_ocr_result['document']['pages']):
+                    if 'pages' in actual_ocr_result['document']:
+                        for i, page in enumerate(target_ocr_result['document']['pages']):
                             if i < len(redacted_texts):
                                 if 'content' in page:
                                     page['content'] = redacted_texts[i]
@@ -117,14 +129,17 @@ def lambda_handler(event, context):
                                     page['text'] = redacted_texts[i]
                                 elif 'markdown' in page:
                                     page['markdown'] = redacted_texts[i]
-                    elif 'text' in ocr_result['document']:
-                        redacted_ocr_result['document']['text'] = redacted_texts[0]
-                elif 'text' in ocr_result:
+                    elif 'text' in actual_ocr_result['document']:
+                        target_ocr_result['document']['text'] = redacted_texts[0]
+                elif 'text' in actual_ocr_result:
                     # Direct text format
-                    redacted_ocr_result['text'] = redacted_texts[0]
-                elif isinstance(ocr_result, str):
-                    # String format
-                    redacted_ocr_result = redacted_texts[0]
+                    target_ocr_result['text'] = redacted_texts[0]
+                elif isinstance(actual_ocr_result, str):
+                    # String format - this case is more complex with nested structure
+                    if 'ocr_result' in redacted_ocr_result:
+                        redacted_ocr_result['ocr_result'] = redacted_texts[0]
+                    else:
+                        redacted_ocr_result = redacted_texts[0]
                 
                 print(f"PII redaction completed successfully. Stats: {stats}")
                 
