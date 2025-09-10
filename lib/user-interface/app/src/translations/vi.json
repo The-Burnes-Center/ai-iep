@@ -107,8 +107,8 @@
     "current.noDocument": "Không tìm thấy tài liệu IEP. Vui lòng tải lên tài liệu để bắt đầu.",
     "current.header1": "Quan trọng",
     "current.paragraph1": "Hành động này sẽ thay thế tài liệu IEP hiện tại của bạn và tạo một bản tóm tắt mới.",
-    "current.header2": "Tài liệu của bạn không được xử lý",
-    "current.paragraph2": "Đã xảy ra lỗi khi xử lý IEP của bạn. Vui lòng thử tải lên lại.",
+    "current.header2": "Bạn không có IEP của mình?",
+    "current.paragraph2": "Bạn có thể yêu cầu từ nhân viên phụ trách hồ sơ của bạn bất cứ lúc nào.",
     
     "document.back": "← Quay lại",
     "document.updateAlert": "Tài liệu đã được cập nhật. Thông tin tài liệu hiện tại của bạn sẽ được làm mới.",
