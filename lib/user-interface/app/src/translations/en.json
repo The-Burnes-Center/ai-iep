@@ -111,8 +111,8 @@
     "current.noDocument": "No IEP document found. Please upload a document to get started.",
     "current.header1": "Important",
     "current.paragraph1":"This action will replace your current IEP document and generate a new summary.",
-    "current.header2": "Your document was not processed",
-    "current.paragraph2":"There was an error while processing your IEP. Please try uploading it again.",
+    "current.header2": "Don’t have your IEP?",
+    "current.paragraph2":"You can request it from your case worker at any time.",
     
     "document.back": "← Back",
     "document.updateAlert": "Document has been updated. Your current document information will refresh.",
