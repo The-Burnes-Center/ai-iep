@@ -3,6 +3,7 @@ Redact PII from OCR text using AWS Comprehend - Core business logic only
 """
 import json
 import traceback
+import boto3
 from comprehend_redactor import redact_pii_from_texts
 
 def lambda_handler(event, context):
@@ -13,60 +14,45 @@ def lambda_handler(event, context):
     print(f"RedactOCR handler received: {json.dumps(event)}")
     
     try:
-        ocr_result = event['ocr_result']
+        iep_id = event['iep_id']
+        user_id = event['user_id']
+        child_id = event['child_id']
         
         print("Starting PII redaction")
-        print(f"OCR result type: {type(ocr_result)}")
-        print(f"OCR result keys: {list(ocr_result.keys()) if isinstance(ocr_result, dict) else 'Not a dict'}")
+        print(f"Getting OCR data from DynamoDB for iepId: {iep_id}")
         
-        # Check if OCR result is stored in S3 (to handle Step Functions size limits)
-        actual_ocr_result = ocr_result
-        is_s3_stored = False
+        # Get OCR result from DynamoDB via centralized DDB service
+        lambda_client = boto3.client('lambda')
+        ddb_service_name = event.get('ddb_service_arn', 'DDBService')
         
-        if isinstance(ocr_result, dict) and 's3_bucket' in ocr_result and 's3_key' in ocr_result:
-            print(f"OCR result is stored in S3: s3://{ocr_result['s3_bucket']}/{ocr_result['s3_key']}")
-            
-            # Retrieve OCR result from S3
-            import boto3
-            import json as json_lib
-            
-            s3_client = boto3.client('s3')
-            
-            response = s3_client.get_object(
-                Bucket=ocr_result['s3_bucket'],
-                Key=ocr_result['s3_key']
-            )
-            
-            actual_ocr_result = json_lib.loads(response['Body'].read().decode('utf-8'))
-            is_s3_stored = True
-            print(f"Retrieved OCR result from S3: {len(actual_ocr_result.get('pages', []))} pages")
-            
-        # Handle Step Functions nested structure - the actual OCR result may be nested
-        elif isinstance(ocr_result, dict) and 'ocr_result' in ocr_result:
-            print("Found nested OCR result from Step Functions")
-            nested_result = ocr_result['ocr_result']
-            
-            # Check if nested result is also S3-stored
-            if isinstance(nested_result, dict) and 's3_bucket' in nested_result and 's3_key' in nested_result:
-                print(f"Nested OCR result is stored in S3: s3://{nested_result['s3_bucket']}/{nested_result['s3_key']}")
-                
-                import boto3
-                import json as json_lib
-                
-                s3_client = boto3.client('s3')
-                
-                response = s3_client.get_object(
-                    Bucket=nested_result['s3_bucket'],
-                    Key=nested_result['s3_key']
-                )
-                
-                actual_ocr_result = json_lib.loads(response['Body'].read().decode('utf-8'))
-                is_s3_stored = True
-                print(f"Retrieved nested OCR result from S3: {len(actual_ocr_result.get('pages', []))} pages")
-            else:
-                actual_ocr_result = nested_result
-            
-        print(f"Final OCR result keys: {list(actual_ocr_result.keys()) if isinstance(actual_ocr_result, dict) else 'Not a dict'}")
+        ddb_payload = {
+            'operation': 'get_ocr_data',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'data_type': 'ocr_result'
+            }
+        }
+        
+        ddb_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(ddb_payload)
+        )
+        
+        ddb_result = json.loads(ddb_response['Payload'].read())
+        print(f"DDB get result: {ddb_result}")
+        
+        if ddb_result.get('statusCode') != 200:
+            raise Exception(f"Failed to get OCR data from DDB: {ddb_result}")
+        
+        # Extract OCR data from DDB response
+        response_body = json.loads(ddb_result['body'])
+        actual_ocr_result = response_body['data']
+        
+        print(f"Retrieved OCR data from DynamoDB: {len(actual_ocr_result.get('pages', []))} pages")
+        print(f"OCR result keys: {list(actual_ocr_result.keys()) if isinstance(actual_ocr_result, dict) else 'Not a dict'}")
         
         # Handle different OCR result formats
         page_texts = []
@@ -185,50 +171,41 @@ def lambda_handler(event, context):
                 
                 print(f"PII redaction completed successfully. Stats: {stats}")
                 
-                # If original was S3-stored, store redacted result in S3 too
-                if is_s3_stored:
-                    from datetime import datetime
-                    
-                    s3_client = boto3.client('s3')
-                    
-                    # Create redacted OCR result S3 key
-                    timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-                    redacted_s3_key = f"{event['user_id']}/{event['child_id']}/{event['iep_id']}/redacted_ocr_result_{timestamp}.json"
-                    
-                    # Get original S3 bucket from metadata
-                    s3_bucket = ocr_result.get('s3_bucket') or ocr_result.get('ocr_result', {}).get('s3_bucket')
-                    
-                    # Store redacted OCR result in S3
-                    s3_client.put_object(
-                        Bucket=s3_bucket,
-                        Key=redacted_s3_key,
-                        Body=json.dumps(redacted_ocr_result),
-                        ContentType='application/json'
-                    )
-                    
-                    print(f"Stored redacted OCR result in S3: s3://{s3_bucket}/{redacted_s3_key}")
-                    
-                    # Return metadata instead of full content
-                    redacted_metadata = {
-                        'page_count': len(actual_ocr_result.get('pages', [])),
-                        'redacted_pages': len(redacted_texts),
-                        's3_bucket': s3_bucket,
-                        's3_key': redacted_s3_key,
-                        'stored_at': timestamp,
-                        'redaction_stats': stats
+                # Save redacted OCR result to DynamoDB via centralized DDB service
+                ddb_save_payload = {
+                    'operation': 'save_ocr_data',
+                    'params': {
+                        'iep_id': iep_id,
+                        'user_id': user_id,
+                        'child_id': child_id,
+                        'ocr_data': redacted_ocr_result,
+                        'data_type': 'redacted_ocr_result'
                     }
-                    
-                    return {
-                        **event,  # Pass through all input data
-                        'redacted_ocr_result': redacted_metadata
-                    }
-                else:
-                    # Return full result if not S3-stored (backward compatibility)
-                    return {
-                        **event,  # Pass through all input data
-                        'redacted_ocr_result': redacted_ocr_result,
-                        'redaction_stats': stats
-                    }
+                }
+                
+                ddb_save_response = lambda_client.invoke(
+                    FunctionName=ddb_service_name,
+                    InvocationType='RequestResponse',
+                    Payload=json.dumps(ddb_save_payload)
+                )
+                
+                ddb_save_result = json.loads(ddb_save_response['Payload'].read())
+                print(f"DDB save redacted result: {ddb_save_result}")
+                
+                if ddb_save_result.get('statusCode') != 200:
+                    raise Exception(f"Failed to save redacted OCR data to DDB: {ddb_save_result}")
+                
+                print(f"Successfully saved redacted OCR data to DynamoDB for iepId: {iep_id}")
+                
+                # Return minimal metadata (no large data in Step Functions)
+                return {
+                    **event,  # Pass through all input data
+                    'redaction_status': 'completed',
+                    'page_count': len(actual_ocr_result.get('pages', [])),
+                    'redacted_pages': len(redacted_texts),
+                    'redaction_stats': stats,
+                    'ddb_save_result': ddb_save_result
+                }
             else:
                 raise Exception("PII redaction failed - no redacted text returned")
         else:

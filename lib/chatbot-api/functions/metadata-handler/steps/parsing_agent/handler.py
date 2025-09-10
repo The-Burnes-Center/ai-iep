@@ -13,29 +13,46 @@ def lambda_handler(event, context):
     print(f"ParsingAgent handler received: {json.dumps(event)}")
     
     try:
-        redacted_ocr_result = event.get('redacted_ocr_result')
+        iep_id = event['iep_id']
+        user_id = event['user_id']
+        child_id = event['child_id']
         
         print("Starting English-only document analysis...")
+        print(f"Getting redacted OCR data from DynamoDB for iepId: {iep_id}")
         
-        # Check if redacted OCR result is stored in S3
-        actual_redacted_ocr = redacted_ocr_result
+        # Get redacted OCR result from DynamoDB via centralized DDB service
+        import boto3
         
-        if isinstance(redacted_ocr_result, dict) and 's3_bucket' in redacted_ocr_result and 's3_key' in redacted_ocr_result:
-            print(f"Redacted OCR result is stored in S3: s3://{redacted_ocr_result['s3_bucket']}/{redacted_ocr_result['s3_key']}")
-            
-            # Retrieve redacted OCR result from S3
-            import boto3
-            import json as json_lib
-            
-            s3_client = boto3.client('s3')
-            
-            response = s3_client.get_object(
-                Bucket=redacted_ocr_result['s3_bucket'],
-                Key=redacted_ocr_result['s3_key']
-            )
-            
-            actual_redacted_ocr = json_lib.loads(response['Body'].read().decode('utf-8'))
-            print(f"Retrieved redacted OCR result from S3: {len(actual_redacted_ocr.get('pages', []))} pages")
+        lambda_client = boto3.client('lambda')
+        ddb_service_name = event.get('ddb_service_arn', 'DDBService')
+        
+        ddb_payload = {
+            'operation': 'get_ocr_data',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'data_type': 'redacted_ocr_result'
+            }
+        }
+        
+        ddb_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(ddb_payload)
+        )
+        
+        ddb_result = json.loads(ddb_response['Payload'].read())
+        print(f"DDB get result: {ddb_result}")
+        
+        if ddb_result.get('statusCode') != 200:
+            raise Exception(f"Failed to get redacted OCR data from DDB: {ddb_result}")
+        
+        # Extract redacted OCR data from DDB response
+        response_body = json.loads(ddb_result['body'])
+        actual_redacted_ocr = response_body['data']
+        
+        print(f"Retrieved redacted OCR data from DynamoDB: {len(actual_redacted_ocr.get('pages', []))} pages")
         
         # Create OpenAI Agent with redacted OCR data
         agent = OpenAIAgent(ocr_data=actual_redacted_ocr)

@@ -3,6 +3,7 @@ Process document with Mistral OCR API - Core business logic only
 """
 import json
 import traceback
+import boto3
 from mistral_ocr import process_document_with_mistral_ocr
 
 def lambda_handler(event, context):
@@ -28,42 +29,41 @@ def lambda_handler(event, context):
         
         print(f"OCR completed successfully. Found {len(ocr_result.get('pages', []))} pages")
         
-        # Store large OCR result in S3 to avoid Step Functions data limits
-        import boto3
-        import json as json_lib
-        from datetime import datetime
+        # Save OCR result to DynamoDB via centralized DDB service
+        lambda_client = boto3.client('lambda')
+        ddb_service_name = event.get('ddb_service_arn', 'DDBService')
         
-        s3_client = boto3.client('s3')
-        
-        # Create OCR result S3 key
-        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-        ocr_s3_key = f"{event['user_id']}/{event['child_id']}/{event['iep_id']}/ocr_result_{timestamp}.json"
-        
-        # Store full OCR result in S3
-        s3_client.put_object(
-            Bucket=s3_bucket,
-            Key=ocr_s3_key,
-            Body=json_lib.dumps(ocr_result),
-            ContentType='application/json'
-        )
-        
-        print(f"Stored OCR result in S3: s3://{s3_bucket}/{ocr_s3_key}")
-        
-        # Return only metadata to avoid Step Functions size limits
-        ocr_metadata = {
-            'page_count': len(ocr_result.get('pages', [])),
-            'has_images': any(page.get('images') for page in ocr_result.get('pages', [])),
-            'total_text_length': sum(len(page.get('markdown', '') + page.get('text', '') + page.get('content', '')) 
-                                   for page in ocr_result.get('pages', [])),
-            's3_bucket': s3_bucket,
-            's3_key': ocr_s3_key,
-            'stored_at': timestamp
+        ddb_payload = {
+            'operation': 'save_ocr_data',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'ocr_data': ocr_result,
+                'data_type': 'ocr_result'
+            }
         }
         
-        # Add OCR metadata to the payload for next step
+        ddb_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(ddb_payload)
+        )
+        
+        ddb_result = json.loads(ddb_response['Payload'].read())
+        print(f"DDB save result: {ddb_result}")
+        
+        if ddb_result.get('statusCode') != 200:
+            raise Exception(f"Failed to save OCR data to DDB: {ddb_result}")
+        
+        print(f"Successfully saved OCR data to DynamoDB for iepId: {iep_id}")
+        
+        # Return minimal metadata (no large OCR data in Step Functions)
         return {
             **event,  # Pass through all input data
-            'ocr_result': ocr_metadata  # Only metadata, not full content
+            'ocr_status': 'completed',
+            'page_count': len(ocr_result.get('pages', [])),
+            'ddb_save_result': ddb_result
         }
         
     except Exception as e:
