@@ -284,38 +284,6 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "SaveEnglishResults"
-    },
-    "SaveEnglishResults": {
-      "Type": "Task",
-      "Resource": "${DDBServiceArn}",
-      "Comment": "Save English analysis results to DDB",
-      "Parameters": {
-        "operation": "save_results",
-        "params": {
-          "iep_id.$": "$.iep_id",
-          "child_id.$": "$.child_id", 
-          "user_id.$": "$.user_id",
-          "results.$": "$.parallel_results[0].english_result",
-          "result_type": "english_analysis"
-        }
-      },
-      "ResultPath": null,
-      "Retry": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "MaxAttempts": 3,
-          "IntervalSeconds": 2,
-          "BackoffRate": 2
-        }
-      ],
-      "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "RecordFailure",
-          "ResultPath": "$.error"
-        }
-      ],
       "Next": "TransformAgent"
     },
     "TransformAgent": {
