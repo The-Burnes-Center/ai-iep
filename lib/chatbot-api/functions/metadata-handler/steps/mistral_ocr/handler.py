@@ -16,6 +16,9 @@ def lambda_handler(event, context):
     try:
         s3_bucket = event['s3_bucket']
         s3_key = event['s3_key']
+        iep_id = event['iep_id']
+        user_id = event['user_id']
+        child_id = event['child_id']
         
         # Process document with Mistral OCR
         print(f"Processing document: s3://{s3_bucket}/{s3_key}")
