@@ -22,13 +22,26 @@ def lambda_handler(event, context):
         # Handle different OCR result formats
         page_texts = []
         
-        # Format 1: Legacy format with 'pages' array
+        # Format 1: OCR format with 'pages' array (Mistral and legacy)
         if ocr_result and 'pages' in ocr_result and isinstance(ocr_result['pages'], list):
-            print(f"Processing legacy OCR format with {len(ocr_result['pages'])} pages")
+            print(f"Processing OCR format with {len(ocr_result['pages'])} pages")
             
             for page in ocr_result['pages']:
-                if 'text' in page:
-                    page_texts.append(page['text'])
+                # Follow original monolithic lambda priority: content → text → markdown → fallback
+                if 'content' in page and page.get('content'):
+                    page_texts.append(page.get('content', ''))
+                elif 'text' in page and page.get('text'):
+                    page_texts.append(page.get('text', ''))
+                elif 'markdown' in page and page.get('markdown'):
+                    page_texts.append(page.get('markdown', ''))
+                else:
+                    # Fallback: find any string field with substantial content
+                    text_fields = [v for k, v in page.items() 
+                                  if isinstance(v, str) and len(v) > 20]
+                    if text_fields:
+                        page_texts.append(text_fields[0])
+                    else:
+                        page_texts.append('')
         
         # Format 2: Mistral OCR format with 'document' structure
         elif ocr_result and 'document' in ocr_result:
@@ -36,10 +49,22 @@ def lambda_handler(event, context):
             document = ocr_result['document']
             
             if 'pages' in document and isinstance(document['pages'], list):
-                print(f"Found {len(document['pages'])} pages in Mistral format")
+                print(f"Found {len(document['pages'])} pages in document format")
                 for page in document['pages']:
-                    if 'text' in page:
-                        page_texts.append(page['text'])
+                    if 'content' in page and page.get('content'):
+                        page_texts.append(page.get('content', ''))
+                    elif 'text' in page and page.get('text'):
+                        page_texts.append(page.get('text', ''))
+                    elif 'markdown' in page and page.get('markdown'):
+                        page_texts.append(page.get('markdown', ''))
+                    else:
+                        # Fallback
+                        text_fields = [v for k, v in page.items() 
+                                      if isinstance(v, str) and len(v) > 20]
+                        if text_fields:
+                            page_texts.append(text_fields[0])
+                        else:
+                            page_texts.append('')
             elif 'text' in document:
                 # Single text field for entire document
                 print("Found single text field in Mistral document")
@@ -72,16 +97,26 @@ def lambda_handler(event, context):
                 
                 # Update based on detected format
                 if 'pages' in ocr_result and isinstance(ocr_result['pages'], list):
-                    # Legacy format
+                    # Follow original monolithic lambda priority: content → text → markdown
                     for i, page in enumerate(redacted_ocr_result['pages']):
                         if i < len(redacted_texts):
-                            page['text'] = redacted_texts[i]
+                            if 'content' in page:
+                                page['content'] = redacted_texts[i]
+                            elif 'text' in page:
+                                page['text'] = redacted_texts[i]
+                            elif 'markdown' in page:
+                                page['markdown'] = redacted_texts[i]
                 elif 'document' in ocr_result:
-                    # Mistral format
+                    # Document format
                     if 'pages' in ocr_result['document']:
                         for i, page in enumerate(redacted_ocr_result['document']['pages']):
                             if i < len(redacted_texts):
-                                page['text'] = redacted_texts[i]
+                                if 'content' in page:
+                                    page['content'] = redacted_texts[i]
+                                elif 'text' in page:
+                                    page['text'] = redacted_texts[i]
+                                elif 'markdown' in page:
+                                    page['markdown'] = redacted_texts[i]
                     elif 'text' in ocr_result['document']:
                         redacted_ocr_result['document']['text'] = redacted_texts[0]
                 elif 'text' in ocr_result:
