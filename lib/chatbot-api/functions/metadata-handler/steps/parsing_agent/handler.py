@@ -17,8 +17,28 @@ def lambda_handler(event, context):
         
         print("Starting English-only document analysis...")
         
+        # Check if redacted OCR result is stored in S3
+        actual_redacted_ocr = redacted_ocr_result
+        
+        if isinstance(redacted_ocr_result, dict) and 's3_bucket' in redacted_ocr_result and 's3_key' in redacted_ocr_result:
+            print(f"Redacted OCR result is stored in S3: s3://{redacted_ocr_result['s3_bucket']}/{redacted_ocr_result['s3_key']}")
+            
+            # Retrieve redacted OCR result from S3
+            import boto3
+            import json as json_lib
+            
+            s3_client = boto3.client('s3')
+            
+            response = s3_client.get_object(
+                Bucket=redacted_ocr_result['s3_bucket'],
+                Key=redacted_ocr_result['s3_key']
+            )
+            
+            actual_redacted_ocr = json_lib.loads(response['Body'].read().decode('utf-8'))
+            print(f"Retrieved redacted OCR result from S3: {len(actual_redacted_ocr.get('pages', []))} pages")
+        
         # Create OpenAI Agent with redacted OCR data
-        agent = OpenAIAgent(ocr_data=redacted_ocr_result)
+        agent = OpenAIAgent(ocr_data=actual_redacted_ocr)
         
         # Analyze the document in English only
         english_result = agent.analyze_document()
