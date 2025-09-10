@@ -405,7 +405,7 @@ export class LambdaFunctionStack extends cdk.Stack {
     
     // Replace ARN placeholders with actual Lambda ARNs  
     const aslString = JSON.stringify(aslDefinition)
-      .replace('${DDBServiceArn}', this.ddbServiceFunction.functionArn)
+      .replaceAll('${DDBServiceArn}', this.ddbServiceFunction.functionArn)
       .replace('${MistralOCRArn}', this.mistralOCRFunction.functionArn)
       .replace('${RedactOCRArn}', this.redactOCRFunction.functionArn)
       .replace('${DeleteOriginalArn}', this.deleteOriginalFunction.functionArn)
