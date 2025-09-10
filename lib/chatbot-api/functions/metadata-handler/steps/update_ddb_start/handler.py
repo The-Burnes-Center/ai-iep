@@ -3,12 +3,12 @@ Initialize DynamoDB record and set processing status
 """
 import json
 import traceback
-from shared_utils import update_progress, create_step_function_response, handle_step_error
+import boto3
 
 def lambda_handler(event, context):
     """
-    Initialize processing status in DynamoDB.
-    Sets status="PROCESSING", progress=5, current_step="start"
+    Initialize processing status in DynamoDB using centralized DDB service.
+    Sets status="PROCESSING", progress=5, current_step="initializing"
     """
     print(f"UpdateDDBStart handler received: {json.dumps(event)}")
     
@@ -21,19 +21,38 @@ def lambda_handler(event, context):
         
         print(f"Initializing processing for iepId: {iep_id}")
         
-        # Update DynamoDB with initial processing status
-        update_progress(
-            iep_id=iep_id,
-            child_id=child_id,
-            progress=5,
-            current_step="start",
-            status="PROCESSING"
+        # Call centralized DDB service
+        lambda_client = boto3.client('lambda')
+        ddb_service_name = event.get('ddb_service_arn', 'DDBService')  # Fallback name
+        
+        ddb_payload = {
+            'operation': 'update_progress',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'progress': 0,
+                'current_step': 'initializing',
+                'status': 'PROCESSING'
+            }
+        }
+        
+        ddb_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(ddb_payload)
         )
         
-        # Return event with progress tracking
-        response = create_step_function_response(event)
-        response['progress'] = 5
-        response['current_step'] = "start"
+        ddb_result = json.loads(ddb_response['Payload'].read())
+        print(f"DDB service response: {ddb_result}")
+        
+        # Return event with progress tracking and DDB result
+        response = {
+            **event,  # Pass through all input data
+            'progress': 0,
+            'current_step': 'initializing',
+            'ddb_result': ddb_result
+        }
         
         print(f"Successfully initialized processing for iepId: {iep_id}")
         return response
@@ -42,8 +61,16 @@ def lambda_handler(event, context):
         print(f"Error in UpdateDDBStart: {str(e)}")
         print(traceback.format_exc())
         
-        # Try to get IDs for error handling
-        iep_id = event.get('iep_id', 'unknown')
-        child_id = event.get('child_id', 'unknown')
-        
-        return handle_step_error(iep_id, child_id, "UpdateDDBStart", e, 5)
+        # Return error but don't fail the workflow
+        return {
+            **event,
+            'progress': 0,
+            'current_step': 'initializing',
+            'ddb_result': {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'error': str(e),
+                    'operation': 'update_progress'
+                })
+            }
+        }

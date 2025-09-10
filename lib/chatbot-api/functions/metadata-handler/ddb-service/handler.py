@@ -85,8 +85,8 @@ def update_progress(params):
     
     table.update_item(
         Key={
-            'PK': f'USER#{user_id}',
-            'SK': f'CHILD#{child_id}#IEP#{iep_id}'
+            'iepId': iep_id,
+            'childId': child_id
         },
         UpdateExpression=update_expression,
         ExpressionAttributeNames=expression_names,
@@ -152,8 +152,8 @@ def save_results(params):
     
     table.update_item(
         Key={
-            'PK': f'USER#{user_id}',
-            'SK': f'CHILD#{child_id}#IEP#{iep_id}'
+            'iepId': iep_id,
+            'childId': child_id
         },
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_values
@@ -177,8 +177,8 @@ def record_failure(params):
     
     table.update_item(
         Key={
-            'PK': f'USER#{user_id}',
-            'SK': f'CHILD#{child_id}#IEP#{iep_id}'
+            'iepId': iep_id,
+            'childId': child_id
         },
         UpdateExpression="SET #status = :status, error_message = :error_message, last_error = :last_error, failed_step = :failed_step, updated_at = :updated_at",
         ExpressionAttributeNames={'#status': 'status'},
@@ -208,8 +208,8 @@ def get_document(params):
     
     response = table.get_item(
         Key={
-            'PK': f'USER#{user_id}',
-            'SK': f'CHILD#{child_id}#IEP#{iep_id}'
+            'iepId': iep_id,
+            'childId': child_id
         }
     )
     
