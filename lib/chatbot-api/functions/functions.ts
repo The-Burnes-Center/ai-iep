@@ -551,7 +551,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       handler: 'lambda_function.lambda_handler',
       environment: {
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName
       },
       timeout: cdk.Duration.seconds(300),
       logRetention: logs.RetentionDays.ONE_YEAR,
@@ -583,6 +584,13 @@ export class LambdaFunctionStack extends cdk.Stack {
     }));
 
     this.identifyMissingInfoFunction = identifyMissingInfoFunction;
+
+    // Grant IdentifyMissingInfoFunction permission to invoke DDB service
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['lambda:InvokeFunction'],
+      resources: [this.ddbServiceFunction.functionArn]
+    }));
 
     // Allow metadata handler to invoke the identify-missing-info function
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({

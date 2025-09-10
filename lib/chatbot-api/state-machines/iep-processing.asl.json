@@ -250,7 +250,7 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "UpdateAnalysisProgress",
+      "Next": "UpdateAnalysisProgress", 
       "ResultPath": null
     },
     "UpdateAnalysisProgress": {
