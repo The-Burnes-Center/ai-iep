@@ -83,6 +83,8 @@ export interface IEPDocument {
   documentId?: string;
   documentUrl?: string;
   status?: "PROCESSING" | "PROCESSING_TRANSLATIONS" | "PROCESSED" | "FAILED";
+  progress?: number; // Processing progress percentage (0-100)
+  current_step?: string; // Current processing step (e.g., "initializing", "ocr_complete", "redacting", etc.)
   createdAt?: string;
   message?: string;
   

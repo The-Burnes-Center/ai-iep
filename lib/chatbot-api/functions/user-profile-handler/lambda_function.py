@@ -496,6 +496,8 @@ def get_child_documents(event: Dict) -> Dict:
                         'childId': doc['childId'],
                         'documentUrl': doc.get('documentUrl', f"s3://{os.environ.get('BUCKET', '')}/{doc['iepId']}"),
                         'status': doc.get('status', 'PROCESSING'),
+                        'progress': doc.get('progress', 0),
+                        'current_step': doc.get('current_step', 'initializing'),
                         'createdAt': doc.get('createdAt', ''),
                         'updatedAt': doc.get('updatedAt', '')
                     }
