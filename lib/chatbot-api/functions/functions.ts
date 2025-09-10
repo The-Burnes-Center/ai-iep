@@ -397,6 +397,21 @@ export class LambdaFunctionStack extends cdk.Stack {
       900
     );
 
+    // Grant step functions permission to invoke DDB service
+    const functionsNeedingDDBAccess = [
+      this.mistralOCRFunction,
+      this.redactOCRFunction,
+      this.parsingAgentFunction
+    ];
+
+    functionsNeedingDDBAccess.forEach(func => {
+      func.addToRolePolicy(new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['lambda:InvokeFunction'],
+        resources: [this.ddbServiceFunction.functionArn]
+      }));
+    });
+
     // Note: Lambda invoke permission for missing info agent will be added after identifyMissingInfoFunction is created
 
     // Load and customize the ASL definition
