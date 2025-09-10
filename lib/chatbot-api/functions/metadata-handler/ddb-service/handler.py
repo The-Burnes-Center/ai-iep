@@ -19,7 +19,7 @@ def lambda_handler(event, context):
     
     Expected event structure:
     {
-        "operation": "update_progress|get_user_prefs|save_results|record_failure|get_document",
+        "operation": "update_progress|get_user_prefs|save_results|record_failure|get_document|save_ocr_data|get_ocr_data|get_analysis_data",
         "params": {
             // operation-specific parameters
         }
@@ -45,6 +45,8 @@ def lambda_handler(event, context):
             return save_ocr_data(params)
         elif operation == 'get_ocr_data':
             return get_ocr_data(params)
+        elif operation == 'get_analysis_data':
+            return get_analysis_data(params)
         else:
             raise ValueError(f"Unknown operation: {operation}")
             
@@ -268,6 +270,41 @@ def get_ocr_data(params):
     child_id = params['child_id']
     user_id = params['user_id']
     data_type = params.get('data_type', 'ocr_result')  # 'ocr_result' or 'redacted_ocr_result'
+    
+    response = table.get_item(
+        Key={
+            'iepId': iep_id,
+            'childId': child_id
+        }
+    )
+    
+    if 'Item' not in response:
+        return {
+            'statusCode': 404,
+            'body': json.dumps({'error': 'Document not found'})
+        }
+    
+    item = response['Item']
+    
+    if data_type not in item:
+        return {
+            'statusCode': 404,
+            'body': json.dumps({'error': f'{data_type} not found'})
+        }
+    
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'data': item[data_type]
+            }, default=str)
+        }
+
+def get_analysis_data(params):
+    """Get analysis data from DynamoDB (english_result, missing_info_result, etc.)"""
+    iep_id = params['iep_id']
+    child_id = params['child_id']
+    user_id = params['user_id']
+    data_type = params.get('data_type', 'english_result')  # 'english_result', 'missing_info_result', etc.
     
     response = table.get_item(
         Key={

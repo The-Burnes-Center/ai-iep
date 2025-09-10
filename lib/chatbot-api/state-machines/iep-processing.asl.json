@@ -284,12 +284,12 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "TransformAgent"
+      "Next": "CheckLanguagePrefs"
     },
-    "TransformAgent": {
+    "CheckLanguagePrefs": {
       "Type": "Task",
-      "Resource": "${TransformAgentArn}",
-      "Comment": "Translate content based on user language preferences",
+      "Resource": "${CheckLanguagePrefsArn}",
+      "Comment": "Check user language preferences to determine if translations are needed",
       "Parameters": {
         "iep_id.$": "$.iep_id",
         "child_id.$": "$.child_id", 
@@ -297,7 +297,6 @@
         "s3_bucket.$": "$.s3_bucket",
         "s3_key.$": "$.s3_key"
       },
-      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -313,7 +312,72 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "UpdateTranslationProgress"
+      "Next": "TranslationChoice"
+    },
+    "TranslationChoice": {
+      "Type": "Choice",
+      "Comment": "Decide whether to translate based on user language preferences",
+      "Choices": [
+        {
+          "Variable": "$.translation_needed",
+          "BooleanEquals": true,
+          "Next": "ParallelTranslations"
+        }
+      ],
+      "Default": "CombineResults"
+    },
+    "ParallelTranslations": {
+      "Type": "Parallel",
+      "Comment": "Translate parsing and missing info results independently",
+      "Branches": [
+        {
+          "StartAt": "TranslateParsingResult",
+          "States": {
+            "TranslateParsingResult": {
+              "Type": "Task",
+              "Resource": "${TranslateParsingResultArn}",
+              "Comment": "Translate parsing agent results to target languages",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "TranslateMissingInfo",
+          "States": {
+            "TranslateMissingInfo": {
+              "Type": "Task",
+              "Resource": "${TranslateMissingInfoArn}",
+              "Comment": "Translate missing info results to target languages",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateTranslationProgress",
+      "ResultPath": null
     },
     "UpdateTranslationProgress": {
       "Type": "Task",
@@ -346,6 +410,34 @@
           "ResultPath": "$.error"
         }
       ],
+      "Next": "CombineResults"
+    },
+    "CombineResults": {
+      "Type": "Task",
+      "Resource": "${CombineResultsArn}",
+      "Comment": "Combine all English and translated results into final mega JSON",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id", 
+        "user_id.$": "$.user_id",
+        "target_languages.$": "$.target_languages",
+        "translation_needed.$": "$.translation_needed"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
       "Next": "SaveFinalResults"
     },
     "SaveFinalResults": {
@@ -358,7 +450,7 @@
           "iep_id.$": "$.iep_id",
           "child_id.$": "$.child_id", 
           "user_id.$": "$.user_id",
-          "results.$": "$.transform_result.final_result",
+          "results.$": "$.final_result",
           "result_type": "final_analysis"
         }
       },
