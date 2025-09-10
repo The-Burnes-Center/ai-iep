@@ -426,7 +426,9 @@ export class LambdaFunctionStack extends cdk.Stack {
     const functionsNeedingDDBAccess = [
       this.mistralOCRFunction,
       this.redactOCRFunction,
-      this.parsingAgentFunction
+      this.parsingAgentFunction,
+      this.transformAgentFunction,
+      this.missingInfoAgentFunction
     ];
 
     functionsNeedingDDBAccess.forEach(func => {
