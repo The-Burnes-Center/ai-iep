@@ -24,6 +24,7 @@ import ConsentForm from './pages/profile/ConsentForm';
 import WelcomeIntro from './pages/profile/WelcomeIntro';
 import AboutApp from './pages/profile/AboutApp';
 import SupportCenter from './components/SupportCenter';
+import SurveyForm from "./components/SurveyForm";
 import AboutAIEP from './components/AboutAIEP';
 
 function AppContent() {
@@ -74,6 +75,7 @@ function AppContent() {
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
             <Route path="/revoke-consent" element={<RevokeConsent />} />
             <Route path="/support-center" element={<SupportCenter />} />
+            <Route path="/survey-form" element={<SurveyForm />} />
             <Route path="/about-aiep" element={<AboutAIEP />} />
         </Routes>
       {/* </div> */}
