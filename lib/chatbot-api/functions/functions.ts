@@ -465,14 +465,14 @@ export class LambdaFunctionStack extends cdk.Stack {
     // Replace ARN placeholders with actual Lambda ARNs  
     const aslString = JSON.stringify(aslDefinition)
       .replace(/\$\{DDBServiceArn\}/g, this.ddbServiceFunction.functionArn)
-      .replace('${MistralOCRArn}', this.mistralOCRFunction.functionArn)
-      .replace('${RedactOCRArn}', this.redactOCRFunction.functionArn)
-      .replace('${DeleteOriginalArn}', this.deleteOriginalFunction.functionArn)
-      .replace('${ParsingAgentArn}', this.parsingAgentFunction.functionArn)
-      .replace('${MissingInfoAgentArn}', this.missingInfoAgentFunction.functionArn)
-      .replace('${CheckLanguagePrefsArn}', this.checkLanguagePrefsFunction.functionArn)
-      .replace('${TranslateContentArn}', this.translateContentFunction.functionArn)
-      .replace('${FinalizeResultsArn}', this.finalizeResultsFunction.functionArn);
+      .replace(/\$\{MistralOCRArn\}/g, this.mistralOCRFunction.functionArn)
+      .replace(/\$\{RedactOCRArn\}/g, this.redactOCRFunction.functionArn)
+      .replace(/\$\{DeleteOriginalArn\}/g, this.deleteOriginalFunction.functionArn)
+      .replace(/\$\{ParsingAgentArn\}/g, this.parsingAgentFunction.functionArn)
+      .replace(/\$\{MissingInfoAgentArn\}/g, this.missingInfoAgentFunction.functionArn)
+      .replace(/\$\{CheckLanguagePrefsArn\}/g, this.checkLanguagePrefsFunction.functionArn)
+      .replace(/\$\{TranslateContentArn\}/g, this.translateContentFunction.functionArn)
+      .replace(/\$\{FinalizeResultsArn\}/g, this.finalizeResultsFunction.functionArn);
     
     aslDefinition = JSON.parse(aslString);
 
