@@ -147,20 +147,8 @@ def _fallback_to_original_document(iep_id: str, child_id: str | None):
     analysis = _agentic_missing_info(ocr_text)
     logger.info(f"Identify missing info result (fallback) for {iep_id}: {json.dumps(analysis)}")
 
-    # Persist results back to the same item
-    try:
-        table = _get_table()
-        key: Dict[str, Any] = {'iepId': iep_id}
-        if child_id:
-            key['childId'] = child_id
-        items = analysis.get('items') if isinstance(analysis, dict) else None
-        table.update_item(
-            Key=key,
-            UpdateExpression='SET missingInfo = :mi',
-            ExpressionAttributeValues={ ':mi': (items if isinstance(items, list) else []) }
-        )
-    except Exception as e:
-        logger.warning(f"Failed to write missing info: {str(e)}")
+    # Note: Results are now saved by the missing info agent via DDB service
+    # No direct table write needed here to avoid conflicts with final results
 
     return { 'statusCode': 200, 'body': json.dumps({'iepId': iep_id, 'items': analysis.get('items', [])}) }
 
@@ -241,20 +229,8 @@ def lambda_handler(event, context):
 
     logger.info(f"Identify missing info result for {iep_id}: {json.dumps(analysis)}")
 
-    # Persist results back to the same item
-    try:
-        table = _get_table()
-        key: Dict[str, Any] = {'iepId': iep_id}
-        if child_id:
-            key['childId'] = child_id
-        items = analysis.get('items') if isinstance(analysis, dict) else None
-        table.update_item(
-            Key=key,
-            UpdateExpression='SET missingInfo = :mi',
-            ExpressionAttributeValues={ ':mi': (items if isinstance(items, list) else []) }
-        )
-    except Exception as e:
-        logger.warning(f"Failed to write missing info: {str(e)}")
+    # Note: Results are now saved by the missing info agent via DDB service
+    # No direct table write needed here to avoid conflicts with final results
 
     return { 'statusCode': 200, 'body': json.dumps({'iepId': iep_id, 'items': analysis.get('items', [])}) }
 

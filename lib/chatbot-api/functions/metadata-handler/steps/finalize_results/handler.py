@@ -69,8 +69,8 @@ def lambda_handler(event, context):
         if english_ddb_result.get('statusCode') == 200:
             english_result = json.loads(english_ddb_result['body'])['data']
             
-            # Extract and store in API-compatible format
-            final_result['summaries']['en'] = english_result.get('summaries', '')
+            # Extract and store in API-compatible format (note: parsing agent returns 'summary' not 'summaries')
+            final_result['summaries']['en'] = english_result.get('summary', '')  # Fixed: was 'summaries', now 'summary'
             final_result['sections']['en'] = english_result.get('sections', [])
             final_result['document_index']['en'] = english_result.get('document_index', '')
             final_result['abbreviations']['en'] = english_result.get('abbreviations', [])
@@ -116,9 +116,18 @@ def lambda_handler(event, context):
         if missing_info_ddb_result.get('statusCode') == 200:
             missing_info_result = json.loads(missing_info_ddb_result['body'])['data']
             
-            # Store English missing info in language map format
-            final_result['missingInfo']['en'] = missing_info_result if isinstance(missing_info_result, list) else []
+            # Debug logging for missing info
+            print(f"DEBUG: Retrieved missing info result from DDB: {json.dumps(missing_info_result, indent=2)[:500]}")
             
+            # Extract items from the missing info result (it's structured as {'iepId': x, 'items': [...]})
+            if isinstance(missing_info_result, dict) and 'items' in missing_info_result:
+                final_result['missingInfo']['en'] = missing_info_result['items']
+            elif isinstance(missing_info_result, list):
+                final_result['missingInfo']['en'] = missing_info_result
+            else:
+                final_result['missingInfo']['en'] = []
+            
+            print(f"DEBUG: Final missing info stored: {len(final_result['missingInfo']['en'])} items")
             print("Added English missing info result to final result")
         else:
             print("English missing info result not found")
