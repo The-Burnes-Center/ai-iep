@@ -51,7 +51,6 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly deleteOriginalFunction : lambda.Function;
   public readonly parsingAgentFunction : lambda.Function;
   public readonly missingInfoAgentFunction : lambda.Function;
-  public readonly transformAgentFunction : lambda.Function;
   public readonly checkLanguagePrefsFunction : lambda.Function;
   public readonly translateContentFunction : lambda.Function;
   public readonly combineResultsFunction : lambda.Function;
@@ -417,11 +416,6 @@ export class LambdaFunctionStack extends cdk.Stack {
 
     // Note: Removed saveEnglishFunction, saveFinalFunction, recordFailureFunction - replaced by DDB service calls
 
-    this.transformAgentFunction = createStepFunctionLambda(
-      'TransformAgentFunction',
-      'metadata-handler/steps/transform_agent',
-      900
-    );
 
     this.checkLanguagePrefsFunction = createStepFunctionLambda(
       'CheckLanguagePrefsFunction',
@@ -455,7 +449,6 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.mistralOCRFunction,
       this.redactOCRFunction,
       this.parsingAgentFunction,
-      this.transformAgentFunction,  
       this.missingInfoAgentFunction,
       this.translateContentFunction,
       this.combineResultsFunction,
@@ -484,7 +477,6 @@ export class LambdaFunctionStack extends cdk.Stack {
       .replace('${DeleteOriginalArn}', this.deleteOriginalFunction.functionArn)
       .replace('${ParsingAgentArn}', this.parsingAgentFunction.functionArn)
       .replace('${MissingInfoAgentArn}', this.missingInfoAgentFunction.functionArn)
-      .replace('${TransformAgentArn}', this.transformAgentFunction.functionArn)
       .replace('${CheckLanguagePrefsArn}', this.checkLanguagePrefsFunction.functionArn)
       .replace('${TranslateContentArn}', this.translateContentFunction.functionArn)
       .replace('${CombineResultsArn}', this.combineResultsFunction.functionArn)
@@ -507,7 +499,6 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.deleteOriginalFunction,
       this.parsingAgentFunction,
       this.missingInfoAgentFunction,
-      this.transformAgentFunction,
       this.checkLanguagePrefsFunction,
       this.translateContentFunction,
       this.combineResultsFunction,
@@ -568,7 +559,6 @@ export class LambdaFunctionStack extends cdk.Stack {
         this.deleteOriginalFunction,
         this.parsingAgentFunction,
         this.missingInfoAgentFunction,
-        this.transformAgentFunction,
         this.checkLanguagePrefsFunction,
         this.translateContentFunction,
         this.combineResultsFunction,
