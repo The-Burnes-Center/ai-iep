@@ -483,6 +483,17 @@ export class LambdaFunctionStack extends cdk.Stack {
       timeout: cdk.Duration.minutes(30)
     });
 
+    // Add explicit dependencies to ensure all Lambda functions are created before state machine
+    this.iepProcessingStateMachine.node.addDependency(this.ddbServiceFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.mistralOCRFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.redactOCRFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.deleteOriginalFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.parsingAgentFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.missingInfoAgentFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.checkLanguagePrefsFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.translateContentFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.finalizeResultsFunction);
+
     // Grant the state machine permission to invoke all step functions
     const stepFunctionsList = [
       this.ddbServiceFunction,
