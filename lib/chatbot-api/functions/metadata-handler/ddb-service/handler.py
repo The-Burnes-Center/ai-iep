@@ -19,12 +19,12 @@ def lambda_handler(event, context):
     
     Expected event structure:
     {
-        "operation": "update_progress|get_user_prefs|save_results|record_failure|get_document",
+        "operation": "update_progress|get_user_prefs|save_results|record_failure|get_document|save_ocr_data|get_ocr_data|get_analysis_data|save_final_results",
         "params": {
             // operation-specific parameters
         }
     }
-    """
+"""
     print(f"DDB Service received: {json.dumps(event, default=str)}")
     
     try:
@@ -41,6 +41,14 @@ def lambda_handler(event, context):
             return record_failure(params)
         elif operation == 'get_document':
             return get_document(params)
+        elif operation == 'save_ocr_data':
+            return save_ocr_data(params)
+        elif operation == 'get_ocr_data':
+            return get_ocr_data(params)
+        elif operation == 'get_analysis_data':
+            return get_analysis_data(params)
+        elif operation == 'save_final_results':
+            return save_final_results(params)
         else:
             raise ValueError(f"Unknown operation: {operation}")
             
@@ -225,4 +233,151 @@ def get_document(params):
     return {
         'statusCode': 200,
         'body': json.dumps(item, default=str)
+    }
+
+def save_ocr_data(params):
+    """Save OCR data to DynamoDB"""
+    iep_id = params['iep_id']
+    child_id = params['child_id']
+    user_id = params['user_id']
+    ocr_data = params['ocr_data']
+    data_type = params.get('data_type', 'ocr_result')  # 'ocr_result' or 'redacted_ocr_result'
+    
+    update_expression = f"SET {data_type} = :ocr_data, updated_at = :updated_at"
+    expression_values = {
+        ':ocr_data': ocr_data,
+        ':updated_at': datetime.utcnow().isoformat()
+    }
+    
+    table.update_item(
+        Key={
+            'iepId': iep_id,
+            'childId': child_id
+        },
+        UpdateExpression=update_expression,
+        ExpressionAttributeValues=expression_values
+    )
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'message': f'{data_type} saved successfully',
+            'iep_id': iep_id
+        }, default=str)
+    }
+
+def get_ocr_data(params):
+    """Get OCR data from DynamoDB"""
+    iep_id = params['iep_id']
+    child_id = params['child_id']
+    user_id = params['user_id']
+    data_type = params.get('data_type', 'ocr_result')  # 'ocr_result' or 'redacted_ocr_result'
+    
+    response = table.get_item(
+        Key={
+            'iepId': iep_id,
+            'childId': child_id
+        }
+    )
+    
+    if 'Item' not in response:
+        return {
+            'statusCode': 404,
+            'body': json.dumps({'error': 'Document not found'})
+        }
+    
+    item = response['Item']
+    
+    if data_type not in item:
+        return {
+            'statusCode': 404,
+            'body': json.dumps({'error': f'{data_type} not found'})
+        }
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'data': item[data_type]
+        }, default=str)
+    }
+
+def save_final_results(params):
+    """Save final results to DynamoDB in API-compatible format"""
+    iep_id = params['iep_id']
+    child_id = params['child_id']
+    user_id = params['user_id']
+    final_result = params['final_result']
+    
+    # Extract individual components from final result
+    summaries = final_result.get('summaries', {})
+    sections = final_result.get('sections', {})
+    document_index = final_result.get('document_index', {})
+    abbreviations = final_result.get('abbreviations', {})
+    missing_info = final_result.get('missingInfo', {})  # Changed to map with language keys
+    
+    # Build update expression for all fields
+    update_expression = "SET summaries = :summaries, sections = :sections, document_index = :document_index, abbreviations = :abbreviations, missingInfo = :missing_info, updated_at = :updated_at"
+    
+    expression_values = {
+        ':summaries': summaries,
+        ':sections': sections,
+        ':document_index': document_index,
+        ':abbreviations': abbreviations,
+        ':missing_info': missing_info,
+        ':updated_at': datetime.utcnow().isoformat()
+    }
+    
+    table.update_item(
+        Key={
+            'iepId': iep_id,
+            'childId': child_id
+        },
+        UpdateExpression=update_expression,
+        ExpressionAttributeValues=expression_values
+    )
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'message': 'Final results saved successfully',
+            'iep_id': iep_id,
+            'summaries_languages': list(summaries.keys()),
+            'sections_languages': list(sections.keys()),
+            'missing_info_languages': list(missing_info.keys())
+        }, default=str)
+    }
+
+def get_analysis_data(params):
+    """Get analysis data from DynamoDB (english_result, missing_info_result, etc.)"""
+    iep_id = params['iep_id']
+    child_id = params['child_id']
+    user_id = params['user_id']
+    data_type = params.get('data_type', 'english_result')  # 'english_result', 'missing_info_result', etc.
+    
+    response = table.get_item(
+        Key={
+            'iepId': iep_id,
+            'childId': child_id
+        }
+    )
+    
+    if 'Item' not in response:
+        return {
+            'statusCode': 404,
+            'body': json.dumps({'error': 'Document not found'})
+        }
+    
+    item = response['Item']
+    
+    if data_type not in item:
+        return {
+            'statusCode': 404,
+            'body': json.dumps({'error': f'{data_type} not found'})
+        }
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps({
+            'data': item[data_type]
+        }, default=str)
     }

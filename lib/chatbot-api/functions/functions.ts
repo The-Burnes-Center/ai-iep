@@ -52,6 +52,10 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly parsingAgentFunction : lambda.Function;
   public readonly missingInfoAgentFunction : lambda.Function;
   public readonly transformAgentFunction : lambda.Function;
+  public readonly checkLanguagePrefsFunction : lambda.Function;
+  public readonly translateContentFunction : lambda.Function;
+  public readonly combineResultsFunction : lambda.Function;
+  public readonly finalizeResultsFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
@@ -249,13 +253,40 @@ export class LambdaFunctionStack extends cdk.Stack {
     // STEP FUNCTIONS REFACTORED METADATA HANDLER
     // ==========================================
 
+    // Create DDB service function first so we can reference it in environment variables
+    this.ddbServiceFunction = createTaggedLambda('DDBServiceFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler/ddb-service'), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
+      }),
+      handler: 'handler.lambda_handler',
+      environment: {
+        "BUCKET": props.knowledgeBucket.bucketName,
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+      },
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 1024,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
+    });
+
+
     // Common environment variables for step functions
     const stepFunctionEnvVars = {
       "BUCKET": props.knowledgeBucket.bucketName,
       "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
       "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
       "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
-      "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+      "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+      "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName
     };
 
     // Common permissions for step function Lambdas
@@ -349,12 +380,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       return func;
     };
 
-    // Create DDB service function for centralized database operations
-    this.ddbServiceFunction = createStepFunctionLambda(
-      'DDBServiceFunction',
-      'metadata-handler/ddb-service',
-      60
-    );
+    // DDB service function already created above with proper environment variables
 
     // Create core business logic step functions (no more individual DDB operations)
     // Note: Removed updateDDBStartFunction - replaced by DDB service calls
@@ -397,6 +423,53 @@ export class LambdaFunctionStack extends cdk.Stack {
       900
     );
 
+    this.checkLanguagePrefsFunction = createStepFunctionLambda(
+      'CheckLanguagePrefsFunction',
+      'metadata-handler/steps/check_language_prefs',
+      60
+    );
+
+    this.translateContentFunction = createStepFunctionLambda(
+      'TranslateContentFunction',
+      'metadata-handler/steps/translate_content',
+      600
+    );
+
+    this.combineResultsFunction = createStepFunctionLambda(
+      'CombineResultsFunction',
+      'metadata-handler/steps/combine_results',
+      300
+    );
+
+    this.finalizeResultsFunction = createStepFunctionLambda(
+      'FinalizeResultsFunction',
+      'metadata-handler/steps/finalize_results',
+      300
+    );
+
+    // Add step function policies to DDB service function (created before stepFunctionPolicies were defined)
+    stepFunctionPolicies.forEach(policy => this.ddbServiceFunction.addToRolePolicy(policy));
+
+    // Grant step functions permission to invoke DDB service
+    const functionsNeedingDDBAccess = [
+      this.mistralOCRFunction,
+      this.redactOCRFunction,
+      this.parsingAgentFunction,
+      this.transformAgentFunction,  
+      this.missingInfoAgentFunction,
+      this.translateContentFunction,
+      this.combineResultsFunction,
+      this.finalizeResultsFunction
+    ];
+
+    functionsNeedingDDBAccess.forEach(func => {
+      func.addToRolePolicy(new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['lambda:InvokeFunction'],
+        resources: [this.ddbServiceFunction.functionArn]
+      }));
+    });
+
     // Note: Lambda invoke permission for missing info agent will be added after identifyMissingInfoFunction is created
 
     // Load and customize the ASL definition
@@ -411,7 +484,11 @@ export class LambdaFunctionStack extends cdk.Stack {
       .replace('${DeleteOriginalArn}', this.deleteOriginalFunction.functionArn)
       .replace('${ParsingAgentArn}', this.parsingAgentFunction.functionArn)
       .replace('${MissingInfoAgentArn}', this.missingInfoAgentFunction.functionArn)
-      .replace('${TransformAgentArn}', this.transformAgentFunction.functionArn);
+      .replace('${TransformAgentArn}', this.transformAgentFunction.functionArn)
+      .replace('${CheckLanguagePrefsArn}', this.checkLanguagePrefsFunction.functionArn)
+      .replace('${TranslateContentArn}', this.translateContentFunction.functionArn)
+      .replace('${CombineResultsArn}', this.combineResultsFunction.functionArn)
+      .replace('${FinalizeResultsArn}', this.finalizeResultsFunction.functionArn);
     
     aslDefinition = JSON.parse(aslString);
 
@@ -430,7 +507,11 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.deleteOriginalFunction,
       this.parsingAgentFunction,
       this.missingInfoAgentFunction,
-      this.transformAgentFunction
+      this.transformAgentFunction,
+      this.checkLanguagePrefsFunction,
+      this.translateContentFunction,
+      this.combineResultsFunction,
+      this.finalizeResultsFunction
     ];
     
     stepFunctionsList.forEach(func => {
@@ -488,6 +569,10 @@ export class LambdaFunctionStack extends cdk.Stack {
         this.parsingAgentFunction,
         this.missingInfoAgentFunction,
         this.transformAgentFunction,
+        this.checkLanguagePrefsFunction,
+        this.translateContentFunction,
+        this.combineResultsFunction,
+        this.finalizeResultsFunction,
         this.orchestratorFunction
       ].forEach(func => func.addToRolePolicy(kmsPolicy));
     }
@@ -511,7 +596,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       handler: 'lambda_function.lambda_handler',
       environment: {
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName
       },
       timeout: cdk.Duration.seconds(300),
       logRetention: logs.RetentionDays.ONE_YEAR,
@@ -543,6 +629,13 @@ export class LambdaFunctionStack extends cdk.Stack {
     }));
 
     this.identifyMissingInfoFunction = identifyMissingInfoFunction;
+
+    // Grant IdentifyMissingInfoFunction permission to invoke DDB service
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['lambda:InvokeFunction'],
+      resources: [this.ddbServiceFunction.functionArn]
+    }));
 
     // Allow metadata handler to invoke the identify-missing-info function
     metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({

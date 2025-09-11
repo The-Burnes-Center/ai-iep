@@ -2,7 +2,9 @@
 Redact PII from OCR text using AWS Comprehend - Core business logic only
 """
 import json
+import os
 import traceback
+import boto3
 from comprehend_redactor import redact_pii_from_texts
 
 def lambda_handler(event, context):
@@ -13,51 +15,121 @@ def lambda_handler(event, context):
     print(f"RedactOCR handler received: {json.dumps(event)}")
     
     try:
-        ocr_result = event['ocr_result']
+        iep_id = event['iep_id']
+        user_id = event['user_id']
+        child_id = event['child_id']
         
         print("Starting PII redaction")
-        print(f"OCR result type: {type(ocr_result)}")
-        print(f"OCR result keys: {list(ocr_result.keys()) if isinstance(ocr_result, dict) else 'Not a dict'}")
+        print(f"Getting OCR data from DynamoDB for iepId: {iep_id}")
+        
+        # Get OCR result from DynamoDB via centralized DDB service
+        lambda_client = boto3.client('lambda')
+        ddb_service_name = event.get('ddb_service_arn') or os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
+        
+        ddb_payload = {
+            'operation': 'get_ocr_data',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'data_type': 'ocr_result'
+            }
+        }
+        
+        ddb_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(ddb_payload)
+        )
+        
+        # Handle Lambda invoke response safely
+        payload_response = ddb_response['Payload'].read()
+        print(f"DDB raw response: {payload_response}")
+        
+        if not payload_response:
+            raise Exception("Empty response from DDB service")
+        
+        try:
+            ddb_result = json.loads(payload_response)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Failed to parse DDB service response as JSON: {e}. Response: {payload_response}")
+        
+        print(f"DDB parsed result: {ddb_result}")
+        
+        if not ddb_result or ddb_result.get('statusCode') != 200:
+            raise Exception(f"Failed to get OCR data from DDB: {ddb_result}")
+        
+        # Extract OCR data from DDB response
+        response_body = json.loads(ddb_result['body'])
+        actual_ocr_result = response_body['data']
+        
+        print(f"Retrieved OCR data from DynamoDB: {len(actual_ocr_result.get('pages', []))} pages")
+        print(f"OCR result keys: {list(actual_ocr_result.keys()) if isinstance(actual_ocr_result, dict) else 'Not a dict'}")
         
         # Handle different OCR result formats
         page_texts = []
         
-        # Format 1: Legacy format with 'pages' array
-        if ocr_result and 'pages' in ocr_result and isinstance(ocr_result['pages'], list):
-            print(f"Processing legacy OCR format with {len(ocr_result['pages'])} pages")
+        # Format 1: OCR format with 'pages' array (Mistral and legacy)
+        if actual_ocr_result and 'pages' in actual_ocr_result and isinstance(actual_ocr_result['pages'], list):
+            print(f"Processing OCR format with {len(actual_ocr_result['pages'])} pages")
             
-            for page in ocr_result['pages']:
-                if 'text' in page:
-                    page_texts.append(page['text'])
+            for page in actual_ocr_result['pages']:
+                # Follow original monolithic lambda priority: content → text → markdown → fallback
+                if 'content' in page and page.get('content'):
+                    page_texts.append(page.get('content', ''))
+                elif 'text' in page and page.get('text'):
+                    page_texts.append(page.get('text', ''))
+                elif 'markdown' in page and page.get('markdown'):
+                    page_texts.append(page.get('markdown', ''))
+                else:
+                    # Fallback: find any string field with substantial content
+                    text_fields = [v for k, v in page.items() 
+                                  if isinstance(v, str) and len(v) > 20]
+                    if text_fields:
+                        page_texts.append(text_fields[0])
+                    else:
+                        page_texts.append('')
         
         # Format 2: Mistral OCR format with 'document' structure
-        elif ocr_result and 'document' in ocr_result:
+        elif actual_ocr_result and 'document' in actual_ocr_result:
             print("Processing Mistral OCR format")
-            document = ocr_result['document']
+            document = actual_ocr_result['document']
             
             if 'pages' in document and isinstance(document['pages'], list):
-                print(f"Found {len(document['pages'])} pages in Mistral format")
+                print(f"Found {len(document['pages'])} pages in document format")
                 for page in document['pages']:
-                    if 'text' in page:
-                        page_texts.append(page['text'])
+                    if 'content' in page and page.get('content'):
+                        page_texts.append(page.get('content', ''))
+                    elif 'text' in page and page.get('text'):
+                        page_texts.append(page.get('text', ''))
+                    elif 'markdown' in page and page.get('markdown'):
+                        page_texts.append(page.get('markdown', ''))
+                    else:
+                        # Fallback
+                        text_fields = [v for k, v in page.items() 
+                                      if isinstance(v, str) and len(v) > 20]
+                        if text_fields:
+                            page_texts.append(text_fields[0])
+                        else:
+                            page_texts.append('')
             elif 'text' in document:
                 # Single text field for entire document
                 print("Found single text field in Mistral document")
                 page_texts.append(document['text'])
         
         # Format 3: Direct text content (fallback)
-        elif ocr_result and 'text' in ocr_result:
+        elif actual_ocr_result and 'text' in actual_ocr_result:
             print("Processing direct text format")
-            page_texts.append(ocr_result['text'])
+            page_texts.append(actual_ocr_result['text'])
         
         # Format 4: Check if it's a string directly
-        elif isinstance(ocr_result, str):
+        elif isinstance(actual_ocr_result, str):
             print("Processing string format")
-            page_texts.append(ocr_result)
+            page_texts.append(actual_ocr_result)
         
         else:
-            print(f"Unrecognized OCR format. Available keys: {list(ocr_result.keys()) if isinstance(ocr_result, dict) else 'N/A'}")
-            print(f"OCR result sample: {str(ocr_result)[:500]}")
+            print(f"Unrecognized OCR format. Available keys: {list(actual_ocr_result.keys()) if isinstance(actual_ocr_result, dict) else 'N/A'}")
+            print(f"OCR result sample: {str(actual_ocr_result)[:500]}")
             raise Exception("Invalid OCR result format for redaction")
         
         if page_texts:
@@ -68,35 +140,85 @@ def lambda_handler(event, context):
             
             if redacted_texts:
                 # Create redacted OCR result maintaining original structure
-                redacted_ocr_result = {**ocr_result}  # Copy original structure
+                redacted_ocr_result = {**actual_ocr_result}  # Copy original structure
+                
+                # Get reference to the actual OCR data to update
+                target_ocr_result = redacted_ocr_result
+                if 'ocr_result' in redacted_ocr_result:
+                    target_ocr_result = redacted_ocr_result['ocr_result']
                 
                 # Update based on detected format
-                if 'pages' in ocr_result and isinstance(ocr_result['pages'], list):
-                    # Legacy format
-                    for i, page in enumerate(redacted_ocr_result['pages']):
+                if 'pages' in actual_ocr_result and isinstance(actual_ocr_result['pages'], list):
+                    # Follow original monolithic lambda priority: content → text → markdown
+                    for i, page in enumerate(target_ocr_result['pages']):
                         if i < len(redacted_texts):
-                            page['text'] = redacted_texts[i]
-                elif 'document' in ocr_result:
-                    # Mistral format
-                    if 'pages' in ocr_result['document']:
-                        for i, page in enumerate(redacted_ocr_result['document']['pages']):
-                            if i < len(redacted_texts):
+                            if 'content' in page:
+                                page['content'] = redacted_texts[i]
+                            elif 'text' in page:
                                 page['text'] = redacted_texts[i]
-                    elif 'text' in ocr_result['document']:
-                        redacted_ocr_result['document']['text'] = redacted_texts[0]
-                elif 'text' in ocr_result:
+                            elif 'markdown' in page:
+                                page['markdown'] = redacted_texts[i]
+                elif 'document' in actual_ocr_result:
+                    # Document format
+                    if 'pages' in actual_ocr_result['document']:
+                        for i, page in enumerate(target_ocr_result['document']['pages']):
+                            if i < len(redacted_texts):
+                                if 'content' in page:
+                                    page['content'] = redacted_texts[i]
+                                elif 'text' in page:
+                                    page['text'] = redacted_texts[i]
+                                elif 'markdown' in page:
+                                    page['markdown'] = redacted_texts[i]
+                    elif 'text' in actual_ocr_result['document']:
+                        target_ocr_result['document']['text'] = redacted_texts[0]
+                elif 'text' in actual_ocr_result:
                     # Direct text format
-                    redacted_ocr_result['text'] = redacted_texts[0]
-                elif isinstance(ocr_result, str):
-                    # String format
-                    redacted_ocr_result = redacted_texts[0]
+                    target_ocr_result['text'] = redacted_texts[0]
+                elif isinstance(actual_ocr_result, str):
+                    # String format - this case is more complex with nested structure
+                    if 'ocr_result' in redacted_ocr_result:
+                        redacted_ocr_result['ocr_result'] = redacted_texts[0]
+                    else:
+                        redacted_ocr_result = redacted_texts[0]
                 
                 print(f"PII redaction completed successfully. Stats: {stats}")
                 
+                # Save redacted OCR result to DynamoDB via centralized DDB service
+                ddb_save_payload = {
+                    'operation': 'save_ocr_data',
+                    'params': {
+                        'iep_id': iep_id,
+                        'user_id': user_id,
+                        'child_id': child_id,
+                        'ocr_data': redacted_ocr_result,
+                        'data_type': 'redacted_ocr_result'
+                    }
+                }
+                
+                ddb_save_response = lambda_client.invoke(
+                    FunctionName=ddb_service_name,
+                    InvocationType='RequestResponse',
+                    Payload=json.dumps(ddb_save_payload)
+                )
+                
+                ddb_save_result = json.loads(ddb_save_response['Payload'].read())
+                print(f"DDB save redacted result: {ddb_save_result}")
+                
+                if ddb_save_result.get('statusCode') != 200:
+                    raise Exception(f"Failed to save redacted OCR data to DDB: {ddb_save_result}")
+                
+                print(f"Successfully saved redacted OCR data to DynamoDB for iepId: {iep_id}")
+                
+                # Return minimal metadata (no large data in Step Functions)
+                # Note: Don't pass through progress/current_step as they're managed by state machine
+                event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
                 return {
-                    **event,  # Pass through all input data
-                    'redacted_ocr_result': redacted_ocr_result,
-                    'redaction_stats': stats
+                    **event_copy,  # Pass through input data except progress tracking
+                    'redaction_status': 'completed',
+                    'page_count': len(actual_ocr_result.get('pages', [])),
+                    'redacted_pages': len(redacted_texts),
+                    'redaction_stats': stats,
+                    'ddb_save_result': ddb_save_result
                 }
             else:
                 raise Exception("PII redaction failed - no redacted text returned")

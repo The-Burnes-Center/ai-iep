@@ -2,6 +2,7 @@
 Translate content based on user language preferences - Core business logic only
 """
 import json
+import os
 import traceback
 import boto3
 from open_ai_agent import OpenAIAgent
@@ -12,8 +13,8 @@ def get_user_language_preferences(user_id):
     Returns list of language codes to translate to (excluding English)
     """
     if not user_id:
-        print("No user_id provided, defaulting to all languages")
-        return ['zh', 'es', 'vi']  # All non-English languages
+        print("No user_id provided, skipping translation")
+        return []  # Skip translation if no user_id
     
     try:
         dynamodb = boto3.resource('dynamodb')
@@ -23,8 +24,8 @@ def get_user_language_preferences(user_id):
             response = table.get_item(Key={'userId': user_id})
             
             if 'Item' not in response:
-                print(f"No user profile found for {user_id}, defaulting to all languages")
-                return ['zh', 'es', 'vi']  # All non-English languages
+                print(f"No user profile found for {user_id}, skipping translation")
+                return []  # Skip translation if no user profile
             
             user_profile = response['Item']
             target_languages = set()  # Use set to avoid duplicates
@@ -44,21 +45,21 @@ def get_user_language_preferences(user_id):
             # Convert set to list
             target_languages = list(target_languages)
             
-            # If no non-English languages found, default to all
+            # If no non-English languages found, return empty list (skip translation)
             if not target_languages:
-                print(f"No non-English languages found for user {user_id}, defaulting to all")
-                return ['zh', 'es', 'vi']
+                print(f"No non-English languages found for user {user_id}, skipping translation")
+                return []
             
             print(f"User {user_id} target languages: {target_languages}")
             return target_languages
             
         except Exception as e:
             print(f"Error accessing user profile for {user_id}: {str(e)}")
-            return ['zh', 'es', 'vi']  # Default to all languages on error
+            return []  # Skip translation on error
             
     except Exception as e:
         print(f"Error setting up DynamoDB connection: {str(e)}")
-        return ['zh', 'es', 'vi']  # Default to all languages on error
+        return []  # Skip translation on error
 
 def lambda_handler(event, context):
     """
@@ -68,9 +69,88 @@ def lambda_handler(event, context):
     print(f"TransformAgent handler received: {json.dumps(event)}")
     
     try:
+        iep_id = event['iep_id']
         user_id = event['user_id']
-        english_result = event['english_result']
-        missing_info_result = event.get('missing_info_result', {})
+        child_id = event['child_id']
+        
+        print("Retrieving analysis results from DynamoDB...")
+        
+        # Get English analysis result from DynamoDB via centralized DDB service
+        import boto3
+        
+        lambda_client = boto3.client('lambda')
+        ddb_service_name = os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
+        
+        # Get English analysis result
+        english_payload = {
+            'operation': 'get_analysis_data',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'data_type': 'english_result'
+            }
+        }
+        
+        english_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(english_payload)
+        )
+        
+        # Handle Lambda invoke response safely
+        english_payload_response = english_response['Payload'].read()
+        print(f"DDB raw response: {english_payload_response}")
+        
+        if not english_payload_response:
+            raise Exception("Empty response from DDB service")
+        
+        try:
+            english_ddb_result = json.loads(english_payload_response)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Failed to parse DDB service response as JSON: {e}. Response: {english_payload_response}")
+        
+        print(f"DDB parsed result: {english_ddb_result}")
+        
+        if not english_ddb_result or english_ddb_result.get('statusCode') != 200:
+            raise Exception(f"Failed to get English analysis data from DDB: {english_ddb_result}")
+        
+        english_result = json.loads(english_ddb_result['body'])['data']
+        
+        # Get missing info result 
+        missing_info_payload = {
+            'operation': 'get_analysis_data',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'data_type': 'missing_info_result'
+            }
+        }
+        
+        missing_info_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(missing_info_payload)
+        )
+        
+        # Handle Lambda invoke response safely
+        missing_info_payload_response = missing_info_response['Payload'].read()
+        
+        if not missing_info_payload_response:
+            print("Empty response from DDB service for missing info")
+            missing_info_ddb_result = {'statusCode': 404}
+        else:
+            try:
+                missing_info_ddb_result = json.loads(missing_info_payload_response)
+            except json.JSONDecodeError as e:
+                print(f"Failed to parse missing info DDB service response as JSON: {e}. Response: {missing_info_payload_response}")
+                missing_info_ddb_result = {'statusCode': 500}
+        missing_info_result = {}
+        if missing_info_ddb_result.get('statusCode') == 200:
+            missing_info_result = json.loads(missing_info_ddb_result['body'])['data']
+        else:
+            print("Missing info result not found, proceeding without it")
         
         print("Starting translation process")
         
@@ -78,9 +158,41 @@ def lambda_handler(event, context):
         target_languages = get_user_language_preferences(user_id)
         
         if not target_languages:
-            print("No target languages found, returning English-only result")
+            print("No target languages found, skipping translation and returning English-only result")
+            
+            # Save English-only final result directly to DynamoDB
+            final_result_payload = {
+                'operation': 'save_results',
+                'params': {
+                    'iep_id': iep_id,
+                    'user_id': user_id,
+                    'child_id': child_id,
+                    'results': {
+                        'en': english_result,
+                        'missing_info': missing_info_result
+                    },
+                    'result_type': 'final_multilingual'
+                }
+            }
+            
+            final_result_response = lambda_client.invoke(
+                FunctionName=ddb_service_name,
+                InvocationType='RequestResponse',
+                Payload=json.dumps(final_result_payload)
+            )
+            
+            final_result_ddb_result = json.loads(final_result_response['Payload'].read())
+            if final_result_ddb_result.get('statusCode') != 200:
+                raise Exception(f"Failed to save English-only result to DDB: {final_result_ddb_result}")
+            
+            print("English-only result saved successfully")
+            
+            # Don't pass through progress/current_step as they're managed by state machine
+            event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
             return {
-                **event,
+                **event_copy,
+                'translation_skipped': True,
+                'languages_processed': ['en'],
                 'final_result': {
                     'en': english_result,
                     'missing_info': missing_info_result
@@ -116,8 +228,36 @@ def lambda_handler(event, context):
             'missing_info': missing_info_result
         }
         
+        # Save final multilingual result to DynamoDB
+        final_result_payload = {
+            'operation': 'save_results',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'results': final_result,
+                'result_type': 'final_multilingual'
+            }
+        }
+        
+        final_result_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(final_result_payload)
+        )
+        
+        final_result_ddb_result = json.loads(final_result_response['Payload'].read())
+        if final_result_ddb_result.get('statusCode') != 200:
+            raise Exception(f"Failed to save final multilingual result to DDB: {final_result_ddb_result}")
+            
+        print("Final multilingual result saved successfully")
+        
+        # Don't pass through progress/current_step as they're managed by state machine
+        event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
         return {
-            **event,  # Pass through all input data
+            **event_copy,  # Pass through input data except progress tracking
+            'translation_completed': True,
+            'languages_processed': list(translated_results.keys()),
             'final_result': final_result
         }
         

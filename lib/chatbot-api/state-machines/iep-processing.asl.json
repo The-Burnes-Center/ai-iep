@@ -17,7 +17,7 @@
           "progress": 5
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -39,7 +39,7 @@
       "Type": "Task", 
       "Resource": "${MistralOCRArn}",
       "Comment": "Extract text from document using Mistral OCR API",
-      "ResultPath": "$.ocr_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -72,7 +72,7 @@
           "progress": 15
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -94,7 +94,7 @@
       "Type": "Task",
       "Resource": "${RedactOCRArn}",
       "Comment": "Redact PII from OCR text using AWS Comprehend",
-      "ResultPath": "$.redact_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -127,7 +127,7 @@
           "progress": 20
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -149,7 +149,7 @@
       "Type": "Task",
       "Resource": "${DeleteOriginalArn}",
       "Comment": "Delete original uploaded file from S3",
-      "ResultPath": "$.delete_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -182,7 +182,7 @@
           "progress": 22
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -250,8 +250,8 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "UpdateAnalysisProgress",
-      "ResultPath": "$.parallel_results"
+      "Next": "UpdateAnalysisProgress", 
+      "ResultPath": null
     },
     "UpdateAnalysisProgress": {
       "Type": "Task",
@@ -268,7 +268,7 @@
           "progress": 65
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -284,52 +284,19 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "SaveEnglishResults"
+      "Next": "CheckLanguagePrefs"
     },
-    "SaveEnglishResults": {
+    "CheckLanguagePrefs": {
       "Type": "Task",
-      "Resource": "${DDBServiceArn}",
-      "Comment": "Save English analysis results to DDB",
-      "Parameters": {
-        "operation": "save_results",
-        "params": {
-          "iep_id.$": "$.iep_id",
-          "child_id.$": "$.child_id", 
-          "user_id.$": "$.user_id",
-          "results.$": "$.parallel_results[0].english_result",
-          "result_type": "english_analysis"
-        }
-      },
-      "ResultPath": "$.save_result",
-      "Retry": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "MaxAttempts": 3,
-          "IntervalSeconds": 2,
-          "BackoffRate": 2
-        }
-      ],
-      "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "RecordFailure",
-          "ResultPath": "$.error"
-        }
-      ],
-      "Next": "TransformAgent"
-    },
-    "TransformAgent": {
-      "Type": "Task",
-      "Resource": "${TransformAgentArn}",
-      "Comment": "Translate content based on user language preferences",
+      "Resource": "${CheckLanguagePrefsArn}",
+      "Comment": "Check user language preferences to determine if translations are needed",
       "Parameters": {
         "iep_id.$": "$.iep_id",
         "child_id.$": "$.child_id", 
         "user_id.$": "$.user_id",
-        "english_result.$": "$.parallel_results[0].english_result",
-        "missing_info_result.$": "$.parallel_results[1].missing_info_result"
+        "s3_bucket.$": "$.s3_bucket",
+        "s3_key.$": "$.s3_key"
       },
-      "ResultPath": "$.transform_result",
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -345,7 +312,86 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "UpdateTranslationProgress"
+      "Next": "TranslationChoice"
+    },
+    "TranslationChoice": {
+      "Type": "Choice",
+      "Comment": "Decide whether to translate based on user language preferences",
+      "Choices": [
+        {
+          "Variable": "$.translation_needed",
+          "BooleanEquals": true,
+          "Next": "ParallelTranslations"
+        }
+      ],
+      "Default": "FinalizeResults"
+    },
+    "ParallelTranslations": {
+      "Type": "Parallel",
+      "Comment": "Translate parsing and missing info results using unified translation function",
+      "Branches": [
+        {
+          "StartAt": "TranslateParsingResult",
+          "States": {
+            "TranslateParsingResult": {
+              "Type": "Task",
+              "Resource": "${TranslateContentArn}",
+              "Comment": "Translate parsing agent results to target languages",
+              "Parameters": {
+                "iep_id.$": "$.iep_id",
+                "child_id.$": "$.child_id", 
+                "user_id.$": "$.user_id",
+                "target_languages.$": "$.target_languages",
+                "content_type": "parsing_result"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "TranslateMissingInfo",
+          "States": {
+            "TranslateMissingInfo": {
+              "Type": "Task",
+              "Resource": "${TranslateContentArn}",
+              "Comment": "Translate missing info results to target languages",
+              "Parameters": {
+                "iep_id.$": "$.iep_id",
+                "child_id.$": "$.child_id", 
+                "user_id.$": "$.user_id",
+                "target_languages.$": "$.target_languages",
+                "content_type": "missing_info"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateTranslationProgress",
+      "ResultPath": null
     },
     "UpdateTranslationProgress": {
       "Type": "Task",
@@ -362,7 +408,7 @@
           "progress": 85
         }
       },
-      "ResultPath": "$.ddb_result",
+      "ResultPath": null,
       "Retry": [
         {
           "ErrorEquals": ["States.ALL"],
@@ -378,54 +424,18 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "SaveFinalResults"
+      "Next": "FinalizeResults"
     },
-    "SaveFinalResults": {
+    "FinalizeResults": {
       "Type": "Task",
-      "Resource": "${DDBServiceArn}",
-      "Comment": "Save final multilingual results and mark as PROCESSED",
+      "Resource": "${FinalizeResultsArn}",
+      "Comment": "Combined step: combine results, save to DDB, and mark as completed",
       "Parameters": {
-        "operation": "save_results",
-        "params": {
-          "iep_id.$": "$.iep_id",
-          "child_id.$": "$.child_id", 
-          "user_id.$": "$.user_id",
-          "results.$": "$.transform_result.final_result",
-          "result_type": "final_analysis"
-        }
-      },
-      "ResultPath": "$.save_result",
-      "Retry": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "MaxAttempts": 3,
-          "IntervalSeconds": 2,
-          "BackoffRate": 2
-        }
-      ],
-      "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "RecordFailure",
-          "ResultPath": "$.error"
-        }
-      ],
-      "Next": "MarkCompleted"
-    },
-    "MarkCompleted": {
-      "Type": "Task",
-      "Resource": "${DDBServiceArn}",
-      "Comment": "Mark processing as completed with 100% progress",
-      "Parameters": {
-        "operation": "update_progress",
-        "params": {
-          "iep_id.$": "$.iep_id",
-          "child_id.$": "$.child_id", 
-          "user_id.$": "$.user_id",
-          "status": "PROCESSED",
-          "current_step": "completed",
-          "progress": 100
-        }
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id", 
+        "user_id.$": "$.user_id",
+        "target_languages.$": "$.target_languages",
+        "translation_needed.$": "$.translation_needed"
       },
       "Retry": [
         {

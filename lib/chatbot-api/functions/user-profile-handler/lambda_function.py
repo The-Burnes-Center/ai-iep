@@ -496,6 +496,8 @@ def get_child_documents(event: Dict) -> Dict:
                         'childId': doc['childId'],
                         'documentUrl': doc.get('documentUrl', f"s3://{os.environ.get('BUCKET', '')}/{doc['iepId']}"),
                         'status': doc.get('status', 'PROCESSING'),
+                        'progress': doc.get('progress', 0),
+                        'current_step': doc.get('current_step', 'initializing'),
                         'createdAt': doc.get('createdAt', ''),
                         'updatedAt': doc.get('updatedAt', '')
                     }
@@ -524,14 +526,30 @@ def get_child_documents(event: Dict) -> Dict:
                     else:
                         latest_doc['abbreviations'] = {}
 
-                    # Include missingInfo list (parent-focused insights)
+                    # Handle missingInfo (supports both old array format and new language map format)
                     if 'missingInfo' in doc:
                         try:
-                            latest_doc['missingInfo'] = clean_dynamodb_json(doc['missingInfo'])
+                            missing_info_data = clean_dynamodb_json(doc['missingInfo'])
+                            
+                            # Check if it's the new language map format
+                            if isinstance(missing_info_data, dict) and 'en' in missing_info_data:
+                                # New format: language map
+                                latest_doc['missingInfo'] = missing_info_data
+                            elif isinstance(missing_info_data, list):
+                                # Old format: array (backward compatibility)
+                                latest_doc['missingInfo'] = {'en': missing_info_data}
+                            else:
+                                # Fallback
+                                latest_doc['missingInfo'] = {'en': []}
                         except Exception:
-                            latest_doc['missingInfo'] = doc.get('missingInfo', [])
+                            # Fallback for any parsing issues
+                            missing_info_raw = doc.get('missingInfo', [])
+                            if isinstance(missing_info_raw, list):
+                                latest_doc['missingInfo'] = {'en': missing_info_raw}
+                            else:
+                                latest_doc['missingInfo'] = {'en': []}
                     else:
-                        latest_doc['missingInfo'] = []
+                        latest_doc['missingInfo'] = {'en': []}
         
         # If no document found
         if not latest_doc:
