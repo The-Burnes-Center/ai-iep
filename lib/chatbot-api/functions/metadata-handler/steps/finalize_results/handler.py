@@ -212,9 +212,15 @@ def lambda_handler(event, context):
             if missing_info_translations_result.get('statusCode') == 200:
                 missing_info_translations = json.loads(missing_info_translations_result['body'])['data']
                 
-                # Add translated missing info to language map
+                # Add translated missing info to language map (same structure as English: {'iepId': x, 'items': [...]})
                 for lang, content in missing_info_translations.items():
-                    final_result['missingInfo'][lang] = content if isinstance(content, list) else []
+                    # Extract items from the translated missing info result (same structure as English)
+                    if isinstance(content, dict) and 'items' in content:
+                        final_result['missingInfo'][lang] = content['items']
+                    elif isinstance(content, list):
+                        final_result['missingInfo'][lang] = content
+                    else:
+                        final_result['missingInfo'][lang] = []
                     
                 print(f"Added missing info translations for {list(missing_info_translations.keys())}")
             else:
