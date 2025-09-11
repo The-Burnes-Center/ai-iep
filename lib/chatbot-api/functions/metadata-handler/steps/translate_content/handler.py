@@ -1,5 +1,5 @@
 """
-Unified translation handler for both parsing results and missing info
+Minimal translation handler for both parsing results and missing info
 """
 import json
 import os
@@ -23,7 +23,7 @@ def lambda_handler(event, context):
         user_id = event['user_id'] 
         child_id = event['child_id']
         target_languages = event['target_languages']
-        content_type = event.get('content_type', 'parsing_result')  # Default to parsing_result for backward compatibility
+        content_type = event.get('content_type', 'parsing_result')
         
         if not target_languages:
             print("No target languages provided, skipping translation")
@@ -36,7 +36,7 @@ def lambda_handler(event, context):
         
         print(f"Translating {content_type} to languages: {target_languages}")
         
-        # Get source data from DynamoDB based on content type
+        # Get source data from DynamoDB
         lambda_client = boto3.client('lambda')
         ddb_service_name = os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
         
@@ -66,12 +66,10 @@ def lambda_handler(event, context):
             Payload=json.dumps(source_payload)
         )
         
-        # Handle Lambda invoke response safely
         source_payload_response = source_response['Payload'].read()
         
         if not source_payload_response:
             if content_type == 'missing_info':
-                # Missing info might not exist, handle gracefully
                 print("Missing info result not found, skipping translation")
                 event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
                 return {
@@ -85,9 +83,8 @@ def lambda_handler(event, context):
         try:
             source_ddb_result = json.loads(source_payload_response)
         except json.JSONDecodeError as e:
-            raise Exception(f"Failed to parse DDB service response as JSON: {e}. Response: {source_payload_response}")
+            raise Exception(f"Failed to parse DDB service response as JSON: {e}")
         
-        # Handle missing info gracefully
         if source_ddb_result.get('statusCode') != 200:
             if content_type == 'missing_info':
                 print("Missing info result not found, skipping translation")
@@ -116,7 +113,6 @@ def lambda_handler(event, context):
             
             if "error" in translated_content:
                 print(f"Translation to {lang} failed: {translated_content['error']}")
-                # Continue with other languages instead of failing completely
                 continue
             
             translations[lang] = translated_content
@@ -142,7 +138,6 @@ def lambda_handler(event, context):
             Payload=json.dumps(save_payload)
         )
         
-        # Handle Lambda invoke response safely
         save_payload_response = save_response['Payload'].read()
         
         if not save_payload_response:
@@ -151,14 +146,14 @@ def lambda_handler(event, context):
         try:
             save_result = json.loads(save_payload_response)
         except json.JSONDecodeError as e:
-            raise Exception(f"Failed to parse save DDB service response as JSON: {e}. Response: {save_payload_response}")
+            raise Exception(f"Failed to parse save DDB service response as JSON: {e}")
         
         if not save_result or save_result.get('statusCode') != 200:
             raise Exception(f"Failed to save {content_type} translations to DDB: {save_result}")
         
         print(f"{content_type} translations saved successfully")
         
-        # Don't pass through progress/current_step as they're managed by state machine
+        # Return result
         event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
         return {
             **event_copy,
