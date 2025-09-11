@@ -324,7 +324,7 @@
           "Next": "ParallelTranslations"
         }
       ],
-      "Default": "CombineResults"
+      "Default": "FinalizeResults"
     },
     "ParallelTranslations": {
       "Type": "Parallel",
@@ -410,81 +410,18 @@
           "ResultPath": "$.error"
         }
       ],
-      "Next": "CombineResults"
+      "Next": "FinalizeResults"
     },
-    "CombineResults": {
+    "FinalizeResults": {
       "Type": "Task",
-      "Resource": "${CombineResultsArn}",
-      "Comment": "Combine all English and translated results into final mega JSON",
+      "Resource": "${FinalizeResultsArn}",
+      "Comment": "Combined step: combine results, save to DDB, and mark as completed",
       "Parameters": {
         "iep_id.$": "$.iep_id",
         "child_id.$": "$.child_id", 
         "user_id.$": "$.user_id",
         "target_languages.$": "$.target_languages",
         "translation_needed.$": "$.translation_needed"
-      },
-      "Retry": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "MaxAttempts": 3,
-          "IntervalSeconds": 2,
-          "BackoffRate": 2
-        }
-      ],
-      "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "RecordFailure",
-          "ResultPath": "$.error"
-        }
-      ],
-      "Next": "SaveFinalResults"
-    },
-    "SaveFinalResults": {
-      "Type": "Task",
-      "Resource": "${DDBServiceArn}",
-      "Comment": "Save final multilingual results and mark as PROCESSED",
-      "Parameters": {
-        "operation": "save_final_results",
-        "params": {
-          "iep_id.$": "$.iep_id",
-          "child_id.$": "$.child_id", 
-          "user_id.$": "$.user_id",
-          "final_result.$": "$.final_result"
-        }
-      },
-      "ResultPath": null,
-      "Retry": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "MaxAttempts": 3,
-          "IntervalSeconds": 2,
-          "BackoffRate": 2
-        }
-      ],
-      "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "RecordFailure",
-          "ResultPath": "$.error"
-        }
-      ],
-      "Next": "MarkCompleted"
-    },
-    "MarkCompleted": {
-      "Type": "Task",
-      "Resource": "${DDBServiceArn}",
-      "Comment": "Mark processing as completed with 100% progress",
-      "Parameters": {
-        "operation": "update_progress",
-        "params": {
-          "iep_id.$": "$.iep_id",
-          "child_id.$": "$.child_id", 
-          "user_id.$": "$.user_id",
-          "status": "PROCESSED",
-          "current_step": "completed",
-          "progress": 100
-        }
       },
       "Retry": [
         {

@@ -56,6 +56,7 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly translateParsingResultFunction : lambda.Function;
   public readonly translateMissingInfoFunction : lambda.Function;
   public readonly combineResultsFunction : lambda.Function;
+  public readonly finalizeResultsFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
@@ -447,6 +448,12 @@ export class LambdaFunctionStack extends cdk.Stack {
       300
     );
 
+    this.finalizeResultsFunction = createStepFunctionLambda(
+      'FinalizeResultsFunction',
+      'metadata-handler/steps/finalize_results',
+      300
+    );
+
     // Add step function policies to DDB service function (created before stepFunctionPolicies were defined)
     stepFunctionPolicies.forEach(policy => this.ddbServiceFunction.addToRolePolicy(policy));
 
@@ -459,7 +466,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.missingInfoAgentFunction,
       this.translateParsingResultFunction,
       this.translateMissingInfoFunction,
-      this.combineResultsFunction
+      this.combineResultsFunction,
+      this.finalizeResultsFunction
     ];
 
     functionsNeedingDDBAccess.forEach(func => {
@@ -488,7 +496,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       .replace('${CheckLanguagePrefsArn}', this.checkLanguagePrefsFunction.functionArn)
       .replace('${TranslateParsingResultArn}', this.translateParsingResultFunction.functionArn)
       .replace('${TranslateMissingInfoArn}', this.translateMissingInfoFunction.functionArn)
-      .replace('${CombineResultsArn}', this.combineResultsFunction.functionArn);
+      .replace('${CombineResultsArn}', this.combineResultsFunction.functionArn)
+      .replace('${FinalizeResultsArn}', this.finalizeResultsFunction.functionArn);
     
     aslDefinition = JSON.parse(aslString);
 
@@ -511,7 +520,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.checkLanguagePrefsFunction,
       this.translateParsingResultFunction,
       this.translateMissingInfoFunction,
-      this.combineResultsFunction
+      this.combineResultsFunction,
+      this.finalizeResultsFunction
     ];
     
     stepFunctionsList.forEach(func => {
@@ -573,6 +583,7 @@ export class LambdaFunctionStack extends cdk.Stack {
         this.translateParsingResultFunction,
         this.translateMissingInfoFunction,
         this.combineResultsFunction,
+        this.finalizeResultsFunction,
         this.orchestratorFunction
       ].forEach(func => func.addToRolePolicy(kmsPolicy));
     }

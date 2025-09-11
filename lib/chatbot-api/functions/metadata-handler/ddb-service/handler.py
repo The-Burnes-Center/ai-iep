@@ -24,7 +24,7 @@ def lambda_handler(event, context):
             // operation-specific parameters
         }
     }
-    """
+"""
     print(f"DDB Service received: {json.dumps(event, default=str)}")
     
     try:
@@ -379,51 +379,5 @@ def get_analysis_data(params):
         'statusCode': 200,
         'body': json.dumps({
             'data': item[data_type]
-        }, default=str)
-    }
-
-def save_final_results(params):
-    """Save final results to DynamoDB in API-compatible format"""
-    iep_id = params['iep_id']
-    child_id = params['child_id']
-    user_id = params['user_id']
-    final_result = params['final_result']
-    
-    # Extract individual components from final result
-    summaries = final_result.get('summaries', {})
-    sections = final_result.get('sections', {})
-    document_index = final_result.get('document_index', {})
-    abbreviations = final_result.get('abbreviations', {})
-    missing_info = final_result.get('missingInfo', {})  # Changed to map with language keys
-    
-    # Build update expression for all fields
-    update_expression = "SET summaries = :summaries, sections = :sections, document_index = :document_index, abbreviations = :abbreviations, missingInfo = :missing_info, updated_at = :updated_at"
-    
-    expression_values = {
-        ':summaries': summaries,
-        ':sections': sections,
-        ':document_index': document_index,
-        ':abbreviations': abbreviations,
-        ':missing_info': missing_info,
-        ':updated_at': datetime.utcnow().isoformat()
-    }
-    
-    table.update_item(
-        Key={
-            'iepId': iep_id,
-            'childId': child_id
-        },
-        UpdateExpression=update_expression,
-        ExpressionAttributeValues=expression_values
-    )
-    
-    return {
-        'statusCode': 200,
-        'body': json.dumps({
-            'message': 'Final results saved successfully',
-            'iep_id': iep_id,
-            'summaries_languages': list(summaries.keys()),
-            'sections_languages': list(sections.keys()),
-            'missing_info_languages': list(missing_info.keys())
         }, default=str)
     }
