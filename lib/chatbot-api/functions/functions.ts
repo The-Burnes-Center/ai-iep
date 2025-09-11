@@ -53,8 +53,7 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly missingInfoAgentFunction : lambda.Function;
   public readonly transformAgentFunction : lambda.Function;
   public readonly checkLanguagePrefsFunction : lambda.Function;
-  public readonly translateParsingResultFunction : lambda.Function;
-  public readonly translateMissingInfoFunction : lambda.Function;
+  public readonly translateContentFunction : lambda.Function;
   public readonly combineResultsFunction : lambda.Function;
   public readonly finalizeResultsFunction : lambda.Function;
 
@@ -430,15 +429,9 @@ export class LambdaFunctionStack extends cdk.Stack {
       60
     );
 
-    this.translateParsingResultFunction = createStepFunctionLambda(
-      'TranslateParsingResultFunction',
-      'metadata-handler/steps/translate_parsing_result',
-      600
-    );
-
-    this.translateMissingInfoFunction = createStepFunctionLambda(
-      'TranslateMissingInfoFunction',
-      'metadata-handler/steps/translate_missing_info',
+    this.translateContentFunction = createStepFunctionLambda(
+      'TranslateContentFunction',
+      'metadata-handler/steps/translate_content',
       600
     );
 
@@ -464,8 +457,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.parsingAgentFunction,
       this.transformAgentFunction,  
       this.missingInfoAgentFunction,
-      this.translateParsingResultFunction,
-      this.translateMissingInfoFunction,
+      this.translateContentFunction,
       this.combineResultsFunction,
       this.finalizeResultsFunction
     ];
@@ -494,8 +486,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       .replace('${MissingInfoAgentArn}', this.missingInfoAgentFunction.functionArn)
       .replace('${TransformAgentArn}', this.transformAgentFunction.functionArn)
       .replace('${CheckLanguagePrefsArn}', this.checkLanguagePrefsFunction.functionArn)
-      .replace('${TranslateParsingResultArn}', this.translateParsingResultFunction.functionArn)
-      .replace('${TranslateMissingInfoArn}', this.translateMissingInfoFunction.functionArn)
+      .replace('${TranslateContentArn}', this.translateContentFunction.functionArn)
       .replace('${CombineResultsArn}', this.combineResultsFunction.functionArn)
       .replace('${FinalizeResultsArn}', this.finalizeResultsFunction.functionArn);
     
@@ -518,8 +509,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.missingInfoAgentFunction,
       this.transformAgentFunction,
       this.checkLanguagePrefsFunction,
-      this.translateParsingResultFunction,
-      this.translateMissingInfoFunction,
+      this.translateContentFunction,
       this.combineResultsFunction,
       this.finalizeResultsFunction
     ];
@@ -580,8 +570,7 @@ export class LambdaFunctionStack extends cdk.Stack {
         this.missingInfoAgentFunction,
         this.transformAgentFunction,
         this.checkLanguagePrefsFunction,
-        this.translateParsingResultFunction,
-        this.translateMissingInfoFunction,
+        this.translateContentFunction,
         this.combineResultsFunction,
         this.finalizeResultsFunction,
         this.orchestratorFunction
