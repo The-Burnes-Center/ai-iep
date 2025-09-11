@@ -80,12 +80,49 @@ def lambda_handler(event, context):
         
         print(f"English analysis completed. Generated {len(english_result.get('sections', []))} sections")
         
-        # Return event with English analysis results
+        # Save English analysis result to DynamoDB for later retrieval by CombineResults
+        save_payload = {
+            'operation': 'save_results',
+            'params': {
+                'iep_id': iep_id,
+                'user_id': user_id,
+                'child_id': child_id,
+                'results': english_result,
+                'result_type': 'english_result'
+            }
+        }
+        
+        save_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(save_payload)
+        )
+        
+        # Handle Lambda invoke response safely
+        save_payload_response = save_response['Payload'].read()
+        
+        if not save_payload_response:
+            raise Exception("Empty response from DDB service during save")
+        
+        try:
+            save_result = json.loads(save_payload_response)
+        except json.JSONDecodeError as e:
+            raise Exception(f"Failed to parse save DDB service response as JSON: {e}. Response: {save_payload_response}")
+        
+        if not save_result or save_result.get('statusCode') != 200:
+            raise Exception(f"Failed to save English result to DDB: {save_result}")
+        
+        print("English analysis result saved to DDB successfully")
+        
+        # Return minimal event (no need to pass large data through Step Functions)
         # Note: Don't pass through progress/current_step as they're managed by state machine
         event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
         return {
             **event_copy,  # Pass through input data except progress tracking
-            'english_result': english_result
+            'parsing_completed': True,
+            'sections_count': len(english_result.get('sections', [])),
+            'has_summary': bool(english_result.get('summaries', '').strip()),
+            'has_document_index': bool(english_result.get('document_index', '').strip())
         }
         
     except Exception as e:

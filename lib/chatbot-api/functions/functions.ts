@@ -455,7 +455,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.mistralOCRFunction,
       this.redactOCRFunction,
       this.parsingAgentFunction,
-      this.transformAgentFunction,
+      this.transformAgentFunction,  
       this.missingInfoAgentFunction,
       this.translateParsingResultFunction,
       this.translateMissingInfoFunction,
