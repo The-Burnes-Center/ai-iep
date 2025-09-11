@@ -44,9 +44,11 @@ def lambda_handler(event, context):
         if content_type == 'parsing_result':
             data_type = 'english_result'
             result_key = 'parsing_translations'
+            result_type = 'parsing_translations'  # Field name in DDB
         elif content_type == 'missing_info':
             data_type = 'missing_info_result'
             result_key = 'missing_info_translations'
+            result_type = 'missing_info_translations'  # Field name in DDB
         else:
             raise ValueError(f"Unsupported content_type: {content_type}")
         
@@ -128,7 +130,7 @@ def lambda_handler(event, context):
                 'user_id': user_id,
                 'child_id': child_id,
                 'results': translations,
-                'result_type': f'{content_type}_translations'
+                'result_type': result_type
             }
         }
         
@@ -149,9 +151,9 @@ def lambda_handler(event, context):
             raise Exception(f"Failed to parse save DDB service response as JSON: {e}")
         
         if not save_result or save_result.get('statusCode') != 200:
-            raise Exception(f"Failed to save {content_type} translations to DDB: {save_result}")
+            raise Exception(f"Failed to save {result_type} to DDB: {save_result}")
         
-        print(f"{content_type} translations saved successfully")
+        print(f"{result_type} saved successfully")
         
         # Return result
         event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
