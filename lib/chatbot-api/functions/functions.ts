@@ -53,7 +53,6 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly missingInfoAgentFunction : lambda.Function;
   public readonly checkLanguagePrefsFunction : lambda.Function;
   public readonly translateContentFunction : lambda.Function;
-  public readonly combineResultsFunction : lambda.Function;
   public readonly finalizeResultsFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
@@ -429,11 +428,6 @@ export class LambdaFunctionStack extends cdk.Stack {
       600
     );
 
-    this.combineResultsFunction = createStepFunctionLambda(
-      'CombineResultsFunction',
-      'metadata-handler/steps/combine_results',
-      300
-    );
 
     this.finalizeResultsFunction = createStepFunctionLambda(
       'FinalizeResultsFunction',
@@ -451,7 +445,6 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.parsingAgentFunction,
       this.missingInfoAgentFunction,
       this.translateContentFunction,
-      this.combineResultsFunction,
       this.finalizeResultsFunction
     ];
 
@@ -479,7 +472,6 @@ export class LambdaFunctionStack extends cdk.Stack {
       .replace('${MissingInfoAgentArn}', this.missingInfoAgentFunction.functionArn)
       .replace('${CheckLanguagePrefsArn}', this.checkLanguagePrefsFunction.functionArn)
       .replace('${TranslateContentArn}', this.translateContentFunction.functionArn)
-      .replace('${CombineResultsArn}', this.combineResultsFunction.functionArn)
       .replace('${FinalizeResultsArn}', this.finalizeResultsFunction.functionArn);
     
     aslDefinition = JSON.parse(aslString);
@@ -501,7 +493,6 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.missingInfoAgentFunction,
       this.checkLanguagePrefsFunction,
       this.translateContentFunction,
-      this.combineResultsFunction,
       this.finalizeResultsFunction
     ];
     
@@ -561,7 +552,6 @@ export class LambdaFunctionStack extends cdk.Stack {
         this.missingInfoAgentFunction,
         this.checkLanguagePrefsFunction,
         this.translateContentFunction,
-        this.combineResultsFunction,
         this.finalizeResultsFunction,
         this.orchestratorFunction
       ].forEach(func => func.addToRolePolicy(kmsPolicy));
