@@ -6,7 +6,7 @@ import traceback
 from data_model import IEPData, TranslationOutput, SingleLanguageIEP
 from openai import OpenAI
 from agents import Agent, Runner, function_tool, ModelSettings
-from config import get_translation_prompt, get_english_only_prompt, IEP_SECTIONS, SECTION_KEY_POINTS, LANGUAGE_CODES
+from config import get_translation_prompt, get_english_only_prompt, get_translation_prompt_missing_info, IEP_SECTIONS, SECTION_KEY_POINTS, LANGUAGE_CODES
 from agents.exceptions import MaxTurnsExceeded
 
 # Configure logging
@@ -186,66 +186,66 @@ class OpenAIAgent:
         try:
             client = OpenAI(api_key=self.api_key)
             
-            # Create content-type-specific translation prompts
+            # Dynamically select base prompt based on content type from config
             if content_type == 'parsing_result':
-                prompt = f"""
-Translate the following IEP parsing result from English to {target_language}:
+                # Adapt the existing parsing translation approach for single language
+                system_prompt = f"""
+You are a multi-language translation agent using GPT-4.1.
+Your input is a JSON object with English IEP parsing content (summaries, sections, document_index, abbreviations).
 
-{json.dumps(content, indent=2)}
+Translation Task: Translate the English content to {target_language} while preserving structure.
 
-Requirements:
+Guidelines:
 - Translate all text content while preserving the JSON structure
-- Do not translate JSON keys or section titles (e.g., keep "Present Levels", "Goals", "Services")
+- Do not translate JSON keys or section titles (e.g., keep "Present Levels", "Goals", "Services")  
 - Maintain the same data structure and field names
-- For {target_language}: Use appropriate cultural context and maintain 8th-grade reading level
+- Use appropriate cultural context for {target_language} and maintain 8th-grade reading level
 - Preserve all page numbers, dates, and numerical values
-- Return only the translated JSON, no additional text
+- For abbreviations: translate full forms, keep abbreviation codes in English
+- Do not include extra keys or commentary—output only the valid JSON
 
-Focus on translating:
-- Summary content
-- Section content (markdown text)
-- Document index content
-- Abbreviation full forms (keep abbreviations themselves in English)
-"""
+Cultural Guidelines for {target_language}:
+""" + self._get_language_guidelines(target_language)
                 
             elif content_type == 'missing_info':
-                # Handle the missing info structure which contains 'items' array
-                prompt = f"""
-Translate the following missing information items from English to {target_language}:
+                system_prompt = f"""
+You are a multi-language translation agent using GPT-4.1 specializing in parent communication.
+Your input is a JSON object with missing information items that help parents understand what's needed for their child's IEP.
 
-{json.dumps(content, indent=2)}
+Translation Task: Translate the missing info content to {target_language} while maintaining a supportive, parent-friendly tone.
 
-Requirements:
-- Translate all description and suggestion text while preserving the original structure
-- Keep field names in English (e.g., "iepId", "items", "description", "suggestion")
-- For {target_language}: Use appropriate cultural context and maintain 8th-grade reading level
-- Maintain parent-friendly, supportive tone
-- Return only the translated JSON, no additional text
-
-Focus on translating:
-- Item descriptions (what's missing)
-- Suggestions (how parents can help)
+Guidelines:
+- Translate all text fields (descriptions, suggestions) while preserving the JSON structure
+- Do not translate field names (e.g., "iepId", "items", "description", "suggestion") 
+- Use appropriate cultural context for {target_language} and maintain 8th-grade reading level
+- Be supportive and encouraging (never judgmental)
+- Emphasize collaboration between parents and school
 - Keep all IDs and structural elements unchanged
+- Do not include extra keys or commentary—output only the valid JSON
+
+Cultural Guidelines for {target_language}:
+""" + self._get_language_guidelines(target_language)
+                
+            else:
+                # Fallback for unknown content types
+                system_prompt = f"""
+You are a professional translator specializing in educational documents.
+Translate all text content from English to {target_language} while preserving the original structure and maintaining 8th-grade reading level.
+Return only the translated content in the same format.
 """
             
-            else:
-                # Generic content translation
-                prompt = f"""
-Translate the following content from English to {target_language}:
+            # Create user prompt with content
+            user_prompt = f"""
+Content to translate:
 
 {json.dumps(content, indent=2)}
-
-Requirements:
-- Translate all text content while preserving the original structure
-- For {target_language}: Use appropriate cultural context and maintain 8th-grade reading level
-- Return only the translated content in the same format
 """
             
             response = client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": "system", "content": "You are a professional translator specializing in educational documents and IEP materials. Maintain a supportive, parent-friendly tone."},
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.1
             )
@@ -265,6 +265,15 @@ Requirements:
         except Exception as e:
             logger.error(f"Translation failed: {str(e)}")
             return {"error": f"Translation failed: {str(e)}"}
+
+    def _get_language_guidelines(self, target_language):
+        """Get cultural and linguistic guidelines for specific target language"""
+        guidelines = {
+            'es': "- Use formal but warm tone, educational terminology familiar to Hispanic families\n- Respect for family values and educational process\n- Clear, direct communication style",
+            'vi': "- Respectful tone, avoid complex grammatical structures\n- Community-focused, family-respectful approach\n- Simple, clear sentence structures", 
+            'zh': "- Use simplified characters, respectful educational language\n- Formal respect for education, emphasis on student success\n- Clear, structured communication"
+        }
+        return guidelines.get(target_language, "- Use appropriate cultural context and clear language")
 
     def translate_document(self, english_data, target_languages=None, model="gpt-4.1"):
         """

@@ -120,6 +120,53 @@ Guidelines:
 
 
 
+
+def get_translation_prompt_missing_info() -> str:
+    """
+    Generate the instruction prompt for translating missing information items using GPT-4.1.
+    Takes missing info items structure and outputs translations for es, vi, zh in one call.
+    Uses the `get_language_context_for_translation` tool to fetch language-specific guidelines.
+    """
+    return '''
+You are a multi-language translation agent using GPT-4.1 specializing in parent communication.
+Your input is a JSON object with missing information items that help parents understand what's needed for their child's IEP.
+
+Translation Workflow:
+1. For each target language code (`es`, `vi`, `zh`):
+   a. Invoke the `get_language_context_for_translation` tool with the language code to retrieve guidelines (reading level, tone, terminology rules).
+   b. Apply those guidelines when translating the missing info content, maintaining a supportive, parent-friendly tone.
+2. Translate **all** text fields (descriptions, suggestions) into Spanish (`es`), Vietnamese (`vi`), and Simplified Chinese (`zh`), preserving the overall JSON structure. Do not translate the field names in the JSON.
+3. Organize your translation output in this exact JSON format:
+```
+{
+  "iepId": "<keep original ID>",
+  "items": [
+    {
+      "description": {
+        "es": "<Spanish description>",
+        "vi": "<Vietnamese description>", 
+        "zh": "<Chinese description>"
+      },
+      "suggestion": {
+        "es": "<Spanish suggestion>",
+        "vi": "<Vietnamese suggestion>",
+        "zh": "<Chinese suggestion>"
+      },
+      "category": "<keep original category>"
+    }
+  ]
+}
+```
+Guidelines:
+- Use the language-specific context from the tool for tone and cultural sensitivity.
+- When calling guidelines, use the tool named `get_language_context_for_translation(language_code)`.
+- Maintain an 8th-grade reading level and parent-friendly tone.
+- Be supportive and encouraging (never judgmental).
+- Emphasize collaboration between parents and school.
+- Keep all IDs and structural elements unchanged.
+- Do not include extra keys or commentary—output only the valid JSON.
+'''
+
 def get_english_only_prompt() -> str:
     """
     Generate the instruction prompt for IEP analysis using GPT-4.1.
