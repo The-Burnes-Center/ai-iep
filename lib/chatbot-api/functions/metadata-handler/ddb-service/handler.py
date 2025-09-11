@@ -313,7 +313,7 @@ def save_final_results(params):
     sections = final_result.get('sections', {})
     document_index = final_result.get('document_index', {})
     abbreviations = final_result.get('abbreviations', {})
-    missing_info = final_result.get('missingInfo', [])
+    missing_info = final_result.get('missingInfo', {})  # Changed to map with language keys
     
     # Build update expression for all fields
     update_expression = "SET summaries = :summaries, sections = :sections, document_index = :document_index, abbreviations = :abbreviations, missingInfo = :missing_info, updated_at = :updated_at"
@@ -343,7 +343,7 @@ def save_final_results(params):
             'iep_id': iep_id,
             'summaries_languages': list(summaries.keys()),
             'sections_languages': list(sections.keys()),
-            'missing_info_count': len(missing_info)
+            'missing_info_languages': list(missing_info.keys())
         }, default=str)
     }
 
@@ -394,7 +394,7 @@ def save_final_results(params):
     sections = final_result.get('sections', {})
     document_index = final_result.get('document_index', {})
     abbreviations = final_result.get('abbreviations', {})
-    missing_info = final_result.get('missingInfo', [])
+    missing_info = final_result.get('missingInfo', {})  # Changed to map with language keys
     
     # Build update expression for all fields
     update_expression = "SET summaries = :summaries, sections = :sections, document_index = :document_index, abbreviations = :abbreviations, missingInfo = :missing_info, updated_at = :updated_at"
@@ -424,6 +424,6 @@ def save_final_results(params):
             'iep_id': iep_id,
             'summaries_languages': list(summaries.keys()),
             'sections_languages': list(sections.keys()),
-            'missing_info_count': len(missing_info)
+            'missing_info_languages': list(missing_info.keys())
         }, default=str)
     }

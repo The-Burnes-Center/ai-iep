@@ -29,7 +29,7 @@ def lambda_handler(event, context):
             'sections': {},
             'document_index': {},
             'abbreviations': {},
-            'missingInfo': []
+            'missingInfo': {}  # Changed to map with lang codes as keys
         }
         
         # 1. Get English parsing result
@@ -112,13 +112,13 @@ def lambda_handler(event, context):
         if missing_info_ddb_result.get('statusCode') == 200:
             missing_info_result = json.loads(missing_info_ddb_result['body'])['data']
             
-            # Store missing info as array (API expects this format)
-            final_result['missingInfo'] = missing_info_result if isinstance(missing_info_result, list) else []
+            # Store English missing info in language map format
+            final_result['missingInfo']['en'] = missing_info_result if isinstance(missing_info_result, list) else []
             
             print("Added English missing info result to final result")
         else:
             print("English missing info result not found")
-            final_result['missingInfo'] = []
+            final_result['missingInfo']['en'] = []
         
         # 3. Get parsing translations if they exist
         if target_languages:
@@ -199,13 +199,15 @@ def lambda_handler(event, context):
             if missing_info_translations_result.get('statusCode') == 200:
                 missing_info_translations = json.loads(missing_info_translations_result['body'])['data']
                 
-                # Note: For now, we only store English missing info in the main missingInfo field
-                # Translated versions could be stored separately if needed in the future
-                print(f"Retrieved missing info translations for {list(missing_info_translations.keys())} (currently only English is stored)")
+                # Add translated missing info to language map
+                for lang, content in missing_info_translations.items():
+                    final_result['missingInfo'][lang] = content if isinstance(content, list) else []
+                    
+                print(f"Added missing info translations for {list(missing_info_translations.keys())}")
             else:
                 print("Missing info translations not found")
         
-        print(f"Final result created with summaries in {len(final_result['summaries'])} languages, sections in {len(final_result['sections'])} languages, and {len(final_result['missingInfo'])} missing info items")
+        print(f"Final result created with summaries in {len(final_result['summaries'])} languages, sections in {len(final_result['sections'])} languages, and missing info in {len(final_result['missingInfo'])} languages")
         
         # Don't pass through progress/current_step as they're managed by state machine
         event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
