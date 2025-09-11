@@ -168,8 +168,8 @@ def lambda_handler(event, context):
                 parsing_translations = json.loads(parsing_translations_result['body'])['data']
                 
                 for lang, content in parsing_translations.items():
-                    # Add translated parsing data to API-compatible format
-                    final_result['summaries'][lang] = content.get('summaries', '')
+                    # Add translated parsing data to API-compatible format (translations preserve English structure)
+                    final_result['summaries'][lang] = content.get('summary', '')  # Fixed: translations have 'summary' not 'summaries'
                     final_result['sections'][lang] = content.get('sections', [])
                     final_result['document_index'][lang] = content.get('document_index', '')
                     final_result['abbreviations'][lang] = content.get('abbreviations', [])
