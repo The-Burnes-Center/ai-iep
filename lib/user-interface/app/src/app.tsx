@@ -24,6 +24,7 @@ import ConsentForm from './pages/profile/ConsentForm';
 import WelcomeIntro from './pages/profile/WelcomeIntro';
 import AboutApp from './pages/profile/AboutApp';
 import SupportCenter from './components/SupportCenter';
+import SurveyForm from "./components/SurveyForm";
 import AboutAIEP from './components/AboutAIEP';
 
 function AppContent() {
@@ -35,7 +36,7 @@ function AppContent() {
   }, [location]);
   
   // Routes where header should be hidden
-  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/profile","/support-center","/about-aiep"];
+  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/profile","/support-center","/about-aiep","/survey-form"];
   
   // Check if current location is in the list of routes where header should be hidden
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
@@ -74,6 +75,7 @@ function AppContent() {
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
             <Route path="/revoke-consent" element={<RevokeConsent />} />
             <Route path="/support-center" element={<SupportCenter />} />
+            <Route path="/survey-form" element={<SurveyForm />} />
             <Route path="/about-aiep" element={<AboutAIEP />} />
         </Routes>
       {/* </div> */}
