@@ -147,15 +147,34 @@ def lambda_handler(event, context):
         
         print(f"{content_type} translation completed for {len(translations)} languages")
         
-        # Save translations to DynamoDB
+        # Save translations directly to API-compatible fields 
+        field_updates = {}
+        
+        if content_type == 'parsing_result':
+            # Save parsing translations to summaries, sections, document_index, abbreviations
+            for lang, translated_content in translations.items():
+                field_updates[f'summaries.{lang}'] = translated_content.get('summary', '')
+                field_updates[f'sections.{lang}'] = translated_content.get('sections', [])
+                field_updates[f'document_index.{lang}'] = translated_content.get('document_index', '')
+                field_updates[f'abbreviations.{lang}'] = translated_content.get('abbreviations', [])
+        elif content_type == 'missing_info':
+            # Save missing info translations to missingInfo fields
+            for lang, translated_content in translations.items():
+                # Handle missing info structure (should be list of items)
+                if isinstance(translated_content, dict) and 'items' in translated_content:
+                    field_updates[f'missingInfo.{lang}'] = translated_content['items']
+                elif isinstance(translated_content, list):
+                    field_updates[f'missingInfo.{lang}'] = translated_content
+                else:
+                    field_updates[f'missingInfo.{lang}'] = []
+        
         save_payload = {
-            'operation': 'save_results',
+            'operation': 'save_api_fields',
             'params': {
                 'iep_id': iep_id,
                 'user_id': user_id,
                 'child_id': child_id,
-                'results': translations,
-                'result_type': result_type
+                'field_updates': field_updates
             }
         }
         
@@ -176,9 +195,9 @@ def lambda_handler(event, context):
             raise Exception(f"Failed to parse save DDB service response as JSON: {e}")
         
         if not save_result or save_result.get('statusCode') != 200:
-            raise Exception(f"Failed to save {result_type} to DDB: {save_result}")
+            raise Exception(f"Failed to save {content_type} translations to API fields: {save_result}")
         
-        print(f"{result_type} saved successfully")
+        print(f"{content_type} translations saved directly to API fields: {list(field_updates.keys())}")
         
         # Return result
         event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
