@@ -70,11 +70,12 @@ except Exception as e:
 
 # AWS clients
 s3 = boto3.client('s3')
-bedrock_retrieve = boto3.client('bedrock-agent-runtime', region_name='us-east-1')  # for knowledge base retrieval
+bedrock_retrieve = boto3.client('bedrock-agent-runtime', region_name=os.environ.get('AWS_REGION', 'us-east-1'))  # for knowledge base retrieval
 dynamodb = boto3.client('dynamodb')  # for document status updates
 ssm = boto3.client('ssm')  # for accessing parameter store
+lambda_client = boto3.client('lambda')
 
-# Retrieve MISTRAL_API_KEY from Parameter Store
+# Retrieve MISTRAL_API_KEY from Parameter Store with caching
 mistral_api_key_param_name = os.environ.get('MISTRAL_API_KEY_PARAMETER_NAME')
 try:
     mistral_api_key = ssm.get_parameter(Name=mistral_api_key_param_name, WithDecryption=True)['Parameter']['Value']
@@ -86,7 +87,7 @@ except Exception as e:
     print(f"Error retrieving Mistral API key: {str(e)}")
     mistral_api_key = None
 
-# Retrieve OPENAI_API_KEY from Parameter Store
+# Retrieve OPENAI_API_KEY from Parameter Store with caching  
 openai_api_key_param_name = os.environ.get('OPENAI_API_KEY_PARAMETER_NAME')
 try:
     openai_api_key = ssm.get_parameter(Name=openai_api_key_param_name, WithDecryption=True)['Parameter']['Value']
@@ -847,6 +848,19 @@ def iep_processing_pipeline(event):
                 })
             }
         
+        # Ensure a tracking item exists in DynamoDB (PROCESSING)
+        try:
+            if iep_id:
+                update_iep_document_status(
+                    iep_id=iep_id,
+                    status="PROCESSING",
+                    child_id=child_id,
+                    user_id=user_id,
+                    object_key=key
+                )
+        except Exception as e:
+            print(f"Non-blocking: failed to set initial PROCESSING status: {str(e)}")
+
         # Process the document using Mistral OCR API
         ocr_result = process_document_with_mistral_ocr(bucket, key)
         
@@ -910,7 +924,57 @@ def iep_processing_pipeline(event):
             ocr_result['pii_redaction_stats'] = pii_stats
             print(f"PII redaction complete - redacted {pii_stats.get('redacted_entities', 0)} entities")
             
+            # Save redacted OCR page texts to DynamoDB for downstream processing
+            try:
+                ocr_pages_texts = []
+                for page in ocr_result['pages']:
+                    if 'content' in page and page.get('content') is not None:
+                        ocr_pages_texts.append(page.get('content', ''))
+                    elif 'text' in page and page.get('text') is not None:
+                        ocr_pages_texts.append(page.get('text', ''))
+                    elif 'markdown' in page and page.get('markdown') is not None:
+                        ocr_pages_texts.append(page.get('markdown', ''))
+                    else:
+                        # Fallback: any string field
+                        text_fields = [v for k, v in page.items() if isinstance(v, str)]
+                        ocr_pages_texts.append(text_fields[0] if text_fields else '')
 
+                dynamodb_res = boto3.resource('dynamodb')
+                table = dynamodb_res.Table(os.environ['IEP_DOCUMENTS_TABLE'])
+                key_attrs = {'iepId': iep_id}
+                if child_id:
+                    key_attrs['childId'] = child_id
+                table.update_item(
+                    Key=key_attrs,
+                    UpdateExpression='SET ocrPages = :p, ocrPageCount = :n, ocrSavedAt = :t, updatedAt = :t',
+                    ExpressionAttributeValues={
+                        ':p': ocr_pages_texts,
+                        ':n': len(ocr_pages_texts),
+                        ':t': datetime.now().isoformat()
+                    }
+                )
+                print("Saved redacted OCR pages to DynamoDB")
+            except Exception as save_err:
+                print(f"Non-blocking: failed to persist redacted OCR pages to DynamoDB: {str(save_err)}")
+
+            # Trigger identify-missing-info lambda asynchronously now that OCR is redacted and saved elsewhere
+            try:
+                target_fn_name = os.environ.get('IDENTIFY_MISSING_INFO_FUNCTION_NAME')
+                if target_fn_name and iep_id:
+                    payload = {
+                        'iepId': iep_id,
+                        'childId': child_id
+                    }
+                    print(f"Invoking {target_fn_name} asynchronously post-redaction with payload: {json.dumps(payload)}")
+                    lambda_client.invoke(
+                        FunctionName=target_fn_name,
+                        InvocationType='Event',
+                        Payload=json.dumps(payload).encode('utf-8')
+                    )
+                else:
+                    print("IDENTIFY_MISSING_INFO_FUNCTION_NAME not set or iepId missing; skipping invoke")
+            except Exception as invoke_err:
+                print(f"Non-blocking: failed to invoke identify-missing-info: {str(invoke_err)}")
 
         
         # Delete the original file from S3 after successful processing

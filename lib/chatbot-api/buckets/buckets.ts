@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 import { createBucketPolicy } from './bucket-policy';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
+import { getEnvironment } from '../../tags';
 
 export interface S3BucketStackProps extends cdk.StackProps {
   encryptionKey?: kms.IKey;
@@ -15,8 +16,12 @@ export class S3BucketStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: S3BucketStackProps) {
     super(scope, id, props);
 
-    // Create a new S3 bucket
+    // Create a new S3 bucket with explicit name to support cross-environment usage
+    const environment = getEnvironment();
+    const bucketName = `ai-iep-knowledge-source-${environment}`;
+    
     this.knowledgeBucket = new s3.Bucket(scope, 'KnowledgeSourceBucket', {      
+      bucketName: bucketName,
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -32,10 +37,11 @@ export class S3BucketStack extends cdk.Stack {
     });
 
     // Apply restrictive bucket policy to the knowledge bucket (which contains IEP documents)
-    // Replace these ARNs with the actual ARNs of the users who should have access
+    // Use dynamic account ID to support multiple AWS accounts for prod/staging
+    const accountId = this.account;
     const allowedUsers = [
-      'arn:aws:iam::530075910224:user/dhruv', 
-      'arn:aws:iam::530075910224:root',       
+      `arn:aws:iam::${accountId}:user/dhruv`, 
+      `arn:aws:iam::${accountId}:root`,       
     ];
 
     // Create and apply the bucket policy
@@ -48,11 +54,9 @@ export class S3BucketStack extends cdk.Stack {
     this.knowledgeBucket.addToResourcePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       principals: [
-        new iam.ArnPrincipal('arn:aws:iam::530075910224:user/dhruv'),
-        new iam.ArnPrincipal('arn:aws:iam::530075910224:root'),
-        // Use roles instead of function ARNs
-        new iam.ArnPrincipal('arn:aws:iam::530075910224:role/AIEPStack-ChatbotAPIMetadataHandlerFunctionServiceR-r5pXSumdiwSl'),
-        // Allow Lambda service principal
+        new iam.ArnPrincipal(`arn:aws:iam::${accountId}:user/dhruv`),
+        new iam.ArnPrincipal(`arn:aws:iam::${accountId}:root`),
+        // Allow Lambda service principal (specific roles will be granted by CDK automatically)
         new iam.ServicePrincipal('lambda.amazonaws.com'),
         // Allow API Gateway service principal for the uploads via frontend
         new iam.ServicePrincipal('apigateway.amazonaws.com')

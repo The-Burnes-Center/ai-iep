@@ -1,0 +1,482 @@
+{
+  "Comment": "IEP Document Processing State Machine - orchestrated steps with centralized DDB service",
+  "StartAt": "InitializeProcessing",
+  "States": {
+    "InitializeProcessing": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Initialize processing status and progress tracking using DDB service",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "start",
+          "progress": 5
+        }
+      },
+      "ResultPath": null,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "MistralOCR"
+    },
+    "MistralOCR": {
+      "Type": "Task", 
+      "Resource": "${MistralOCRArn}",
+      "Comment": "Extract text from document using Mistral OCR API",
+      "ResultPath": null,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateOCRProgress"
+    },
+    "UpdateOCRProgress": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after OCR completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "ocr_complete",
+          "progress": 15
+        }
+      },
+      "ResultPath": null,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "RedactOCR"
+    },
+    "RedactOCR": {
+      "Type": "Task",
+      "Resource": "${RedactOCRArn}",
+      "Comment": "Redact PII from OCR text using AWS Comprehend",
+      "ResultPath": null,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateRedactionProgress"
+    },
+    "UpdateRedactionProgress": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after PII redaction completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "pii_redaction_complete",
+          "progress": 20
+        }
+      },
+      "ResultPath": null,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "DeleteOriginal"
+    },
+    "DeleteOriginal": {
+      "Type": "Task",
+      "Resource": "${DeleteOriginalArn}",
+      "Comment": "Delete original uploaded file from S3",
+      "ResultPath": null,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateCleanupProgress"
+    },
+    "UpdateCleanupProgress": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after file cleanup completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "cleanup_complete",
+          "progress": 22
+        }
+      },
+      "ResultPath": null,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "ParallelWork"
+    },
+    "ParallelWork": {
+      "Type": "Parallel",
+      "Comment": "Run parsing and missing info extraction concurrently",
+      "Branches": [
+        {
+          "StartAt": "ParsingAgent",
+          "States": {
+            "ParsingAgent": {
+              "Type": "Task",
+              "Resource": "${ParsingAgentArn}",
+              "Comment": "Generate English summary, sections, and document index using OpenAI",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "MissingInfoAgent",
+          "States": {
+            "MissingInfoAgent": {
+              "Type": "Task",
+              "Resource": "${MissingInfoAgentArn}",
+              "Comment": "Extract missing information insights for parents",
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateAnalysisProgress", 
+      "ResultPath": null
+    },
+    "UpdateAnalysisProgress": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after parallel analysis completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "analysis_complete",
+          "progress": 65
+        }
+      },
+      "ResultPath": null,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "CheckLanguagePrefs"
+    },
+    "CheckLanguagePrefs": {
+      "Type": "Task",
+      "Resource": "${CheckLanguagePrefsArn}",
+      "Comment": "Check user language preferences to determine if translations are needed",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id", 
+        "user_id.$": "$.user_id",
+        "s3_bucket.$": "$.s3_bucket",
+        "s3_key.$": "$.s3_key"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "TranslationChoice"
+    },
+    "TranslationChoice": {
+      "Type": "Choice",
+      "Comment": "Decide whether to translate based on user language preferences",
+      "Choices": [
+        {
+          "Variable": "$.translation_needed",
+          "BooleanEquals": true,
+          "Next": "ParallelTranslations"
+        }
+      ],
+      "Default": "FinalizeResults"
+    },
+    "ParallelTranslations": {
+      "Type": "Parallel",
+      "Comment": "Translate parsing and missing info results using unified translation function",
+      "Branches": [
+        {
+          "StartAt": "TranslateParsingResult",
+          "States": {
+            "TranslateParsingResult": {
+              "Type": "Task",
+              "Resource": "${TranslateContentArn}",
+              "Comment": "Translate parsing agent results to target languages",
+              "Parameters": {
+                "iep_id.$": "$.iep_id",
+                "child_id.$": "$.child_id", 
+                "user_id.$": "$.user_id",
+                "target_languages.$": "$.target_languages",
+                "content_type": "parsing_result"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "TranslateMissingInfo",
+          "States": {
+            "TranslateMissingInfo": {
+              "Type": "Task",
+              "Resource": "${TranslateContentArn}",
+              "Comment": "Translate missing info results to target languages",
+              "Parameters": {
+                "iep_id.$": "$.iep_id",
+                "child_id.$": "$.child_id", 
+                "user_id.$": "$.user_id",
+                "target_languages.$": "$.target_languages",
+                "content_type": "missing_info"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "MaxAttempts": 3,
+                  "IntervalSeconds": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "UpdateTranslationProgress",
+      "ResultPath": null
+    },
+    "UpdateTranslationProgress": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Update progress after translation completion",
+      "Parameters": {
+        "operation": "update_progress",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "status": "PROCESSING",
+          "current_step": "translation_complete",
+          "progress": 85
+        }
+      },
+      "ResultPath": null,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "Next": "FinalizeResults"
+    },
+    "FinalizeResults": {
+      "Type": "Task",
+      "Resource": "${FinalizeResultsArn}",
+      "Comment": "Combined step: combine results, save to DDB, and mark as completed",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id", 
+        "user_id.$": "$.user_id",
+        "target_languages.$": "$.target_languages",
+        "translation_needed.$": "$.translation_needed"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "RecordFailure",
+          "ResultPath": "$.error"
+        }
+      ],
+      "End": true
+    },
+    "RecordFailure": {
+      "Type": "Task",
+      "Resource": "${DDBServiceArn}",
+      "Comment": "Record processing failure using DDB service",
+      "Parameters": {
+        "operation": "record_failure",
+        "params": {
+          "iep_id.$": "$.iep_id",
+          "child_id.$": "$.child_id", 
+          "user_id.$": "$.user_id",
+          "error_message.$": "$.error.Cause",
+          "failed_step.$": "$$.State.Name"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 3,
+          "IntervalSeconds": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "End": true
+    }
+  }
+}

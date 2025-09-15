@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import * as fs from 'fs';
 
 // Import Lambda L2 construct
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -16,6 +17,8 @@ import { UserPool } from 'aws-cdk-lib/aws-cognito';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import { getEnvironment } from '../../tags';
+import * as stepfunctions from 'aws-cdk-lib/aws-stepfunctions';
+import * as stepfunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 
 export interface LambdaFunctionStackProps {
   readonly knowledgeBucket : s3.Bucket;
@@ -32,9 +35,25 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly getS3KnowledgeFunction : lambda.Function;
   public readonly uploadS3KnowledgeFunction : lambda.Function;
   public readonly metadataHandlerFunction : lambda.Function;
+  public readonly identifyMissingInfoFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
   public readonly cognitoTriggerFunction : lambda.Function;
   public readonly pdfGeneratorFunction : lambda.Function;
+  
+  // Step Functions components
+  public readonly orchestratorFunction : lambda.Function;
+  public readonly iepProcessingStateMachine : stepfunctions.StateMachine;
+  
+  // Step function Lambda handlers
+  public readonly ddbServiceFunction : lambda.Function;
+  public readonly mistralOCRFunction : lambda.Function;
+  public readonly redactOCRFunction : lambda.Function;
+  public readonly deleteOriginalFunction : lambda.Function;
+  public readonly parsingAgentFunction : lambda.Function;
+  public readonly missingInfoAgentFunction : lambda.Function;
+  public readonly checkLanguagePrefsFunction : lambda.Function;
+  public readonly translateContentFunction : lambda.Function;
+  public readonly finalizeResultsFunction : lambda.Function;
 
   constructor(scope: Construct, id: string, props: LambdaFunctionStackProps) {
     super(scope, id);    
@@ -150,6 +169,9 @@ export class LambdaFunctionStack extends cdk.Stack {
     
     this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
 
+    // Note: API keys will be fetched at runtime from SSM SecureString parameters
+    // CDK valueFromLookup doesn't properly decrypt customer-managed KMS encrypted parameters
+
     // Define the Lambda function for metadata
     const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
@@ -167,8 +189,9 @@ export class LambdaFunctionStack extends cdk.Stack {
         "BUCKET": props.knowledgeBucket.bucketName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName, 
-        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
-        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+        // SSM parameter names for encrypted API keys (runtime fetch with caching)
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
       },
       timeout: cdk.Duration.seconds(900),
       memorySize: 2048,
@@ -193,8 +216,20 @@ export class LambdaFunctionStack extends cdk.Stack {
       resources: [
         props.knowledgeBucket.bucketArn,
         props.knowledgeBucket.bucketArn + "/*",
-        'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
+        `arn:aws:bedrock:${this.region}::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0`,
         '*', // Comprehend permissions apply to all resources
+      ]
+    }));
+
+    // Add SSM permissions for API key retrieval
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'ssm:GetParameter'
+      ],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`
       ]
     }));
 
@@ -228,8 +263,407 @@ export class LambdaFunctionStack extends cdk.Stack {
 
     this.metadataHandlerFunction = metadataHandlerFunction;
 
-    metadataHandlerFunction.addEventSource(new S3EventSource(props.knowledgeBucket, {
+    // ==========================================
+    // STEP FUNCTIONS REFACTORED METADATA HANDLER
+    // ==========================================
+
+    // Create DDB service function first so we can reference it in environment variables
+    this.ddbServiceFunction = createTaggedLambda('DDBServiceFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler/ddb-service'), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
+      }),
+      handler: 'handler.lambda_handler',
+      environment: {
+        "BUCKET": props.knowledgeBucket.bucketName,
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
+        // SSM parameter names for encrypted API keys (runtime fetch with caching)
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
+      },
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 1024,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
+    });
+
+    // Common environment variables for step functions
+    const stepFunctionEnvVars = {
+      "BUCKET": props.knowledgeBucket.bucketName,
+      "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+      "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
+      "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName,
+      // SSM parameter names for encrypted API keys (runtime fetch with caching)
+      "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+      "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
+    };
+
+    // Common permissions for step function Lambdas
+    const stepFunctionPolicies = [
+      // S3 permissions
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          's3:GetObject',
+          's3:PutObject', 
+          's3:DeleteObject',
+          's3:ListBucket',
+          's3:GetBucketLocation'
+        ],
+        resources: [
+          props.knowledgeBucket.bucketArn,
+          props.knowledgeBucket.bucketArn + "/*"
+        ]
+      }),
+      // DynamoDB permissions
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'dynamodb:GetItem',
+          'dynamodb:PutItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:Query',
+          'dynamodb:Scan'
+        ],
+        resources: [
+          props.iepDocumentsTable.tableArn,
+          props.userProfilesTable.tableArn
+        ]
+      }),
+      // Note: SSM permissions removed - API keys now passed as environment variables
+      // Comprehend permissions
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'comprehend:BatchDetectPiiEntities',
+          'comprehend:DetectPiiEntities'
+        ],
+        resources: ['*']
+      }),
+      // SSM permissions for API key retrieval
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'ssm:GetParameter'
+        ],
+        resources: [
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`,
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`
+        ]
+      }),
+      // Bedrock permissions  
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'bedrock:InvokeModel',
+          'bedrock:Retrieve',
+          'bedrock-agent-runtime:Retrieve'
+        ],
+        resources: [
+          `arn:aws:bedrock:${this.region}::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0`,
+          '*'
+        ]
+      })
+    ];
+
+    // Helper function to create step function Lambdas
+    const createStepFunctionLambda = (name: string, handlerPath: string, timeout: number = 300): lambda.Function => {
+      const func = createTaggedLambda(name, {
+        runtime: lambda.Runtime.PYTHON_3_12,
+        code: lambda.Code.fromAsset(path.join(__dirname, handlerPath), {
+          bundling: {
+            image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+            command: [
+              'bash', '-c',
+              'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+            ],
+          },
+        }),
+        handler: 'handler.lambda_handler',
+        environment: stepFunctionEnvVars,
+        timeout: cdk.Duration.seconds(timeout),
+        memorySize: 1024,
+        ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
+      });
+      
+      // Add common policies to each step function
+      stepFunctionPolicies.forEach(policy => func.addToRolePolicy(policy));
+      
+      return func;
+    };
+
+    // DDB service function already created above with proper environment variables
+
+    // Create core business logic step functions (no more individual DDB operations)
+    // Note: Removed updateDDBStartFunction - replaced by DDB service calls
+
+    this.mistralOCRFunction = createStepFunctionLambda(
+      'MistralOCRFunction', 
+      'metadata-handler/steps/mistral_ocr',
+      600
+    );
+
+    this.redactOCRFunction = createStepFunctionLambda(
+      'RedactOCRFunction',
+      'metadata-handler/steps/redact_ocr', 
+      300
+    );
+
+    this.deleteOriginalFunction = createStepFunctionLambda(
+      'DeleteOriginalFunction',
+      'metadata-handler/steps/delete_original',
+      60
+    );
+
+    this.parsingAgentFunction = createStepFunctionLambda(
+      'ParsingAgentFunction',
+      'metadata-handler/steps/parsing_agent',
+      900
+    );
+
+    this.missingInfoAgentFunction = createStepFunctionLambda(
+      'MissingInfoAgentFunction',
+      'metadata-handler/steps/missing_info_agent',
+      300
+    );
+
+    // Note: Removed saveEnglishFunction, saveFinalFunction, recordFailureFunction - replaced by DDB service calls
+
+
+    this.checkLanguagePrefsFunction = createStepFunctionLambda(
+      'CheckLanguagePrefsFunction',
+      'metadata-handler/steps/check_language_prefs',
+      60
+    );
+
+    this.translateContentFunction = createStepFunctionLambda(
+      'TranslateContentFunction',
+      'metadata-handler/steps/translate_content',
+      600
+    );
+
+
+    this.finalizeResultsFunction = createStepFunctionLambda(
+      'FinalizeResultsFunction',
+      'metadata-handler/steps/finalize_results',
+      300
+    );
+
+    // Add step function policies to DDB service function (created before stepFunctionPolicies were defined)
+    stepFunctionPolicies.forEach(policy => this.ddbServiceFunction.addToRolePolicy(policy));
+
+    // Grant step functions permission to invoke DDB service
+    const functionsNeedingDDBAccess = [
+      this.mistralOCRFunction,
+      this.redactOCRFunction,
+      this.parsingAgentFunction,
+      this.missingInfoAgentFunction,
+      this.translateContentFunction,
+      this.finalizeResultsFunction
+    ];
+
+    functionsNeedingDDBAccess.forEach(func => {
+      func.addToRolePolicy(new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['lambda:InvokeFunction'],
+        resources: [this.ddbServiceFunction.functionArn]
+      }));
+    });
+
+    // Note: Lambda invoke permission for missing info agent will be added after identifyMissingInfoFunction is created
+
+    // Load and customize the ASL definition
+    const aslPath = path.join(__dirname, '../state-machines/iep-processing.asl.json');
+    let aslDefinition = JSON.parse(fs.readFileSync(aslPath, 'utf8'));
+    
+    // Replace ARN placeholders with actual Lambda ARNs  
+    const aslString = JSON.stringify(aslDefinition)
+      .replace(/\$\{DDBServiceArn\}/g, this.ddbServiceFunction.functionArn)
+      .replace(/\$\{MistralOCRArn\}/g, this.mistralOCRFunction.functionArn)
+      .replace(/\$\{RedactOCRArn\}/g, this.redactOCRFunction.functionArn)
+      .replace(/\$\{DeleteOriginalArn\}/g, this.deleteOriginalFunction.functionArn)
+      .replace(/\$\{ParsingAgentArn\}/g, this.parsingAgentFunction.functionArn)
+      .replace(/\$\{MissingInfoAgentArn\}/g, this.missingInfoAgentFunction.functionArn)
+      .replace(/\$\{CheckLanguagePrefsArn\}/g, this.checkLanguagePrefsFunction.functionArn)
+      .replace(/\$\{TranslateContentArn\}/g, this.translateContentFunction.functionArn)
+      .replace(/\$\{FinalizeResultsArn\}/g, this.finalizeResultsFunction.functionArn);
+    
+    aslDefinition = JSON.parse(aslString);
+
+    // Create Step Functions state machine
+    this.iepProcessingStateMachine = new stepfunctions.StateMachine(scope, 'IEPProcessingStateMachine', {
+      definitionBody: stepfunctions.DefinitionBody.fromString(JSON.stringify(aslDefinition)),
+      stateMachineType: stepfunctions.StateMachineType.STANDARD,
+      timeout: cdk.Duration.minutes(30)
+    });
+
+    // Add explicit dependencies to ensure all Lambda functions are created before state machine
+    this.iepProcessingStateMachine.node.addDependency(this.ddbServiceFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.mistralOCRFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.redactOCRFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.deleteOriginalFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.parsingAgentFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.missingInfoAgentFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.checkLanguagePrefsFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.translateContentFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.finalizeResultsFunction);
+
+    // Grant the state machine permission to invoke all step functions
+    const stepFunctionsList = [
+      this.ddbServiceFunction,
+      this.mistralOCRFunction,
+      this.redactOCRFunction,
+      this.deleteOriginalFunction,
+      this.parsingAgentFunction,
+      this.missingInfoAgentFunction,
+      this.checkLanguagePrefsFunction,
+      this.translateContentFunction,
+      this.finalizeResultsFunction
+    ];
+    
+    stepFunctionsList.forEach(func => {
+      func.grantInvoke(this.iepProcessingStateMachine.role);
+    });
+
+    // Create the orchestrator Lambda that starts the state machine
+    this.orchestratorFunction = createTaggedLambda('OrchestratorFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
+      }),
+      handler: 'orchestrator.lambda_handler',
+      environment: {
+        ...stepFunctionEnvVars,
+        STATE_MACHINE_ARN: this.iepProcessingStateMachine.stateMachineArn
+      },
+      timeout: cdk.Duration.seconds(60),
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
+    });
+
+    // Grant orchestrator permission to start state machine executions
+    this.iepProcessingStateMachine.grantStartExecution(this.orchestratorFunction);
+
+    // Replace the S3 trigger: use orchestrator instead of monolithic handler
+    this.orchestratorFunction.addEventSource(new S3EventSource(props.knowledgeBucket, {
       events: [s3.EventType.OBJECT_CREATED],
+    }));
+
+    // Apply KMS policies to new step function Lambdas if needed
+    if (props.kmsKey) {
+      const kmsPolicy = new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'kms:Encrypt',
+          'kms:Decrypt',
+          'kms:ReEncrypt*',
+          'kms:GenerateDataKey*',
+          'kms:DescribeKey'
+        ],
+        resources: [props.kmsKey.keyArn]
+      });
+
+      [
+        this.ddbServiceFunction,
+        this.mistralOCRFunction,
+        this.redactOCRFunction,
+        this.deleteOriginalFunction,
+        this.parsingAgentFunction,
+        this.missingInfoAgentFunction,
+        this.checkLanguagePrefsFunction,
+        this.translateContentFunction,
+        this.finalizeResultsFunction,
+        this.orchestratorFunction
+      ].forEach(func => func.addToRolePolicy(kmsPolicy));
+    }
+
+    // ==========================================
+    // END OF STEP FUNCTIONS COMPONENTS
+    // ==========================================
+
+    // Identify Missing Info Lambda - reads OCR from DynamoDB and calls OpenAI
+    const identifyMissingInfoFunction = new lambda.Function(scope, 'IdentifyMissingInfoFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'identify-missing-info'), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
+      }),
+      handler: 'lambda_function.lambda_handler',
+      environment: {
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName
+      },
+      timeout: cdk.Duration.seconds(300),
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
+    });
+
+    // Allow reading/updating IEP documents from DynamoDB
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:Query',
+        'dynamodb:UpdateItem',
+        'dynamodb:Scan'
+      ],
+      resources: [
+        props.iepDocumentsTable.tableArn,
+        props.iepDocumentsTable.tableArn + '/index/*'
+      ]
+    }));
+
+    // Allow SSM read for OpenAI API key
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['ssm:GetParameter'],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
+      ]
+    }));
+
+    this.identifyMissingInfoFunction = identifyMissingInfoFunction;
+
+    // Grant IdentifyMissingInfoFunction permission to invoke DDB service
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['lambda:InvokeFunction'],
+      resources: [this.ddbServiceFunction.functionArn]
+    }));
+
+    // Allow metadata handler to invoke the identify-missing-info function
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['lambda:InvokeFunction'],
+      resources: [identifyMissingInfoFunction.functionArn]
+    }));
+
+    // Pass the target Lambda function name to the metadata handler via env var
+    metadataHandlerFunction.addEnvironment('IDENTIFY_MISSING_INFO_FUNCTION_NAME', identifyMissingInfoFunction.functionName);
+
+    // Add Lambda invoke permission to missing info agent step function
+    this.missingInfoAgentFunction.addEnvironment('IDENTIFY_MISSING_INFO_FUNCTION_NAME', identifyMissingInfoFunction.functionName);
+    this.missingInfoAgentFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['lambda:InvokeFunction'],
+      resources: [identifyMissingInfoFunction.functionArn]
     }));
 
     const userProfileHandlerFunction = new lambda.Function(scope, 'UserProfileHandlerFunction', {
@@ -402,6 +836,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(kmsPolicy);
       metadataHandlerFunction.addToRolePolicy(kmsPolicy);
       userProfileHandlerFunction.addToRolePolicy(kmsPolicy);
+      // Ensure IdentifyMissingInfoFunction can decrypt KMS-encrypted DynamoDB items
+      identifyMissingInfoFunction.addToRolePolicy(kmsPolicy);
       // Cognito trigger and PDF generator don't need direct KMS usage beyond env, skip
     }
   }

@@ -10,20 +10,50 @@ from datetime import datetime, timedelta
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Global cache for API key (reused across Lambda invocations)
+_cached_mistral_api_key = None
+
 def get_mistral_api_key():
     """
-    Retrieves the Mistral API key from the environment variable.
-    The Lambda function should have already set this from SSM Parameter Store.
+    Retrieves the Mistral API key with caching for performance.
+    First checks environment variables, then falls back to SSM Parameter Store.
     Returns:
         str: The Mistral API key.
     """
-    # Get from environment - Lambda should have already set this
+    global _cached_mistral_api_key
+    
+    # Return cached key if available
+    if _cached_mistral_api_key:
+        logger.info("Using cached MISTRAL_API_KEY")
+        return _cached_mistral_api_key
+    
+    # First try direct environment variable (for backwards compatibility)
     mistral_api_key = os.environ.get('MISTRAL_API_KEY')
     
-    if not mistral_api_key:
-        logger.error("MISTRAL_API_KEY not found in environment variables - CDK should pass this directly")
-        
-    return mistral_api_key
+    if mistral_api_key and not mistral_api_key.startswith('AQICA'):
+        logger.info(f"MISTRAL_API_KEY found in environment (length: {len(mistral_api_key)})")
+        _cached_mistral_api_key = mistral_api_key
+        return mistral_api_key
+    
+    # Fetch from SSM Parameter Store with decryption
+    param_name = os.environ.get('MISTRAL_API_KEY_PARAMETER_NAME')
+    if param_name:
+        try:
+            logger.info(f"Fetching MISTRAL_API_KEY from SSM: {param_name}")
+            ssm = boto3.client('ssm')
+            response = ssm.get_parameter(Name=param_name, WithDecryption=True)
+            mistral_api_key = response['Parameter']['Value']
+            
+            # Cache for future invocations
+            _cached_mistral_api_key = mistral_api_key
+            logger.info(f"Successfully retrieved and cached MISTRAL_API_KEY from SSM (length: {len(mistral_api_key)})")
+            return mistral_api_key
+            
+        except Exception as e:
+            logger.error(f"Error retrieving MISTRAL_API_KEY from SSM: {str(e)}")
+    
+    logger.error("MISTRAL_API_KEY not available from environment or SSM")
+    return None
 
 def process_document_with_mistral_ocr(bucket, key):
     """

@@ -83,6 +83,8 @@ export interface IEPDocument {
   documentId?: string;
   documentUrl?: string;
   status?: "PROCESSING" | "PROCESSING_TRANSLATIONS" | "PROCESSED" | "FAILED";
+  progress?: number; // Processing progress percentage (0-100)
+  current_step?: string; // Current processing step (e.g., "initializing", "ocr_complete", "redacting", etc.)
   createdAt?: string;
   message?: string;
   
@@ -115,6 +117,27 @@ export interface IEPDocument {
     vi: IEPSection[];
     es: IEPSection[];
     zh: IEPSection[];
+    // Add other languages as needed
+  };
+  
+  // Missing information insights by language
+  missingInfo?: {
+    en?: Array<{
+      category: string;
+      description: string;
+    }>;
+    vi?: Array<{
+      category: string;
+      description: string;
+    }>;
+    es?: Array<{
+      category: string;
+      description: string;
+    }>;
+    zh?: Array<{
+      category: string;
+      description: string;
+    }>;
     // Add other languages as needed
   };
   
