@@ -391,53 +391,78 @@ def save_api_fields(params):
     user_id = params['user_id']
     field_updates = params['field_updates']  # Dict of field paths and their values
     
-    # Group updates by parent field to handle nested paths properly
-    parent_fields = {}
-    simple_fields = {}
+    print(f"Saving API fields for {iep_id}: {list(field_updates.keys())}")
+    
+    # First, ensure parent maps exist for nested fields
+    parent_fields_to_init = set()
+    nested_updates = []
+    simple_updates = []
     
     for field_path, field_value in field_updates.items():
         if '.' in field_path:
             parts = field_path.split('.')
             if len(parts) == 2:
                 parent_field, lang_key = parts
-                if parent_field not in parent_fields:
-                    parent_fields[parent_field] = {}
-                parent_fields[parent_field][lang_key] = field_value
+                parent_fields_to_init.add(parent_field)
+                nested_updates.append((parent_field, lang_key, field_value))
         else:
-            simple_fields[field_path] = field_value
+            simple_updates.append((field_path, field_value))
     
-    # Build update expression
+    # Step 1: Initialize parent maps if they don't exist (if we have nested updates)
+    if parent_fields_to_init:
+        init_expressions = []
+        init_expression_values = {}
+        init_expression_names = {}
+        
+        for parent_field in parent_fields_to_init:
+            parent_attr = f"#{parent_field}_init"
+            empty_map_ref = f":empty_map_{parent_field}"
+            
+            init_expression_names[parent_attr] = parent_field
+            init_expression_values[empty_map_ref] = {}
+            
+            init_expressions.append(f"{parent_attr} = if_not_exists({parent_attr}, {empty_map_ref})")
+        
+        init_expression = "SET " + ", ".join(init_expressions)
+        
+        print(f"Initializing parent maps: {init_expression}")
+        
+        try:
+            table.update_item(
+                Key={
+                    'iepId': iep_id,
+                    'childId': child_id
+                },
+                UpdateExpression=init_expression,
+                ExpressionAttributeNames=init_expression_names,
+                ExpressionAttributeValues=init_expression_values
+            )
+        except Exception as e:
+            print(f"Error initializing parent maps: {str(e)}")
+            # Continue anyway - they might already exist
+    
+    # Step 2: Update the actual values
     update_expressions = []
     expression_values = {}
     expression_names = {}
     value_counter = 0
     
-    # Handle parent fields (like summaries, sections, etc.) with nested updates
-    for parent_field, lang_values in parent_fields.items():
-        parent_attr = f"#{parent_field}"
-        empty_map_ref = f":empty_map_{value_counter}"
+    # Handle nested field updates
+    for parent_field, lang_key, field_value in nested_updates:
+        parent_attr = f"#{parent_field}_{value_counter}"
+        lang_attr = f"#{lang_key}_{value_counter}"
+        value_ref = f":val{value_counter}"
         
         expression_names[parent_attr] = parent_field
-        expression_values[empty_map_ref] = {}
+        expression_names[lang_attr] = lang_key
+        expression_values[value_ref] = field_value
         
-        # Initialize parent field as empty map if it doesn't exist
-        update_expressions.append(f"{parent_attr} = if_not_exists({parent_attr}, {empty_map_ref})")
+        update_expressions.append(f"{parent_attr}.{lang_attr} = {value_ref}")
         value_counter += 1
-        
-        # Now add the language-specific values
-        for lang_key, lang_value in lang_values.items():
-            lang_attr = f"#{lang_key}_{value_counter}"
-            value_ref = f":val{value_counter}"
-            
-            expression_names[lang_attr] = lang_key
-            expression_values[value_ref] = lang_value
-            
-            update_expressions.append(f"{parent_attr}.{lang_attr} = {value_ref}")
-            value_counter += 1
     
-    # Handle simple fields
-    for field_path, field_value in simple_fields.items():
-        attr_name = f"#{field_path}"
+    # Handle simple field updates
+    for field_path, field_value in simple_updates:
+        attr_name = f"#{field_path}_{value_counter}"
         value_ref = f":val{value_counter}"
         
         expression_names[attr_name] = field_path
