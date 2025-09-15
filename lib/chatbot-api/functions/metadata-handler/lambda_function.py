@@ -75,18 +75,29 @@ dynamodb = boto3.client('dynamodb')  # for document status updates
 ssm = boto3.client('ssm')  # for accessing parameter store
 lambda_client = boto3.client('lambda')
 
-# Get API keys directly from environment variables (passed by CDK)
-mistral_api_key = os.environ.get('MISTRAL_API_KEY')
-if mistral_api_key:
-    print(f"Successfully retrieved Mistral API key from environment variables")
-else:
-    print(f"ERROR: MISTRAL_API_KEY not found in environment variables")
+# Retrieve MISTRAL_API_KEY from Parameter Store with caching
+mistral_api_key_param_name = os.environ.get('MISTRAL_API_KEY_PARAMETER_NAME')
+try:
+    mistral_api_key = ssm.get_parameter(Name=mistral_api_key_param_name, WithDecryption=True)['Parameter']['Value']
+    print(f"Successfully retrieved Mistral API key from parameter store")
+    # Set it in environment for the mistral_ocr module
+    os.environ['MISTRAL_API_KEY'] = mistral_api_key
+    print("Mistral API key set in environment")
+except Exception as e:
+    print(f"Error retrieving Mistral API key: {str(e)}")
+    mistral_api_key = None
 
-openai_api_key = os.environ.get('OPENAI_API_KEY')
-if openai_api_key:
-    print(f"Successfully retrieved OpenAI API key from environment variables")
-else:
-    print(f"ERROR: OPENAI_API_KEY not found in environment variables")
+# Retrieve OPENAI_API_KEY from Parameter Store with caching  
+openai_api_key_param_name = os.environ.get('OPENAI_API_KEY_PARAMETER_NAME')
+try:
+    openai_api_key = ssm.get_parameter(Name=openai_api_key_param_name, WithDecryption=True)['Parameter']['Value']
+    print(f"Successfully retrieved OpenAI API key from parameter store")
+    # Set it in environment for the open_ai_agent module
+    os.environ['OPENAI_API_KEY'] = openai_api_key
+    print("OpenAI API key set in environment for agents")
+except Exception as e:
+    print(f"Error retrieving OpenAI API key: {str(e)}")
+    openai_api_key = None
 
 def format_data_for_dynamodb(section_data):
     """

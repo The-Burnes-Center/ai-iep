@@ -36,9 +36,25 @@ class OpenAIAgent:
             str: The OpenAI API key.
         """
         key = os.environ.get('OPENAI_API_KEY')
-        if not key:
-            logger.error("OPENAI_API_KEY not found in environment variables - CDK should pass this directly")
-        return key
+        if key and not key.startswith('AQICA'):
+            return key
+            
+        # Fallback to SSM Parameter Store
+        param = os.environ.get('OPENAI_API_KEY_PARAMETER_NAME')
+        if param:
+            try:
+                ssm = boto3.client('ssm')
+                resp = ssm.get_parameter(Name=param, WithDecryption=True)
+                key = resp['Parameter']['Value']
+                # Cache in environment for future use
+                os.environ['OPENAI_API_KEY'] = key
+                logger.info("Successfully retrieved OPENAI_API_KEY from SSM")
+                return key
+            except Exception as e:
+                logger.error(f"Error retrieving OPENAI_API_KEY from SSM: {str(e)}")
+        
+        logger.error("OPENAI_API_KEY not available from environment or SSM")
+        return None
 
     # --- tool factories unchanged ---
     def _create_ocr_text_tool(self):

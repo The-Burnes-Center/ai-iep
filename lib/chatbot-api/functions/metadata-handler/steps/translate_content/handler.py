@@ -102,10 +102,26 @@ def lambda_handler(event, context):
         source_result = json.loads(source_ddb_result['body'])['data']
         print(f"Retrieved {content_type} data for translation")
         
-        # Create optimized agent for translation with direct env var access (0ms overhead)
+        # Create optimized agent for translation with SSM fallback
         api_key = os.environ.get('OPENAI_API_KEY')
+        
+        # If encrypted or missing, fetch from SSM
+        if not api_key or api_key.startswith('AQICA'):
+            param_name = os.environ.get('OPENAI_API_KEY_PARAMETER_NAME')
+            if param_name:
+                try:
+                    ssm = boto3.client('ssm')
+                    response = ssm.get_parameter(Name=param_name, WithDecryption=True)
+                    api_key = response['Parameter']['Value']
+                    # Cache in environment for future use
+                    os.environ['OPENAI_API_KEY'] = api_key
+                    print("Successfully retrieved OPENAI_API_KEY from SSM")
+                except Exception as e:
+                    print(f"Error retrieving OPENAI_API_KEY from SSM: {str(e)}")
+                    raise Exception("Failed to retrieve OPENAI_API_KEY from SSM")
+        
         if not api_key:
-            raise Exception("OPENAI_API_KEY environment variable not set")
+            raise Exception("OPENAI_API_KEY not available from environment or SSM")
         
         optimized_agent = OptimizedTranslationAgent(api_key=api_key)
         

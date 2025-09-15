@@ -169,9 +169,8 @@ export class LambdaFunctionStack extends cdk.Stack {
     
     this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
 
-    // Get API keys from SSM at deployment time (much faster than runtime SSM calls)
-    const openaiApiKey = ssm.StringParameter.valueFromLookup(scope, '/ai-iep/OPENAI_API_KEY');
-    const mistralApiKey = ssm.StringParameter.valueFromLookup(scope, '/ai-iep/MISTRAL_API_KEY');
+    // Note: API keys will be fetched at runtime from SSM SecureString parameters
+    // CDK valueFromLookup doesn't properly decrypt customer-managed KMS encrypted parameters
 
     // Define the Lambda function for metadata
     const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
@@ -190,9 +189,9 @@ export class LambdaFunctionStack extends cdk.Stack {
         "BUCKET": props.knowledgeBucket.bucketName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName, 
-        // API keys passed directly as environment variables (no SSM calls needed)
-        "OPENAI_API_KEY": openaiApiKey,
-        "MISTRAL_API_KEY": mistralApiKey
+        // SSM parameter names for encrypted API keys (runtime fetch with caching)
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
       },
       timeout: cdk.Duration.seconds(900),
       memorySize: 2048,
@@ -219,6 +218,18 @@ export class LambdaFunctionStack extends cdk.Stack {
         props.knowledgeBucket.bucketArn + "/*",
         `arn:aws:bedrock:${this.region}::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0`,
         '*', // Comprehend permissions apply to all resources
+      ]
+    }));
+
+    // Add SSM permissions for API key retrieval
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'ssm:GetParameter'
+      ],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`
       ]
     }));
 
@@ -273,9 +284,9 @@ export class LambdaFunctionStack extends cdk.Stack {
         "BUCKET": props.knowledgeBucket.bucketName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
-        // Direct API keys for 0ms access (no runtime SSM calls needed)
-        "OPENAI_API_KEY": openaiApiKey,
-        "MISTRAL_API_KEY": mistralApiKey
+        // SSM parameter names for encrypted API keys (runtime fetch with caching)
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
       },
       timeout: cdk.Duration.seconds(60),
       memorySize: 1024,
@@ -288,9 +299,9 @@ export class LambdaFunctionStack extends cdk.Stack {
       "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
       "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
       "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName,
-      // Direct API keys for 0ms access (no runtime SSM calls needed)
-      "OPENAI_API_KEY": openaiApiKey,
-      "MISTRAL_API_KEY": mistralApiKey
+      // SSM parameter names for encrypted API keys (runtime fetch with caching)
+      "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+      "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
     };
 
     // Common permissions for step function Lambdas
@@ -334,6 +345,17 @@ export class LambdaFunctionStack extends cdk.Stack {
           'comprehend:DetectPiiEntities'
         ],
         resources: ['*']
+      }),
+      // SSM permissions for API key retrieval
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'ssm:GetParameter'
+        ],
+        resources: [
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`,
+          `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`
+        ]
       }),
       // Bedrock permissions  
       new iam.PolicyStatement({
@@ -585,7 +607,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       handler: 'lambda_function.lambda_handler',
       environment: {
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-        "OPENAI_API_KEY": openaiApiKey,
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
         "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName
       },
       timeout: cdk.Duration.seconds(300),

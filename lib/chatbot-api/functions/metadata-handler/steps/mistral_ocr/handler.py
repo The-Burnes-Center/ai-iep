@@ -14,15 +14,6 @@ def lambda_handler(event, context):
     """
     print(f"MistralOCR handler received: {json.dumps(event)}")
     
-    # Debug: Check if API key is available
-    mistral_key = os.environ.get('MISTRAL_API_KEY')
-    if mistral_key:
-        print(f"MISTRAL_API_KEY found in environment (length: {len(mistral_key)})")
-        print(f"MISTRAL_API_KEY starts with: {mistral_key[:10]}...")
-    else:
-        print("ERROR: MISTRAL_API_KEY not found in environment variables!")
-        print(f"Available environment variables: {list(os.environ.keys())}")
-    
     try:
         s3_bucket = event['s3_bucket']
         s3_key = event['s3_key']

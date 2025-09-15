@@ -39,12 +39,38 @@ def _get_document_item(iep_id: str, child_id: str | None) -> Dict[str, Any] | No
     return None
 
 
+# Global cache for API key (reused across Lambda invocations)
+_cached_openai_api_key = None
+
 def _get_openai_client() -> OpenAI | None:
+    global _cached_openai_api_key
+    
+    # Return cached client if available
+    if _cached_openai_api_key:
+        return OpenAI(api_key=_cached_openai_api_key)
+    
+    # First try direct environment variable
     key = os.environ.get('OPENAI_API_KEY')
-    if not key:
-        logger.error('OPENAI_API_KEY not found in environment variables - CDK should pass this directly')
-        return None
-    return OpenAI(api_key=key)
+    
+    if key and not key.startswith('AQICA'):
+        _cached_openai_api_key = key
+        return OpenAI(api_key=key)
+    
+    # Fetch from SSM Parameter Store with decryption
+    param = os.environ.get('OPENAI_API_KEY_PARAMETER_NAME')
+    if param:
+        try:
+            ssm = boto3.client('ssm')
+            resp = ssm.get_parameter(Name=param, WithDecryption=True)
+            key = resp['Parameter']['Value']
+            _cached_openai_api_key = key
+            logger.info('Successfully retrieved and cached OPENAI_API_KEY from SSM')
+            return OpenAI(api_key=key)
+        except Exception as e:
+            logger.error(f'Error retrieving OPENAI_API_KEY from SSM: {str(e)}')
+    
+    logger.error('OPENAI_API_KEY not available from environment or SSM')
+    return None
 
 
 class MissingInfoItem(BaseModel):
