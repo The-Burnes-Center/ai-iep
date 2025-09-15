@@ -21,22 +21,7 @@ def get_mistral_api_key():
     mistral_api_key = os.environ.get('MISTRAL_API_KEY')
     
     if not mistral_api_key:
-        logger.warning("Mistral API key not found in environment variables")
-        # Fallback to SSM in case Lambda didn't set it
-        param_name = os.environ.get('MISTRAL_API_KEY_PARAMETER_NAME')
-        if param_name:
-            try:
-                ssm = boto3.client('ssm')
-                response = ssm.get_parameter(Name=param_name, WithDecryption=True)
-                mistral_api_key = response['Parameter']['Value']
-                # Set in environment for future use
-                os.environ['MISTRAL_API_KEY'] = mistral_api_key
-                logger.info("Successfully retrieved Mistral API key from SSM Parameter Store")
-            except Exception as e:
-                logger.error(f"Error retrieving Mistral API key from SSM: {str(e)}")
-    
-    if not mistral_api_key:
-        logger.error("No Mistral API key available")
+        logger.error("MISTRAL_API_KEY not found in environment variables - CDK should pass this directly")
         
     return mistral_api_key
 

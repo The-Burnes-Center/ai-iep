@@ -169,6 +169,10 @@ export class LambdaFunctionStack extends cdk.Stack {
     
     this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
 
+    // Get API keys from SSM at deployment time (much faster than runtime SSM calls)
+    const openaiApiKey = ssm.StringParameter.valueFromLookup(scope, '/ai-iep/OPENAI_API_KEY');
+    const mistralApiKey = ssm.StringParameter.valueFromLookup(scope, '/ai-iep/MISTRAL_API_KEY');
+
     // Define the Lambda function for metadata
     const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
@@ -186,8 +190,9 @@ export class LambdaFunctionStack extends cdk.Stack {
         "BUCKET": props.knowledgeBucket.bucketName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName, 
-        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
-        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+        // API keys passed directly as environment variables (no SSM calls needed)
+        "OPENAI_API_KEY": openaiApiKey,
+        "MISTRAL_API_KEY": mistralApiKey
       },
       timeout: cdk.Duration.seconds(900),
       memorySize: 2048,
@@ -250,10 +255,6 @@ export class LambdaFunctionStack extends cdk.Stack {
     // ==========================================
     // STEP FUNCTIONS REFACTORED METADATA HANDLER
     // ==========================================
-
-    // Get API keys from SSM at deployment time (much faster than runtime SSM calls)
-    const openaiApiKey = ssm.StringParameter.valueFromLookup(scope, '/ai-iep/OPENAI_API_KEY');
-    const mistralApiKey = ssm.StringParameter.valueFromLookup(scope, '/ai-iep/MISTRAL_API_KEY');
 
     // Create DDB service function first so we can reference it in environment variables
     this.ddbServiceFunction = createTaggedLambda('DDBServiceFunction', {
@@ -584,7 +585,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       handler: 'lambda_function.lambda_handler',
       environment: {
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
-        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "OPENAI_API_KEY": openaiApiKey,
         "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName
       },
       timeout: cdk.Duration.seconds(300),

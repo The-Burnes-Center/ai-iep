@@ -37,15 +37,7 @@ class OpenAIAgent:
         """
         key = os.environ.get('OPENAI_API_KEY')
         if not key:
-            logger.warning("OPENAI_API_KEY not in env, fetching from SSM")
-            param = os.environ.get('OPENAI_API_KEY_PARAMETER_NAME')
-            if param:
-                ssm = boto3.client('ssm')
-                resp = ssm.get_parameter(Name=param, WithDecryption=True)
-                key = resp['Parameter']['Value']
-                os.environ['OPENAI_API_KEY'] = key
-        if not key:
-            logger.error("No OpenAI API key available")
+            logger.error("OPENAI_API_KEY not found in environment variables - CDK should pass this directly")
         return key
 
     # --- tool factories unchanged ---

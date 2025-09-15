@@ -42,14 +42,7 @@ def _get_document_item(iep_id: str, child_id: str | None) -> Dict[str, Any] | No
 def _get_openai_client() -> OpenAI | None:
     key = os.environ.get('OPENAI_API_KEY')
     if not key:
-        param = os.environ.get('OPENAI_API_KEY_PARAMETER_NAME')
-        if param:
-            ssm = boto3.client('ssm')
-            resp = ssm.get_parameter(Name=param, WithDecryption=True)
-            key = resp['Parameter']['Value']
-            os.environ['OPENAI_API_KEY'] = key
-    if not key:
-        logger.error('OPENAI_API_KEY not available')
+        logger.error('OPENAI_API_KEY not found in environment variables - CDK should pass this directly')
         return None
     return OpenAI(api_key=key)
 
