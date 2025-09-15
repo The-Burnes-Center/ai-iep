@@ -20,8 +20,12 @@ def get_mistral_api_key():
     # Get from environment - Lambda should have already set this
     mistral_api_key = os.environ.get('MISTRAL_API_KEY')
     
-    if not mistral_api_key:
+    if mistral_api_key:
+        logger.info(f"MISTRAL_API_KEY found (length: {len(mistral_api_key)})")
+        logger.info(f"MISTRAL_API_KEY starts with: {mistral_api_key[:10]}...")
+    else:
         logger.error("MISTRAL_API_KEY not found in environment variables - CDK should pass this directly")
+        logger.error(f"Available environment variables: {list(os.environ.keys())}")
         
     return mistral_api_key
 
