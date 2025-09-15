@@ -391,41 +391,60 @@ def save_api_fields(params):
     user_id = params['user_id']
     field_updates = params['field_updates']  # Dict of field paths and their values
     
-    # Build dynamic update expression based on the fields provided
+    # Group updates by parent field to handle nested paths properly
+    parent_fields = {}
+    simple_fields = {}
+    
+    for field_path, field_value in field_updates.items():
+        if '.' in field_path:
+            parts = field_path.split('.')
+            if len(parts) == 2:
+                parent_field, lang_key = parts
+                if parent_field not in parent_fields:
+                    parent_fields[parent_field] = {}
+                parent_fields[parent_field][lang_key] = field_value
+        else:
+            simple_fields[field_path] = field_value
+    
+    # Build update expression
     update_expressions = []
     expression_values = {}
     expression_names = {}
     value_counter = 0
     
-    for field_path, field_value in field_updates.items():
-        # Handle nested field paths like "summaries.en", "sections.es", "missingInfo.vi"
-        if '.' in field_path:
-            parts = field_path.split('.')
-            if len(parts) == 2:
-                # Format: "summaries.en" -> SET summaries.#lang1 = :val1
-                parent_field, lang_key = parts
-                
-                # Use expression names for reserved words and language keys
-                parent_attr = f"#{parent_field}"
-                lang_attr = f"#{lang_key}_{value_counter}"
-                value_ref = f":val{value_counter}"
-                
-                expression_names[parent_attr] = parent_field
-                expression_names[lang_attr] = lang_key
-                expression_values[value_ref] = field_value
-                
-                update_expressions.append(f"{parent_attr}.{lang_attr} = {value_ref}")
-                value_counter += 1
-        else:
-            # Simple field path like "status"
-            attr_name = f"#{field_path}"
+    # Handle parent fields (like summaries, sections, etc.) with nested updates
+    for parent_field, lang_values in parent_fields.items():
+        parent_attr = f"#{parent_field}"
+        empty_map_ref = f":empty_map_{value_counter}"
+        
+        expression_names[parent_attr] = parent_field
+        expression_values[empty_map_ref] = {}
+        
+        # Initialize parent field as empty map if it doesn't exist
+        update_expressions.append(f"{parent_attr} = if_not_exists({parent_attr}, {empty_map_ref})")
+        value_counter += 1
+        
+        # Now add the language-specific values
+        for lang_key, lang_value in lang_values.items():
+            lang_attr = f"#{lang_key}_{value_counter}"
             value_ref = f":val{value_counter}"
             
-            expression_names[attr_name] = field_path
-            expression_values[value_ref] = field_value
+            expression_names[lang_attr] = lang_key
+            expression_values[value_ref] = lang_value
             
-            update_expressions.append(f"{attr_name} = {value_ref}")
+            update_expressions.append(f"{parent_attr}.{lang_attr} = {value_ref}")
             value_counter += 1
+    
+    # Handle simple fields
+    for field_path, field_value in simple_fields.items():
+        attr_name = f"#{field_path}"
+        value_ref = f":val{value_counter}"
+        
+        expression_names[attr_name] = field_path
+        expression_values[value_ref] = field_value
+        
+        update_expressions.append(f"{attr_name} = {value_ref}")
+        value_counter += 1
     
     # Always update the timestamp
     expression_names["#updated_at"] = "updated_at"
