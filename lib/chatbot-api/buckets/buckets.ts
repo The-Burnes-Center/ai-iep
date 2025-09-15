@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 import { createBucketPolicy } from './bucket-policy';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
+import { getEnvironment } from '../../tags';
 
 export interface S3BucketStackProps extends cdk.StackProps {
   encryptionKey?: kms.IKey;
@@ -15,8 +16,12 @@ export class S3BucketStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: S3BucketStackProps) {
     super(scope, id, props);
 
-    // Create a new S3 bucket
+    // Create a new S3 bucket with explicit name to support cross-environment usage
+    const environment = getEnvironment();
+    const bucketName = `ai-iep-knowledge-source-${environment}`;
+    
     this.knowledgeBucket = new s3.Bucket(scope, 'KnowledgeSourceBucket', {      
+      bucketName: bucketName,
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
