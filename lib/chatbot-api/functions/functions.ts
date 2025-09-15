@@ -251,6 +251,10 @@ export class LambdaFunctionStack extends cdk.Stack {
     // STEP FUNCTIONS REFACTORED METADATA HANDLER
     // ==========================================
 
+    // Get API keys from SSM at deployment time (much faster than runtime SSM calls)
+    const openaiApiKey = ssm.StringParameter.valueFromLookup(scope, '/ai-iep/OPENAI_API_KEY');
+    const mistralApiKey = ssm.StringParameter.valueFromLookup(scope, '/ai-iep/MISTRAL_API_KEY');
+
     // Create DDB service function first so we can reference it in environment variables
     this.ddbServiceFunction = createTaggedLambda('DDBServiceFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
@@ -268,23 +272,24 @@ export class LambdaFunctionStack extends cdk.Stack {
         "BUCKET": props.knowledgeBucket.bucketName,
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
-        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
-        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY"
+        // Direct API keys for 0ms access (no runtime SSM calls needed)
+        "OPENAI_API_KEY": openaiApiKey,
+        "MISTRAL_API_KEY": mistralApiKey
       },
       timeout: cdk.Duration.seconds(60),
       memorySize: 1024,
       ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
     });
 
-
     // Common environment variables for step functions
     const stepFunctionEnvVars = {
       "BUCKET": props.knowledgeBucket.bucketName,
       "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
       "USER_PROFILES_TABLE": props.userProfilesTable.tableName,
-      "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY",
-      "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
-      "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName
+      "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName,
+      // Direct API keys for 0ms access (no runtime SSM calls needed)
+      "OPENAI_API_KEY": openaiApiKey,
+      "MISTRAL_API_KEY": mistralApiKey
     };
 
     // Common permissions for step function Lambdas
@@ -319,15 +324,7 @@ export class LambdaFunctionStack extends cdk.Stack {
           props.userProfilesTable.tableArn
         ]
       }),
-      // SSM permissions
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['ssm:GetParameter'],
-        resources: [
-          `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`,
-          `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
-        ]
-      }),
+      // Note: SSM permissions removed - API keys now passed as environment variables
       // Comprehend permissions
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,

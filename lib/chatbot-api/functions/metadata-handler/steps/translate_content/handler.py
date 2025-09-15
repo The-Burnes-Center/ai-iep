@@ -5,7 +5,7 @@ import json
 import os
 import boto3
 import traceback
-from open_ai_agent import OpenAIAgent
+from translation_agent import OptimizedTranslationAgent
 
 def lambda_handler(event, context):
     """
@@ -102,23 +102,32 @@ def lambda_handler(event, context):
         source_result = json.loads(source_ddb_result['body'])['data']
         print(f"Retrieved {content_type} data for translation")
         
-        # Create OpenAI agent for translation
-        agent = OpenAIAgent()
+        # Create optimized agent for translation with direct env var access (0ms overhead)
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            raise Exception("OPENAI_API_KEY environment variable not set")
         
-        # Translate content to target languages
+        optimized_agent = OptimizedTranslationAgent(api_key=api_key)
+        
+        # Translate content to target languages using agent framework
         translations = {}
         
         for lang in target_languages:
-            print(f"Translating {content_type} to {lang}")
+            print(f"Translating {content_type} to {lang} using optimized agent framework")
             
-            translated_content = agent.translate_content(source_result, lang, content_type=content_type)
+            # Use optimized agent-based translation for better quality and tool usage
+            translated_content = optimized_agent.translate_content_with_agent(
+                source_result, 
+                lang, 
+                content_type=content_type
+            )
             
             if "error" in translated_content:
                 print(f"Translation to {lang} failed: {translated_content['error']}")
                 continue
             
             translations[lang] = translated_content
-            print(f"Translation to {lang} completed successfully")
+            print(f"Translation to {lang} completed successfully using optimized agent framework")
         
         print(f"{content_type} translation completed for {len(translations)} languages")
         

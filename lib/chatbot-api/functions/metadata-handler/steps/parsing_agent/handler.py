@@ -3,6 +3,7 @@ Generate English summary, sections, and document index using OpenAI - Core busin
 """
 import json
 import os
+import boto3
 import traceback
 from open_ai_agent import OpenAIAgent
 
@@ -66,8 +67,12 @@ def lambda_handler(event, context):
         
         print(f"Retrieved redacted OCR data from DynamoDB: {len(actual_redacted_ocr.get('pages', []))} pages")
         
-        # Create OpenAI Agent with redacted OCR data
-        agent = OpenAIAgent(ocr_data=actual_redacted_ocr)
+        # Create OpenAI Agent with redacted OCR data and direct env var access (0ms overhead)
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            raise Exception("OPENAI_API_KEY environment variable not set")
+            
+        agent = OpenAIAgent(ocr_data=actual_redacted_ocr, api_key=api_key)
         
         # Analyze the document in English only
         english_result = agent.analyze_document()
