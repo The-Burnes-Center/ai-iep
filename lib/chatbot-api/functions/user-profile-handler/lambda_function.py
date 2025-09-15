@@ -14,7 +14,7 @@ user_profiles_table = dynamodb.Table(os.environ['USER_PROFILES_TABLE'])
 iep_documents_table = dynamodb.Table(os.environ['IEP_DOCUMENTS_TABLE'])
 
 # Initialize KMS client using Lambda's region from AWS_REGION (provided by runtime)
-region = os.environ.get('AWS_REGION', 'us-east-1')
+region = os.environ.get('AWS_REGION', os.environ.get('AWS_DEFAULT_REGION', 'us-east-1'))
 kms_client = boto3.client('kms', region_name=region)
 kms_key_alias = os.environ.get('AIEP_KMS_KEY_ALIAS', 'alias/aiep/app')
 

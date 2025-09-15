@@ -70,7 +70,7 @@ except Exception as e:
 
 # AWS clients
 s3 = boto3.client('s3')
-bedrock_retrieve = boto3.client('bedrock-agent-runtime', region_name='us-east-1')  # for knowledge base retrieval
+bedrock_retrieve = boto3.client('bedrock-agent-runtime', region_name=os.environ.get('AWS_REGION', 'us-east-1'))  # for knowledge base retrieval
 dynamodb = boto3.client('dynamodb')  # for document status updates
 ssm = boto3.client('ssm')  # for accessing parameter store
 lambda_client = boto3.client('lambda')

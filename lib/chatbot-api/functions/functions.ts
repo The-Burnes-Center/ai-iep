@@ -212,7 +212,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       resources: [
         props.knowledgeBucket.bucketArn,
         props.knowledgeBucket.bucketArn + "/*",
-        'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
+        `arn:aws:bedrock:${this.region}::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0`,
         '*', // Comprehend permissions apply to all resources
       ]
     }));
@@ -343,7 +343,7 @@ export class LambdaFunctionStack extends cdk.Stack {
           'bedrock-agent-runtime:Retrieve'
         ],
         resources: [
-          'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0',
+          `arn:aws:bedrock:${this.region}::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0`,
           '*'
         ]
       })
