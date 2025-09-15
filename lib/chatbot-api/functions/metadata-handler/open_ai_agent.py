@@ -132,7 +132,7 @@ class OpenAIAgent:
             name="IEP Document Analyzer",
             model=model,
             instructions=prompt,
-            model_settings=ModelSettings(parallel_tool_calls=True, temperature=0.0),
+            model_settings=ModelSettings(parallel_tool_calls=True),
             tools=[
                 self.ocr_text_tool, 
                 self.ocr_page_tool,
@@ -220,7 +220,7 @@ class OpenAIAgent:
             model=model,
             instructions=translation_prompt,
             tools=[self.language_context_tool],
-            model_settings=ModelSettings(temperature=0.0), 
+            model_settings=ModelSettings(), 
             output_type=TranslationOutput
         )
 

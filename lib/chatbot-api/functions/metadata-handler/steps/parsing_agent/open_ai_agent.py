@@ -116,7 +116,7 @@ class OpenAIAgent:
             name="IEP Document Analyzer",
             model=model,
             instructions=prompt,
-            model_settings=ModelSettings(parallel_tool_calls=True, temperature=0.0),
+            model_settings=ModelSettings(parallel_tool_calls=True),
             tools=[
                 self.ocr_text_tool, 
                 self.ocr_page_tool,

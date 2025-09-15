@@ -70,7 +70,6 @@ class OptimizedTranslationAgent:
                 ],
                 model_settings=ModelSettings(
                     parallel_tool_calls=True,
-                    temperature=0.0,
                 )
             )
 
