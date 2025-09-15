@@ -162,7 +162,6 @@ class OpenAIAgent:
             logger.error(traceback.format_exc(limit=3))
             return {"error": f"Validation failed: {str(e)}"}
 
-    # Note: Translation functionality removed - handled by dedicated TranslateContent step in new pipeline
 
     def _ensure_complete_english_sections(self, data):
         """
