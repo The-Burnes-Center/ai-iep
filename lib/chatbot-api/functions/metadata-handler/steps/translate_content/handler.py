@@ -228,6 +228,14 @@ def lambda_handler(event, context):
         
         print(f"{content_type} translations saved directly to API fields: {list(field_updates.keys())}")
         
+        # Set the result key based on content type
+        if content_type == 'parsing_result':
+            result_key = 'parsing_translations'
+        elif content_type == 'missing_info':
+            result_key = 'missing_info_translations'
+        else:
+            result_key = f'{content_type}_translations'
+        
         # Return result
         event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
         return {
