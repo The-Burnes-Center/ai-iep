@@ -152,7 +152,7 @@ def lambda_handler(event, context):
         if not api_key:
             raise Exception("OPENAI_API_KEY not available from environment or SSM")
         
-        optimized_agent = OptimizedTranslationAgent(api_key=api_key)
+        optimized_agent = OptimizedTranslationAgent()
         
         # Translate content to target languages using agent framework
         translations = {}
