@@ -11,7 +11,7 @@ const AccountCenter: React.FC = () => {
   const handleAccordionClick = (id: string) => {
     switch (id) {
       case '0':
-        navigate('/update-profile');
+        navigate('/account-center/profile');
         break;
       // Future accordion items can be handled here
       // case '1':
