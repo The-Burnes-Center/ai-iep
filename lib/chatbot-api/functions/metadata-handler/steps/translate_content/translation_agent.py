@@ -2,13 +2,10 @@
 Optimized Translation Agent for New Pipeline
 Combines the power of the old pipeline's agents with new pipeline efficiency
 """
-import os
-import boto3
 import logging
 import json
-from openai import OpenAI
 from agents import Agent, Runner, function_tool, ModelSettings
-from config import get_translation_prompt, get_language_context
+from config import get_language_context
 from data_model import TranslationSectionContent, AbbreviationLegend, MissingInfoTranslation
 
 # Configure logging
@@ -16,12 +13,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class OptimizedTranslationAgent:
-    def __init__(self, api_key):
+    def __init__(self):
         """
         Initialize optimized translation agent for new pipeline.
         Designed for single-language, high-performance translation.
         """
-        self.api_key = api_key
         self.language_context_tool = self._create_language_context_tool()
         self.terminology_tool = self._create_terminology_tool()
 

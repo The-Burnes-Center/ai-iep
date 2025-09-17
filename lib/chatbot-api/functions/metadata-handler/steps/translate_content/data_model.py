@@ -15,13 +15,6 @@ class AbbreviationLegend(BaseModel):
 # TRANSLATION-SPECIFIC MODELS
 # =============================================================================
 
-class TranslationSummaries(BaseModel):
-    """Summaries for translations (excludes English as it's already available)"""
-    es: str
-    vi: str
-    zh: str
-
-
 class TranslationSectionContent(BaseModel):
     """Section content for translations (simplified structure)"""
     title: str
@@ -29,36 +22,7 @@ class TranslationSectionContent(BaseModel):
     page_numbers: List[int]
 
 
-class TranslationSections(BaseModel):
-    """Sections for each translated language (excludes English)"""
-    es: List[TranslationSectionContent]
-    vi: List[TranslationSectionContent]
-    zh: List[TranslationSectionContent]
-
-
-class TranslationDocumentIndex(BaseModel):
-    """Document index for translations (excludes English)"""
-    es: str
-    vi: str
-    zh: str
-
-
-class TranslationAbbreviations(BaseModel):
-    """Abbreviation legends for translations (excludes English)"""
-    es: List[AbbreviationLegend]
-    vi: List[AbbreviationLegend]
-    zh: List[AbbreviationLegend]
-
-
-class TranslationOutput(BaseModel):
-    """Complete translation output schema for all non-English languages"""
-    summaries: TranslationSummaries
-    sections: TranslationSections
-    document_index: TranslationDocumentIndex
-    abbreviations: TranslationAbbreviations
-
-    class Config:
-        extra = "forbid"
+ 
 
 
 # =============================================================================
