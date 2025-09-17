@@ -9,6 +9,7 @@ import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context'; 
 import './UpdateProfileName.css';
 import './ProfileForms.css';
+import DeleteButton from '../../components/DeleteButton';
 
 export default function DeleteAccount() {
   const appContext = useContext(AppContext);
@@ -176,14 +177,11 @@ export default function DeleteAccount() {
               <Form>
 
                 <div className="d-grid">
-                  <Button 
-                    variant="primary" 
-                    onClick={handleSaveAndContinue}
+                  <DeleteButton
+                    loading={loading}
+                    buttonText="Delete My Account"
                     disabled={!isFormValid() || saving}
-                    className="consent-button aiep-button"
-                  >
-                    {saving ? 'Saving' : 'Update Profile'}
-                  </Button>
+                  />
                 </div>
               </Form>
             </div>
