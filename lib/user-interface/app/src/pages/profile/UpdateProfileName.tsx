@@ -7,7 +7,7 @@ import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context'; 
-import './ProfileForms.css';
+import './UpdateProfileName.css';
 
 export default function UpdateProfileName() {
   const appContext = useContext(AppContext);
@@ -154,6 +154,7 @@ export default function UpdateProfileName() {
 
   return (
     <div>
+      {/* Back button */}
       <div className="mt-3 text-start px-3 py-2">
         <Button variant="outline-secondary" onClick={handleBackClick} className='aiep-button'>
           {t('common.back')}
