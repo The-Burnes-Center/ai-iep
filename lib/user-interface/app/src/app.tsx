@@ -18,6 +18,7 @@ import IEPDocumentView from './pages/iep-folder/IEPDocumentView';
 import SummaryAndTranslationsPage from './pages/iep-folder/SummaryAndTranslationsPage';
 import ViewAndAddChild from './pages/profile/ViewAndAddChild';
 import ViewAndAddParent from './pages/profile/ViewAndAddParent';
+import UpdateProfileName from './pages/profile/UpdateProfileName';
 import RevokeConsent from './pages/profile/RevokeConsent';
 import RightsAndOnboarding from './pages/RightsAndOnboarding';
 import ConsentForm from './pages/profile/ConsentForm';
@@ -37,7 +38,7 @@ function AppContent() {
   }, [location]);
   
   // Routes where header should be hidden
-  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/profile","/support-center","/about-aiep","/survey-form","/account-center"];
+  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/profile","/support-center","/about-aiep","/survey-form","/account-center","/update-profile"];
   
   // Check if current location is in the list of routes where header should be hidden
   const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
@@ -71,6 +72,7 @@ function AppContent() {
                 element={<ViewAndAddParent />} 
             />
             <Route path="/profile" element={<UserProfileForm />} />
+            <Route path="/update-profile" element={<UpdateProfileName />} />
             <Route path="/iep-documents" element={<IEPDocumentView />} />
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
