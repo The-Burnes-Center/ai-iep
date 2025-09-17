@@ -3,9 +3,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 2rem;
 }
-
 
 .update-profile-header {
     font-size: 2.6rem;
@@ -20,82 +18,27 @@
   line-height: 2;
   line-height: 1.6;
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-  padding-bottom: 2rem;
+  padding-bottom: 1.5rem;
 }
 
-/*Unchanged from ProfileForms.css*/
+.breadcrumb-item + .breadcrumb-item::before {
+  content: ">" !important;
+}
 
-.parent-name-title {
+.breadcrumb-item {
+  font-size: 1.5rem;
   font-family: 'salford-sans-variable', sans-serif;
   font-variation-settings: "slnt" 0, "wght" 600;
-  font-size: 1.75rem;
-  padding-right: 1rem;
-  padding-bottom: 2rem;
+  padding-bottom: 0.5rem;
 }
 
-.form-label {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
+/* Simplified breadcrumb link styling */
+.breadcrumb-item a {
+  text-decoration: none !important;
+  color: #1E1E1E !important;
+  opacity: 0.35;
 }
 
-.profile-form {
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-  box-shadow: none;
+.breadcrumb-item a:hover {
+  color: #00682F !important;
 }
-
-.consent-button {
-  font-family: 'salford-sans-variable', sans-serif;
-  font-variation-settings: "slnt" 0, "wght" 600;
-  text-transform: uppercase;
-}
-
-/* Disabled consent button styling */
-.consent-button:disabled {
-  background-color: #E7E4DC !important;
-  color: #A09E99 !important;
-  border-color: #E7E4DC !important;
-  opacity: 1 !important; /* Override Bootstrap's default opacity */
-}
-
-/* Remove hover effects when disabled */
-.consent-button:disabled:hover {
-  background-color: #E7E4DC !important;
-  color: #A09E99 !important;
-  border-color: #E7E4DC !important;
-  transform: none !important;
-}
-
-.aiep-button {
-    margin: 0 5px;
-    padding-left: 1.2rem !important;
-    padding-right: 1.2rem !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    font-family: 'salford-sans-variable', sans-serif !important;
-    font-size: 1.2rem !important;
-    font-variation-settings: "slnt" 0, "wght" 500;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid #00682F;
-    border: none;
-    border-radius: 20px !important;
-    transition: all 0.1s ease !important;
-    min-width: 120px;
-  }
-  
-  .aiep-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .aiep-button:disabled {
-    border: 1px solid #CBC6BC !important;
-    box-shadow: none;
-    color: #b3ada9 !important;
-    background-color: #F5F3EE;
-    cursor: not-allowed !important;
-  }

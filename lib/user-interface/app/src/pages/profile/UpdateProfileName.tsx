@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Container, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { Container, Form, Button, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
@@ -8,6 +8,7 @@ import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context'; 
 import './UpdateProfileName.css';
+import './ProfileForms.css';
 
 export default function UpdateProfileName() {
   const appContext = useContext(AppContext);
@@ -154,11 +155,12 @@ export default function UpdateProfileName() {
 
   return (
     <div>
-      {/* Back button */}
-      <div className="mt-3 text-start px-3 py-2">
-        <Button variant="outline-secondary" onClick={handleBackClick} className='aiep-button'>
-          {t('common.back')}
-        </Button>
+      {/* Breadcrumbs */}
+      <div className="mt-3 text-start px-4">
+        <Breadcrumb>
+          <Breadcrumb.Item onClick={handleBackClick}>ACCOUNT</Breadcrumb.Item>
+          <Breadcrumb.Item active>UPDATE PROFILE</Breadcrumb.Item>
+        </Breadcrumb>
       </div>
       
       <Container 
