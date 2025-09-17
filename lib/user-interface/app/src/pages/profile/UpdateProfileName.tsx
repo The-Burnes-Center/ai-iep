@@ -114,9 +114,9 @@ export default function UpdateProfileName() {
       
       // Navigate based on whether user has existing documents
       if (hasExistingDocument) {
-        navigate('/iep-documents');
+        navigate('/account-center');
       } else {
-        navigate('/iep-documents');
+        navigate('/account-center');
       }
     } catch (err) {
       console.error('Error saving parent name:', err);
@@ -131,7 +131,7 @@ export default function UpdateProfileName() {
   };
 
   const handleBackClick = () => {
-    navigate('/consent-form');
+    navigate('/account-center');
   };
 
   if (loading) {
@@ -170,7 +170,7 @@ export default function UpdateProfileName() {
             <div className="profile-form">
             {/*Add translations*/}
             <h4 className="update-profile-header">Update Profile</h4>
-
+            <p className='update-profile-description'>Your name or personal information will not be linked to any IEP summaries. It will only be used to tailor our messages for you on this app.</p>
               <Form>
                 <Row className="mb-4">
                   <Col md={12}>
@@ -193,7 +193,7 @@ export default function UpdateProfileName() {
                     disabled={!isFormValid() || saving}
                     className="consent-button aiep-button"
                   >
-                    {saving ? t('parent.button.saving') : t('parent.button.save')}
+                    {saving ? 'Saving' : 'Update Profile'}
                   </Button>
                 </div>
               </Form>

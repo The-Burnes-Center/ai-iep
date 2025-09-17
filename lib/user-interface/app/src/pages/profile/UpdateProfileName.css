@@ -11,8 +11,17 @@
     font-size: 2.6rem;
     font-family: 'salford-sans-variable', sans-serif;
     font-variation-settings: "slnt" 0, "wght" 600;
+    padding-bottom: 0.5rem;
   }
   
+.update-profile-description {
+  font-size: 1.125rem;
+  font-weight: 350;
+  line-height: 2;
+  line-height: 1.6;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  padding-bottom: 2rem;
+}
 
 /*Unchanged from ProfileForms.css*/
 
