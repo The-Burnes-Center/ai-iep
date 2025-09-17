@@ -159,7 +159,7 @@ export default function DeleteAccount() {
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
           <Breadcrumb.Item onClick={handleBackClick}>ACCOUNT</Breadcrumb.Item>
-          <Breadcrumb.Item active>DELETE PROFILE</Breadcrumb.Item>
+          <Breadcrumb.Item active>DELETE ACCOUNT</Breadcrumb.Item>
         </Breadcrumb>
       </div>
       
@@ -172,21 +172,8 @@ export default function DeleteAccount() {
             <div className="profile-form">
             {/*Add translations*/}
             <h4 className="update-profile-header">Delete Account</h4>
-            <p className='update-profile-description'>Your name or personal information will not be linked to any IEP summaries. It will only be used to tailor our messages for you on this app.</p>
+            <p className='update-profile-description'>This action will delete your account, as well as any information linked to it on our servers.<strong> You cannot undo this action,</strong> but you can create a new account.</p> 
               <Form>
-                <Row className="mb-4">
-                  <Col md={12}>
-                    <Form.Group controlId="formParentName">
-                      <Form.Label className="form-label">{t('parent.name.label')}</Form.Label>
-                      <Form.Control 
-                        type="text" 
-                        placeholder={t('parent.name.placeholder')}
-                        value={parentName} 
-                        onChange={(e) => setParentName(e.target.value)}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
 
                 <div className="d-grid">
                   <Button 
