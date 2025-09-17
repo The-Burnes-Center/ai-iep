@@ -14,12 +14,12 @@ const AccountCenter: React.FC = () => {
         navigate('/account-center/profile');
         break;
       // Future accordion items can be handled here
-      // case '1':
-      //   navigate('/change-language');
-      //   break;
-      // case '2':
-      //   navigate('/delete-account');
-      //   break;
+      case '1':
+        navigate('/account-center/change-language');
+        break;
+      case '2':
+        navigate('/account-center/delete-account');
+        break;
       // case '3':
       //   // Handle logout functionality
       //   break;
