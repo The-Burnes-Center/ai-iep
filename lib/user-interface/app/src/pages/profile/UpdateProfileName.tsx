@@ -163,15 +163,14 @@ export default function UpdateProfileName() {
       
       <Container 
         fluid 
-        className="profile-form-container"
+        className="update-profile-container"
       >
         <Row style={{ width: '100%', justifyContent: 'center' }}>
           <Col xs={12} md={8} lg={6}>
             <div className="profile-form">
-              <h2 className="parent-name-title">
-                {t('parent.title')}
-              </h2>
-              
+            {/*Add translations*/}
+            <h4 className="update-profile-header">Update Profile</h4>
+
               <Form>
                 <Row className="mb-4">
                   <Col md={12}>

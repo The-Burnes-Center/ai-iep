@@ -1,9 +1,20 @@
-.profile-form-container {
+.update-profile-container {
   min-height: 80vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 2rem;
 }
+
+
+.update-profile-header {
+    font-size: 2.6rem;
+    font-family: 'salford-sans-variable', sans-serif;
+    font-variation-settings: "slnt" 0, "wght" 600;
+  }
+  
+
+/*Unchanged from ProfileForms.css*/
 
 .parent-name-title {
   font-family: 'salford-sans-variable', sans-serif;
