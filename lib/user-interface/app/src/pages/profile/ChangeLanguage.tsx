@@ -52,9 +52,29 @@ export default function ChangeLanguage() {
     navigate('/account-center');
   };
 
-  const handlePreferredLanguageChange = (languageCode: string) => {
-    setProfile(prev => prev ? {...prev, secondaryLanguage: languageCode} : null);
-  };
+const handlePreferredLanguageChange = async (languageCode: string) => {
+  if (!profile || languageCode === profile.secondaryLanguage) return;
+  
+  const updatedProfile = {...profile, secondaryLanguage: languageCode};
+  setProfile(updatedProfile);
+  
+  try {
+    setSaving(true);
+    await apiClient.profile.updateProfile(updatedProfile);
+    
+    // Update language context
+    setLanguage(languageCode as SupportedLanguage);
+    
+    setOriginalProfile(updatedProfile);
+    addNotification('success', t('profile.success.update'));
+  } catch (err) {
+    // Revert on error
+    setProfile(originalProfile);
+    addNotification('error', t('profile.error.update'));
+  } finally {
+    setSaving(false);
+  }
+};
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -117,7 +137,7 @@ export default function ChangeLanguage() {
             {/*Add translations*/}
             <h4 className="update-profile-header">Change Language</h4>
             <p className='update-profile-description'>Your name or personal information will not be linked to any IEP summaries. It will only be used to tailor our messages for you on this app.</p>
-              <Form onSubmit={handleSubmit}>
+              <Form>
                 <Row className="mb-4">
                   <Col md={12}>
                     <Form.Group controlId="formParentName">
@@ -133,6 +153,7 @@ export default function ChangeLanguage() {
                       <Form.Select 
                         value={profile?.secondaryLanguage || 'en'}
                         onChange={e => handlePreferredLanguageChange(e.target.value)}
+                        disabled={saving}
                       >
                         {LANGUAGE_OPTIONS.map(option => (
                           <option key={option.value} value={option.value}>
@@ -143,17 +164,6 @@ export default function ChangeLanguage() {
                     </Form.Group>
                   </Col>
                 </Row>
-
-                <div className="d-grid">
-                  <Button 
-                    variant="primary" 
-                    type='submit'
-                    disabled={saving}
-                    className="consent-button aiep-button"
-                  >
-                    {saving ? 'Saving' : 'Update Profile'}
-                  </Button>
-                </div>
               </Form>
             </div>
           </Col>
