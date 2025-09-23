@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { ApiClient } from '../../common/api-client/api-client';
-import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage, SupportedLanguage } from '../../common/language-context'; 
@@ -21,7 +20,6 @@ const LANGUAGE_OPTIONS = [
 export default function ChangeLanguage() {
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
-  const iepDocumentClient = new IEPDocumentClient(appContext);
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
   const { t, setLanguage } = useLanguage();
@@ -29,39 +27,8 @@ export default function ChangeLanguage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [parentName, setParentName] = useState<string>('');
   const [saving, setSaving] = useState(false);
-  const [hasExistingDocument, setHasExistingDocument] = useState<boolean>(false);
   const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null);
-
-  useEffect(() => {
-    loadProfileAndCheckDocument();
-  }, []);
-
-  const loadProfileAndCheckDocument = async () => {
-    try {
-      setLoading(true);
-      
-      // Load user profile
-      const data = await apiClient.profile.getProfile();
-      setProfile(data);
-      
-      // Check if parentName exists in the profile
-      if (data.parentName) {
-        setParentName(data.parentName);
-      }
-      
-      // Check for existing documents
-      await checkForExistingDocument();
-      
-      setError(null);
-    } catch (err) {
-      console.error('Error loading profile or checking document:', err);
-      setError('Service unavailable');
-    } finally {
-      setLoading(false);
-    }
-  };
 
     useEffect(() => {
       loadProfile();
@@ -80,83 +47,6 @@ export default function ChangeLanguage() {
         setLoading(false);
       }
     };
-
-  const checkForExistingDocument = async () => {
-    try {
-      const document = await iepDocumentClient.getMostRecentDocumentWithSummary();
-      
-      // Check if document exists and has been processed or is processing
-      if (document && (document.status === "PROCESSED" || document.status === "PROCESSING")) {
-        setHasExistingDocument(true);
-      } else {
-        setHasExistingDocument(false);
-      }
-    } catch (err) {
-      console.error('Error checking for existing document:', err);
-      // If there's an error checking for documents, assume no document exists
-      setHasExistingDocument(false);
-    }
-  };
-
-  const handleSaveAndContinue = async () => {
-    if (!parentName.trim()) {
-      return; // Button should be disabled in this case
-    }
-
-    try {
-      setSaving(true);
-      
-      // Prepare updated profile data
-      const updatedProfileData = {
-        parentName: parentName.trim()
-      };
-      
-      // Update the profile with parent name
-      await apiClient.profile.updateProfile(updatedProfileData);
-      addNotification('success', 'Parent information saved successfully');
-      
-      // Check if user has any children - if not, create a default child
-      if (!profile?.children || profile.children.length === 0) {
-        try {
-          // Create a default child with generic information
-          // The user can update this later if needed
-          await apiClient.profile.addChild('My Child', profile?.city || 'Not specified');
-          console.log('Created default child for IEP document functionality');
-        } catch (childError) {
-          console.error('Error creating default child:', childError);
-          // Don't fail the flow if child creation fails - user can add manually later
-        }
-      }
-      
-      // Check for existing documents after potentially creating child
-      await checkForExistingDocument();
-      
-      // Mark onboarding as completed since user has finished all required steps
-      try {
-        await apiClient.profile.updateProfile({ showOnboarding: false });
-        console.log('Onboarding completed - showOnboarding set to false');
-      } catch (onboardingError) {
-        console.error('Error updating onboarding status:', onboardingError);
-        // Don't fail the flow if this update fails
-      }
-      
-      // Navigate based on whether user has existing documents
-      if (hasExistingDocument) {
-        navigate('/account-center');
-      } else {
-        navigate('/account-center');
-      }
-    } catch (err) {
-      console.error('Error saving parent name:', err);
-      addNotification('error', 'Failed to save parent information');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const isFormValid = () => {
-    return parentName.trim() !== '';
-  };
 
   const handleBackClick = () => {
     navigate('/account-center');
@@ -240,7 +130,6 @@ export default function ChangeLanguage() {
                 <Row className="mb-4">
                   <Col md={10}>
                     <Form.Group controlId="formPreferredLanguage">
-                      <Form.Label className="small">{t('profile.preferredLanguage')}</Form.Label>
                       <Form.Select 
                         value={profile?.secondaryLanguage || 'en'}
                         onChange={e => handlePreferredLanguageChange(e.target.value)}
@@ -259,7 +148,7 @@ export default function ChangeLanguage() {
                   <Button 
                     variant="primary" 
                     type='submit'
-                    disabled={!isFormValid() || saving}
+                    disabled={saving}
                     className="consent-button aiep-button"
                   >
                     {saving ? 'Saving' : 'Update Profile'}
