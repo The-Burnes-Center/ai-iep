@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
@@ -154,6 +155,7 @@ export default function UpdateProfileName() {
   }
 
   return (
+    <>
     <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
@@ -204,5 +206,7 @@ export default function UpdateProfileName() {
         </Row>
       </Container>
     </div>
+    <MobileBottomNavigation />
+    </>
   );
 }

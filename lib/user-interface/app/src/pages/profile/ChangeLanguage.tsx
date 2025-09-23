@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
+import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { ApiClient } from '../../common/api-client/api-client';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import { UserProfile } from '../../common/types';
@@ -154,7 +155,8 @@ export default function ChangeLanguage() {
   }
 
   return (
-    <div>
+  <>
+      <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
@@ -204,5 +206,7 @@ export default function ChangeLanguage() {
         </Row>
       </Container>
     </div>
+  <MobileBottomNavigation />
+  </>
   );
 }

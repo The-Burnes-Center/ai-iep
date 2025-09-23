@@ -10,6 +10,7 @@ import { useLanguage } from '../../common/language-context';
 import './UpdateProfileName.css';
 import './ProfileForms.css';
 import DeleteButton from '../../components/DeleteButton';
+import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 
 export default function DeleteAccount() {
   const appContext = useContext(AppContext);
@@ -155,7 +156,8 @@ export default function DeleteAccount() {
   }
 
   return (
-    <div>
+    <>
+        <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
@@ -189,5 +191,7 @@ export default function DeleteAccount() {
         </Row>
       </Container>
     </div>
+    <MobileBottomNavigation />
+    </>
   );
 }
