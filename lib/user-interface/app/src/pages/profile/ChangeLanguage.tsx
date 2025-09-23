@@ -7,9 +7,16 @@ import { ApiClient } from '../../common/api-client/api-client';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
-import { useLanguage } from '../../common/language-context'; 
+import { useLanguage, SupportedLanguage } from '../../common/language-context'; 
 import './UpdateProfileName.css';
 import './ProfileForms.css';
+
+const LANGUAGE_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'zh', label: 'Chinese' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'vi', label: 'Vietnamese' }
+];
 
 export default function ChangeLanguage() {
   const appContext = useContext(AppContext);
@@ -17,7 +24,7 @@ export default function ChangeLanguage() {
   const iepDocumentClient = new IEPDocumentClient(appContext);
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
-  const { t } = useLanguage();
+  const { t, setLanguage } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +32,7 @@ export default function ChangeLanguage() {
   const [parentName, setParentName] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [hasExistingDocument, setHasExistingDocument] = useState<boolean>(false);
+  const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     loadProfileAndCheckDocument();
@@ -54,6 +62,24 @@ export default function ChangeLanguage() {
       setLoading(false);
     }
   };
+
+    useEffect(() => {
+      loadProfile();
+    }, []);
+  
+    const loadProfile = async () => {
+      try {
+        setLoading(true);
+        const data = await apiClient.profile.getProfile();
+        setProfile(data);
+        setOriginalProfile(data);
+        setError(null);
+      } catch (err) {
+        setError(t('profile.error.serviceUnavailable'));
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const checkForExistingDocument = async () => {
     try {
@@ -136,6 +162,32 @@ export default function ChangeLanguage() {
     navigate('/account-center');
   };
 
+  const handlePreferredLanguageChange = (languageCode: string) => {
+    setProfile(prev => prev ? {...prev, secondaryLanguage: languageCode} : null);
+  };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!profile) return;
+  
+      try {
+        setSaving(true);
+        await apiClient.profile.updateProfile(profile);
+        
+        // Update language context if secondary language changed
+        if (profile.secondaryLanguage && profile.secondaryLanguage !== originalProfile?.secondaryLanguage) {
+          setLanguage(profile.secondaryLanguage as SupportedLanguage);
+        }
+        
+        setOriginalProfile(profile); // Update original profile after successful save
+        addNotification('success', t('profile.success.update'));
+      } catch (err) {
+        addNotification('error', t('profile.error.update'));
+      } finally {
+        setSaving(false);
+      }
+    };
+
   if (loading) {
     return (
       <Container className="text-center">
@@ -175,17 +227,30 @@ export default function ChangeLanguage() {
             {/*Add translations*/}
             <h4 className="update-profile-header">Change Language</h4>
             <p className='update-profile-description'>Your name or personal information will not be linked to any IEP summaries. It will only be used to tailor our messages for you on this app.</p>
-              <Form>
+              <Form onSubmit={handleSubmit}>
                 <Row className="mb-4">
                   <Col md={12}>
                     <Form.Group controlId="formParentName">
                       <Form.Label className="form-label">{t('parent.name.label')}</Form.Label>
-                      <Form.Control 
-                        type="text" 
-                        placeholder={t('parent.name.placeholder')}
-                        value={parentName} 
-                        onChange={(e) => setParentName(e.target.value)}
-                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                {/* Preferred Language Section */}
+                <Row className="mb-4">
+                  <Col md={10}>
+                    <Form.Group controlId="formPreferredLanguage">
+                      <Form.Label className="small">{t('profile.preferredLanguage')}</Form.Label>
+                      <Form.Select 
+                        value={profile?.secondaryLanguage || 'en'}
+                        onChange={e => handlePreferredLanguageChange(e.target.value)}
+                      >
+                        {LANGUAGE_OPTIONS.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -193,7 +258,7 @@ export default function ChangeLanguage() {
                 <div className="d-grid">
                   <Button 
                     variant="primary" 
-                    onClick={handleSaveAndContinue}
+                    type='submit'
                     disabled={!isFormValid() || saving}
                     className="consent-button aiep-button"
                   >
