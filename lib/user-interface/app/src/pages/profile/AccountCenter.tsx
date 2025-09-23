@@ -1,11 +1,26 @@
-import React from 'react';
+import React, {useContext} from 'react';
+import { AuthContext } from '../../common/auth-context';
+import { Auth } from "aws-amplify";
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { Container, Row, Col, Card, Accordion} from 'react-bootstrap';
 import './AccountCenter.css';
 
 const AccountCenter: React.FC = () => {
+
+  const { setAuthenticated } = useContext(AuthContext);
+
   const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      navigate('/', { replace: true });
+      await Auth.signOut();
+      setAuthenticated(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   // Navigation handler for accordion items
   const handleAccordionClick = (id: string) => {
@@ -20,9 +35,9 @@ const AccountCenter: React.FC = () => {
       case '2':
         navigate('/account-center/delete-account');
         break;
-      // case '3':
-      //   // Handle logout functionality
-      //   break;
+      case '3':
+        handleSignOut();
+        break;
       default:
         break;
     }
