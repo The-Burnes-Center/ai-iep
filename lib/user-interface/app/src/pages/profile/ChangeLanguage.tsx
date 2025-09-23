@@ -7,7 +7,7 @@ import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage, SupportedLanguage } from '../../common/language-context'; 
-import './UpdateProfileName.css';
+import './ChangeLanguage.css';
 import './ProfileForms.css';
 
 const LANGUAGE_OPTIONS = [
@@ -135,13 +135,13 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
           <Col xs={12} md={8} lg={6}>
             <div className="profile-form">
             {/*Add translations*/}
-            <h4 className="update-profile-header">Change Language</h4>
-            <p className='update-profile-description'>Your name or personal information will not be linked to any IEP summaries. It will only be used to tailor our messages for you on this app.</p>
+            <h4 className="update-profile-header">Your Language</h4>
+            <p className='update-profile-description'>The original summary of your IEP will always be generated in English. We can translate this summary to the language of your choice.</p>
               <Form>
                 <Row className="mb-4">
                   <Col md={12}>
                     <Form.Group controlId="formParentName">
-                      <Form.Label className="form-label">{t('parent.name.label')}</Form.Label>
+                      <Form.Label className="form-label">TRANSLATION</Form.Label>
                     </Form.Group>
                   </Col>
                 </Row>
@@ -154,6 +154,7 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
                         value={profile?.secondaryLanguage || 'en'}
                         onChange={e => handlePreferredLanguageChange(e.target.value)}
                         disabled={saving}
+                        className='language-select-dropdown'
                       >
                         {LANGUAGE_OPTIONS.map(option => (
                           <option key={option.value} value={option.value}>
