@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from './MobileBottomNavigation';
 import './SurveyForm.css';
 
@@ -11,8 +10,6 @@ declare global {
 }
 
 const SurveyForm: React.FC = () => {
-    const navigate = useNavigate();
-  
   useEffect(() => {
     // Load JotForm embed handler script
     const script = document.createElement('script');
@@ -30,32 +27,6 @@ const SurveyForm: React.FC = () => {
     return () => {
       // Cleanup script on component unmount
       document.head.removeChild(script);
-    };
-  }, []);
-
-  // Add this useEffect after your existing useEffect
-  useEffect(() => {
-    // Function to handle messages from JotForm iframe
-    const handleMessage = (event: MessageEvent) => {
-      // Check if the message is from JotForm
-      if (event.origin && event.origin.includes('jotform.com')) {
-        // Log ALL messages from JotForm for debugging
-        console.log('📩 Message from JotForm:', event.data);
-        
-        // Check specifically for submission completed
-        if (event.data && event.data.action === 'submission-completed') {
-          console.log('FORM SUBMITTED SUCCESSFULLY!');
-          console.log('Form ID:', event.data.formID || 'No ID provided');
-        }
-      }
-    };
-
-    // Add the event listener
-    window.addEventListener('message', handleMessage);
-
-    // Cleanup function
-    return () => {
-      window.removeEventListener('message', handleMessage);
     };
   }, []);
 

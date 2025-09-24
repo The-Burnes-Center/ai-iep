@@ -57,28 +57,18 @@ def lambda_handler(event, context):
         if isinstance(missing_info_result, str):
             missing_info_result = json.loads(missing_info_result)
         
-        # Save missing info directly to API-compatible field (missingInfo.en)
+        # Save missing info result to DynamoDB for later retrieval by CombineResults
         lambda_client = boto3.client('lambda')
         ddb_service_name = os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
         
-        # Extract items from missing info result structure
-        missing_info_items = []
-        if isinstance(missing_info_result, dict) and 'items' in missing_info_result:
-            missing_info_items = missing_info_result['items']
-        elif isinstance(missing_info_result, list):
-            missing_info_items = missing_info_result
-        
-        field_updates = {
-            'missingInfo.en': missing_info_items
-        }
-        
         save_payload = {
-            'operation': 'save_api_fields',
+            'operation': 'save_results',
             'params': {
                 'iep_id': iep_id,
                 'user_id': user_id,
                 'child_id': child_id,
-                'field_updates': field_updates
+                'results': missing_info_result,
+                'result_type': 'missing_info_result'
             }
         }
         
@@ -95,9 +85,9 @@ def lambda_handler(event, context):
             try:
                 save_result = json.loads(save_payload_response)
                 if save_result and save_result.get('statusCode') == 200:
-                    print("Missing info saved directly to API field (missingInfo.en)")
+                    print("Missing info result saved to DDB successfully")
                 else:
-                    print(f"Warning: Failed to save missing info to API field: {save_result}")
+                    print(f"Warning: Failed to save missing info result to DDB: {save_result}")
             except json.JSONDecodeError as e:
                 print(f"Warning: Failed to parse save DDB service response: {e}")
         else:

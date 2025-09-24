@@ -1,12 +1,12 @@
-# Metadata Handler
+# Metadata Handler 
 
-This document describes the Step Functions-based implementation and architecture of the Metadata Handler in the A-IEP backend, focusing on the document processing pipeline and its multi-agent system. The previous monolithic Lambda handler is deprecated and replaced by a state-machine-driven pipeline.
+This document describes the actual implementation and architecture of the Metadata Handler in the A-IEP backend, focusing on the document processing pipeline and its multi-agent system.
 
 ---
 
 ## 1. Pipeline Overview
 
-The document processing pipeline is orchestrated by AWS Step Functions via an `OrchestratorFunction` that starts the state machine on S3 object-created events. The pipeline consists of several key stages:
+The document processing pipeline is orchestrated primarily by the `iep_processing_pipeline` function in `lambda_function.py`. This function is triggered by an S3 event (e.g., when a new document is uploaded). The pipeline consists of several key stages:
 
 - **Document Ingestion & OCR**: The document is downloaded from S3 and processed using the Mistral OCR API to extract text.
 - **PII Redaction**: The extracted text is scanned for PII (personally identifiable information) using AWS Comprehend, and sensitive data is redacted.
@@ -18,28 +18,29 @@ The document processing pipeline is orchestrated by AWS Step Functions via an `O
 
 ## 2. Detailed Pipeline Flow
 
-### A. S3 Event Handling & Start Execution
+### A. S3 Event Handling & Metadata Extraction
 - The pipeline is triggered by an S3 event.
-- The `orchestrator.py` Lambda parses the S3 key to extract `user_id`, `child_id`, and `iep_id` and starts the Step Functions state machine.
+- The S3 key is parsed to extract `user_id`, `child_id`, and `iep_id`.
 
 ### B. OCR Processing
-- The document is processed by the `MistralOCRFunction` step (`steps/mistral_ocr/mistral_ocr.py`).
-- If OCR fails, the state machine logs the error and updates the document status via the central DDB service.
+- The document is processed using `process_document_with_mistral_ocr` (from `mistral_ocr.py`).
+- If OCR fails, the pipeline logs the error, updates the document status in DynamoDB, and deletes the file if appropriate.
 
 ### C. PII Redaction
-- The OCR result is passed to the `RedactOCRFunction` step (`steps/redact_ocr/comprehend_redactor.py`).
+- The OCR result (a list of pages with text) is passed to `redact_pii_from_texts` (from `comprehend_redactor.py`).
 - This uses AWS Comprehend to detect and redact PII, except for names.
-- Redaction statistics are added to the OCR result for tracking and stored.
+- Redaction statistics are added to the OCR result for tracking.
 
 ### D. Multi-Agent Document Analysis & Translation
 
 #### Agent Architecture
-- The core of the multi-agent system is implemented per-step in `steps/parsing_agent` and `steps/translate_content` using a custom `Agent` and `Runner` abstraction (from the shared `agents` module).
+- The core of the multi-agent system is implemented in `open_ai_agent.py` via the `OpenAIAgent` class.
+- The agent system is built on top of a custom `Agent` and `Runner` abstraction (imported from an `agents` module, likely a local or shared library).
 
 #### Agent Hierarchy and Tools
--- **Main Agent ("IEP Document Analyzer")**
-  - Model: OpenAI GPT-4.1 (default)
-  - Instructions: Provided by prompts in `steps/parsing_agent/config.py`
+- **Main Agent ("IEP Document Analyzer")**
+  - Model: OpenAI GPT-4.1 (or similar)
+  - Instructions: Provided by a prompt from `config.py`
   - Tools:
     - **OCR Tools:**
       - `get_all_ocr_text`: Returns all OCR text.
@@ -50,28 +51,35 @@ The document processing pipeline is orchestrated by AWS Step Functions via an `O
     - **Translation Agent (as a tool)**
 
 - **Translation Agent ("Translation Agent")**
-  - Model: OpenAI GPT-4.1 (default)
-  - Instructions: Translation-specific prompt in `steps/translate_content/config.py`.
+  - Model: OpenAI GPT-4.1 (or similar)
+  - Instructions: Translation-specific prompt.
   - Tools:
     - `get_language_context_for_translation`: Provides language context for translation (e.g., cultural/linguistic notes).
 
 #### Agent Execution Flow
-- The parsing agent extracts the English structure (summaries, sections, document index, abbreviations).
-- The translation agent translates the structured English output into the required non-English languages.
-- Agents support parallel tool calls via `ModelSettings` for efficiency.
+- The main agent is responsible for:
+  - Analyzing the IEP document (using OCR tools and section info).
+  - Structuring the content into summaries, sections, document indices, and extracting abbreviations.
+  - Calling the translation agent as a tool to translate the structured English output into Spanish, Vietnamese, and Chinese.
+- The translation agent, when invoked, uses its own tool to fetch language context and performs the translation.
+- The agent system supports **parallel tool calls** (as specified in `ModelSettings`), allowing for efficient multi-step reasoning and tool use.
 
 #### Validation and Output
-- Output is validated using the Pydantic models in each step module (e.g., `steps/parsing_agent/data_model.py`).
-- The final output is written through the central DDB service.
+- The output from the agent is validated against the `IEPData` schema (from `data_model.py`).
+- The schema includes four main components: summaries, sections, document_index, and abbreviations for all supported languages.
+- If validation fails, errors are logged and the document status is updated accordingly.
+- The final, validated, and translated output is formatted for DynamoDB and stored.
 
 ---
 
-## 3. Key Components
+## 3. Key Classes and Functions
 
-- `orchestrator.py`: Starts the Step Functions execution on S3 events.
-- `state-machines/iep-processing.asl.json`: The state machine definition.
-- Step Lambdas under `steps/*`: business logic for OCR, redaction, parsing, translation, finalize.
-- `functions.ts`: CDK setup wiring Lambdas and the state machine.
+- `iep_processing_pipeline` (`lambda_function.py`): Orchestrates the entire pipeline.
+- `OpenAIAgent` (`open_ai_agent.py`): Encapsulates the multi-agent system, tool creation, and document analysis logic.
+- `Agent`, `Runner`, `function_tool`, `ModelSettings` (agents module): Provide the abstractions for agent behavior, tool registration, and execution.
+- `process_document_with_mistral_ocr` (`mistral_ocr.py`): Handles OCR.
+- `redact_pii_from_texts` (`comprehend_redactor.py`): Handles PII redaction.
+- `update_iep_document_status` (`lambda_function.py`): Updates DynamoDB with processing status and results.
 
 ---
 
