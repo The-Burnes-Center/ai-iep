@@ -34,6 +34,7 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly deleteS3Function : lambda.Function;
   public readonly getS3KnowledgeFunction : lambda.Function;
   public readonly uploadS3KnowledgeFunction : lambda.Function;
+  public readonly metadataHandlerFunction : lambda.Function;
   public readonly identifyMissingInfoFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
   public readonly cognitoTriggerFunction : lambda.Function;
@@ -168,7 +169,99 @@ export class LambdaFunctionStack extends cdk.Stack {
     
     this.uploadS3KnowledgeFunction = uploadS3KnowledgeAPIHandlerFunction;
 
-    // Note: legacy monolithic metadata handler removed in favor of Step Functions orchestrator
+    // Note: API keys will be fetched at runtime from SSM SecureString parameters
+    // CDK valueFromLookup doesn't properly decrypt customer-managed KMS encrypted parameters
+
+    // Define the Lambda function for metadata
+    const metadataHandlerFunction = createTaggedLambda('MetadataHandlerFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'metadata-handler'), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
+      }),
+      handler: 'lambda_function.lambda_handler',
+      environment: {
+        "BUCKET": props.knowledgeBucket.bucketName,
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "USER_PROFILES_TABLE": props.userProfilesTable.tableName, 
+        // SSM parameter names for encrypted API keys (runtime fetch with caching)
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "MISTRAL_API_KEY_PARAMETER_NAME": "/ai-iep/MISTRAL_API_KEY"
+      },
+      timeout: cdk.Duration.seconds(900),
+      memorySize: 2048,
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
+    });
+
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        's3:GetObject',
+        's3:PutObject',
+        's3:DeleteObject',
+        's3:ListBucket',
+        's3:GetBucketLocation',
+        'bedrock:InvokeModel',
+        'bedrock:Retrieve',
+        'bedrock-agent-runtime:Retrieve',
+        'comprehend:BatchDetectPiiEntities',
+        'comprehend:DetectPiiEntities',
+      ],
+      resources: [
+        props.knowledgeBucket.bucketArn,
+        props.knowledgeBucket.bucketArn + "/*",
+        `arn:aws:bedrock:${this.region}::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0`,
+        '*', // Comprehend permissions apply to all resources
+      ]
+    }));
+
+    // Add SSM permissions for API key retrieval
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'ssm:GetParameter'
+      ],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`
+      ]
+    }));
+
+    // Add DynamoDB permissions for updating document status and user profiles
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:PutItem',
+        'dynamodb:UpdateItem',
+        'dynamodb:Query',
+        'dynamodb:Scan'
+      ],
+      resources: [
+        props.iepDocumentsTable.tableArn,
+        props.userProfilesTable.tableArn
+      ]
+    }));
+
+    // Add SSM permission to access the parameter
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'ssm:GetParameter'
+      ],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/MISTRAL_API_KEY`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
+      ]
+    }));
+
+    this.metadataHandlerFunction = metadataHandlerFunction;
 
     // ==========================================
     // STEP FUNCTIONS REFACTORED METADATA HANDLER
@@ -555,7 +648,15 @@ export class LambdaFunctionStack extends cdk.Stack {
       resources: [this.ddbServiceFunction.functionArn]
     }));
 
-    // Metadata handler removed; invoke permissions and env are now managed per-step
+    // Allow metadata handler to invoke the identify-missing-info function
+    metadataHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['lambda:InvokeFunction'],
+      resources: [identifyMissingInfoFunction.functionArn]
+    }));
+
+    // Pass the target Lambda function name to the metadata handler via env var
+    metadataHandlerFunction.addEnvironment('IDENTIFY_MISSING_INFO_FUNCTION_NAME', identifyMissingInfoFunction.functionName);
 
     // Add Lambda invoke permission to missing info agent step function
     this.missingInfoAgentFunction.addEnvironment('IDENTIFY_MISSING_INFO_FUNCTION_NAME', identifyMissingInfoFunction.functionName);
@@ -733,7 +834,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       deleteS3APIHandlerFunction.addToRolePolicy(kmsPolicy);
       getS3APIHandlerFunction.addToRolePolicy(kmsPolicy);
       uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(kmsPolicy);
-      // Legacy metadata handler removed
+      metadataHandlerFunction.addToRolePolicy(kmsPolicy);
       userProfileHandlerFunction.addToRolePolicy(kmsPolicy);
       // Ensure IdentifyMissingInfoFunction can decrypt KMS-encrypted DynamoDB items
       identifyMissingInfoFunction.addToRolePolicy(kmsPolicy);
