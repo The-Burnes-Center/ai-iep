@@ -1,0 +1,54 @@
+.delete-button-login {
+    margin: 0 5px;
+    padding-left: 1.2rem !important;
+    padding-right: 1.2rem !important;
+    padding-top: 0.5rem !important; /* Additional to button styling */
+    padding-bottom: 0.5rem !important; /* Additional to button styling */
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-family: 'salford-sans-variable', sans-serif !important;
+    color: #F01E19 !important;
+    font-size: 1.2rem !important;
+    font-variation-settings: "slnt" 0, "wght" 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 2px solid #F01E19 !important;
+    border: none;
+    border-radius: 30px !important; /* Changed from 20px to 30px */
+    transition: all 0.1s ease !important;
+    min-width: 120px;
+  }
+  
+  .delete-button-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .delete-button-login:disabled {
+    border: 1px solid #CBC6BC !important;
+    box-shadow: none;
+    color: #b3ada9 !important;
+    background-color: #F5F3EE;
+    cursor: not-allowed !important;
+  }
+  
+  .delete-button-login .btn-icon {
+    margin-right: 10px;
+  }
+  
+  /* Secondary outline button styles for submit-button-login */
+  .delete-button-login.btn-outline-secondary {
+    color: #1e1e1e;
+    border: 1px solid #CBC6BC;
+    background-color: #F5F3EE;
+    box-shadow: none;
+  }
+  
+  .delete-button-login.btn-outline-secondary:hover {
+    color: #1e1e1e;
+    border: 1px solid #CBC6BC;
+    background-color: #E7E4DC;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
