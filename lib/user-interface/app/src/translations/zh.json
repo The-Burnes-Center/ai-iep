@@ -294,5 +294,23 @@
     "accountCenter.updateProfile": "更新您的个人资料",
     "accountCenter.changeLanguage": "更改您的语言",
     "accountCenter.deleteAccount": "删除您的账户",
-    "accountCenter.logOut": "退出登录"
+    "accountCenter.logOut": "退出登录",
+
+    "updateProfile.breadcrumb.account": "账户",
+    "updateProfile.breadcrumb.updateProfile": "更新个人资料",
+    "updateProfile.title": "更新个人资料",
+    "updateProfile.description": "您的姓名或个人信息不会与IEP摘要关联。它只会用于在这个应用程序中为您量身定制我们的消息。",
+    "updateProfile.button.saving": "保存中",
+    "updateProfile.button.update": "更新个人资料",
+    "updateProfile.loading": "加载中...",
+    "updateProfile.error.serviceUnavailable": "服务不可用",
+    "updateProfile.success.saved": "家长信息保存成功",
+    "updateProfile.error.saveFailed": "保存家长信息失败",
+
+    "changeLanguage.breadcrumb.account": "账户",
+    "changeLanguage.breadcrumb.changeLanguage": "更改语言",
+    "changeLanguage.title": "您的语言",
+    "changeLanguage.description": "您的IEP原始摘要将始终以英语生成。我们可以将此摘要翻译为您选择的语言。",
+    "changeLanguage.label.translation": "翻译",
+    "changeLanguage.loading": "加载中..."
 }

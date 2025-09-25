@@ -49,7 +49,7 @@ export default function UpdateProfileName() {
       setError(null);
     } catch (err) {
       console.error('Error loading profile or checking document:', err);
-      setError('Service unavailable');
+      setError(t('updateProfile.error.serviceUnavailable'));
     } finally {
       setLoading(false);
     }
@@ -87,7 +87,7 @@ export default function UpdateProfileName() {
       
       // Update the profile with parent name
       await apiClient.profile.updateProfile(updatedProfileData);
-      addNotification('success', 'Parent information saved successfully');
+      addNotification('success', t('updateProfile.success.saved'));
       
       // Check if user has any children - if not, create a default child
       if (!profile?.children || profile.children.length === 0) {
@@ -122,7 +122,7 @@ export default function UpdateProfileName() {
       }
     } catch (err) {
       console.error('Error saving parent name:', err);
-      addNotification('error', 'Failed to save parent information');
+      addNotification('error', t('updateProfile.error.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -140,7 +140,7 @@ export default function UpdateProfileName() {
     return (
       <Container className="text-center">
         <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">{t('updateProfile.loading')}</span>
         </Spinner>
       </Container>
     );
@@ -160,8 +160,8 @@ export default function UpdateProfileName() {
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
-          <Breadcrumb.Item onClick={handleBackClick}>ACCOUNT</Breadcrumb.Item>
-          <Breadcrumb.Item active>UPDATE PROFILE</Breadcrumb.Item>
+          <Breadcrumb.Item onClick={handleBackClick}>{t('updateProfile.breadcrumb.account')}</Breadcrumb.Item>
+          <Breadcrumb.Item active>{t('updateProfile.breadcrumb.updateProfile')}</Breadcrumb.Item>
         </Breadcrumb>
       </div>
       
@@ -173,8 +173,8 @@ export default function UpdateProfileName() {
           <Col xs={12} md={8} lg={6}>
             <div className="profile-form">
             {/*Add translations*/}
-            <h4 className="update-profile-header">Update Profile</h4>
-            <p className='update-profile-description'>Your name or personal information will not be linked to any IEP summaries. It will only be used to tailor our messages for you on this app.</p>
+            <h4 className="update-profile-header">{t('updateProfile.title')}</h4>
+            <p className='update-profile-description'>{t('updateProfile.description')}</p>
               <Form>
                 <Row className="mb-4">
                   <Col md={12}>
@@ -197,7 +197,7 @@ export default function UpdateProfileName() {
                     disabled={!isFormValid() || saving}
                     className="consent-button aiep-button"
                   >
-                    {saving ? 'Saving' : 'Update Profile'}
+                    {saving ? t('updateProfile.button.saving') : t('updateProfile.button.update')}
                   </Button>
                 </div>
               </Form>

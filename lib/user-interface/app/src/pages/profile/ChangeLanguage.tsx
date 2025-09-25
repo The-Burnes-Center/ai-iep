@@ -10,19 +10,20 @@ import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import './ChangeLanguage.css';
 import './ProfileForms.css';
 
-const LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'English' },
-  { value: 'zh', label: 'Chinese' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'vi', label: 'Vietnamese' }
-];
-
 export default function ChangeLanguage() {
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
   const { t, setLanguage } = useLanguage();
+
+  // Language options - hardcoded so users can always read the language names
+  const LANGUAGE_OPTIONS = [
+    { value: 'en', label: 'English' },
+    { value: 'zh', label: 'Chinese' },
+    { value: 'es', label: 'Spanish' },
+    { value: 'vi', label: 'Vietnamese' }
+  ];
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +103,7 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
     return (
       <Container className="text-center">
         <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">{t('changeLanguage.loading')}</span>
         </Spinner>
       </Container>
     );
@@ -122,8 +123,8 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
-          <Breadcrumb.Item onClick={handleBackClick}>ACCOUNT</Breadcrumb.Item>
-          <Breadcrumb.Item active>CHANGE LANGUAGE</Breadcrumb.Item>
+          <Breadcrumb.Item onClick={handleBackClick}>{t('changeLanguage.breadcrumb.account')}</Breadcrumb.Item>
+          <Breadcrumb.Item active>{t('changeLanguage.breadcrumb.changeLanguage')}</Breadcrumb.Item>
         </Breadcrumb>
       </div>
       
@@ -135,13 +136,13 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
           <Col xs={12} md={8} lg={6}>
             <div className="profile-form">
             {/*Add translations*/}
-            <h4 className="update-profile-header">Your Language</h4>
-            <p className='update-profile-description'>The original summary of your IEP will always be generated in English. We can translate this summary to the language of your choice.</p>
+            <h4 className="update-profile-header">{t('changeLanguage.title')}</h4>
+            <p className='update-profile-description'>{t('changeLanguage.description')}</p>
               <Form>
                 <Row className="mb-4">
                   <Col md={12}>
                     <Form.Group controlId="formParentName">
-                      <Form.Label className="form-label">TRANSLATION</Form.Label>
+                      <Form.Label className="form-label">{t('changeLanguage.label.translation')}</Form.Label>
                     </Form.Group>
                   </Col>
                 </Row>

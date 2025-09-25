@@ -308,5 +308,23 @@
     "accountCenter.updateProfile": "Update Your Profile",
     "accountCenter.changeLanguage": "Change your Language",
     "accountCenter.deleteAccount": "Delete your account",
-    "accountCenter.logOut": "Log out"
+    "accountCenter.logOut": "Log out",
+
+    "updateProfile.breadcrumb.account": "ACCOUNT",
+    "updateProfile.breadcrumb.updateProfile": "UPDATE PROFILE",
+    "updateProfile.title": "Update Profile",
+    "updateProfile.description": "Your name or personal information will not be linked to any IEP summaries. It will only be used to tailor our messages for you on this app.",
+    "updateProfile.button.saving": "Saving",
+    "updateProfile.button.update": "Update Profile",
+    "updateProfile.loading": "Loading...",
+    "updateProfile.error.serviceUnavailable": "Service unavailable",
+    "updateProfile.success.saved": "Parent information saved successfully",
+    "updateProfile.error.saveFailed": "Failed to save parent information",
+
+    "changeLanguage.breadcrumb.account": "ACCOUNT",
+    "changeLanguage.breadcrumb.changeLanguage": "CHANGE LANGUAGE",
+    "changeLanguage.title": "Your Language",
+    "changeLanguage.description": "The original summary of your IEP will always be generated in English. We can translate this summary to the language of your choice.",
+    "changeLanguage.label.translation": "TRANSLATION",
+    "changeLanguage.loading": "Loading..."
   }

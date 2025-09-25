@@ -295,5 +295,23 @@
     "accountCenter.updateProfile": "Actualizar Su Perfil",
     "accountCenter.changeLanguage": "Cambiar su idioma",
     "accountCenter.deleteAccount": "Eliminar su cuenta",
-    "accountCenter.logOut": "Cerrar sesión"
+    "accountCenter.logOut": "Cerrar sesión",
+
+    "updateProfile.breadcrumb.account": "CUENTA",
+    "updateProfile.breadcrumb.updateProfile": "ACTUALIZAR PERFIL",
+    "updateProfile.title": "Actualizar Perfil",
+    "updateProfile.description": "Su nombre o información personal no estará vinculada a ningún resumen de IEP. Solo se usará para personalizar nuestros mensajes para usted en esta aplicación.",
+    "updateProfile.button.saving": "Guardando",
+    "updateProfile.button.update": "Actualizar Perfil",
+    "updateProfile.loading": "Cargando...",
+    "updateProfile.error.serviceUnavailable": "Servicio no disponible",
+    "updateProfile.success.saved": "Información del padre guardada exitosamente",
+    "updateProfile.error.saveFailed": "Error al guardar la información del padre",
+
+    "changeLanguage.breadcrumb.account": "CUENTA",
+    "changeLanguage.breadcrumb.changeLanguage": "CAMBIAR IDIOMA",
+    "changeLanguage.title": "Su Idioma",
+    "changeLanguage.description": "El resumen original de su IEP siempre se generará en inglés. Podemos traducir este resumen al idioma de su elección.",
+    "changeLanguage.label.translation": "TRADUCCIÓN",
+    "changeLanguage.loading": "Cargando..."
   }
