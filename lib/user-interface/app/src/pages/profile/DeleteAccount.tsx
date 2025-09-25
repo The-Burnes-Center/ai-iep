@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Container, Form, Button, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
+import React, { useState, useContext } from 'react';
+import { Container, Form, Row, Col, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
-import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
-import { UserProfile } from '../../common/types';
+import { Auth } from 'aws-amplify';
+import { AuthContext } from '../../common/auth-context';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context'; 
 import './UpdateProfileName.css';
@@ -13,147 +13,41 @@ import DeleteButton from '../../components/DeleteButton';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 
 export default function DeleteAccount() {
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
-  const iepDocumentClient = new IEPDocumentClient(appContext);
-  const navigate = useNavigate();
+  const { setAuthenticated } = useContext(AuthContext);
   const { addNotification } = useNotifications();
   const { t } = useLanguage();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [parentName, setParentName] = useState<string>('');
-  const [saving, setSaving] = useState(false);
-  const [hasExistingDocument, setHasExistingDocument] = useState<boolean>(false);
-
-  useEffect(() => {
-    loadProfileAndCheckDocument();
-  }, []);
-
-  const loadProfileAndCheckDocument = async () => {
+  const handleDeleteProfile = async () => {
     try {
-      setLoading(true);
-      
-      // Load user profile
-      const data = await apiClient.profile.getProfile();
-      setProfile(data);
-      
-      // Check if parentName exists in the profile
-      if (data.parentName) {
-        setParentName(data.parentName);
-      }
-      
-      // Check for existing documents
-      await checkForExistingDocument();
-      
+      setProcessing(true);
       setError(null);
+      
+      // Delete the entire user profile and all data
+      await apiClient.profile.deleteProfile();
+      
+      // Show success notification
+      addNotification('success', t('delete.success'));
+      
+      // Sign out the user
+      await Auth.signOut();
+      setAuthenticated(false);
+      
+      // Navigation will happen via auth context
     } catch (err) {
-      console.error('Error loading profile or checking document:', err);
-      setError('Service unavailable');
-    } finally {
-      setLoading(false);
+      console.error('Error deleting profile:', err);
+      setError(t('delete.error.failed'));
+      setProcessing(false);
     }
-  };
-
-  const checkForExistingDocument = async () => {
-    try {
-      const document = await iepDocumentClient.getMostRecentDocumentWithSummary();
-      
-      // Check if document exists and has been processed or is processing
-      if (document && (document.status === "PROCESSED" || document.status === "PROCESSING")) {
-        setHasExistingDocument(true);
-      } else {
-        setHasExistingDocument(false);
-      }
-    } catch (err) {
-      console.error('Error checking for existing document:', err);
-      // If there's an error checking for documents, assume no document exists
-      setHasExistingDocument(false);
-    }
-  };
-
-  const handleSaveAndContinue = async () => {
-    if (!parentName.trim()) {
-      return; // Button should be disabled in this case
-    }
-
-    try {
-      setSaving(true);
-      
-      // Prepare updated profile data
-      const updatedProfileData = {
-        parentName: parentName.trim()
-      };
-      
-      // Update the profile with parent name
-      await apiClient.profile.updateProfile(updatedProfileData);
-      addNotification('success', 'Parent information saved successfully');
-      
-      // Check if user has any children - if not, create a default child
-      if (!profile?.children || profile.children.length === 0) {
-        try {
-          // Create a default child with generic information
-          // The user can update this later if needed
-          await apiClient.profile.addChild('My Child', profile?.city || 'Not specified');
-          console.log('Created default child for IEP document functionality');
-        } catch (childError) {
-          console.error('Error creating default child:', childError);
-          // Don't fail the flow if child creation fails - user can add manually later
-        }
-      }
-      
-      // Check for existing documents after potentially creating child
-      await checkForExistingDocument();
-      
-      // Mark onboarding as completed since user has finished all required steps
-      try {
-        await apiClient.profile.updateProfile({ showOnboarding: false });
-        console.log('Onboarding completed - showOnboarding set to false');
-      } catch (onboardingError) {
-        console.error('Error updating onboarding status:', onboardingError);
-        // Don't fail the flow if this update fails
-      }
-      
-      // Navigate based on whether user has existing documents
-      if (hasExistingDocument) {
-        navigate('/account-center');
-      } else {
-        navigate('/account-center');
-      }
-    } catch (err) {
-      console.error('Error saving parent name:', err);
-      addNotification('error', 'Failed to save parent information');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const isFormValid = () => {
-    return parentName.trim() !== '';
   };
 
   const handleBackClick = () => {
     navigate('/account-center');
   };
-
-  if (loading) {
-    return (
-      <Container className="text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container>
-        <Alert variant="danger">{error}</Alert>
-      </Container>
-    );
-  }
 
   return (
     <>
@@ -161,8 +55,8 @@ export default function DeleteAccount() {
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
-          <Breadcrumb.Item onClick={handleBackClick}>ACCOUNT</Breadcrumb.Item>
-          <Breadcrumb.Item active>DELETE ACCOUNT</Breadcrumb.Item>
+          <Breadcrumb.Item onClick={handleBackClick}>{t('deleteAccount.breadcrumb.account')}</Breadcrumb.Item>
+          <Breadcrumb.Item active>{t('deleteAccount.breadcrumb.deleteAccount')}</Breadcrumb.Item>
         </Breadcrumb>
       </div>
       
@@ -173,16 +67,15 @@ export default function DeleteAccount() {
         <Row style={{ width: '100%', justifyContent: 'center' }}>
           <Col xs={12} md={8} lg={6}>
             <div className="profile-form">
-            {/*Add translations*/}
-            <h4 className="update-profile-header">Delete Account</h4>
-            <p className='update-profile-description'>This action will delete your account, as well as any information linked to it on our servers.<strong> You cannot undo this action,</strong> but you can create a new account.</p> 
-              <Form>
+            <h4 className="update-profile-header">{t('deleteAccount.title')}</h4>
+            <p className='update-profile-description'>{t('deleteAccount.description')}</p> 
+              <Form onSubmit={(e) => { e.preventDefault(); handleDeleteProfile(); }}>
 
                 <div className="d-grid">
                   <DeleteButton
-                    loading={loading}
-                    buttonText="Delete My Account"
-                    disabled={!isFormValid() || saving}
+                    loading={processing}
+                    buttonText={processing ? t('delete.button.processing') : t('deleteAccount.button.deleteMyAccount')}
+                    disabled={processing}
                   />
                 </div>
               </Form>
