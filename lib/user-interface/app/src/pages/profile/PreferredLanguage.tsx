@@ -225,7 +225,7 @@ export default function PreferredLanguage() {
   if (showSurveyForm && !surveyCompleted) {
     return (
       <div className="survey-form-container">
-        <h2 className="survey-form-title">Survey Form:</h2>
+        <h2 className="survey-form-title text-center">Survey Form:</h2>
 
         <div className="jotform-container">
           <iframe

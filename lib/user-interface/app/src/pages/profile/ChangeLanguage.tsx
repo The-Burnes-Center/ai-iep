@@ -20,9 +20,9 @@ export default function ChangeLanguage() {
   // Language options - hardcoded so users can always read the language names
   const LANGUAGE_OPTIONS = [
     { value: 'en', label: 'English' },
-    { value: 'zh', label: 'Chinese' },
-    { value: 'es', label: 'Spanish' },
-    { value: 'vi', label: 'Vietnamese' }
+    { value: 'zh', label: '中文' },
+    { value: 'es', label: 'Español' },
+    { value: 'vi', label: 'Tiếng Việt' }
   ];
 
   const [loading, setLoading] = useState(true);
