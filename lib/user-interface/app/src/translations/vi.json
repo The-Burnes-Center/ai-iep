@@ -318,5 +318,23 @@
     "changeLanguage.title": "Ngôn Ngữ Của Bạn",
     "changeLanguage.description": "Bản tóm tắt gốc của IEP sẽ luôn được tạo bằng tiếng Anh. Chúng tôi có thể dịch bản tóm tắt này sang ngôn ngữ bạn chọn.",
     "changeLanguage.label.translation": "DỊCH THUẬT",
-    "changeLanguage.loading": "Đang tải..."
+    "changeLanguage.loading": "Đang tải...",
+
+    "deleteAccount.breadcrumb.account": "TÀI KHOẢN",
+    "deleteAccount.breadcrumb.deleteAccount": "XÓA TÀI KHOẢN",
+    "deleteAccount.title": "Xóa Tài Khoản",
+    "deleteAccount.description": "Hành động này sẽ xóa tài khoản của bạn, cũng như bất kỳ thông tin nào liên kết với nó trên máy chủ của chúng tôi. Bạn không thể hoàn tác hành động này, nhưng bạn có thể tạo một tài khoản mới.",
+    "deleteAccount.button.deleteMyAccount": "Xóa Tài Khoản Của Tôi",
+    "deleteAccount.loading": "Đang tải...",
+    "deleteAccount.error.serviceUnavailable": "Dịch vụ không khả dụng",
+
+    "deleteAccount.breadcrumb.account": "TÀI KHOẢN",
+    "deleteAccount.breadcrumb.deleteAccount": "XÓA TÀI KHOẢN",
+    "deleteAccount.title": "Xóa Tài Khoản",
+    "deleteAccount.description": "Hành động này sẽ xóa tài khoản của bạn, cũng như mọi thông tin liên kết với nó trên máy chủ của chúng tôi.",
+    "deleteAccount.warning": "Bạn không thể hoàn tác hành động này,",
+    "deleteAccount.alternative": "nhưng bạn có thể tạo một tài khoản mới.",
+    "deleteAccount.button.delete": "Xóa Tài Khoản Của Tôi",
+    "deleteAccount.loading": "Đang tải...",
+    "deleteAccount.error.serviceUnavailable": "Dịch vụ không khả dụng"
 }

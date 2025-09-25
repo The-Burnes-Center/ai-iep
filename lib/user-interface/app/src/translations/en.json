@@ -326,5 +326,23 @@
     "changeLanguage.title": "Your Language",
     "changeLanguage.description": "The original summary of your IEP will always be generated in English. We can translate this summary to the language of your choice.",
     "changeLanguage.label.translation": "TRANSLATION",
-    "changeLanguage.loading": "Loading..."
+    "changeLanguage.loading": "Loading...",
+
+    "deleteAccount.breadcrumb.account": "ACCOUNT",
+    "deleteAccount.breadcrumb.deleteAccount": "DELETE ACCOUNT",
+    "deleteAccount.title": "Delete Account",
+    "deleteAccount.description": "This action will delete your account, as well as any information linked to it on our servers. You cannot undo this action, but you can create a new account.",
+    "deleteAccount.button.deleteMyAccount": "Delete My Account",
+    "deleteAccount.loading": "Loading...",
+    "deleteAccount.error.serviceUnavailable": "Service unavailable",
+
+    "deleteAccount.breadcrumb.account": "ACCOUNT",
+    "deleteAccount.breadcrumb.deleteAccount": "DELETE ACCOUNT",
+    "deleteAccount.title": "Delete Account",
+    "deleteAccount.description": "This action will delete your account, as well as any information linked to it on our servers.",
+    "deleteAccount.warning": "You cannot undo this action,",
+    "deleteAccount.alternative": "but you can create a new account.",
+    "deleteAccount.button.delete": "Delete My Account",
+    "deleteAccount.loading": "Loading...",
+    "deleteAccount.error.serviceUnavailable": "Service unavailable"
   }

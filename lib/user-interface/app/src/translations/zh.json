@@ -312,5 +312,23 @@
     "changeLanguage.title": "您的语言",
     "changeLanguage.description": "您的IEP原始摘要将始终以英语生成。我们可以将此摘要翻译为您选择的语言。",
     "changeLanguage.label.translation": "翻译",
-    "changeLanguage.loading": "加载中..."
+    "changeLanguage.loading": "加载中...",
+
+    "deleteAccount.breadcrumb.account": "账户",
+    "deleteAccount.breadcrumb.deleteAccount": "删除账户",
+    "deleteAccount.title": "删除账户",
+    "deleteAccount.description": "此操作将删除您的账户，以及我们服务器上与其相关的任何信息。您无法撤销此操作，但您可以创建一个新账户。",
+    "deleteAccount.button.deleteMyAccount": "删除我的账户",
+    "deleteAccount.loading": "加载中...",
+    "deleteAccount.error.serviceUnavailable": "服务不可用",
+
+    "deleteAccount.breadcrumb.account": "账户",
+    "deleteAccount.breadcrumb.deleteAccount": "删除账户",
+    "deleteAccount.title": "删除账户",
+    "deleteAccount.description": "此操作将删除您的账户，以及我们服务器上与其相关的所有信息。",
+    "deleteAccount.warning": "您无法撤销此操作，",
+    "deleteAccount.alternative": "但您可以创建一个新账户。",
+    "deleteAccount.button.delete": "删除我的账户",
+    "deleteAccount.loading": "加载中...",
+    "deleteAccount.error.serviceUnavailable": "服务不可用"
 }
