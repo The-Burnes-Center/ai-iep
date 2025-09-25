@@ -294,5 +294,11 @@
     "navigation.support": "Hỗ trợ",
     "navigation.account": "Tài khoản",
     "navigation.about": "Giới thiệu", 
-    "navigation.processing": "Tài liệu của bạn đang được xử lý..."
+    "navigation.processing": "Tài liệu của bạn đang được xử lý...",
+
+    "accountCenter.title": "Trung Tâm Tài Khoản",
+    "accountCenter.updateProfile": "Cập Nhật Hồ Sơ Của Bạn",
+    "accountCenter.changeLanguage": "Thay đổi ngôn ngữ của bạn",
+    "accountCenter.deleteAccount": "Xóa tài khoản của bạn",
+    "accountCenter.logOut": "Đăng xuất"
 }

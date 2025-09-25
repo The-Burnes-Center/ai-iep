@@ -1,12 +1,15 @@
-import React, {useContext} from 'react';
+import React, {useContext, useMemo} from 'react';
 import { AuthContext } from '../../common/auth-context';
 import { Auth } from "aws-amplify";
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { Container, Row, Col, Card, Accordion} from 'react-bootstrap';
+import { useLanguage } from '../../common/language-context'; 
 import './AccountCenter.css';
 
 const AccountCenter: React.FC = () => {
+
+  const { t } = useLanguage();
 
   const { setAuthenticated } = useContext(AuthContext);
 
@@ -43,25 +46,25 @@ const AccountCenter: React.FC = () => {
     }
   };
 
-  // FAQ data object
-  const headers = [
+  // FAQ data object - memoized to ensure translations are loaded
+  const headers = useMemo(() => [
     {
       id: "0",
-      title: "Update Your Profile",
+      title: t("accountCenter.updateProfile"),
     },
     {
       id: "1",
-      title: "Change your Language",
+      title: t("accountCenter.changeLanguage"),
     },
     {
       id: "2",
-      title: "Delete your account",
+      title: t("accountCenter.deleteAccount"),
     },
     {
       id: "3",
-      title: "Log out",
+      title: t("accountCenter.logOut"),
     }
-  ];
+  ], [t]);
 
   return (
     <>
@@ -72,7 +75,7 @@ const AccountCenter: React.FC = () => {
               <Row className="g-0">
                 <Col md={12} className="no-padding-inherit-faq">
                   <>
-                    <h4 className="account-center-header mt-4 px-4"> Account Center</h4>
+                    <h4 className="account-center-header mt-4 px-4">{t("accountCenter.title")}</h4>
                     <Accordion className="mb-3 pb-5 account-center-accordion">
                       {headers.map((header) => (
                         <Accordion.Item key={header.id} eventKey={header.id}>

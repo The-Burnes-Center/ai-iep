@@ -289,5 +289,11 @@
     "navigation.support": "Soporte",
     "navigation.account": "Cuenta", 
     "navigation.about": "Acerca de",
-    "navigation.processing": "Su documento está siendo procesado..."
+    "navigation.processing": "Su documento está siendo procesado...",
+
+    "accountCenter.title": "Centro de Cuenta",
+    "accountCenter.updateProfile": "Actualizar Su Perfil",
+    "accountCenter.changeLanguage": "Cambiar su idioma",
+    "accountCenter.deleteAccount": "Eliminar su cuenta",
+    "accountCenter.logOut": "Cerrar sesión"
   }

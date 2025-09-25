@@ -302,5 +302,11 @@
     "navigation.support": "Support", 
     "navigation.account": "Account",
     "navigation.about": "About",
-    "navigation.processing": "Your document is being processed..."
+    "navigation.processing": "Your document is being processed...",
+
+    "accountCenter.title": "Account Center",
+    "accountCenter.updateProfile": "Update Your Profile",
+    "accountCenter.changeLanguage": "Change your Language",
+    "accountCenter.deleteAccount": "Delete your account",
+    "accountCenter.logOut": "Log out"
   }
