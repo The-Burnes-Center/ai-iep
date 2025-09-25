@@ -1,0 +1,85 @@
+.account-center-container {
+  width: 100%;
+  margin: 0 auto;
+  --bs-gutter-x: 0;
+}
+
+.account-center-card {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background-color: #F5f3EE;
+}
+
+.account-center-header {
+  font-size: 2.6rem;
+  padding-left: 1rem;
+  font-family: 'salford-sans-variable', sans-serif;
+  font-variation-settings: "slnt" 0, "wght" 600;
+  padding-bottom: 1rem;
+}
+
+.account-center-accordion .accordion-header {
+  border-top: 1px solid #1E1E1E;
+}
+
+.account-center-accordion .accordion-item {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  background-color: #F5f3EE;
+
+}
+
+.account-center-accordion .accordion-header .accordion-button {
+  padding: 0.75rem 1rem;
+  background-color: #F5f3EE;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 420;
+  font-size: 1.125rem;
+  line-height: 2;
+  text-align: left;
+  color: #1E1E1E;
+}
+
+.account-center-accordion .accordion-body {
+  padding: 1rem;
+}
+
+/* Custom accordion button icons - downward arrow for closed */
+.account-center-accordion .accordion-button::after {
+  background-image: url('/images/arrow.svg');
+  background-size: 15px 18px;
+  transform: rotate(270deg);
+}
+
+/* Custom accordion button icons - upward arrow for open */
+.account-center-accordion .accordion-button:not(.collapsed)::after {
+  background-image: url('/images/arrow.svg');
+  background-size: 15px 18px;
+}
+
+/* Background color for open accordion header */
+.account-center-accordion .accordion-button:not(.collapsed) {
+  background-color: #E7E4DC;
+}
+
+.account-center-accordion .accordion-item:first-child {
+  border-top: none;
+}
+
+.account-center-accordion .accordion-item:last-child {
+  border-bottom: none;
+}
+
+.no-padding-inherit-faq {
+  padding-left: revert !important;
+  padding-right: revert !important;
+}
+
+.account-center-accordion {
+  /* Disable accordion transitions and transforms */
+  --bs-accordion-transition: none;
+  --bs-accordion-btn-icon-transform: none;
+  --bs-accordion-btn-icon-transition: none;
+}

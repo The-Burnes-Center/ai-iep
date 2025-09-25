@@ -289,5 +289,47 @@
     "navigation.support": "Soporte",
     "navigation.account": "Cuenta", 
     "navigation.about": "Acerca de",
-    "navigation.processing": "Su documento está siendo procesado..."
+    "navigation.processing": "Su documento está siendo procesado...",
+
+    "accountCenter.title": "Centro de Cuenta",
+    "accountCenter.updateProfile": "Actualizar Su Perfil",
+    "accountCenter.changeLanguage": "Cambiar su idioma",
+    "accountCenter.deleteAccount": "Eliminar su cuenta",
+    "accountCenter.logOut": "Cerrar sesión",
+
+    "updateProfile.breadcrumb.account": "CUENTA",
+    "updateProfile.breadcrumb.updateProfile": "ACTUALIZAR PERFIL",
+    "updateProfile.title": "Actualizar Perfil",
+    "updateProfile.description": "Su nombre o información personal no estará vinculada a ningún resumen de IEP. Solo se usará para personalizar nuestros mensajes para usted en esta aplicación.",
+    "updateProfile.button.saving": "Guardando",
+    "updateProfile.button.update": "Actualizar Perfil",
+    "updateProfile.loading": "Cargando...",
+    "updateProfile.error.serviceUnavailable": "Servicio no disponible",
+    "updateProfile.success.saved": "Información del padre guardada exitosamente",
+    "updateProfile.error.saveFailed": "Error al guardar la información del padre",
+
+    "changeLanguage.breadcrumb.account": "CUENTA",
+    "changeLanguage.breadcrumb.changeLanguage": "CAMBIAR IDIOMA",
+    "changeLanguage.title": "Su Idioma",
+    "changeLanguage.description": "El resumen original de su IEP siempre se generará en inglés. Podemos traducir este resumen al idioma de su elección.",
+    "changeLanguage.label.translation": "TRADUCCIÓN",
+    "changeLanguage.loading": "Cargando...",
+
+    "deleteAccount.breadcrumb.account": "CUENTA",
+    "deleteAccount.breadcrumb.deleteAccount": "ELIMINAR CUENTA",
+    "deleteAccount.title": "Eliminar Cuenta",
+    "deleteAccount.description": "Esta acción eliminará su cuenta, así como cualquier información vinculada a ella en nuestros servidores. No puede deshacer esta acción, pero puede crear una nueva cuenta.",
+    "deleteAccount.button.deleteMyAccount": "Eliminar Mi Cuenta",
+    "deleteAccount.loading": "Cargando...",
+    "deleteAccount.error.serviceUnavailable": "Servicio no disponible",
+
+    "deleteAccount.breadcrumb.account": "CUENTA",
+    "deleteAccount.breadcrumb.deleteAccount": "ELIMINAR CUENTA",
+    "deleteAccount.title": "Eliminar Cuenta",
+    "deleteAccount.description": "Esta acción eliminará su cuenta, así como toda la información vinculada a ella en nuestros servidores.",
+    "deleteAccount.warning": "No puede deshacer esta acción,",
+    "deleteAccount.alternative": "pero puede crear una nueva cuenta.",
+    "deleteAccount.button.delete": "Eliminar Mi Cuenta",
+    "deleteAccount.loading": "Cargando...",
+    "deleteAccount.error.serviceUnavailable": "Servicio no disponible"
   }

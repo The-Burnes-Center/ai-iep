@@ -294,5 +294,47 @@
     "navigation.support": "Hỗ trợ",
     "navigation.account": "Tài khoản",
     "navigation.about": "Giới thiệu", 
-    "navigation.processing": "Tài liệu của bạn đang được xử lý..."
+    "navigation.processing": "Tài liệu của bạn đang được xử lý...",
+
+    "accountCenter.title": "Trung Tâm Tài Khoản",
+    "accountCenter.updateProfile": "Cập Nhật Hồ Sơ Của Bạn",
+    "accountCenter.changeLanguage": "Thay đổi ngôn ngữ của bạn",
+    "accountCenter.deleteAccount": "Xóa tài khoản của bạn",
+    "accountCenter.logOut": "Đăng xuất",
+
+    "updateProfile.breadcrumb.account": "TÀI KHOẢN",
+    "updateProfile.breadcrumb.updateProfile": "CẬP NHẬT HỒ SƠ",
+    "updateProfile.title": "Cập Nhật Hồ Sơ",
+    "updateProfile.description": "Tên hoặc thông tin cá nhân của bạn sẽ không được liên kết với bất kỳ bản tóm tắt IEP nào. Nó chỉ được sử dụng để tùy chỉnh thông điệp của chúng tôi dành cho bạn trong ứng dụng này.",
+    "updateProfile.button.saving": "Đang Lưu",
+    "updateProfile.button.update": "Cập Nhật Hồ Sơ",
+    "updateProfile.loading": "Đang tải...",
+    "updateProfile.error.serviceUnavailable": "Dịch vụ không khả dụng",
+    "updateProfile.success.saved": "Thông tin phụ huynh đã được lưu thành công",
+    "updateProfile.error.saveFailed": "Không thể lưu thông tin phụ huynh",
+
+    "changeLanguage.breadcrumb.account": "TÀI KHOẢN",
+    "changeLanguage.breadcrumb.changeLanguage": "THAY ĐỔI NGÔN NGỮ",
+    "changeLanguage.title": "Ngôn Ngữ Của Bạn",
+    "changeLanguage.description": "Bản tóm tắt gốc của IEP sẽ luôn được tạo bằng tiếng Anh. Chúng tôi có thể dịch bản tóm tắt này sang ngôn ngữ bạn chọn.",
+    "changeLanguage.label.translation": "DỊCH THUẬT",
+    "changeLanguage.loading": "Đang tải...",
+
+    "deleteAccount.breadcrumb.account": "TÀI KHOẢN",
+    "deleteAccount.breadcrumb.deleteAccount": "XÓA TÀI KHOẢN",
+    "deleteAccount.title": "Xóa Tài Khoản",
+    "deleteAccount.description": "Hành động này sẽ xóa tài khoản của bạn, cũng như bất kỳ thông tin nào liên kết với nó trên máy chủ của chúng tôi. Bạn không thể hoàn tác hành động này, nhưng bạn có thể tạo một tài khoản mới.",
+    "deleteAccount.button.deleteMyAccount": "Xóa Tài Khoản Của Tôi",
+    "deleteAccount.loading": "Đang tải...",
+    "deleteAccount.error.serviceUnavailable": "Dịch vụ không khả dụng",
+
+    "deleteAccount.breadcrumb.account": "TÀI KHOẢN",
+    "deleteAccount.breadcrumb.deleteAccount": "XÓA TÀI KHOẢN",
+    "deleteAccount.title": "Xóa Tài Khoản",
+    "deleteAccount.description": "Hành động này sẽ xóa tài khoản của bạn, cũng như mọi thông tin liên kết với nó trên máy chủ của chúng tôi.",
+    "deleteAccount.warning": "Bạn không thể hoàn tác hành động này,",
+    "deleteAccount.alternative": "nhưng bạn có thể tạo một tài khoản mới.",
+    "deleteAccount.button.delete": "Xóa Tài Khoản Của Tôi",
+    "deleteAccount.loading": "Đang tải...",
+    "deleteAccount.error.serviceUnavailable": "Dịch vụ không khả dụng"
 }
