@@ -30,6 +30,7 @@ import SurveyForm from "./components/SurveyForm";
 import AboutAIEP from './components/AboutAIEP';
 import DeleteAccount from "./pages/profile/DeleteAccount";
 import ChangeLanguage from "./pages/profile/ChangeLanguage";
+import ParentRights from "./pages/ParentRights";
 
 function AppContent() {
   const location = useLocation();
@@ -76,7 +77,8 @@ function AppContent() {
             <Route path="/account-center/delete-account" element={<DeleteAccount />} />
             <Route path="/account-center/change-language" element={<ChangeLanguage />} />
             <Route path="/iep-documents" element={<IEPDocumentView />} />
-            <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
+            <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />
+            <Route path="/parent-rights" element={<ParentRights />} />
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
             <Route path="/revoke-consent" element={<RevokeConsent />} />
             <Route path="/support-center" element={<SupportCenter />} />
