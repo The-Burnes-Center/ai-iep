@@ -31,7 +31,12 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
       icon: 'bi-question-circle-fill',
       label: t('navigation.support') || 'Support',
       route: '/support-center'
-    }
+    },
+    {
+      icon: 'bi-info-circle-fill',
+      label: t('navigation.rights') || 'Rights',
+      route: '/parent-rights'
+    },
   ];
 
   const handleNavigation = (route: string) => {

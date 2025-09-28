@@ -1,19 +1,32 @@
-import React, {useContext, useMemo} from 'react';
+import React, {useContext} from 'react';
 import { AuthContext } from '../../common/auth-context';
 import { Auth } from "aws-amplify";
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
-import { Container, Row, Col, Card, Accordion} from 'react-bootstrap';
+import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import { useLanguage } from '../../common/language-context'; 
 import './AccountCenter.css';
 
 const AccountCenter: React.FC = () => {
 
-  const { t } = useLanguage();
+  const { t, translationsLoaded } = useLanguage();
 
   const { setAuthenticated } = useContext(AuthContext);
 
   const navigate = useNavigate();
+
+  // Return loading state if translations aren't ready
+  if (!translationsLoaded) {
+    return (
+      <Container className="account-center-container mt-4 mb-5">
+        <div className="text-center my-5">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>        
+        </div>
+      </Container>
+    );
+  }
 
   const handleSignOut = async () => {
     try {
@@ -46,8 +59,8 @@ const AccountCenter: React.FC = () => {
     }
   };
 
-  // FAQ data object - memoized to ensure translations are loaded
-  const headers = useMemo(() => [
+  // FAQ data object
+  const headers = [
     {
       id: "0",
       title: t("accountCenter.updateProfile"),
@@ -64,7 +77,7 @@ const AccountCenter: React.FC = () => {
       id: "3",
       title: t("accountCenter.logOut"),
     }
-  ], [t]);
+  ];
 
   return (
     <>

@@ -1,58 +1,64 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import MobileBottomNavigation from '../components/MobileBottomNavigation';
-import { Container, Row, Col, Card, Accordion} from 'react-bootstrap';
+import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import '../components/SupportCenter.css';
 import { useLanguage } from '../common/language-context'; 
 
+
 const ParentRights: React.FC = () => {
-   // Multilingual FAQ data
-   const faqsByLanguage = {
-     // English (en) FAQs
-     en: [
+   const { t, translationsLoaded } = useLanguage();
+
+   // Parent rights data using same translation keys as parentRightsSlideData
+   const rightsByLanguage = useMemo(() => {
+     if (!translationsLoaded) return [];
+     
+     return [
        {
          id: "0",
-         question: "You can request a translator",
-         answer: "You can request a translator for IEP meetings to ensure clear communication."
+         title: t('rights.slide1.title'),
+         content: t('rights.slide1.content')
        },
        {
          id: "1",
-         question: "You can take your time",
-         answer: "You have the right to take your time before signing an IEP - you don\'t need to sign until you\'re ready."
+         title: t('rights.slide2.title'),
+         content: t('rights.slide2.content')
        },
-      {
+       {
          id: "2",
-         question: "You can consent or not",
-         answer: "You can consent to all, some, or none of the proposed services - your child won\'t receive new services without your approval."
+         title: t('rights.slide3.title'),
+         content: t('rights.slide3.content')
        },
        {
          id: "3",
-         question: "You can request a meeting",
-         answer: "You have the right to request an IEP meeting at any time, not just at  the annual review, and the school must schedule it within 30 days."
+         title: t('rights.slide4.title'),
+         content: t('rights.slide4.content')
        },
        {
          id: "4",
-         question: "You can reschedule",
-         answer: "If an administrator isn\'t present at the meeting, you have the right to reschedule for a time when they can attend."
+         title: t('rights.slide5.title'),
+         content: t('rights.slide5.content')
        },
        {
          id: "5",
-         question: "You must be given a booklet of your rights",
-         answer: "By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting."
+         title: t('rights.slide6.title'),
+         content: t('rights.slide6.content')
        }
-     ],
-     
-   };
+     ];
+   }, [t, translationsLoaded]);
  
-   const { language } = useLanguage();
-   
-   // Use the selected language or fallback to English if the language is not supported
-   const displayFaqs = faqsByLanguage['en'];
- 
-   // Get appropriate heading text based on language
-   const getFaqHeaderText = () => {
-    return 'Parent Rights';     
-   };
- 
+   // Return loading state if translations aren't ready
+   if (!translationsLoaded) {
+     return (
+       <Container className="faqs-container mt-4 mb-5">
+         <div className="text-center my-5">
+           <Spinner animation="border" role="status">
+             <span className="visually-hidden">Loading...</span>
+           </Spinner>
+         </div>
+       </Container>
+     );
+   }
+
    return (
      <>
        <Container className="faqs-container mt-3 mb-3">
@@ -62,16 +68,16 @@ const ParentRights: React.FC = () => {
                <Row className="g-0">
                  <Col md={12} className="no-padding-inherit-faq">
                    <>
-                     <h4 className="faqs-header mt-4 px-4">{getFaqHeaderText()}</h4>
+                     <h4 className="faqs-header mt-4 px-4">{t('rights.title')}</h4>
                      <Accordion defaultActiveKey="0" className="mb-3 pb-5 faqs-accordion">
-                       {displayFaqs.map((faq) => (
+                       {rightsByLanguage.map((faq) => (
                          <Accordion.Item key={faq.id} eventKey={faq.id}>
                            <Accordion.Header>
-                             {faq.question}
+                             {faq.title}
                            </Accordion.Header>
                            <Accordion.Body>
                              <div className="faq-content">
-                               {faq.answer}
+                               {faq.content}
                              </div>
                            </Accordion.Body>
                          </Accordion.Item>
