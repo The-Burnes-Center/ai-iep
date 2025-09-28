@@ -39,18 +39,16 @@ function AppContent() {
     trackPageView(location.pathname + location.search);
   }, [location]);
   
-  // Routes where header should be hidden
-  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/profile","/support-center","/about-aiep","/survey-form","/account-center","/account-center/profile","/account-center/delete-account","/account-center/change-language",""];
   
-  // Check if current location is in the list of routes where header should be hidden
-  const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
+  // TODO: remove shouldShowHeader which remains from earlier implementation of GlobalHeader
+  const shouldShowHeader = false;
   
   return (
     <div style={{ height: "100%" }}>
       {shouldShowHeader && <GlobalHeader />}
       <div style={{ 
-        height: shouldShowHeader ? "56px" : "0", 
-        backgroundColor: shouldShowHeader ? "#000716" : "transparent" 
+        height: "0", 
+        backgroundColor: "transparent" 
       }}>&nbsp;</div>
       
       {/* <div> */}
