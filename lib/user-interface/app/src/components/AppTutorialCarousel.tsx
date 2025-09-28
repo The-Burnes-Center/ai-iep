@@ -12,22 +12,13 @@ interface SlideData {
 interface AppTutorialCarouselProps {
   slides: SlideData[];
   className?: string;
-  onLastSlideReached?: () => void;
 }
 
-const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, className = '', onLastSlideReached }) => {
+const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, className = '' }) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const handleSelect = (selectedIndex: number) => {
     setActiveIndex(selectedIndex);
-    
-    // Check if we've reached the last slide (0-indexed, so slides.length - 1)
-    if (selectedIndex === slides.length - 1 && onLastSlideReached) {
-      // Add a small delay to ensure the slide transition completes
-      setTimeout(() => {
-        onLastSlideReached();
-      }, 4000);
-    }
   };
 
   const handlePrevious = () => {
@@ -38,12 +29,6 @@ const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, class
   };
 
   const handleNext = () => {
-    if(activeIndex === 4){
-      setTimeout(() => {
-        onLastSlideReached();
-      }, 4000);
-    }
-
     if (activeIndex < slides.length - 1) {
       setActiveIndex(activeIndex + 1);
     }
