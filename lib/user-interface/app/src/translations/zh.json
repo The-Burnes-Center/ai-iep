@@ -296,6 +296,10 @@
     "accountCenter.changeLanguage": "更改您的语言",
     "accountCenter.deleteAccount": "删除您的账户",
     "accountCenter.logOut": "退出登录",
+    
+    "supportCenter.title": "Support Center",
+    "supportCenter.frequentlyAskedQuestions": "Frequently Asked Questions",
+    "supportCenter.goToOnboarding": "Go To Onboarding",
 
     "updateProfile.breadcrumb.account": "账户",
     "updateProfile.breadcrumb.updateProfile": "更新个人资料",

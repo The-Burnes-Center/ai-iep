@@ -311,6 +311,10 @@
     "accountCenter.deleteAccount": "Delete your account",
     "accountCenter.logOut": "Log out",
 
+    "supportCenter.title": "Support Center",
+    "supportCenter.frequentlyAskedQuestions": "Frequently Asked Questions",
+    "supportCenter.goToOnboarding": "Go To Onboarding",
+
     "updateProfile.breadcrumb.account": "ACCOUNT",
     "updateProfile.breadcrumb.updateProfile": "UPDATE PROFILE",
     "updateProfile.title": "Update Profile",

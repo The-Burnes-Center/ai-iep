@@ -297,6 +297,10 @@
     "accountCenter.changeLanguage": "Cambiar su idioma",
     "accountCenter.deleteAccount": "Eliminar su cuenta",
     "accountCenter.logOut": "Cerrar sesión",
+    
+    "supportCenter.title": "Support Center",
+    "supportCenter.frequentlyAskedQuestions": "Frequently Asked Questions",
+    "supportCenter.goToOnboarding": "Go To Onboarding",
 
     "updateProfile.breadcrumb.account": "CUENTA",
     "updateProfile.breadcrumb.updateProfile": "ACTUALIZAR PERFIL",

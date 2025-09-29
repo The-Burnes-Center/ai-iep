@@ -24,13 +24,15 @@ import RightsAndOnboarding from './pages/RightsAndOnboarding';
 import ConsentForm from './pages/profile/ConsentForm';
 import WelcomeIntro from './pages/profile/WelcomeIntro';
 import AboutApp from './pages/profile/AboutApp';
-import SupportCenter from './components/SupportCenter';
+import FrequentlyAskedQuestions from './components/FrequentlyAskedQuestions';
 import AccountCenter from './pages/profile/AccountCenter';
+import SupportCenter from './pages/profile/SupportCenter';
 import SurveyForm from "./components/SurveyForm";
 import AboutAIEP from './components/AboutAIEP';
 import DeleteAccount from "./pages/profile/DeleteAccount";
 import ChangeLanguage from "./pages/profile/ChangeLanguage";
 import ParentRights from "./pages/ParentRights";
+ 
 
 function AppContent() {
   const location = useLocation();
@@ -74,6 +76,8 @@ function AppContent() {
             />
             <Route path="/profile" element={<UserProfileForm />} />
             <Route path="/account-center/profile" element={<UpdateProfileName />} />
+            <Route path="/account-center" element={<AccountCenter />} />
+            <Route path="/support-center" element={<SupportCenter />} />
             <Route path="/account-center/delete-account" element={<DeleteAccount />} />
             <Route path="/account-center/change-language" element={<ChangeLanguage />} />
             <Route path="/iep-documents" element={<IEPDocumentView />} />
@@ -81,8 +85,7 @@ function AppContent() {
             <Route path="/parent-rights" element={<ParentRights />} />
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
             <Route path="/revoke-consent" element={<RevokeConsent />} />
-            <Route path="/support-center" element={<SupportCenter />} />
-            <Route path="/account-center" element={<AccountCenter />} />
+            <Route path="/frequently-asked-questions" element={<FrequentlyAskedQuestions />} />
             <Route path="/survey-form" element={<SurveyForm />} />
             <Route path="/about-aiep" element={<AboutAIEP />} />
         </Routes>

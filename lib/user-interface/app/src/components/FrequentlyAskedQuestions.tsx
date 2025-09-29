@@ -1,10 +1,10 @@
 import React from 'react';
 import MobileBottomNavigation from './MobileBottomNavigation';
 import { Container, Row, Col, Card, Accordion} from 'react-bootstrap';
-import './SupportCenter.css';
+import './FrequentlyAskedQuestions.css';
 import { useLanguage } from '../common/language-context'; 
 
-const SupportCenter: React.FC = () => {
+const FrequentlyAskedQuestions: React.FC = () => {
   // Multilingual FAQ data
   const faqsByLanguage = {
     // English (en) FAQs
@@ -359,4 +359,4 @@ const SupportCenter: React.FC = () => {
   );
 };
 
-export default SupportCenter;
+export default FrequentlyAskedQuestions;

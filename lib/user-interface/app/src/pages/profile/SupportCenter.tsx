@@ -7,7 +7,7 @@ import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import { useLanguage } from '../../common/language-context'; 
 import './AccountCenter.css';
 
-const AccountCenter: React.FC = () => {
+const SupportCenter: React.FC = () => {
 
   const { t, translationsLoaded } = useLanguage();
 
@@ -42,16 +42,10 @@ const AccountCenter: React.FC = () => {
   const handleAccordionClick = (id: string) => {
     switch (id) {
       case '0':
-        navigate('/account-center/profile');
+        navigate('/frequently-asked-questions');
         break;
       case '1':
-        navigate('/account-center/change-language');
-        break;
-      case '2':
-        navigate('/account-center/delete-account');
-        break;
-      case '3':
-        handleSignOut();
+        navigate('/onboarding-user');
         break;
       default:
         break;
@@ -62,20 +56,12 @@ const AccountCenter: React.FC = () => {
   const headers = [
     {
       id: "0",
-      title: t("accountCenter.updateProfile"),
+      title: t("supportCenter.frequentlyAskedQuestions"),
     },
     {
       id: "1",
-      title: t("accountCenter.changeLanguage"),
+      title: t("supportCenter.goToOnboarding"),
     },
-    {
-      id: "2",
-      title: t("accountCenter.deleteAccount"),
-    },
-    {
-      id: "3",
-      title: t("accountCenter.logOut"),
-    }
   ];
 
   return (
@@ -87,7 +73,7 @@ const AccountCenter: React.FC = () => {
               <Row className="g-0">
                 <Col md={12} className="no-padding-inherit-faq">
                   <>
-                    <h4 className="account-center-header mt-4 px-4">{t("accountCenter.title")}</h4>
+                    <h4 className="account-center-header mt-4 px-4">{t("supportCenter.title")}</h4>
                     <Accordion className="mb-3 pb-5 account-center-accordion">
                       {headers.map((header) => (
                         <Accordion.Item key={header.id} eventKey={header.id}>
@@ -112,4 +98,4 @@ const AccountCenter: React.FC = () => {
   );
 };
 
-export default AccountCenter;
+export default SupportCenter;

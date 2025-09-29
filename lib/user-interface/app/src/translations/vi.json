@@ -302,6 +302,10 @@
     "accountCenter.changeLanguage": "Thay đổi ngôn ngữ của bạn",
     "accountCenter.deleteAccount": "Xóa tài khoản của bạn",
     "accountCenter.logOut": "Đăng xuất",
+    
+    "supportCenter.title": "Support Center",
+    "supportCenter.frequentlyAskedQuestions": "Frequently Asked Questions",
+    "supportCenter.goToOnboarding": "Go To Onboarding",
 
     "updateProfile.breadcrumb.account": "TÀI KHOẢN",
     "updateProfile.breadcrumb.updateProfile": "CẬP NHẬT HỒ SƠ",

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import MobileBottomNavigation from '../components/MobileBottomNavigation';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
-import '../components/SupportCenter.css';
+import '../components/FrequentlyAskedQuestions.css';
 import { useLanguage } from '../common/language-context'; 
 
 
