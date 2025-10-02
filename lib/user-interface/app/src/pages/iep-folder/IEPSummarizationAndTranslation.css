@@ -80,7 +80,7 @@
   width: 90%;
   align-self: center;
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-  font-weight: 420;
+  font-weight: 500;
 }
 
 .summary-card-body {
@@ -116,7 +116,7 @@
   padding: 0.75rem 1rem;
   background-color: #F5f3EE;
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-  font-weight: 420;
+  font-weight: 500;
   font-size: 1.125rem;
   line-height: 2;
   text-align: left;
@@ -176,10 +176,11 @@ background-color: #F5f3EE;
 }
 
 .summary-header {
-  font-size: 2.8rem;
+  font-size: 2.2rem;
   padding-left: 1rem;
-  font-family: 'salford-sans-variable', sans-serif;
-  font-variation-settings: "slnt" 0, "wght" 600;
+  font-family: "Fjalla One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
   padding-bottom: 0rem; /*Only different from profile-title*/
 }
 
@@ -328,7 +329,7 @@ background-color: #007AD1;
 
 .jargon-drawer .offcanvas-title {
 color: #F5F3EE;
-font-weight: 420;
+font-weight: 500;
 font-family: 'akzidenz-grotesk-next-pro', sans-serif;
 
 }
@@ -346,7 +347,7 @@ font-weight: 350;
 
 .jargon-drawer .offcanvas-body h3 {
 font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-font-weight: 420;
+font-weight: 500;
 font-size: 1.2rem;
 line-height: 2;
 }

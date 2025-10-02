@@ -6,22 +6,17 @@
   }
   
   .login-method-toggle-container .btn-group .btn {
-    font-family: 'Roboto', sans-serif;
-    font-weight: 500;
-    border-radius: 0;
-    transition: all 0.3s ease;
-  }
-  
-  .login-method-toggle-container .btn-group .btn {
     border-top-left-radius: 0.5rem;
     border-bottom-left-radius: 0.5rem;
     --bs-btn-border-width: none;
-    font-family: 'salford-sans-variable', sans-serif !important;
-    font-size: 1.2rem !important;
-    font-variation-settings: "slnt" 0, "wght" 500;
-    letter-spacing: 0.07em;
+    font-family: akzidenz-grotesk-next-conden, sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    border-radius: 0%;
+    border-radius: 0;
+    transition: all 0.3s ease;
   }
   
   /* Mobile responsive styling */

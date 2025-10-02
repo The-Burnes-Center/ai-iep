@@ -1,17 +1,8 @@
-/* Google font imports */
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
-
-
-/* Button text style */
-.button-text {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
-}
-
 /* Apply styles to form controls for placeholder text */
 .form-control::placeholder {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 300;
+  font-family: 'akzidenz-grotesk-next-pro' sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
   color: #1E1E1E;
   opacity: 0.35;
 }
@@ -25,8 +16,23 @@
 /* Primary button color override */
 .btn-primary {
   background-color: #00682F !important;
-  border-color: #1E1E1E !important;
-  color: #F5F3EE !important;
+  margin: 0 5px;
+  padding-left: 1.2rem !important;
+  padding-right: 1.2rem !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-family: akzidenz-grotesk-next-conden, sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1rem !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 20px !important;
+  transition: all 0.1s ease !important;
+  min-width: 120px;
 }
 
 /* Button hover effect */
@@ -34,6 +40,8 @@
   background-color: #00682F !important;
   border-color: #00682F !important;
   color: #F5F3EE !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Form control focus */
@@ -44,32 +52,29 @@
 
 /* Login method toggle buttons styling */
 .btn-group .btn {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 500;
   border-radius: 0.375rem;
   transition: all 0.3s ease;
 }
 
 .btn-group .btn:first-child {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
 }
 
 .btn-group .btn:last-child {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
 }
 
 .btn-outline-primary {
-  color: #1E1E1E;
-  border-color: #1E1E1E;
+  color: #00682F;
   background-color: transparent;
   --bs-btn-active-bg: #00682F !important;
   --bs-btn-active-border-color: #00682F !important;
 }
 
 .btn-outline-primary:hover {
-  color: #1E1E1E;
+  color: #F5F3EE;
   background-color: #00682F;
   border-color: #F5F3EE;
 }
@@ -96,8 +101,9 @@
 
 /* Phone number input specific styling */
 input[type="tel"] {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'akzidenz-grotesk-next-pro' sans-serif;
   font-weight: 400;
+  font-size: 1rem;
 }
 
 input[type="tel"]:focus {
@@ -107,8 +113,9 @@ input[type="tel"]:focus {
 
 /* Mobile consent text styling */
 .mobile-consent-text {
-  font-family: 'Roboto', sans-serif;
-  font-size: 0.8rem !important;
+  font-family: 'akzidenz-grotesk-next-pro' sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
   text-align: center !important;
   color: #6c757d !important;
   line-height: 1.4;
@@ -118,7 +125,9 @@ input[type="tel"]:focus {
 
 /* SMS verification info text */
 .sms-verification-info {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'akzidenz-grotesk-next-pro' sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
   color: #6c757d;
   text-align: center;
   margin-bottom: 1rem;

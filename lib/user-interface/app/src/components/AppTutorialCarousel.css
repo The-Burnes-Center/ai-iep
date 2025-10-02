@@ -77,14 +77,12 @@
   font-weight: 600;
   margin-bottom: 1rem;
   line-height: 1.3;
-  color: #0040BA;
 }
 
 .slide-tutorial-content p {
   font-size: 1.05rem;
   line-height: 1.5;
   margin-bottom: 0;
-  color: #6c757d;
 }
 
 /* Individual slide backgrounds - subdued colors matching Summary screen */
@@ -135,7 +133,6 @@
 
 /* Desktop Navigation Buttons - Only visible on desktop */
 .carousel-desktop-navigation {
-  display: none; /* Hidden by default on mobile */
   justify-content: space-between;
   padding: 1.5rem 2rem;
   width: 50%;
@@ -155,6 +152,10 @@
   cursor: pointer;
   transition: all 0.3s ease;
   letter-spacing: 0.05em;
+  font-family: akzidenz-grotesk-next-conden, sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  text-transform: uppercase;
 }
 
 .carousel-nav-btn:hover:not(:disabled) {

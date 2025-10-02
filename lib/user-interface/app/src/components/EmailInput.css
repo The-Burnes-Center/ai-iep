@@ -13,8 +13,6 @@
 
 /* Placeholder styling for email input */
 .email-input-control::placeholder {
-  font-family: 'Roboto', sans-serif;
-  font-weight: 300;
   color: #1E1E1E;
   opacity: 0.35;
 }

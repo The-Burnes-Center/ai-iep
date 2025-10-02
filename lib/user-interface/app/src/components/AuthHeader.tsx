@@ -1,3 +1,4 @@
+import './AuthHeader.css';
 interface AuthHeaderProps {
   title: string;
   logoSrc?: string;
@@ -7,7 +8,7 @@ interface AuthHeaderProps {
 
 const AuthHeader: React.FC<AuthHeaderProps> = ({ 
   title, 
-  logoSrc = "/images/AIEP_Logo.png",
+  logoSrc = "/images/aiep-logo.svg",
   logoAlt = "AIEP Logo",
   className = '' 
 }) => {

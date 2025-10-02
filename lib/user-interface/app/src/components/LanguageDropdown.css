@@ -1,14 +1,13 @@
 .language-login-dropdown .dropdown-toggle {
-    margin: 0 5px;
-    padding-left: 1.2rem !important;
-    padding-right: 1.2rem !important;
-    font-family: 'salford-sans-variable', sans-serif !important;
-    font-size: 1.2rem !important;
-    font-variation-settings: "slnt" 0, "wght" 500;
-    letter-spacing: 0.07em;
+    margin: 1rem 0rem;
+    padding: 0.5rem 1.2rem 0.4rem 1.2rem !important;
+    font-family: akzidenz-grotesk-next-conden, sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 1rem !important;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid #00682F;
     border: none;
     border-radius: 20px !important;
     transition: all 0.1s ease !important;

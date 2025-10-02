@@ -14,8 +14,9 @@
 .faqs-header {
   font-size: 2.6rem;
   padding-left: 1rem;
-  font-family: 'salford-sans-variable', sans-serif;
-  font-variation-settings: "slnt" 0, "wght" 600;
+  font-family: "Fjalla One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
   padding-bottom: 1rem;
 }
 
@@ -34,8 +35,8 @@
 .faqs-accordion .accordion-header .accordion-button {
   padding: 0.75rem 1rem;
   background-color: #F5f3EE;
-  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-  font-weight: 420;
+  font-family: 'akzidenz-grotesk-next-pro' sans-serif;
+  font-weight: 400;
   font-size: 1.125rem;
   line-height: 2;
   text-align: left;
@@ -81,9 +82,8 @@
 }
 
 .faq-content {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 350;
-  line-height: 2;
   line-height: 1.6;
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
 
