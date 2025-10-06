@@ -1,0 +1,28 @@
+.view-resources-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+
+.resources-list-container {
+    display: flex;
+    flex-direction: column;
+    background-color: #007AD1;
+    min-height: 100px;
+    width: 100%;
+    padding: 10px;
+    align-items: center;
+}
+
+.resource {
+    display: flex;
+    flex-direction: column;
+    background-color: #F5F3EE;
+    min-height: 100px;
+    width: 80%;
+    border-radius: 20px;
+    padding: 10px;
+    margin: 10px;
+
+}
