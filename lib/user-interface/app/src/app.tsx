@@ -31,8 +31,9 @@ import SurveyForm from "./components/SurveyForm";
 import AboutAIEP from './components/AboutAIEP';
 import DeleteAccount from "./pages/profile/DeleteAccount";
 import ChangeLanguage from "./pages/profile/ChangeLanguage";
-import ParentRights from "./pages/ParentRights";
- 
+import ViewResources from "./pages/profile/ViewResources";
+import AboutTheProject from "./pages/profile/AboutTheProject";
+import ParentRights from "./pages/ParentRights"; 
 
 function AppContent() {
   const location = useLocation();
@@ -79,6 +80,8 @@ function AppContent() {
             <Route path="/account-center" element={<AccountCenter />} />
             <Route path="/support-center" element={<SupportCenter />} />
             <Route path="/account-center/delete-account" element={<DeleteAccount />} />
+            <Route path="/view-resources" element={<ViewResources />} />
+            <Route path="/about-the-project" element={<AboutTheProject />} />
             <Route path="/account-center/change-language" element={<ChangeLanguage />} />
             <Route path="/iep-documents" element={<IEPDocumentView />} />
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />

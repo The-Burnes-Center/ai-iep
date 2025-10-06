@@ -47,6 +47,12 @@ const SupportCenter: React.FC = () => {
       case '1':
         navigate('/onboarding-user');
         break;
+      case '2':
+        navigate('/onboarding-user');
+        break;
+      case '3':
+        navigate('/onboarding-user');
+        break;
       default:
         break;
     }
@@ -62,6 +68,14 @@ const SupportCenter: React.FC = () => {
       id: "1",
       title: t("supportCenter.goToOnboarding"),
     },
+    {
+      id: "3",
+      title: "Resources", 
+    },
+    {
+      id: "4",
+      title: "About", 
+    }
   ];
 
   return (
