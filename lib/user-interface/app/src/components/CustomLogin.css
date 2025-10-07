@@ -44,6 +44,23 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+.selected-login-method {
+  background-color: #00682F !important;
+  border-color: #1E1E1E !important;
+  color: #F5F3EE !important;
+}
+
+.selected-login-method:hover {
+  background-color: #00682F !important;
+  border-color: #00682F !important;
+  color: #F5F3EE !important;
+}
+
+.unselected-login-method {
+  color: #00682F;
+  background-color: transparent;
+}
+
 /* Form control focus */
 .form-control:focus {
   border-color: #0040BA;
