@@ -4,14 +4,13 @@
   justify-content: center;
 }
 
-
 .resources-list-container {
     display: flex;
     flex-direction: column;
     background-color: #007AD1;
     min-height: 100px;
     width: 100%;
-    padding: 10px;
+    padding: 10px 10px 100px 10px;
     align-items: center;
 }
 
@@ -20,9 +19,29 @@
     flex-direction: column;
     background-color: #F5F3EE;
     min-height: 100px;
-    width: 80%;
+    width: 95%;
     border-radius: 20px;
-    padding: 10px;
+    padding: 15px;
     margin: 10px;
 
+}
+
+.resource h5 {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 500;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.resource p {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+
+.resources-description {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
+  font-size: 1.125rem;
 }
