@@ -12,17 +12,21 @@ interface SlideData {
 interface AppTutorialCarouselProps {
   slides: SlideData[];
   className?: string;
+  onLastSlideReached?: () => void;
 }
 
-const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, className = '' }) => {
+const AppTutorialCarousel: React.FC<AppTutorialCarouselProps> = ({ slides, className = '',onLastSlideReached}) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const handleSelect = (selectedIndex: number) => {
+    if(selectedIndex === 0 && activeIndex && slides.length -1){
+      onLastSlideReached();
+    }
+
     setActiveIndex(selectedIndex);
   };
 
   const handlePrevious = () => {
-    console.log("Active Index",activeIndex);
     if (activeIndex > 0) {
       setActiveIndex(activeIndex - 1);
     }

@@ -133,6 +133,7 @@
 
 /* Desktop Navigation Buttons - Only visible on desktop */
 .carousel-desktop-navigation {
+  display: none;
   justify-content: space-between;
   padding: 1.5rem 2rem;
   width: 50%;
