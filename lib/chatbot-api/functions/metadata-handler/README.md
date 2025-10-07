@@ -117,7 +117,66 @@ The system automatically extracts and organizes abbreviations found throughout I
 
 ---
 
-## 7. Extensibility
+## 7. IEP Processing Status Transitions
+
+The IEP processing workflow uses a comprehensive status tracking system with real-time progress updates. Here's the complete breakdown of all status transitions:
+
+### Status Values
+- `PROCESSING` - Document is being processed
+- `PROCESSED` - Document processing completed successfully  
+- `FAILED` - Document processing failed
+
+### Complete Workflow with Progress & Current Steps
+
+| **Step** | **Progress** | **Current Step** | **Status** | **Description** |
+|----------|-------------|------------------|------------|-----------------|
+| **InitializeProcessing** | 5% | `"start"` | `PROCESSING` | Initialize processing status and progress tracking |
+| **MistralOCR** | 15% | `"ocr_complete"` | `PROCESSING` | Extract text using Mistral OCR API |
+| **RedactOCR** | 20% | `"pii_redaction_complete"` | `PROCESSING` | Remove PII using AWS Comprehend |
+| **DeleteOriginal** | 22% | `"cleanup_complete"` | `PROCESSING` | Delete uploaded S3 file |
+| **ParallelWork** | 65% | `"analysis_complete"` | `PROCESSING` | Run parsing and missing info concurrently |
+| ├─ **ParsingAgent** | - | - | `PROCESSING` | Generate English summary/sections using OpenAI |
+| └─ **MissingInfoAgent** | - | - | `PROCESSING` | Extract missing info insights using OpenAI |
+| **CheckLanguagePrefs** | - | - | `PROCESSING` | Check user language preferences |
+| **TranslationChoice** | - | - | `PROCESSING` | Decide if translations are needed |
+| **ParallelTranslations** | 85% | `"translation_complete"` | `PROCESSING` | Translate content (if needed) |
+| ├─ **TranslateParsingResult** | - | - | `PROCESSING` | Translate parsing results |
+| └─ **TranslateMissingInfo** | - | - | `PROCESSING` | Translate missing info results |
+| **FinalizeResults** | 100% | `"completed"` | `PROCESSED` | Mark document as completed |
+| **RecordFailure** | 0% | `"error"` | `FAILED` | Record failure state and error details |
+
+### Key Transition Points
+
+1. **Start (5%)**: Document processing begins
+2. **OCR Complete (15%)**: Text extraction finished
+3. **PII Redaction Complete (20%)**: Sensitive data removed
+4. **Cleanup Complete (22%)**: Original file deleted
+5. **Analysis Complete (65%)**: English analysis and missing info extraction done
+6. **Translation Complete (85%)**: Multi-language translations finished (if needed)
+7. **Completed (100%)**: All processing finished successfully
+
+### Error Handling
+- Any step failure routes to `RecordFailure`
+- Sets `status="FAILED"`, `current_step="error"`, `progress=0`
+- Records `error_message`, `last_error`, and `failed_step`
+
+### Parallel Processing
+- **ParsingAgent** and **MissingInfoAgent** run concurrently (both at 65% progress)
+- **TranslateParsingResult** and **TranslateMissingInfo** run concurrently (both at 85% progress)
+
+### Translation Logic
+- If user has language preferences beyond English → translations run
+- If user only wants English → skips to finalization
+- Progress jumps from 65% to 100% if no translations needed
+
+### Frontend Integration
+- Frontend polls status updates every 5 seconds via `GET /profile/children/{childId}/documents`
+- Displays real-time progress percentage and current step to users
+- Stops polling when `status="PROCESSED"` or `status="FAILED"`
+
+---
+
+## 8. Extensibility
 
 - The agent-tool abstraction allows for easy addition of new tools (e.g., new language translation, new section analyzers).
 - The multi-agent setup (agents calling agents as tools) supports complex workflows and modularity.
