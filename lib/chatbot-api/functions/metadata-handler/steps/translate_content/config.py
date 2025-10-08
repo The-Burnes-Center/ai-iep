@@ -5,17 +5,17 @@ import json
 
 def get_en_to_es_translations():
     """Load the English to Spanish translation dictionary."""
-    with open('en_es_translations.json', 'r') as f:
+    with open('en_es_translations.json', 'r', encoding='utf-8-sig') as f:
         return json.load(f)
 
 def get_en_to_vi_translations():
     """Load the English to Vietnamese translation dictionary."""
-    with open('en_vi_translations.json', 'r') as f:
+    with open('en_vi_translations.json', 'r', encoding='utf-8-sig') as f:
         return json.load(f)
 
 def get_en_to_zh_translations():
     """Load the English to Chinese translation dictionary."""
-    with open('en_zh_translations.json', 'r') as f:
+    with open('en_zh_translations.json', 'r', encoding='utf-8-sig') as f:
         return json.load(f)
 
 def get_language_context(target_language):

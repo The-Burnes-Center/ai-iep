@@ -37,7 +37,17 @@ class OptimizedTranslationAgent:
             try:
                 if target_language == 'es':
                     # Load Spanish translations
-                    with open('en_es_translations.json', 'r') as f:
+                    with open('en_es_translations.json', 'r', encoding='utf-8-sig') as f:
+                        translations = json.load(f)
+                    return translations.get(term.lower(), f"No translation found for '{term}'")
+                elif target_language == 'vi':
+                    # Load Vietnamese translations
+                    with open('en_vi_translations.json', 'r', encoding='utf-8-sig') as f:
+                        translations = json.load(f)
+                    return translations.get(term.lower(), f"No translation found for '{term}'")
+                elif target_language == 'zh':
+                    # Load Chinese translations
+                    with open('en_zh_translations.json', 'r', encoding='utf-8-sig') as f:
                         translations = json.load(f)
                     return translations.get(term.lower(), f"No translation found for '{term}'")
                 else:
