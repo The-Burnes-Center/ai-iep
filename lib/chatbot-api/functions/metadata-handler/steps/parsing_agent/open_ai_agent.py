@@ -26,7 +26,6 @@ class OpenAIAgent:
         self.ocr_text_tool = self._create_ocr_text_tool()
         self.ocr_page_tool = self._create_ocr_page_tool()
         self.ocr_multiple_pages_tool = self._create_ocr_multiple_pages_tool()
-        self.language_context_tool = self._create_language_context_tool()
         self.section_info_tool = self._create_section_info_tool()
 
     def _get_openai_api_key(self):
@@ -79,12 +78,6 @@ class OpenAIAgent:
             return "\n\n".join(parts)
         return get_ocr_text_for_pages
 
-    def _create_language_context_tool(self):
-        @function_tool()
-        def get_language_context_for_translation(target_language: str) -> str:
-            from config import get_language_context
-            return get_language_context(target_language)
-        return get_language_context_for_translation
 
     def _create_section_info_tool(self):
         sections_list = ', '.join(IEP_SECTIONS.keys())
