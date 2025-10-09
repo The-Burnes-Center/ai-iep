@@ -11,8 +11,6 @@ const SupportCenter: React.FC = () => {
 
   const { t, translationsLoaded } = useLanguage();
 
-  const { setAuthenticated } = useContext(AuthContext);
-
   const navigate = useNavigate();
 
   // Return loading state if translations aren't ready
@@ -28,16 +26,6 @@ const SupportCenter: React.FC = () => {
     );
   }
 
-  const handleSignOut = async () => {
-    try {
-      navigate('/', { replace: true });
-      await Auth.signOut();
-      setAuthenticated(false);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   // Navigation handler for accordion items
   const handleAccordionClick = (id: string) => {
     switch (id) {
@@ -48,9 +36,6 @@ const SupportCenter: React.FC = () => {
         navigate('/onboarding-user');
         break;
       case '2':
-        navigate('/onboarding-user');
-        break;
-      case '3':
         navigate('/onboarding-user');
         break;
       default:
@@ -70,12 +55,8 @@ const SupportCenter: React.FC = () => {
     },
     {
       id: "3",
-      title: "Resources", 
+      title: t("supportCenter.resources"), 
     },
-    {
-      id: "4",
-      title: "About", 
-    }
   ];
 
   return (

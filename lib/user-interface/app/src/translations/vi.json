@@ -303,9 +303,10 @@
     "accountCenter.deleteAccount": "Xóa tài khoản của bạn",
     "accountCenter.logOut": "Đăng xuất",
     
-    "supportCenter.title": "Support Center",
-    "supportCenter.frequentlyAskedQuestions": "Frequently Asked Questions",
-    "supportCenter.goToOnboarding": "Go To Onboarding",
+    "supportCenter.title": "Trung Tâm Hỗ Trợ",
+    "supportCenter.frequentlyAskedQuestions": "Câu Hỏi Thường Gặp",
+    "supportCenter.goToOnboarding": "Đến Trang Giới Thiệu",
+    "supportCenter.resources": "Tài Nguyên",
 
     "updateProfile.breadcrumb.account": "TÀI KHOẢN",
     "updateProfile.breadcrumb.updateProfile": "CẬP NHẬT HỒ SƠ",

@@ -297,9 +297,10 @@
     "accountCenter.deleteAccount": "删除您的账号",
     "accountCenter.logOut": "退出登录",
     
-    "supportCenter.title": "Support Center",
-    "supportCenter.frequentlyAskedQuestions": "Frequently Asked Questions",
-    "supportCenter.goToOnboarding": "Go To Onboarding",
+    "supportCenter.title": "支持中心",
+    "supportCenter.frequentlyAskedQuestions": "常见问题",
+    "supportCenter.goToOnboarding": "前往入门指南",
+    "supportCenter.resources": "资源",
 
     "updateProfile.breadcrumb.account": "账号",
     "updateProfile.breadcrumb.updateProfile": "更新个人资料",

@@ -298,9 +298,10 @@
     "accountCenter.deleteAccount": "Eliminar su cuenta",
     "accountCenter.logOut": "Cerrar sesión",
     
-    "supportCenter.title": "Support Center",
-    "supportCenter.frequentlyAskedQuestions": "Frequently Asked Questions",
-    "supportCenter.goToOnboarding": "Go To Onboarding",
+    "supportCenter.title": "Centro de Soporte",
+    "supportCenter.frequentlyAskedQuestions": "Preguntas Frecuentes",
+    "supportCenter.goToOnboarding": "Ir a la Incorporación",
+    "supportCenter.resources": "Recursos",
 
     "updateProfile.breadcrumb.account": "CUENTA",
     "updateProfile.breadcrumb.updateProfile": "ACTUALIZAR PERFIL",
