@@ -1,6 +1,4 @@
-import React, {useContext} from 'react';
-import { AuthContext } from '../../common/auth-context';
-import { Auth } from "aws-amplify";
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
