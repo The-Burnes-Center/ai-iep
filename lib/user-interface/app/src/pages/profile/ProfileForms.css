@@ -6,28 +6,40 @@
 }
 
 .profile-title {
-  font-family: 'salford-sans-variable', sans-serif;
-  font-variation-settings: "slnt" 0, "wght" 600;
+  font-family: "Fjalla One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
   font-size: 1.75rem;
   padding-right: 1rem;
 }
 
 .parent-name-title {
-  font-family: 'salford-sans-variable', sans-serif;
-  font-variation-settings: "slnt" 0, "wght" 600;
+  font-family: "Fjalla One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
   font-size: 1.75rem;
   padding-right: 1rem;
   padding-bottom: 2rem;
 }
 
 .form-label {
-  font-family: 'Roboto', sans-serif;
+  font-family: akzidenz-grotesk-next-conden, sans-serif;
   font-weight: 500;
+  font-style: normal;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.05em;
 }
 
 .button-text {
-  font-family: 'salford-sans-variable', sans-serif;
-  font-variation-settings: "slnt" 0, "wght" 600;
+  font-family: akzidenz-grotesk-next-conden, sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1rem !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 20px !important;
+  transition: all 0.1s ease !important;
+  min-width: 120px;
 }
 
 .consent-box {
@@ -123,27 +135,6 @@
   align-items: center;
 }
 
-.consent-button {
-  font-family: 'salford-sans-variable', sans-serif;
-  font-variation-settings: "slnt" 0, "wght" 600;
-  text-transform: uppercase;
-}
-
-/* Disabled consent button styling */
-.consent-button:disabled {
-  background-color: #E7E4DC !important;
-  color: #A09E99 !important;
-  border-color: #E7E4DC !important;
-  opacity: 1 !important; /* Override Bootstrap's default opacity */
-}
-
-/* Remove hover effects when disabled */
-.consent-button:disabled:hover {
-  background-color: #E7E4DC !important;
-  color: #A09E99 !important;
-  border-color: #E7E4DC !important;
-  transform: none !important;
-}
 
 @media (max-width: 576px) {
   .profile-actions {

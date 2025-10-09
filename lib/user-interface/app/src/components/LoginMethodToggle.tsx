@@ -20,17 +20,17 @@ const LoginMethodToggle: React.FC<LoginMethodToggleProps> = ({
   return (
     <div className="login-method-toggle-container d-grid gap-2 mb-4">
       <div className="btn-group" role="group">
-        <Button 
-          variant={showMobileLogin ? "primary" : "outline-primary"}
+        <Button
+          variant='secondary'
           onClick={onMobileLoginClick}
-          className="button-text"
+          className={`button-text ${showMobileLogin ? 'selected-login-method' : 'unselected-login-method'}` }
         >
           {mobileLoginText}
         </Button>
-        <Button 
-          variant={!showMobileLogin ? "primary" : "outline-primary"}
+        <Button
+          variant='secondary'
           onClick={onEmailLoginClick}
-          className="button-text"
+          className={`button-text ${!showMobileLogin ? 'selected-login-method' : 'unselected-login-method'}` }
         >
           {emailLoginText}
         </Button>

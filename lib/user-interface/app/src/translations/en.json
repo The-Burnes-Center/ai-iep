@@ -302,6 +302,7 @@
     "navigation.support": "Support", 
     "navigation.account": "Account",
     "navigation.about": "About",
+    "navigation.rights": "Rights",
     "navigation.processing": "Your document is being processed...",
 
     "accountCenter.title": "Account Center",
@@ -309,6 +310,25 @@
     "accountCenter.changeLanguage": "Change your Language",
     "accountCenter.deleteAccount": "Delete your account",
     "accountCenter.logOut": "Log out",
+
+    "supportCenter.title": "Support Center",
+    "supportCenter.frequentlyAskedQuestions": "Frequently Asked Questions",
+    "supportCenter.goToOnboarding": "Go To Onboarding",
+    "supportCenter.resources": "Resources",
+
+    "resources.title": "Resources",
+    "resources.breadcrumb.supportCenter": "SUPPORT CENTER",
+    "resources.breadcrumb.resources": "RESOURCES",
+    "resources.description": "Access essential tools and guides to help you advocate for your child's special education needs. These resources provide valuable information about your parental rights, advocacy strategies, and practical tips for navigating the IEP process effectively.",
+    "resources.toolkit.title": "Special Education Basics Toolkit",
+    "resources.toolkit.description": "Comprehensive collection of advocacy tools, timelines, template letters, and worksheets to help you navigate the special education process effectively.",
+    "resources.walletCard.title": "Know Your Rights Wallet Card",
+    "resources.walletCard.description": "Printable reference card explaining your disability rights under the ADA, including accommodations you can request in public spaces and services.",
+    "resources.advocacyTips.title": "17 Special Education Advocacy Tips",
+    "resources.advocacyTips.description": "Essential strategies for before, during, and after IEP meetings to help you effectively advocate for your child's educational needs.",
+    "resources.rulaManual.title": "Rights Under the Lanterman Act Manual (RULA)",
+    "resources.rulaManual.description": "Detailed guide to understanding your rights and services available under California's Lanterman Developmental Disabilities Services Act.",
+    "resources.buttonText": "VIEW RESOURCES",
 
     "updateProfile.breadcrumb.account": "ACCOUNT",
     "updateProfile.breadcrumb.updateProfile": "UPDATE PROFILE",

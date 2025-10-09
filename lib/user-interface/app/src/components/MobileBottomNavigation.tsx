@@ -23,15 +23,20 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
       route: '/summary-and-translations'
     },
     {
+      icon: 'bi-question-circle-fill',
+      label: t('navigation.support') || 'Support',
+      route: '/support-center'
+    },
+    {
+      icon: 'bi-info-circle-fill',
+      label: t('navigation.rights') || 'Rights',
+      route: '/parent-rights'
+    },
+    {
       icon: 'bi-person-fill',
       label: t('navigation.account') || 'Account',
       route: '/account-center'
     },
-        {
-      icon: 'bi-question-circle-fill',
-      label: t('navigation.support') || 'Support',
-      route: '/support-center'
-    }
   ];
 
   const handleNavigation = (route: string) => {

@@ -1,47 +1,98 @@
-import React from 'react';
-import ParentRightsCarousel from '../components/ParentRightsCarousel';
+import React, { useMemo } from 'react';
+import MobileBottomNavigation from '../components/MobileBottomNavigation';
+import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
+import '../components/FrequentlyAskedQuestions.css';
+import { useLanguage } from '../common/language-context'; 
+
 
 const ParentRights: React.FC = () => {
-  const slideData = [
-    {
-      id: 'slide-1',
-      title: 'You can request a translator',
-      content: 'You can request a translator for IEP meetings to ensure clear communication.',
-      image: '/images/carousel/surprised.png'
-    },
-    {
-      id: 'slide-2',
-      title: 'You can take your time',
-      content: 'You have the right to take your time before signing an IEP - you don\'t need to sign until you\'re ready.',
-      image: '/images/carousel/blissful.png'
-    },
-    {
-      id: 'slide-3',
-      title: 'You can consent or not',
-      content: 'You can consent to all, some, or none of the proposed services - your child won\'t receive new services without your approval.',
-      image: '/images/carousel/joyful.png'
-    },
-    {
-      id: 'slide-4',
-      title: 'You can request a meeting',
-      content: 'You have the right to request an IEP meeting at any time, not just at  the annual review, and the school must schedule it within 30 days.',
-      image: '/images/carousel/surprised.png'
-    },
-    {
-      id: 'slide-5',
-      title: 'You can reschedule',
-      content: 'If an administrator isn\'t present at the meeting, you have the right to reschedule for a time when they can attend.',
-      image: '/images/carousel/blissful.png'
-    },
-    {
-      id: 'slide-6',
-      title: 'You must be given a booklet of your rights',
-      content: 'By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting.',
-      image: '/images/carousel/confident.png'
-    }
-  ];
+   const { t, translationsLoaded } = useLanguage();
 
-  return <ParentRightsCarousel slides={slideData} />;
+   // Parent rights data using same translation keys as parentRightsSlideData
+   const rightsByLanguage = useMemo(() => {
+     if (!translationsLoaded) return [];
+     
+     return [
+       {
+         id: "0",
+         title: t('rights.slide1.title'),
+         content: t('rights.slide1.content')
+       },
+       {
+         id: "1",
+         title: t('rights.slide2.title'),
+         content: t('rights.slide2.content')
+       },
+       {
+         id: "2",
+         title: t('rights.slide3.title'),
+         content: t('rights.slide3.content')
+       },
+       {
+         id: "3",
+         title: t('rights.slide4.title'),
+         content: t('rights.slide4.content')
+       },
+       {
+         id: "4",
+         title: t('rights.slide5.title'),
+         content: t('rights.slide5.content')
+       },
+       {
+         id: "5",
+         title: t('rights.slide6.title'),
+         content: t('rights.slide6.content')
+       }
+     ];
+   }, [t, translationsLoaded]);
+ 
+   // Return loading state if translations aren't ready
+   if (!translationsLoaded) {
+     return (
+       <Container className="faqs-container mt-4 mb-5">
+         <div className="text-center my-5">
+           <Spinner animation="border" role="status">
+             <span className="visually-hidden">Loading...</span>
+           </Spinner>
+         </div>
+       </Container>
+     );
+   }
+
+   return (
+     <>
+       <Container className="faqs-container mt-3 mb-3">
+         <Row className="mt-2">
+           <Col>
+             <Card className="faqs-card">
+               <Row className="g-0">
+                 <Col md={12} className="no-padding-inherit-faq">
+                   <>
+                     <h4 className="faqs-header mt-4 px-4">{t('rights.title')}</h4>
+                     <Accordion defaultActiveKey="0" className="mb-3 pb-5 faqs-accordion">
+                       {rightsByLanguage.map((faq) => (
+                         <Accordion.Item key={faq.id} eventKey={faq.id}>
+                           <Accordion.Header>
+                             {faq.title}
+                           </Accordion.Header>
+                           <Accordion.Body>
+                             <div className="faq-content">
+                               {faq.content}
+                             </div>
+                           </Accordion.Body>
+                         </Accordion.Item>
+                       ))}
+                     </Accordion>
+                   </>
+                 </Col>
+               </Row>
+             </Card>
+           </Col>
+         </Row>
+       </Container>
+       <MobileBottomNavigation />
+     </>
+   );
 };
 
 export default ParentRights; 

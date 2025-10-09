@@ -1,7 +1,12 @@
 .language-select-dropdown {
-    width: 30%;
+    width: 40%;
     background-color: #F5F3EE;
     border: 2px solid;
     border-color: rgba(30, 30, 30, 0.35);
     border-radius: 20px;
+    font-family: akzidenz-grotesk-next-conden, sans-serif;
+    font-weight: 400;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }

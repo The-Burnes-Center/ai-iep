@@ -1,17 +1,13 @@
-import React, {useContext} from 'react';
-import { AuthContext } from '../../common/auth-context';
-import { Auth } from "aws-amplify";
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import { useLanguage } from '../../common/language-context'; 
 import './AccountCenter.css';
 
-const AccountCenter: React.FC = () => {
+const SupportCenter: React.FC = () => {
 
   const { t, translationsLoaded } = useLanguage();
-
-  const { setAuthenticated } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -28,30 +24,17 @@ const AccountCenter: React.FC = () => {
     );
   }
 
-  const handleSignOut = async () => {
-    try {
-      navigate('/', { replace: true });
-      await Auth.signOut();
-      setAuthenticated(false);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   // Navigation handler for accordion items
   const handleAccordionClick = (id: string) => {
     switch (id) {
       case '0':
-        navigate('/account-center/profile');
+        navigate('/frequently-asked-questions');
         break;
       case '1':
-        navigate('/account-center/change-language');
+        navigate('/onboarding-user');
         break;
       case '2':
-        navigate('/account-center/delete-account');
-        break;
-      case '3':
-        handleSignOut();
+        navigate('/view-resources');
         break;
       default:
         break;
@@ -62,20 +45,16 @@ const AccountCenter: React.FC = () => {
   const headers = [
     {
       id: "0",
-      title: t("accountCenter.updateProfile"),
+      title: t("supportCenter.frequentlyAskedQuestions"),
     },
     {
       id: "1",
-      title: t("accountCenter.changeLanguage"),
+      title: t("supportCenter.goToOnboarding"),
     },
     {
       id: "2",
-      title: t("accountCenter.deleteAccount"),
+      title: t("supportCenter.resources"), 
     },
-    {
-      id: "3",
-      title: t("accountCenter.logOut"),
-    }
   ];
 
   return (
@@ -87,7 +66,7 @@ const AccountCenter: React.FC = () => {
               <Row className="g-0">
                 <Col md={12} className="no-padding-inherit-faq">
                   <>
-                    <h4 className="account-center-header mt-4 px-4">{t("accountCenter.title")}</h4>
+                    <h4 className="account-center-header mt-4 px-4">{t("supportCenter.title")}</h4>
                     <Accordion className="mb-3 pb-5 account-center-accordion">
                       {headers.map((header) => (
                         <Accordion.Item key={header.id} eventKey={header.id}>
@@ -112,4 +91,4 @@ const AccountCenter: React.FC = () => {
   );
 };
 
-export default AccountCenter;
+export default SupportCenter;

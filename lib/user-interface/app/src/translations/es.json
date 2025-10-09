@@ -289,6 +289,7 @@
     "navigation.support": "Soporte",
     "navigation.account": "Cuenta", 
     "navigation.about": "Acerca de",
+    "navigation.rights": "Derechos",
     "navigation.processing": "Su documento está siendo procesado...",
 
     "accountCenter.title": "Centro de Cuenta",
@@ -296,6 +297,25 @@
     "accountCenter.changeLanguage": "Cambiar su idioma",
     "accountCenter.deleteAccount": "Eliminar su cuenta",
     "accountCenter.logOut": "Cerrar sesión",
+    
+    "supportCenter.title": "Centro de Soporte",
+    "supportCenter.frequentlyAskedQuestions": "Preguntas Frecuentes",
+    "supportCenter.goToOnboarding": "Ir a la Incorporación",
+    "supportCenter.resources": "Recursos",
+
+    "resources.title": "Recursos",
+    "resources.breadcrumb.supportCenter": "CENTRO DE SOPORTE",
+    "resources.breadcrumb.resources": "RECURSOS",
+    "resources.description": "Acceda a herramientas esenciales y guías para ayudarle a abogar por las necesidades de educación especial de su hijo. Estos recursos proporcionan información valiosa sobre sus derechos como padre, estrategias de defensa y consejos prácticos para navegar el proceso del IEP de manera efectiva.",
+    "resources.toolkit.title": "Kit de Herramientas Básicas de Educación Especial",
+    "resources.toolkit.description": "Colección integral de herramientas de defensa, cronogramas, cartas modelo y hojas de trabajo para ayudarle a navegar el proceso de educación especial de manera efectiva.",
+    "resources.walletCard.title": "Tarjeta de Conozca Sus Derechos",
+    "resources.walletCard.description": "Tarjeta de referencia imprimible que explica sus derechos de discapacidad bajo la ADA, incluyendo las adaptaciones que puede solicitar en espacios públicos y servicios.",
+    "resources.advocacyTips.title": "17 Consejos de Defensa de Educación Especial",
+    "resources.advocacyTips.description": "Estrategias esenciales para antes, durante y después de las reuniones del IEP para ayudarle a abogar efectivamente por las necesidades educativas de su hijo.",
+    "resources.rulaManual.title": "Manual de Derechos Bajo la Ley Lanterman (RULA)",
+    "resources.rulaManual.description": "Guía detallada para entender sus derechos y servicios disponibles bajo la Ley de Servicios para Discapacidades del Desarrollo Lanterman de California.",
+    "resources.buttonText": "VER RECURSOS",
 
     "updateProfile.breadcrumb.account": "CUENTA",
     "updateProfile.breadcrumb.updateProfile": "ACTUALIZAR PERFIL",

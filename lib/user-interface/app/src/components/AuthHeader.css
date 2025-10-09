@@ -1,6 +1,7 @@
 /* AIEP logo style */
 .aiep-logo {
-  max-width: 200px;
+  max-width: 200px !important;
+  margin-left: 5px;
   height: auto;
   animation: fadeIn 1.2s ease-in;
 }

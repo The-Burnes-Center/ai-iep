@@ -24,12 +24,16 @@ import RightsAndOnboarding from './pages/RightsAndOnboarding';
 import ConsentForm from './pages/profile/ConsentForm';
 import WelcomeIntro from './pages/profile/WelcomeIntro';
 import AboutApp from './pages/profile/AboutApp';
-import SupportCenter from './components/SupportCenter';
+import FrequentlyAskedQuestions from './components/FrequentlyAskedQuestions';
 import AccountCenter from './pages/profile/AccountCenter';
+import SupportCenter from './pages/profile/SupportCenter';
 import SurveyForm from "./components/SurveyForm";
 import AboutAIEP from './components/AboutAIEP';
 import DeleteAccount from "./pages/profile/DeleteAccount";
 import ChangeLanguage from "./pages/profile/ChangeLanguage";
+import ViewResources from "./pages/profile/ViewResources";
+import AboutTheProject from "./pages/profile/AboutTheProject";
+import ParentRights from "./pages/ParentRights"; 
 
 function AppContent() {
   const location = useLocation();
@@ -39,18 +43,16 @@ function AppContent() {
     trackPageView(location.pathname + location.search);
   }, [location]);
   
-  // Routes where header should be hidden
-  const hideHeaderRoutes = ["/", "/consent-form", "/city","/view-update-add-child","/view-and-add-parent","/onboarding-user","/iep-documents","/welcome-page","/summary-and-translations","/profile","/support-center","/about-aiep","/survey-form","/account-center","/account-center/profile","/account-center/delete-account","/account-center/change-language",""];
   
-  // Check if current location is in the list of routes where header should be hidden
-  const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
+  // TODO: remove shouldShowHeader which remains from earlier implementation of GlobalHeader
+  const shouldShowHeader = false;
   
   return (
     <div style={{ height: "100%" }}>
       {shouldShowHeader && <GlobalHeader />}
       <div style={{ 
-        height: shouldShowHeader ? "56px" : "0", 
-        backgroundColor: shouldShowHeader ? "#000716" : "transparent" 
+        height: "0", 
+        backgroundColor: "transparent" 
       }}>&nbsp;</div>
       
       {/* <div> */}
@@ -75,14 +77,18 @@ function AppContent() {
             />
             <Route path="/profile" element={<UserProfileForm />} />
             <Route path="/account-center/profile" element={<UpdateProfileName />} />
+            <Route path="/account-center" element={<AccountCenter />} />
+            <Route path="/support-center" element={<SupportCenter />} />
             <Route path="/account-center/delete-account" element={<DeleteAccount />} />
+            <Route path="/view-resources" element={<ViewResources />} />
+            <Route path="/about-the-project" element={<AboutTheProject />} />
             <Route path="/account-center/change-language" element={<ChangeLanguage />} />
             <Route path="/iep-documents" element={<IEPDocumentView />} />
-            <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />           
+            <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />
+            <Route path="/parent-rights" element={<ParentRights />} />
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
             <Route path="/revoke-consent" element={<RevokeConsent />} />
-            <Route path="/support-center" element={<SupportCenter />} />
-            <Route path="/account-center" element={<AccountCenter />} />
+            <Route path="/frequently-asked-questions" element={<FrequentlyAskedQuestions />} />
             <Route path="/survey-form" element={<SurveyForm />} />
             <Route path="/about-aiep" element={<AboutAIEP />} />
         </Routes>
