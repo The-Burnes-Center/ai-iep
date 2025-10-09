@@ -36,7 +36,7 @@ const SupportCenter: React.FC = () => {
         navigate('/onboarding-user');
         break;
       case '2':
-        navigate('/onboarding-user');
+        navigate('/view-resources');
         break;
       default:
         break;
@@ -54,7 +54,7 @@ const SupportCenter: React.FC = () => {
       title: t("supportCenter.goToOnboarding"),
     },
     {
-      id: "3",
+      id: "2",
       title: t("supportCenter.resources"), 
     },
   ];

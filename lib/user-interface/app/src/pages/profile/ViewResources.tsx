@@ -9,7 +9,7 @@ import './ViewResources.css';
 export default function ViewResources() {
   const navigate = useNavigate();
   const handleBackClick = () => {
-    navigate('/account-center');
+    navigate('/support-center');
   };
 
   return (
