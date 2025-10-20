@@ -14,7 +14,7 @@
     align-items: center;
 }
 
-.resource {
+.resource-item {
     display: flex;
     flex-direction: column;
     background-color: #F5F3EE;
@@ -26,14 +26,14 @@
 
 }
 
-.resource h5 {
+.resource-item h5 {
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
   font-weight: 500;
   font-size: 1.25rem;
   margin-bottom: 1rem;
 }
 
-.resource p {
+.resource-item p {
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
   font-weight: 400;
   font-size: 1.125rem;

@@ -61,7 +61,7 @@ function AppContent() {
           <Route path="/onboarding-user" element={<OnboardingUser />} />
           <Route path="/consent-form" element={<ConsentForm />} />
           <Route path="/welcome-intro" element={<WelcomeIntro />} />
-          <Route path="/about-app" element={<AboutApp />} />
+          <Route path="/about-the-app" element={<AboutApp />} />
           <Route
                 index
                 path="/welcome-page"

@@ -51,7 +51,7 @@ export default function DeleteAccount() {
 
   return (
     <>
-        <div>
+    <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>

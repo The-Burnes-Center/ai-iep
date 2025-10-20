@@ -1,0 +1,45 @@
+.thank-you-image {
+  width: 100%;
+  height: 100%;
+  background-image: url('/images/thank_you_bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 400px; /* Ensures visible height when container doesn't have explicit height */
+  display: flex;
+  justify-content: center; /* horizontal centering */
+  align-items: center; /* vertical centering */
+}
+
+.about-app-intro-container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+
+.thank-you-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #F5F3EE;
+    min-height: 100px;
+    width: 95%;
+    border-radius: 20px;
+    padding: 15px;
+    margin: 10px;
+
+}
+
+.thank-you-card h5 {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 500;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.thank-you-card p {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}

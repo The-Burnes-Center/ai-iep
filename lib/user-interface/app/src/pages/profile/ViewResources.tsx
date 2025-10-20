@@ -81,7 +81,7 @@ export default function ViewResources() {
       </Container>
       <div className='resources-list-container'>
         {resources.map((resource, index) => (
-          <div key={index} className='resource'>
+          <div key={index} className='resource-item'>
             <h5>{resource.title}</h5>
             <p>{resource.description}</p>
             <ViewResourcesButton url={resource.url} buttonText={resource.buttonText} />
