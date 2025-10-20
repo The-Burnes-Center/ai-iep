@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useContext, useState } from 'react';
 import { Container, Row, Col, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { AppContext } from '../../common/app-context';
+import { ApiClient } from '../../common/api-client/api-client';
 import './ProfileForms.css';
 import './UpdateProfileName.css';
 import './ProfileForms.css';
@@ -8,6 +10,19 @@ import './AboutApp.css';
 
 const AboutApp: React.FC = () => {
   const navigate = useNavigate();
+  const appContext = useContext(AppContext);
+  const apiClient = new ApiClient(appContext!);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const data = await apiClient.team.getTeamMembersInfo();
+      console.log(data?.team);
+      if (data?.team) {
+        setTeamMembers(data.team);
+      }
+    })();
+  }, []);
 
   const handleBackClick = () => {
     navigate('/support-center');
@@ -46,14 +61,20 @@ const AboutApp: React.FC = () => {
         </div>
 
         <div className='team-members-list-container'>
-          <div className='team-member-item'>
-            <div className='team-member-item-image'>
+          {teamMembers.map((member) => (
+            <div key={member.id} className='team-member-item'>
+              <div className='team-member-item-image'>
+                <img 
+                  src={`https://directus.theburnescenter.org/assets/${member.thumbnail?.filename_disk}`}
+                  alt={`${member.first_name} ${member.last_name}`}
+                />
+              </div>
+              <div className='team-member-item-content'>
+                <h5>{member.first_name} {member.last_name}</h5>
+                <p>{member.title}</p>
+              </div>
             </div>
-            <div className='team-member-item-content'>
-              <h5>Beth Simon Noveck</h5>
-              <p>Director, The Burnes Center for Social Change</p>
-            </div>
-          </div>
+          ))}
       </div>
       
       </div>

@@ -84,3 +84,19 @@ margin-bottom: 1rem;
 .team-member-item-content {
   width: 70%;
 }
+
+.team-member-item-image {
+  width: 102px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-right: 15px;
+}
+
+.team-member-item-image img {
+  width: 102px;
+  height: 95px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: left top;
+}
