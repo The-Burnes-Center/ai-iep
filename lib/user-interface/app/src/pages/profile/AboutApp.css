@@ -43,3 +43,44 @@
   font-size: 1.125rem;
   margin-bottom: 1rem;
 }
+
+
+.team-members-list-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #FF8724;
+  min-height: 100px;
+  width: 100%;
+  padding: 10px 10px 100px 10px;
+  align-items: center;
+}
+
+.team-member-item {
+  display: flex;
+  flex-direction: row;
+  background-color: #F5F3EE;
+  min-height: 100px;
+  width: 95%;
+  border-radius: 20px;
+  padding: 15px;
+  margin: 10px;
+
+}
+
+.team-member-item h5 {
+font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+font-weight: 500;
+font-size: 1.25rem;
+margin-bottom: 1rem;
+}
+
+.team-member-item p {
+font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+font-weight: 400;
+font-size: 1.125rem;
+margin-bottom: 1rem;
+}
+
+.team-member-item-content {
+  width: 70%;
+}

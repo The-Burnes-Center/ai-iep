@@ -44,6 +44,17 @@ const AboutApp: React.FC = () => {
             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt.</p>
           </div>
         </div>
+
+        <div className='team-members-list-container'>
+          <div className='team-member-item'>
+            <div className='team-member-item-image'>
+            </div>
+            <div className='team-member-item-content'>
+              <h5>Beth Simon Noveck</h5>
+              <p>Director, The Burnes Center for Social Change</p>
+            </div>
+          </div>
+      </div>
       
       </div>
     </>

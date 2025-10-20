@@ -4,6 +4,12 @@
   justify-content: center;
 }
 
+.resources-description {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
+  font-size: 1.125rem;
+}
+
 .resources-list-container {
     display: flex;
     flex-direction: column;
@@ -38,10 +44,4 @@
   font-weight: 400;
   font-size: 1.125rem;
   margin-bottom: 1rem;
-}
-
-.resources-description {
-  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-  font-weight: 400;
-  font-size: 1.125rem;
 }
