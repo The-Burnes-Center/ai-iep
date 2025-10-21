@@ -9,6 +9,18 @@ import { Alert, StatusIndicator } from "@cloudscape-design/components";
 import { StorageHelper } from "../common/helpers/storage-helper";
 import { Mode } from "@cloudscape-design/global-styles";
 import CustomLogin from "./CustomLogin";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+
+// Create QueryClient outside the component
+const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: 1,
+      },
+    },
+  }); 
 
 export default function AppConfigured() {
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -136,7 +148,9 @@ export default function AppConfigured() {
     <AuthContext.Provider value={{ authenticated, setAuthenticated }}>
       <AppContext.Provider value={config}>
         <LanguageProvider>
+          <QueryClientProvider client={queryClient}>
             <App />
+          </QueryClientProvider>
         </LanguageProvider>
       </AppContext.Provider>
     </AuthContext.Provider>
