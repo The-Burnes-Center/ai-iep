@@ -1,4 +1,5 @@
-import React, { useEffect, useContext, useState } from 'react';
+import { useContext } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Container, Row, Col, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
@@ -11,18 +12,21 @@ import './AboutApp.css';
 export default function AboutApp() {
   const navigate = useNavigate();
   const appContext = useContext(AppContext);
-  const apiClient = new ApiClient(appContext!);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
-  useEffect(() => {
-    (async () => {
-      const data = await apiClient.team.getTeamMembersInfo();
-      console.log("Team Members :",data?.team);
-      if (data?.team) {
-        setTeamMembers(data.team);
-      }
-    })();
-  }, []);
+  const apiClient = new ApiClient(appContext!);
+
+  // TODO : Handle loading and error handling
+  const { data } = useQuery({
+    queryKey: ['teamMembers'],
+    queryFn: async () => {
+      console.log("🚀 API CALL MADE!");
+      const response = await apiClient.team.getTeamMembersInfo();
+      console.log("📦 API Response:", response?.team);
+      return response?.team || [];
+    },
+  });
+
+  const teamMembers = data || [];
 
   const handleBackClick = () => {
     navigate('/support-center');
