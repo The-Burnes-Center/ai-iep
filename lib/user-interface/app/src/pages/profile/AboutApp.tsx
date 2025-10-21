@@ -8,7 +8,7 @@ import './UpdateProfileName.css';
 import './ProfileForms.css';
 import './AboutApp.css';
 
-const AboutApp: React.FC = () => {
+export default function AboutApp() {
   const navigate = useNavigate();
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext!);
@@ -81,5 +81,3 @@ const AboutApp: React.FC = () => {
     </>
   );
 };
-
-export default AboutApp;
