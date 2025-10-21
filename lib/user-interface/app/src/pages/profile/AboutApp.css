@@ -71,7 +71,8 @@
 font-family: 'akzidenz-grotesk-next-pro', sans-serif;
 font-weight: 500;
 font-size: 1.25rem;
-margin-bottom: 1rem;
+margin-bottom: 5px;
+margin-top: 0px;
 }
 
 .team-member-item p {
