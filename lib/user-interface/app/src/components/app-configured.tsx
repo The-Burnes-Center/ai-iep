@@ -1,7 +1,4 @@
 import { useEffect, useState } from "react";
-import {
-  ThemeProvider,
-} from "@aws-amplify/ui-react";
 import App from "../app";
 import { Amplify, Auth } from "aws-amplify";
 import { AppConfig } from "../common/types";
@@ -129,14 +126,7 @@ export default function AppConfigured() {
     return (
       <AppContext.Provider value={config}>
         <LanguageProvider>
-          <ThemeProvider
-            theme={{
-              name: "default-theme",
-            }}
-            colorMode={theme === Mode.Dark ? "dark" : "light"}
-          >
             <CustomLogin onLoginSuccess={handleLoginSuccess} />
-          </ThemeProvider>
         </LanguageProvider>
       </AppContext.Provider>
     );
@@ -146,14 +136,7 @@ export default function AppConfigured() {
     <AuthContext.Provider value={{ authenticated, setAuthenticated }}>
       <AppContext.Provider value={config}>
         <LanguageProvider>
-          <ThemeProvider
-            theme={{
-              name: "default-theme",
-            }}
-            colorMode={theme === Mode.Dark ? "dark" : "light"}
-          >
             <App />
-          </ThemeProvider>
         </LanguageProvider>
       </AppContext.Provider>
     </AuthContext.Provider>

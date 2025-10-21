@@ -17,7 +17,7 @@ export default function AboutApp() {
   useEffect(() => {
     (async () => {
       const data = await apiClient.team.getTeamMembersInfo();
-      console.log(data?.team);
+      console.log("Team Members :",data?.team);
       if (data?.team) {
         setTeamMembers(data.team);
       }
