@@ -1,9 +1,10 @@
 import { useContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Container, Row, Col, Breadcrumb } from 'react-bootstrap';
+import { Container, Row, Col, Breadcrumb, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
+import { useLanguage } from '../../common/language-context';
 import GoToWebsiteButton from '../../components/GoToWebsiteButton';
 import './ProfileForms.css';
 import './UpdateProfileName.css';
@@ -13,6 +14,7 @@ import './AboutApp.css';
 export default function AboutApp() {
   const navigate = useNavigate();
   const appContext = useContext(AppContext);
+  const { t, translationsLoaded } = useLanguage();
 
   const apiClient = new ApiClient(appContext!);
 
@@ -31,14 +33,27 @@ export default function AboutApp() {
     navigate('/support-center');
   };
 
+  // Return loading state if translations aren't ready
+  if (!translationsLoaded) {
+    return (
+      <Container className="mt-4 mb-5">
+        <div className="text-center my-5">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      </Container>
+    );
+  }
+
   return (
     <>
       <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
-          <Breadcrumb.Item onClick={handleBackClick}>SUPPORT CENTER</Breadcrumb.Item>
-          <Breadcrumb.Item active>ABOUT</Breadcrumb.Item>
+          <Breadcrumb.Item onClick={handleBackClick}>{t("about.breadcrumb.supportCenter")}</Breadcrumb.Item>
+          <Breadcrumb.Item active>{t("about.breadcrumb.about")}</Breadcrumb.Item>
         </Breadcrumb>
       </div>
     
@@ -49,26 +64,26 @@ export default function AboutApp() {
           <Row style={{ width: '100%', justifyContent: 'center' }}>
             <Col xs={12} md={8} lg={6}>
               <div className="profile-form">
-                <h4 className="update-profile-header">About The Project</h4>
-                <p className='update-profile-description'>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt.</p> 
+                <h4 className="update-profile-header">{t("about.title")}</h4>
+                <p className='update-profile-description'>{t("about.description")}</p> 
               </div>  
             </Col>
           </Row>  
         </Container>
 
       <div className='section-header section-header--innovate'>
-        <h5>Thank you, parents!</h5>
+        <h5>{t("about.thankYouParents")}</h5>
       </div>
         
         <div className="thank-you-image">
           <div className="thank-you-card">
-            <h5>Thank you for advocating for children’s right to education!</h5>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt.</p>
+            <h5>{t("about.thankYouAdvocating")}</h5>
+            <p>{t("about.thankYouMessage")}</p>
           </div>
         </div>
 
         <div className='section-header section-header--team'>
-          <h5>The team</h5>
+          <h5>{t("about.theTeam")}</h5>
         </div>
 
         <div className='team-members-list-container'>
@@ -89,24 +104,29 @@ export default function AboutApp() {
       </div>
 
       <div className='section-header section-header--innovate'>
-        <h5>About Innovate Public Schools</h5>
+        <h5>{t("about.aboutInnovatePublicSchools")}</h5>
       </div>
       <div className='about-partners-container'>
+      <div className='innovate-schools-logo-container'>
+        <img src="/images/innovate_logo.png" alt="Innovate Public Schools Logo" />
+      </div>
         <p>
-          Innovate Public Schools is a nonprofit organization dedicated to  building the
-capacity of parents and families to organize, advocate, and demand high quality schools for their children.
+          {t("about.innovatePublicSchoolsDescription")}
         </p>
-        <GoToWebsiteButton url={"https://innovateschools.org/"} buttonText={"GO TO WEBSITE"} />
+        <GoToWebsiteButton url={"https://innovateschools.org/"} buttonText={t("about.goToWebsite")} />
       </div>
 
       <div className='section-header section-header--innovate'>
-        <h5>About The Gov Lab</h5>
+        <h5>{t("about.aboutTheGovLab")}</h5>
       </div>
       <div className='about-partners-container'>
+      <div className='gov-lab-logo-container'>
+        <img src="/images/the_govlab_logo 1.png" alt="The Gov Lab Logo" />
+      </div>
         <p>
-The GovLab’s mission is  to improve people’s lives by changing the way we govern. Our goal is to strengthen the ability of institutions –  including but not limited to governments – and people to work more  openly, collaboratively, effectively and legitimately to make better  decisions and solve public problems.
+          {t("about.theGovLabDescription")}
         </p>
-        <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={"GO TO WEBSITE"} />
+        <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={t("about.goToWebsite")} />
       </div>
       
       </div>

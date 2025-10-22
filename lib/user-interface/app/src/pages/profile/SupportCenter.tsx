@@ -36,6 +36,9 @@ const SupportCenter: React.FC = () => {
       case '2':
         navigate('/view-resources');
         break;
+      case '3':
+        navigate('/about-the-app');
+        break;
       default:
         break;
     }
@@ -54,6 +57,10 @@ const SupportCenter: React.FC = () => {
     {
       id: "2",
       title: t("supportCenter.resources"), 
+    },
+    {
+      id: "3",
+      title: t("supportCenter.aboutTheApp"),
     },
   ];
 

@@ -145,3 +145,31 @@ margin-bottom: 1rem;
 .about-partners-container .go-to-website-button {
   margin: 0px 25px 25px 25px;
 }
+
+.innovate-schools-logo-container {
+  width: 100%;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.innovate-schools-logo-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+.gov-lab-logo-container {
+  width: 100%;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.gov-lab-logo-container img {
+  max-width: 100%;
+  height: auto;
+  padding: 20px;
+}
