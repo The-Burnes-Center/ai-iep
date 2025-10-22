@@ -17,7 +17,6 @@
     justify-content: center;
 }
 
-
 .thank-you-card {
     display: flex;
     flex-direction: column;
@@ -27,7 +26,6 @@
     border-radius: 20px;
     padding: 15px;
     margin: 10px;
-
 }
 
 .thank-you-card h5 {
@@ -64,7 +62,7 @@
   border-radius: 20px;
   padding: 15px;
   margin: 10px;
-
+  border: 1px solid #1E1E1E;
 }
 
 .team-member-item h5 {
@@ -100,4 +98,50 @@ margin-bottom: 1rem;
   border-radius: 50%;
   object-fit: cover;
   object-position: left top;
+  border: 1px solid #1E1E1E;
+}
+
+.section-header {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  padding: 10px 10px 10px 20px;
+  justify-content: flex-start;
+  border: 1px solid #1E1E1E;
+}
+
+.section-header h5 {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 500;
+  font-size: 1.125rem;
+  margin-bottom: 5px;
+  margin-top: 0px;
+}
+
+.section-header--team {
+  background-color: #FF8724;
+}
+
+.section-header--innovate {
+  background-color: #F5F3EE;
+}
+
+.about-partners-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #F5F3EE;
+  min-height: 100px;
+  width: 100%;
+}
+
+.about-partners-container p {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
+  font-size: 1.125rem;
+  padding: 25px;
+  margin: 10px;
+}
+
+.about-partners-container .go-to-website-button {
+  margin: 0px 25px 25px 25px;
 }

@@ -4,6 +4,7 @@ import { Container, Row, Col, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
+import GoToWebsiteButton from '../../components/GoToWebsiteButton';
 import './ProfileForms.css';
 import './UpdateProfileName.css';
 import './ProfileForms.css';
@@ -19,9 +20,7 @@ export default function AboutApp() {
   const { data } = useQuery({
     queryKey: ['teamMembers'],
     queryFn: async () => {
-      console.log("🚀 API CALL MADE!");
       const response = await apiClient.team.getTeamMembersInfo();
-      console.log("📦 API Response:", response?.team);
       return response?.team || [];
     },
   });
@@ -56,12 +55,20 @@ export default function AboutApp() {
             </Col>
           </Row>  
         </Container>
+
+      <div className='section-header section-header--innovate'>
+        <h5>Thank you, parents!</h5>
+      </div>
         
         <div className="thank-you-image">
           <div className="thank-you-card">
             <h5>Thank you for advocating for children’s right to education!</h5>
             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod  tempor incididunt.</p>
           </div>
+        </div>
+
+        <div className='section-header section-header--team'>
+          <h5>The team</h5>
         </div>
 
         <div className='team-members-list-container'>
@@ -79,6 +86,27 @@ export default function AboutApp() {
               </div>
             </div>
           ))}
+      </div>
+
+      <div className='section-header section-header--innovate'>
+        <h5>About Innovate Public Schools</h5>
+      </div>
+      <div className='about-partners-container'>
+        <p>
+          Innovate Public Schools is a nonprofit organization dedicated to  building the
+capacity of parents and families to organize, advocate, and demand high quality schools for their children.
+        </p>
+        <GoToWebsiteButton url={"https://innovateschools.org/"} buttonText={"GO TO WEBSITE"} />
+      </div>
+
+      <div className='section-header section-header--innovate'>
+        <h5>About The Gov Lab</h5>
+      </div>
+      <div className='about-partners-container'>
+        <p>
+The GovLab’s mission is  to improve people’s lives by changing the way we govern. Our goal is to strengthen the ability of institutions –  including but not limited to governments – and people to work more  openly, collaboratively, effectively and legitimately to make better  decisions and solve public problems.
+        </p>
+        <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={"GO TO WEBSITE"} />
       </div>
       
       </div>
