@@ -6,3 +6,9 @@
     font-style: normal;
     font-size: 1rem !important;
 }
+
+.go-to-website-button .arrow-icon {
+    margin-left: 8px;
+    display: inline-block;
+    transform: rotate(-90deg);
+}
