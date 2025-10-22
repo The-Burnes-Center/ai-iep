@@ -12,7 +12,6 @@ import CustomLogin from "./CustomLogin";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 
-// Create QueryClient outside the component
 const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -132,8 +131,8 @@ export default function AppConfigured() {
     );
   }
 
-  // Important: We wrap the CustomLogin component with LanguageProvider
-  // This ensures the login flow has access to translations
+  // Important: Wrapping the CustomLogin component with LanguageProvider
+  // ensures the login flow has access to translations
   if (!authenticated) {
     return (
       <AppContext.Provider value={config}>
