@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Carousel } from 'react-bootstrap';
 import './ParentRightsCarousel.css';
 
@@ -48,11 +48,23 @@ interface ParentRightsCarouselProps {
 }
 
 const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = defaultSlideData, className = '' }) => {
+ 
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleSelect = (selectedIndex: number) => {
+    setActiveIndex(selectedIndex);
+  };
+
   return (
     <div className="parent-rights-container">
-      {/* <img src={slide.image} className="slide-rights-image" alt="" /> */}
+      <div className="parent-rights-pink-card">
+        <h1>Your rights as a parent</h1>
+        <img src={slides[activeIndex].image} className="slide-rights-image" alt={slides[activeIndex].title} /> 
+      </div>
       <div className="parent-rights-carousel-wrapper">
         <Carousel 
+          activeIndex={activeIndex}
+          onSelect={handleSelect}       
           controls={false} 
           indicators={true}
           interval={null}
