@@ -25,7 +25,7 @@
   border: none;
   box-shadow: none;
   border-radius: 0;
-  height: 90vh;
+  height: 100vh;
   background-image: url('/images/blue-background.png');
   background-size: auto;
   background-position: center;
@@ -515,13 +515,13 @@ display: none !important;
   display: inline-block;
 }
 
-.processing-summary-parent-rights-card {
+/* .processing-summary-parent-rights-card {
   background-image: none !important;
   background-color: #F5F3EE;
   display: flex;
   align-items: center;
   justify-content: center;
-}
+} */
 
 }
 
@@ -544,9 +544,9 @@ display: none !important;
   padding-bottom: 0.75rem !important; /* Override py-4 */
 }
 
-  .processing-summary-parent-rights-card {
+  /* .processing-summary-parent-rights-card {
   height: 83vh;
-}
+} */
 
   .processing-summary-app-tutorial-card {
     height: 70vh;
@@ -560,10 +560,10 @@ display: none !important;
 
 @media screen and (min-height: 620px) and (max-height: 740px) {
 
-  .processing-summary-parent-rights-card  {
+  /* .processing-summary-parent-rights-card  {
   padding-top: 0.5rem !important;
   padding-bottom: 0.5rem !important;
- }
+ } */
 
  .tutorial-button-container {
   margin-bottom: 0px !important; /* Override mb-3 */
@@ -587,9 +587,9 @@ display: none !important;
   font-size: 1.2rem !important;
 }
 
-.processing-summary-parent-rights-card {
+/* .processing-summary-parent-rights-card {
   height: 90vh !important;
-}
+} */
 
 .processing-summary-app-tutorial-card {
   height: 70vh !important;

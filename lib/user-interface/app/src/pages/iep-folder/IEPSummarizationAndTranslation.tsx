@@ -33,7 +33,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [profileLoading, setProfileLoading] = useState<boolean>(true);
   
   // Tutorial flow state management
-  const [tutorialPhase, setTutorialPhase] = useState<'app-tutorial' | 'parent-rights' | 'completed'>('app-tutorial');
+  const [tutorialPhase, setTutorialPhase] = useState< 'parent-rights' | 'completed'>('parent-rights');
 
   const [document, setDocument] = useState<IEPDocument>({
     documentId: undefined,
@@ -136,24 +136,17 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Unified skip handler for the external button
   const handleSkip = () => {
-    if (tutorialPhase === 'app-tutorial') {
-      setTutorialPhase('parent-rights');
-    } else if (tutorialPhase === 'parent-rights') {
+    if (tutorialPhase === 'parent-rights') {
       setTutorialPhase('completed');
-    }
+    } 
   };
 
-  // Back button handler
-  const handleBack = () => {
-    if (tutorialPhase === 'parent-rights') {
-      setTutorialPhase('app-tutorial');
-    }
-  };
 
   // Handle when user reaches the last slide in app tutorial
+  // TODO : implement similar functionality in parent rights
   const handleLastSlideReached = () => {
-    if (tutorialPhase === 'app-tutorial') {
-      setTutorialPhase('parent-rights');
+    if (tutorialPhase === 'parent-rights') {
+      setTutorialPhase('completed');
     }
   };
 
@@ -435,7 +428,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       setTutorialPhase('completed');
     } else {
       // Reset to app-tutorial when processing starts
-      setTutorialPhase('app-tutorial');
+      setTutorialPhase('parent-rights');
     }
   }, [isProcessing]);
 
@@ -701,82 +694,29 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   }
 
 
-if(profile.showOnboarding){
-  navigate('/');
-  return null;
-}
+  if(profile.showOnboarding){
+    navigate('/');
+    return null;
+  }
 
-
-
-if(document && document.message === "No document found for this child") {
-    navigate('/iep-documents');
-}
+  if(document && document.message === "No document found for this child") {
+      navigate('/iep-documents');
+  }
 
   // Processing Container - when document is being processed
   if (isProcessing) {
+    console.log("tutorialPhase", tutorialPhase);
     return (
       <>
         <Container className="processing-summary-container">
 
               {error && <Alert variant="danger">{error}</Alert>}
-              
-              {/* Button container - only shown during tutorial phases */}
-              {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
-                <div className="d-flex justify-content-between align-items-center mb-3 px-3 py-4 tutorial-button-container">
-                  {/* Back button - only shown during parent-rights phase */}
-                  {tutorialPhase === 'parent-rights' ? (
-                    <Button 
-                      variant="outline-secondary" 
-                      onClick={handleBack}
-                    >
-                      {t('common.back')}
-                    </Button>
-                  ) : (
-                    <div></div>
-                  )}
-                  
-                  {/* Skip button */}
-                  <Button 
-                    variant="outline-secondary" 
-                    onClick={handleSkip}
-                  >
-                    {t('common.skip')}
-                  </Button>
-                </div>
-              )}
-              
-              {/* Title div - only shown during tutorial phases */}
-              {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
-                <div className="text-center py-2 tutorial-title-container">
-
-
-                  <h3>
-                    {tutorialPhase === 'app-tutorial' 
-                      ? t('tutorial.appTutorial.title')
-                      : t('tutorial.parentRights.title')
-                    }
-                  </h3>
-                  {
-                    tutorialPhase === 'app-tutorial' && (
-                      <p className="text-muted text-center example-video-text">{t('tutorial.exampleVideo')}</p>
-                    )
-                  }             
-                </div>
-              )}
-              
-              {tutorialPhase === 'app-tutorial' ? (
-                <Card className="processing-summary-app-tutorial-card">
-                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
-                    <div className="carousel-with-button">
-                      <AppTutorialCarousel slides={appTutorialSlideData} onLastSlideReached={handleLastSlideReached} />
-                    </div>
-                  </Card.Body>
-                </Card>
-              ) : tutorialPhase === 'parent-rights' ? (
+              {              
+              tutorialPhase === 'parent-rights' ? (
                 <Card className="processing-summary-parent-rights-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
                     <div className="carousel-with-button">
-                      <ParentRightsCarousel slides={parentRightsSlideData} />
+                      <ParentRightsCarousel slides={parentRightsSlideData} onLastSlideReached={handleLastSlideReached} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -793,7 +733,6 @@ if(document && document.message === "No document found for this child") {
                 </Card>
               )}
         </Container>
-        <MobileBottomNavigation tutorialPhaseEnabled={true} tutorialPhase={tutorialPhase}/>
       </>
     );
   }

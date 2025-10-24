@@ -45,13 +45,18 @@ interface SlideData {
 interface ParentRightsCarouselProps {
   slides?: SlideData[];
   className?: string;
+  onLastSlideReached?: () => void;
 }
 
-const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = defaultSlideData, className = '' }) => {
+const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = defaultSlideData, className = '', onLastSlideReached }) => {
  
   const [activeIndex, setActiveIndex] = useState(0);
 
   const handleSelect = (selectedIndex: number) => {
+    if(selectedIndex === 0 && activeIndex && slides.length -1){
+      onLastSlideReached();
+    }
+
     setActiveIndex(selectedIndex);
   };
 

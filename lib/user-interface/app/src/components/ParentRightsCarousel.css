@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 90vh;
+  height: 100%;
   padding: 1rem;
 }
 
@@ -157,15 +157,14 @@
 
 @media (min-width: 992px) {
   .slide-rights-image {
-  max-width: 25%;
-  max-height: 25%;
-}
+    max-width: 25%;
+    max-height: 25%;
+  }
 
-.slide-rights-content h2 {
-  font-size: 2rem;
-  margin-bottom: 2rem;
-}
-
+  .slide-rights-content h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
 }
 
 
