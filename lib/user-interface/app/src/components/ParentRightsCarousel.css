@@ -12,7 +12,10 @@
   width: 95%;
   display: flex;
   flex-direction: row;
-  background-color: #F995A1;
+  background-image: url('/images/pink-background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   margin-top: 3rem;
   margin-bottom: 2rem;
   border-radius: 12px;
@@ -126,19 +129,24 @@
 }
 
 .parent-rights-carousel .carousel-indicators [data-bs-target] {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  border: 2px solid #E7E4DC;
+  border: 0.5px solid #1E1E1E;
   background-color: #E7E4DC;
   margin: 0 4px;
   transition: all 0.3s ease;
 }
 
 .parent-rights-carousel .carousel-indicators .active {
-  background-color: #1E1E1E;
-  border-color: #1E1E1E;
-  transform: scale(1.1);
+  background-color: #00682F;
+  border-color: none;
+}
+
+/* Focus states for accessibility */
+.parent-rights-carousel .carousel-indicators [data-bs-target]:focus {
+  outline: none !important;  /* Remove the focus outline */
+  outline-offset: 2px;
 }
 
 /* Ensure controls are hidden (double check) */

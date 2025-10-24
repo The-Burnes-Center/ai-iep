@@ -25,11 +25,11 @@
   border: none;
   box-shadow: none;
   border-radius: 0;
-  height: 80vh;
-  background-color: #007AD1;
-  background-size: cover;
+  height: 90vh;
+  background-image: url('/images/blue-background.png');
+  background-size: auto;
   background-position: center;
-  background-repeat: no-repeat;
+  background-repeat: repeat;
 }
 
 .processing-summary-loader-card {
