@@ -26,7 +26,7 @@
   box-shadow: none;
   border-radius: 0;
   height: 100vh;
-  background-image: url('/images/blue-background.png');
+  background-color: #EEEBE5;
   background-size: auto;
   background-position: center;
   background-repeat: repeat;
@@ -37,7 +37,7 @@
   box-shadow: none;
   border-radius: 0;
   height: 100vh;
-  background-image: url('/images/your-rights-bg.png');
+  background-image: url('/images/bg-your-rights.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -56,6 +56,19 @@
   border: none;
   box-shadow: none;
   background-color: transparent;
+}
+
+.loading-while-parent-rights {
+  color: #F5F3EE;
+  background-color: #014620;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+}
+
+.loading-while-parent-rights p {
+  margin: 0px;
 }
 
 .summary-container {

@@ -715,6 +715,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               tutorialPhase === 'parent-rights' ? (
                 <Card className="processing-summary-parent-rights-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
+                    <div className='loading-while-parent-rights'>
+                      <p>
+                        Hang tight! We are processing the document . . .
+                      </p>
+                    </div>
                     <div className="carousel-with-button">
                       <ParentRightsCarousel slides={parentRightsSlideData} onLastSlideReached={handleLastSlideReached} />
                     </div>
