@@ -80,6 +80,7 @@ const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = de
             <Carousel.Item key={slide.id}>
               <div className={`carousel-slide slide-${index + 1}`}>
                 <div className="slide-rights-content">
+                  <h2>{index + 1}/6</h2>
                   <h2>{slide.title}</h2>
                   <p>{slide.content}</p>
                 </div>

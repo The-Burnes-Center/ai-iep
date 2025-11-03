@@ -14,6 +14,7 @@ import AppTutorialCarousel from '../../components/AppTutorialCarousel';
 import { ApiClient } from '../../common/api-client/api-client';
 import { AppContext } from '../../common/app-context';
 import { useNotifications } from '../../components/notif-manager';
+import LinearProgress from '@mui/material/LinearProgress';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, setLanguage, translationsLoaded } = useLanguage();
@@ -720,6 +721,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                         Hang tight! We are processing the document . . .
                       </p>
                     </div>
+                    <LinearProgress color="success" /> 
                     <div className="carousel-with-button">
                       <ParentRightsCarousel slides={parentRightsSlideData} onLastSlideReached={handleLastSlideReached} />
                     </div>
