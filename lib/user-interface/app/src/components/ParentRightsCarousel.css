@@ -1,5 +1,16 @@
 /* Mobile-first responsive design for Parent Rights Carousel Component */
 
+
+.parent-rights-carousel-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 95%;
+}
+
+/* .parent-rights-carousel-buttons {
+  background-image: url('/images/arrow.svg');
+} */
+
 .parent-rights-container {
   display: flex;
   flex-direction: column;

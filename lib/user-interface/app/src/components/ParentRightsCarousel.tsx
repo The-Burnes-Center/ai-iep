@@ -60,12 +60,49 @@ const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = de
     setActiveIndex(selectedIndex);
   };
 
+  const handlePrevious = () => {
+    if(activeIndex > 0){
+      setActiveIndex((prev) => prev - 1)
+    }
+  }
+
+  const handleNext = () => {
+    if(activeIndex < slides.length){
+      setActiveIndex((prev) => prev + 1)
+    }
+
+    if(activeIndex == slides.length - 1){
+      console.log("Calling callback onLastSlideReached")
+      onLastSlideReached();
+    }
+  }
+
+  console.log("ActiveIndex - slides length", activeIndex,slides.length)
+
   return (
     <div className="parent-rights-container">
+      
+      {/* Pink Card */}
       <div className="parent-rights-pink-card">
         <h1>Your rights as a parent</h1>
         <img src={slides[activeIndex].image} className="slide-rights-image" alt={slides[activeIndex].title} /> 
       </div>
+
+      <div className='parent-rights-carousel-buttons'>
+          <button 
+            onClick={handlePrevious}
+            disabled={activeIndex === 0}
+          >
+            PREV
+          </button>
+          <button 
+            onClick={handleNext}
+          >
+            NEXT
+          </button>
+      </div>
+
+      {/* Carousel*/}
       <div className="parent-rights-carousel-wrapper">
         <Carousel 
           activeIndex={activeIndex}
