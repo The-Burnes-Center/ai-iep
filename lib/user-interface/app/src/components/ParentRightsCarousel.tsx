@@ -84,11 +84,20 @@ const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = de
   return (
     <div className="parent-rights-container">
       
-      {/* Pink Card */}
-      <div className="parent-rights-pink-card">
-        <h1>{headerPinkTitle}</h1>
+
+      {
+        activeIndex <= 1 ? 
+        <div className="parent-rights-card parent-rights-card--green">
+        <h1>{headerGreenTitle}</h1>
         <img src={slides[activeIndex].image} className="slide-rights-image" alt={slides[activeIndex].title} /> 
       </div>
+        : (
+          <div className="parent-rights-card parent-rights-card--pink">
+          <h1>{headerPinkTitle}</h1>
+          <img src={slides[activeIndex].image} className="slide-rights-image" alt={slides[activeIndex].title} /> 
+        </div>
+        )
+      }
 
       <div className='parent-rights-carousel-buttons'>
           <button 
@@ -121,7 +130,7 @@ const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = de
             <Carousel.Item key={slide.id}>
               <div className={`carousel-slide slide-${index + 1}`}>
                 <div className="slide-rights-content">
-                  <h2>{index + 1}/6</h2>
+                  {index > 1 && <h2>{index - 1}/6</h2>}
                   <h2>{slide.title}</h2>
                   <p>{slide.content}</p>
                 </div>

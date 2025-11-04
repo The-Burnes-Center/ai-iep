@@ -47,11 +47,11 @@
   padding: 1rem;
 }
 
-.parent-rights-pink-card {
+/* Base class with all shared styles */
+.parent-rights-card {
   width: 95%;
   display: flex;
   flex-direction: row;
-  background-image: url('/images/patterns-pink.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -63,7 +63,17 @@
   gap: 1.5rem;
 }
 
-.parent-rights-pink-card h1 {
+/* Modifier classes for different background images */
+.parent-rights-card--pink {
+  background-image: url('/images/patterns-pink.jpg');
+}
+
+.parent-rights-card--green {
+  background-image: url('/images/patterns-dark-green.jpg');
+}
+
+/* Single h1 style for both variants */
+.parent-rights-card h1 {
   font-size: 2.5rem;
   color: #F5F3EE;
 }

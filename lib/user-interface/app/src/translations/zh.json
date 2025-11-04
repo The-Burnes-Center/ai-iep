@@ -52,6 +52,8 @@
     "summary.noDocuments": "未找到文档。请先上传IEP文档。",
     "summary.processing.title": "文档正在处理中",
     "summary.processing.message": "这可能需要几分钟时间。同时，请查看您作为家长的权利：",
+    "summary.processing.hangTight": "请稍候！我们正在处理文档 . . .",
+    "summary.processing.almostThere": "快好了！我们正在翻译您的文档...",
     "summary.failed.title": "处理失败",
     "summary.failed.message": "处理您的文档时出错。请尝试重新上传。",
     "summary.preferredLanguage": "中文",
@@ -269,6 +271,11 @@
     "rights.slide5.content": "如果管理人员缺席会议，您有权重新安排他们能够参加的时间。",
     "rights.slide6.title": "您必须获得权利手册",
     "rights.slide6.content": "根据法律，您的案例经理必须在IEP会议前向您提供一本关于家长权利的手册。",
+
+    "privacy.slide1.title": "您的IEP不会被更改",
+    "privacy.slide1.content": "我们正在创建一个包含您摘要的单独文档。您将能够以PDF格式下载它。",
+    "privacy.slide2.title": "我们关心您的隐私",
+    "privacy.slide2.content": "我们正在从摘要中删除您的个人信息。我们不会存储您或您孩子的任何个人详细信息。",
 
     "appTutorial.slide1.title": "我们现在在做什么？",
     "appTutorial.slide1.content": "我们正在总结您IEP的关键方面。您将首先看到文档的总体概述，然后是每个关键部分的摘要。",

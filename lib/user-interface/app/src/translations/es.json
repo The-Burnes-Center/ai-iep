@@ -52,6 +52,8 @@
     "summary.noDocuments": "No se encontraron documentos. Por favor, suba un documento IEP primero.",
     "summary.processing.title": "El documento está siendo procesado",
     "summary.processing.message": "Esto puede tomar unos minutos. Mientras tanto, eche un vistazo a sus derechos como padre:",
+    "summary.processing.hangTight": "¡Espera un momento! Estamos procesando el documento . . .",
+    "summary.processing.almostThere": "¡Casi terminamos! Ahora estamos traduciendo tu documento...",
     "summary.failed.title": "Procesamiento Fallido",
     "summary.failed.message": "Hubo un error al procesar su documento. Por favor, intente subirlo de nuevo.",
     "summary.preferredLanguage": "Español",
@@ -271,6 +273,11 @@
     "rights.slide5.content": "Si un administrador no está presente en la reunión, tiene derecho a reprogramarla para cuando pueda asistir.",
     "rights.slide6.title": "Debe recibir un folleto de sus derechos",
     "rights.slide6.content": "Por ley, su administrador de caso debe proporcionarle un folleto con sus derechos como padre antes de la reunión del IEP.",
+
+    "privacy.slide1.title": "Su IEP no será modificado",
+    "privacy.slide1.content": "Estamos creando un documento separado con su resumen. Podrá descargarlo como PDF.",
+    "privacy.slide2.title": "Nos importa su privacidad",
+    "privacy.slide2.content": "Estamos eliminando su información personal de los resúmenes. No almacenaremos ningún detalle personal suyo o de su hijo.",
 
     "appTutorial.slide1.title": "¿Qué estamos haciendo ahora?",
     "appTutorial.slide1.content": "Estamos resumiendo los aspectos clave de su IEP. Primero verá una descripción general del documento, y luego un resumen de cada una de las secciones clave.",

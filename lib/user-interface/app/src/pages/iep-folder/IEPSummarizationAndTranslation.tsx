@@ -8,9 +8,7 @@ import { IEPDocument, IEPSection, Language, UserProfile } from '../../common/typ
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
-// PDF generation now handled by API client
 import ParentRightsCarousel from '../../components/ParentRightsCarousel';
-import AppTutorialCarousel from '../../components/AppTutorialCarousel';
 import { ApiClient } from '../../common/api-client/api-client';
 import { AppContext } from '../../common/app-context';
 import { useNotifications } from '../../components/notif-manager';
@@ -157,87 +155,64 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     
     return [
       {
-        id: 'slide-1',
-        title: t('rights.slide1.title'),
-        content: t('rights.slide1.content'),
-        image: '/images/carousel/surprised.png'
+        id: 'privacy-slide-1',
+        type: 'privacy',
+        title: t('privacy.slide1.title'),
+        content: t('privacy.slide1.content'),
+        image: '/images/carousel/joyful.png'
       },
       {
-        id: 'slide-2',
+        id: 'privacy-slide-2',
+        type: 'privacy',
+        title: t('privacy.slide2.title'),
+        content: t('privacy.slide2.content'),
+        image: '/images/carousel/joyful.png'
+      },
+      {
+        id: 'rights-slide-1',
+        type: 'rights',
+        title: t('rights.slide1.title'),
+        content: t('rights.slide1.content'),
+        image: '/images/carousel/blissful.png'
+      },
+      {
+        id: 'rights-slide-2',
+        type: 'rights',
         title: t('rights.slide2.title'),
         content: t('rights.slide2.content'),
         image: '/images/carousel/blissful.png'
       },
       {
-        id: 'slide-3',
+        id: 'rights-slide-3',
+        type: 'rights',
         title: t('rights.slide3.title'),
         content: t('rights.slide3.content'),
-        image: '/images/carousel/joyful.png'
+        image: '/images/carousel/blissful.png'
       },
       {
-        id: 'slide-4',
+        id: 'rights-slide-4',
+        type: 'rights',
         title: t('rights.slide4.title'),
         content: t('rights.slide4.content'),
-        image: '/images/carousel/surprised.png'
+        image: '/images/carousel/blissful.png'
       },
       {
-        id: 'slide-5',
+        id: 'rights-slide-5',
+        type: 'rights',
         title: t('rights.slide5.title'),
         content: t('rights.slide5.content'),
         image: '/images/carousel/blissful.png'
       },
       {
-        id: 'slide-6',
+        id: 'rights-slide-6',
+        type: 'rights',
         title: t('rights.slide6.title'),
         content: t('rights.slide6.content'),
-        image: '/images/carousel/confident.png'
+        image: '/images/carousel/blissful.png'
       }
     ];
   }, [t, translationsLoaded]);
 
-      // AppTutorial carousel data - internationalized using useLanguage hook
-  const appTutorialSlideData = useMemo(() => {
-    if (!translationsLoaded) return [];
-    
-    return [
-      {
-        id: 'slide-1',
-        title: t('appTutorial.slide1.title'),
-        content: t('appTutorial.slide1.content'),
-        image: '/images/Opening_Section_Accordion.gif'
-      },
-      {
-        id: 'slide-2',
-        title: t('appTutorial.slide2.title'),
-        content: t('appTutorial.slide2.content'),
-        image: '/images/Highlighting_Page_Numbers.gif'
-      },
-      {
-        id: 'slide-3',
-        title: t('appTutorial.slide3.title'),
-        content: t('appTutorial.slide3.content'),
-        image: '/images/Language_Switch.gif'
-      },
-      {
-        id: 'slide-4',
-        title: t('appTutorial.slide4.title'),
-        content: t('appTutorial.slide4.content'),
-        image: '/images/Opening_Section_Accordion.gif'
-      },
-      {
-        id: 'slide-5',
-        title: t('appTutorial.slide5.title'),
-        content: t('appTutorial.slide5.content'),
-        image: '/images/Opening_Section_Accordion.gif'
-      },
-      {
-        id: 'slide-6',
-        title: t('appTutorial.slide6.title'),
-        content: t('appTutorial.slide6.content'),
-        image: '/images/Jargon_Drawer.gif'
-      }
-    ];
-  }, [t, translationsLoaded]);
 
   // Handle jargon click
   const handleContentClick = (e: React.MouseEvent) => {
@@ -718,7 +693,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
                     <div className='loading-while-parent-rights'>
                       <p>
-                        Hang tight! We are processing the document . . .
+                        {t('summary.processing.hangTight')}
                       </p>
                     </div>
                     <LinearProgress color="success" /> 
@@ -730,12 +705,21 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               ) : (
                 <Card className="processing-summary-loader-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
-                    <div className="d-flex flex-column align-items-center">
+
+                    <div className='loading-final-screen'>
+                      <h3>
+                      {t('summary.processing.almostThere')}
+                      </h3>
+                    </div>
+                    <LinearProgress color="success" /> 
+
+                    {/* <div className="d-flex flex-column align-items-center">
                       <Spinner animation="border" role="status">
                         <span className="visually-hidden">{t('summary.loading')}</span>
                       </Spinner>
                       <p className="desktop-processing-spinner-text mt-3">Processing Summary ...</p>
-                    </div>
+                    </div> */}
+                  
                   </Card.Body>
                 </Card>
               )}

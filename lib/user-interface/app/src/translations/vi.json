@@ -52,6 +52,8 @@
     "summary.noDocuments": "Không tìm thấy tài liệu. Vui lòng tải lên tài liệu IEP trước.",
     "summary.processing.title": "Tài liệu đang được xử lý",
     "summary.processing.message": "Điều này có thể mất vài phút. Trong khi chờ đợi, hãy xem quyền của bạn với tư cách là phụ huynh:",
+    "summary.processing.hangTight": "Vui lòng chờ trong giây lát! Chúng tôi đang xử lý tài liệu . . .",
+    "summary.processing.almostThere": "Gần xong rồi! Chúng tôi đang dịch tài liệu của bạn...",
     "summary.failed.title": "Xử lý thất bại",
     "summary.failed.message": "Đã xảy ra lỗi khi xử lý tài liệu của bạn. Vui lòng thử tải lên lại.",
     "summary.preferredLanguage": "Tiếng Việt",
@@ -276,6 +278,11 @@
     "rights.slide5.content": "Nếu quản trị viên không có mặt tại cuộc họp, bạn có quyền sắp xếp lại lịch họp vào thời điểm họ có thể tham dự.",
     "rights.slide6.title": "Bạn phải được cung cấp sách hướng dẫn quyền lợi",
     "rights.slide6.content": "Theo luật, người quản lý hồ sơ của bạn phải cung cấp cho bạn một cuốn sách nhỏ về quyền phụ huynh trước cuộc họp IEP.",
+
+    "privacy.slide1.title": "IEP của bạn sẽ không bị thay đổi",
+    "privacy.slide1.content": "Chúng tôi đang tạo một tài liệu riêng với bản tóm tắt của bạn. Bạn sẽ có thể tải xuống dưới dạng PDF.",
+    "privacy.slide2.title": "Chúng tôi quan tâm đến quyền riêng tư của bạn",
+    "privacy.slide2.content": "Chúng tôi đang loại bỏ thông tin cá nhân của bạn khỏi các bản tóm tắt. Chúng tôi sẽ không lưu trữ bất kỳ thông tin cá nhân nào của bạn hoặc con bạn.",
 
     "appTutorial.slide1.title": "Chúng tôi đang làm gì ngay bây giờ?",
     "appTutorial.slide1.content": "Chúng tôi đang tóm tắt các khía cạnh quan trọng của IEP của bạn. Trước tiên bạn sẽ thấy tổng quan về tài liệu, sau đó là tóm tắt cho từng phần quan trọng.",

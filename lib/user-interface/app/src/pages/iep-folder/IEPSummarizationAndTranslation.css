@@ -71,6 +71,18 @@
   margin: 0px;
 }
 
+.loading-final-screen {
+  color: #F5F3EE;
+  background-color: #014620;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.loading-final-screen h3 {
+  margin: 0px;
+}
 .summary-container {
   width: 100%;
   margin: 0 auto;

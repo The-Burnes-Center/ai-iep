@@ -52,6 +52,8 @@
     "summary.noDocuments": "No documents found. Please upload an IEP document first.",
     "summary.processing.title": "Document is being processed",
     "summary.processing.message": "This may take a few minutes. Meanwhile, please take a look at your rights as a parent:",
+    "summary.processing.hangTight": "Hang tight! We are processing the document . . .",
+    "summary.processing.almostThere": "Almost there! We're now translating your document...",
     "summary.failed.title": "Processing Failed",
     "summary.failed.message": "There was an error processing your document. Please try uploading it again.",
     "summary.preferredLanguage": "English",
@@ -283,6 +285,11 @@
     "rights.slide5.content": "If an administrator isn't present at the meeting, you have the right to reschedule for a time when they can attend.",
     "rights.slide6.title": "You must be given a booklet of your rights",
     "rights.slide6.content": "By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting.",
+
+    "privacy.slide1.title": "Your IEP won’t be changed",
+    "privacy.slide1.content": "We’re creating a separate document with your summary. You will be able to download it as a PDF.",
+    "privacy.slide2.title": "We care about your privacy",
+    "privacy.slide2.content": "We’re removing your personal information from the summaries. We will not store any of your or your child’s personal details.",
 
     "appTutorial.slide1.title": "What are we doing right now?",
     "appTutorial.slide1.content": "We're summarizing the key aspects of your IEP. You'll first see a general overview of the document, and then a summary for each one of the key sections.",
