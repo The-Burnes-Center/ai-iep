@@ -1,10 +1,9 @@
-/* Mobile-first responsive design for Parent Rights Carousel Component */
-
 
 .parent-rights-carousel-buttons {
   display: flex;
   justify-content: space-between;
   width: 95%;
+  margin-bottom: 1rem;
 }
 
 .carousel-nav-button {
@@ -125,6 +124,7 @@
   color: #343a40;
   padding: 0.25rem 0.25rem 2rem 0.25rem;
   margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
   max-width: 85%;
 }
 
