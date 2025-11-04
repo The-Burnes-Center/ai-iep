@@ -7,9 +7,38 @@
   width: 95%;
 }
 
-/* .parent-rights-carousel-buttons {
-  background-image: url('/images/arrow.svg');
-} */
+.carousel-nav-button {
+  background-color: #F5F3EE;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-nav-button:hover:not(:disabled) {
+  background-color: #E7E4DC;
+}
+
+.carousel-nav-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.arrow-icon-prev {
+  width: 15px;
+  height: 18px;
+  transform: rotate(90deg);
+}
+
+.arrow-icon-next {
+  width: 15px;
+  height: 18px;
+  transform: rotate(-90deg);
+}
 
 .parent-rights-container {
   display: flex;

@@ -92,13 +92,15 @@ const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = de
           <button 
             onClick={handlePrevious}
             disabled={activeIndex === 0}
+            className='carousel-nav-button carousel-prev-button'
           >
-            PREV
+            <img src="/images/arrow.svg" alt="Previous" className="arrow-icon-prev" />
           </button>
           <button 
             onClick={handleNext}
+            className='carousel-nav-button carousel-next-button'
           >
-            NEXT
+            <img src="/images/arrow.svg" alt="Next" className="arrow-icon-next" />
           </button>
       </div>
 
