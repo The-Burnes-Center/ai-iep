@@ -723,7 +723,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     </div>
                     <LinearProgress color="success" /> 
                     <div className="carousel-with-button">
-                      <ParentRightsCarousel slides={parentRightsSlideData} onLastSlideReached={handleLastSlideReached} />
+                      <ParentRightsCarousel slides={parentRightsSlideData} onLastSlideReached={handleLastSlideReached} headerPinkTitle={t('rights.header.title.pink')} headerGreenTitle={t('rights.header.title.green')} />
                     </div>
                   </Card.Body>
                 </Card>

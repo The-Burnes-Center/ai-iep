@@ -46,9 +46,11 @@ interface ParentRightsCarouselProps {
   slides?: SlideData[];
   className?: string;
   onLastSlideReached?: () => void;
+  headerPinkTitle?: string;
+  headerGreenTitle?: string;
 }
 
-const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = defaultSlideData, className = '', onLastSlideReached }) => {
+const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = defaultSlideData, className = '', onLastSlideReached, headerPinkTitle = "Your rights as a parent", headerGreenTitle = "Your data is safe with us" }) => {
  
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -84,7 +86,7 @@ const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = de
       
       {/* Pink Card */}
       <div className="parent-rights-pink-card">
-        <h1>Your rights as a parent</h1>
+        <h1>{headerPinkTitle}</h1>
         <img src={slides[activeIndex].image} className="slide-rights-image" alt={slides[activeIndex].title} /> 
       </div>
 
