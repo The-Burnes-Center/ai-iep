@@ -42,17 +42,24 @@
   margin-bottom: 1rem;
 }
 
-
 .team-members-list-container {
   display: flex;
   flex-direction: column;
-  background-color: #FF8724;
   min-height: 100px;
   width: 100%;
   padding: 10px 10px 100px 10px;
   align-items: center;
+  position: relative;
 }
 
+.team-members-list-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/patterns-orange.jpg') center/cover;
+  transform: rotate(180deg);
+  z-index: -1;
+}
 .team-member-item {
   display: flex;
   flex-direction: row;

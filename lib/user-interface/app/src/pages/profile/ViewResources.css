@@ -11,13 +11,22 @@
 }
 
 .resources-list-container {
-    display: flex;
-    flex-direction: column;
-    background-color: #007AD1;
-    min-height: 100px;
-    width: 100%;
-    padding: 10px 10px 100px 10px;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  min-height: 100px;
+  width: 100%;
+  padding: 10px 10px 100px 10px;
+  align-items: center;
+  position: relative;
+}
+
+.resources-list-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/patterns-blue.jpg') center/cover;
+  transform: rotate(180deg);
+  z-index: -1;
 }
 
 .resource-item {
