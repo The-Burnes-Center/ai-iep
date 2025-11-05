@@ -395,6 +395,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Check if document is processing (includes both initial processing and translations)
   const isProcessing = document && (document.status === "PROCESSING" || document.status === "PROCESSING_TRANSLATIONS");
+
   
   // Remove the separate isTranslating check since we're treating translation as part of processing
 
@@ -708,18 +709,10 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
                     <div className='loading-final-screen'>
                       <h3>
-                      {t('summary.processing.almostThere')}
+                      {t('summary.processing.hangTight')}
                       </h3>
                     </div>
                     <LinearProgress color="success" /> 
-
-                    {/* <div className="d-flex flex-column align-items-center">
-                      <Spinner animation="border" role="status">
-                        <span className="visually-hidden">{t('summary.loading')}</span>
-                      </Spinner>
-                      <p className="desktop-processing-spinner-text mt-3">Processing Summary ...</p>
-                    </div> */}
-                  
                   </Card.Body>
                 </Card>
               )}

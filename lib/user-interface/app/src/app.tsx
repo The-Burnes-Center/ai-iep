@@ -34,7 +34,8 @@ import DeleteAccount from "./pages/profile/DeleteAccount";
 import ChangeLanguage from "./pages/profile/ChangeLanguage";
 import ViewResources from "./pages/profile/ViewResources";
 import AboutTheProject from "./pages/profile/AboutTheProject";
-import ParentRights from "./pages/ParentRights"; 
+import ParentRights from "./pages/ParentRights";
+import PrivacyPolicy from "./pages/PrivacyPolicy"; 
 
 
 function AppContent() {
@@ -94,6 +95,7 @@ function AppContent() {
             <Route path="/frequently-asked-questions" element={<FrequentlyAskedQuestions />} />
             <Route path="/survey-form" element={<SurveyForm />} />
             <Route path="/about-aiep" element={<AboutAIEP />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       {/* </div> */}
     </div>
