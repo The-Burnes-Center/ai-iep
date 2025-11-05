@@ -74,12 +74,12 @@ const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = de
     }
 
     if(activeIndex == slides.length - 1){
-      console.log("Calling callback onLastSlideReached")
+      // console.log("Calling callback onLastSlideReached")
       onLastSlideReached();
     }
   }
 
-  console.log("ActiveIndex - slides length", activeIndex,slides.length)
+  // console.log("ActiveIndex - slides length", activeIndex,slides.length)
 
   return (
     <div className="parent-rights-container">

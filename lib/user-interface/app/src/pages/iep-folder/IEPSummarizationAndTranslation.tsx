@@ -83,7 +83,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           setLanguage(profileData.secondaryLanguage as SupportedLanguage);
         }
       } catch (err) {
-        console.error('Error loading profile:', err);
+        // console.error('Error loading profile:', err);
         // Profile loading failure is not critical, continue with context language
       } finally {
         setProfileLoading(false);
@@ -327,7 +327,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           });
         }
         
-        console.log("orderedSections", orderedSections);
+        // console.log("orderedSections", orderedSections);
         
         setDocument(prev => ({
           ...prev, 
@@ -337,7 +337,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           }
         }));
       } catch (e) {
-        console.error(`Error processing ${lang} sections:`, e);
+        // console.error(`Error processing ${lang} sections:`, e);
         setDocument(prev => ({
           ...prev, 
           sections: { 
@@ -347,7 +347,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         }));
       }
     } else {
-      console.log(`No ${lang} sections found`);
+      // console.log(`No ${lang} sections found`);
       setDocument(prev => ({
         ...prev, 
         sections: { 
@@ -448,7 +448,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       // Show success notification
       addNotification('success', 'PDF generated successfully!');
     } catch (error) {
-      console.error('PDF generation failed:', error);
+      // console.error('PDF generation failed:', error);
       setPdfError(error instanceof Error ? error.message : 'Failed to generate PDF');
       
       // Show error notification
@@ -682,7 +682,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Processing Container - when document is being processed
   if (isProcessing) {
-    console.log("tutorialPhase", tutorialPhase);
+    // console.log("tutorialPhase", tutorialPhase);
     return (
       <>
         <Container className="processing-summary-container">

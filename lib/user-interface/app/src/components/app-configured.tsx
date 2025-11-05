@@ -46,10 +46,10 @@ export default function AppConfigured() {
             setAuthenticated(true);
           }
         } catch (e) {
-          console.log("No authenticated user found");
+          // console.log("No authenticated user found");
         }
       } catch (e) {
-        console.error("Error loading configuration:", e);
+        // console.error("Error loading configuration:", e);
         setError(true);
       } finally {
         setIsLoading(false);

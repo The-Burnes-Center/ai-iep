@@ -77,7 +77,7 @@ export default function PreferredLanguage() {
       const needsOnboarding = data && data.showOnboarding === true;
       
       if (needsOnboarding) {
-        console.log('User needs onboarding, starting onboarding flow');
+        // console.log('User needs onboarding, starting onboarding flow');
         // Check if the user has already completed some required fields to determine where to start
         const hasLanguage = data && data.secondaryLanguage;
         const hasConsent = data && data.consentGiven === true;
@@ -85,7 +85,7 @@ export default function PreferredLanguage() {
 
         // If all conditions are false, show survey form
         if (!hasLanguage && !hasConsent && !hasCompleteParentData) {
-          console.log("Showing survey form - no language, consent, or parent data");
+          // console.log("Showing survey form - no language, consent, or parent data");
           setShowSurveyForm(true);
           setError(null);
           return;
@@ -93,7 +93,7 @@ export default function PreferredLanguage() {
 
         // If user has language and consent but missing parent data, go to parent form
         if (hasLanguage && hasConsent && !hasCompleteParentData) {
-          console.log("hasLanguage && hasConsent && !hasCompleteParentData");
+          // console.log("hasLanguage && hasConsent && !hasCompleteParentData");
           navigate('/view-and-add-parent');
           return;
         }
@@ -104,7 +104,7 @@ export default function PreferredLanguage() {
       }
 
       // User doesn't need onboarding, go directly to welcome page
-      console.log('User has completed onboarding, going to welcome page');
+      // console.log('User has completed onboarding, going to welcome page');
       navigate('/summary-and-translations');
     } catch (err) {
       setError('Service unavailable');
@@ -146,12 +146,12 @@ export default function PreferredLanguage() {
       // Check if the message is from JotForm
       if (event.origin && event.origin.includes('jotform.com')) {
         // Log ALL messages from JotForm for debugging
-        console.log('📩 Message from JotForm:', event.data);
+        // console.log('📩 Message from JotForm:', event.data);
         
         // Check specifically for submission completed
         if (event.data && event.data.action === 'submission-completed') {
-          console.log('FORM SUBMITTED SUCCESSFULLY!');
-          console.log('Form ID:', event.data.formID || 'No ID provided');
+          // console.log('FORM SUBMITTED SUCCESSFULLY!');
+          // console.log('Form ID:', event.data.formID || 'No ID provided');
           setSurveyCompleted(true);
           setShowSurveyForm(false);
         }

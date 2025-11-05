@@ -55,7 +55,7 @@ export default function ViewAndAddChild() {
       
       setError(null);
     } catch (err) {
-      console.error('Error loading profile or checking document:', err);
+      // console.error('Error loading profile or checking document:', err);
       setError('Service unavailable');
     } finally {
       setLoading(false);
@@ -73,7 +73,7 @@ export default function ViewAndAddChild() {
         setHasExistingDocument(false);
       }
     } catch (err) {
-      console.error('Error checking for existing document:', err);
+      // console.error('Error checking for existing document:', err);
       // If there's an error checking for documents, assume no document exists
       setHasExistingDocument(false);
     }
@@ -116,9 +116,9 @@ export default function ViewAndAddChild() {
       // Mark onboarding as completed since user has finished child setup
       try {
         await apiClient.profile.updateProfile({ showOnboarding: false });
-        console.log('Onboarding completed from ViewAndAddChild - showOnboarding set to false');
+        // console.log('Onboarding completed from ViewAndAddChild - showOnboarding set to false');
       } catch (onboardingError) {
-        console.error('Error updating onboarding status:', onboardingError);
+        // console.error('Error updating onboarding status:', onboardingError);
         // Don't fail the flow if this update fails
       }
       

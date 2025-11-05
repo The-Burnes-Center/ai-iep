@@ -68,7 +68,7 @@ export class PDFClient {
       URL.revokeObjectURL(url);
       
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      // console.error('Error generating PDF:', error);
       throw error;
     }
   }
