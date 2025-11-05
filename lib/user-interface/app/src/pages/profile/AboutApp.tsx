@@ -128,6 +128,15 @@ export default function AboutApp() {
         </p>
         <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={t("about.goToWebsite")} />
       </div>
+      <div className='section-header section-header--privacy'>
+        <h5>{t("about.privacyPolicy")}</h5>
+        <span className="arrow-icon">
+          <img src="/images/arrow.svg" alt="" />
+        </span>
+      </div>
+      <div className='bottom-space'>
+
+      </div>
       
       </div>
     </>

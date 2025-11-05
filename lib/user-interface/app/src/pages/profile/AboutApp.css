@@ -180,3 +180,28 @@ margin-bottom: 1rem;
   height: auto;
   padding: 20px;
 }
+
+.section-header .arrow-icon {
+    margin-left: 8px;
+    display: inline-block;
+    transform: rotate(-90deg);
+}
+
+.section-header--privacy {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-header--privacy .arrow-icon {
+  margin-left: auto;
+  margin-right: 15px;
+}
+
+.about-app-intro-container {
+  padding-bottom: 60px;
+}
+
+.bottom-space {
+  height: 50px;
+  background: transparent;
+}
