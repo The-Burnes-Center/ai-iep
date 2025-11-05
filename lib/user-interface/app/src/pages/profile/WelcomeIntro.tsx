@@ -17,9 +17,9 @@ const WelcomeIntro: React.FC = () => {
     // Mark onboarding as completed since user is continuing to main app
     try {
       await apiClient.profile.updateProfile({ showOnboarding: false });
-      console.log('Onboarding completed from WelcomeIntro - showOnboarding set to false');
+      // console.log('Onboarding completed from WelcomeIntro - showOnboarding set to false');
     } catch (onboardingError) {
-      console.error('Error updating onboarding status:', onboardingError);
+      // console.error('Error updating onboarding status:', onboardingError);
       // Don't fail the flow if this update fails
     }
     

@@ -39,7 +39,7 @@ export default function DeleteAccount() {
       
       // Navigation will happen via auth context
     } catch (err) {
-      console.error('Error deleting profile:', err);
+      // console.error('Error deleting profile:', err);
       setError(t('delete.error.failed'));
       setProcessing(false);
     }
@@ -51,7 +51,7 @@ export default function DeleteAccount() {
 
   return (
     <>
-        <div>
+    <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>

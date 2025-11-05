@@ -11,7 +11,7 @@ The document processing pipeline is orchestrated by AWS Step Functions via an `O
 - **Document Ingestion & OCR**: The document is downloaded from S3 and processed using the Mistral OCR API to extract text.
 - **PII Redaction**: The extracted text is scanned for PII (personally identifiable information) using AWS Comprehend, and sensitive data is redacted.
 - **S3 Cleanup**: The original file is deleted from S3 after successful OCR processing.
-- **Multi-Agent Analysis**: The redacted document is analyzed using OpenAI models to extract structured data (summaries, sections, document index, abbreviations) and missing information insights.
+- **Multi-Agent Analysis**: The redacted document is analyzed using OpenAI models to extract structured data (summaries, sections, document index, abbreviations) and IEP meeting notes verbatim.
 - **Language Translation**: Content is translated to user's preferred languages (Spanish, Vietnamese, Chinese) if needed.
 - **Structured Data Storage**: The final structured results are stored in DynamoDB.
 
@@ -27,14 +27,14 @@ The IEP processing workflow uses comprehensive status tracking with real-time pr
 | **MistralOCR** | 15% | `"ocr_complete"` | `PROCESSING` | Extract text using Mistral OCR API |
 | **RedactOCR** | 20% | `"pii_redaction_complete"` | `PROCESSING` | Remove PII using AWS Comprehend |
 | **DeleteOriginal** | 22% | `"cleanup_complete"` | `PROCESSING` | Delete uploaded S3 file |
-| **ParallelWork** | 65% | `"analysis_complete"` | `PROCESSING` | Run parsing and missing info concurrently |
+| **ParallelWork** | 65% | `"analysis_complete"` | `PROCESSING` | Run parsing and meeting notes extraction concurrently |
 | ├─ **ParsingAgent** | - | - | `PROCESSING` | Generate English summary/sections using OpenAI |
-| └─ **MissingInfoAgent** | - | - | `PROCESSING` | Extract missing info insights using OpenAI |
+| └─ **MeetingNotesAgent** | - | - | `PROCESSING` | Extract IEP meeting notes verbatim using OpenAI |
 | **CheckLanguagePrefs** | - | - | `PROCESSING` | Check user language preferences |
 | **TranslationChoice** | - | - | `PROCESSING` | Decide if translations are needed |
 | **ParallelTranslations** | 85% | `"translation_complete"` | `PROCESSING` | Translate content (if needed) |
 | ├─ **TranslateParsingResult** | - | - | `PROCESSING` | Translate parsing results |
-| └─ **TranslateMissingInfo** | - | - | `PROCESSING` | Translate missing info results |
+| └─ **TranslateMeetingNotes** | - | - | `PROCESSING` | Translate meeting notes results |
 | **FinalizeResults** | 100% | `"completed"` | `PROCESSED` | Mark document as completed |
 | **RecordFailure** | 0% | `"error"` | `FAILED` | Record failure state and error details |
 
@@ -44,7 +44,7 @@ The IEP processing workflow uses comprehensive status tracking with real-time pr
 2. **OCR Complete (15%)**: Text extraction finished
 3. **PII Redaction Complete (20%)**: Sensitive data removed
 4. **Cleanup Complete (22%)**: Original file deleted
-5. **Analysis Complete (65%)**: English analysis and missing info extraction done
+5. **Analysis Complete (65%)**: English analysis and meeting notes extraction done
 6. **Translation Complete (85%)**: Multi-language translations finished (if needed)
 7. **Completed (100%)**: All processing finished successfully
 
@@ -101,7 +101,7 @@ The IEP processing workflow uses comprehensive status tracking with real-time pr
 - `steps/redact_ocr/`: Remove PII using AWS Comprehend
 - `steps/delete_original/`: Delete uploaded S3 file
 - `steps/parsing_agent/`: Generate English summary/sections using OpenAI
-- `steps/missing_info_agent/`: Extract missing info insights using OpenAI
+- `steps/extract_meeting_notes/`: Extract IEP meeting notes verbatim using OpenAI
 - `steps/check_language_prefs/`: Check user language preferences
 - `steps/translate_content/`: Translate content to target languages
 - `steps/finalize_results/`: Combine results and mark as completed
@@ -118,7 +118,7 @@ The IEP processing workflow uses comprehensive status tracking with real-time pr
 - **Sections**: Detailed IEP sections in Markdown format for all languages
 - **Document Index**: Table of contents with page references for all languages  
 - **Abbreviations**: Centralized legend of all abbreviations and their full forms for all languages
-- **Missing Information**: Insights about what information might be missing from the IEP
+- **Meeting Notes**: Verbatim extraction of IEP meeting notes section from the document
 
 ---
 
@@ -225,8 +225,9 @@ lib/chatbot-api/
 │           │   ├── config.py
 │           │   ├── data_model.py
 │           │   └── requirements.txt
-│           ├── missing_info_agent/
+│           ├── extract_meeting_notes/
 │           │   ├── handler.py
+│           │   ├── prompts.py
 │           │   └── requirements.txt
 │           ├── check_language_prefs/
 │           │   ├── handler.py

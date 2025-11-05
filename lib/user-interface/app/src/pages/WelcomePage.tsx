@@ -18,13 +18,13 @@ export default function WelcomePage() {
       try {
         const result = await Auth.currentAuthenticatedUser();
         if (!result || Object.keys(result).length === 0) {
-          console.log("No authenticated user found");
+          // console.log("No authenticated user found");
           await Auth.signOut();
           setAuthenticated(false);
           navigate('/');
         }
         else {
-          console.log("JWT Payload:", result?.signInUserSession?.idToken?.payload);
+          // console.log("JWT Payload:", result?.signInUserSession?.idToken?.payload);
           
           const { 
             email,
@@ -37,16 +37,16 @@ export default function WelcomePage() {
           // Set the email in state
           setUserEmail(email);
           
-          console.log("User details:", {
-            email,
-            name,
-            role,
-            sub,
-            tokenExpiration: new Date(exp * 1000).toLocaleString()
-          });
+          // console.log("User details:", {
+          //   email,
+          //   name,
+          //   role,
+          //   sub,
+          //   tokenExpiration: new Date(exp * 1000).toLocaleString()
+          // });
         }
       } catch (error) {
-        console.error("Authentication check failed:", error);
+        // console.error("Authentication check failed:", error);
         await Auth.signOut();
         setAuthenticated(false);
         navigate('/');

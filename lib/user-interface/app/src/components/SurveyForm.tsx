@@ -40,12 +40,12 @@ const SurveyForm: React.FC = () => {
       // Check if the message is from JotForm
       if (event.origin && event.origin.includes('jotform.com')) {
         // Log ALL messages from JotForm for debugging
-        console.log('📩 Message from JotForm:', event.data);
+        // console.log('📩 Message from JotForm:', event.data);
         
         // Check specifically for submission completed
         if (event.data && event.data.action === 'submission-completed') {
-          console.log('FORM SUBMITTED SUCCESSFULLY!');
-          console.log('Form ID:', event.data.formID || 'No ID provided');
+          // console.log('FORM SUBMITTED SUCCESSFULLY!');
+          // console.log('Form ID:', event.data.formID || 'No ID provided');
         }
       }
     };

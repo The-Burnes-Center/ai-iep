@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../common/language-context';
+import { IconFileDescription, IconHelp, IconUser, IconInfoCircle } from '@tabler/icons-react';
 import './MobileBottomNavigation.css';
 
 interface MobileBottomNavigationProps {
@@ -18,22 +19,22 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
 
   const navigationItems = [
     {
-      icon: 'bi-book-fill',
+      icon: IconFileDescription,
       label: t('navigation.summary') || 'Summary',
       route: '/summary-and-translations'
     },
     {
-      icon: 'bi-question-circle-fill',
+      icon: IconHelp,
       label: t('navigation.support') || 'Support',
       route: '/support-center'
     },
     {
-      icon: 'bi-info-circle-fill',
+      icon: IconInfoCircle,
       label: t('navigation.rights') || 'Rights',
       route: '/parent-rights'
     },
     {
-      icon: 'bi-person-fill',
+      icon: IconUser,
       label: t('navigation.account') || 'Account',
       route: '/account-center'
     },
@@ -58,32 +59,38 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
           {t('navigation.processing') || 'Your document is being processed...'}
         </div>
         <div className="navigation-container">
-          {navigationItems.map((item, index) => (
-            <button
-              key={index}
-              className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
-              onClick={() => handleNavigation(item.route)}
-              aria-label={`Navigate to ${item.label}`}
-            >
-              <i className={`bi ${item.icon}`}></i>
-              <span className="nav-label">{item.label}</span>
-            </button>
-          ))}
+          {navigationItems.map((item, index) => {
+            const IconComponent = item.icon;
+            return (
+              <button
+                key={index}
+                className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
+                onClick={() => handleNavigation(item.route)}
+                aria-label={`Navigate to ${item.label}`}
+              >
+                <IconComponent size={24} stroke={1.5} />
+                <span className="nav-label">{item.label}</span>
+              </button>
+            );
+          })}
         </div>
         </>)
       ) : (
         <div className="navigation-container">
-          {navigationItems.map((item, index) => (
-            <button
-              key={index}
-              className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
-              onClick={() => handleNavigation(item.route)}
-              aria-label={`Navigate to ${item.label}`}
-            >
-              <i className={`bi ${item.icon}`}></i>
-              <span className="nav-label">{item.label}</span>
-            </button>
-          ))}
+          {navigationItems.map((item, index) => {
+            const IconComponent = item.icon;
+            return (
+              <button
+                key={index}
+                className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
+                onClick={() => handleNavigation(item.route)}
+                aria-label={`Navigate to ${item.label}`}
+              >
+                <IconComponent size={24} stroke={1.5} />
+                <span className="nav-label">{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

@@ -1,7 +1,4 @@
 import { useEffect, useState } from "react";
-import {
-  ThemeProvider,
-} from "@aws-amplify/ui-react";
 import App from "../app";
 import { Amplify, Auth } from "aws-amplify";
 import { AppConfig } from "../common/types";
@@ -12,6 +9,17 @@ import { Alert, StatusIndicator } from "@cloudscape-design/components";
 import { StorageHelper } from "../common/helpers/storage-helper";
 import { Mode } from "@cloudscape-design/global-styles";
 import CustomLogin from "./CustomLogin";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+
+const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: 1,
+      },
+    },
+  }); 
 
 export default function AppConfigured() {
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -38,10 +46,10 @@ export default function AppConfigured() {
             setAuthenticated(true);
           }
         } catch (e) {
-          console.log("No authenticated user found");
+          // console.log("No authenticated user found");
         }
       } catch (e) {
-        console.error("Error loading configuration:", e);
+        // console.error("Error loading configuration:", e);
         setError(true);
       } finally {
         setIsLoading(false);
@@ -123,20 +131,13 @@ export default function AppConfigured() {
     );
   }
 
-  // Important: We wrap the CustomLogin component with LanguageProvider
-  // This ensures the login flow has access to translations
+  // Important: Wrapping the CustomLogin component with LanguageProvider
+  // ensures the login flow has access to translations
   if (!authenticated) {
     return (
       <AppContext.Provider value={config}>
         <LanguageProvider>
-          <ThemeProvider
-            theme={{
-              name: "default-theme",
-            }}
-            colorMode={theme === Mode.Dark ? "dark" : "light"}
-          >
             <CustomLogin onLoginSuccess={handleLoginSuccess} />
-          </ThemeProvider>
         </LanguageProvider>
       </AppContext.Provider>
     );
@@ -146,14 +147,9 @@ export default function AppConfigured() {
     <AuthContext.Provider value={{ authenticated, setAuthenticated }}>
       <AppContext.Provider value={config}>
         <LanguageProvider>
-          <ThemeProvider
-            theme={{
-              name: "default-theme",
-            }}
-            colorMode={theme === Mode.Dark ? "dark" : "light"}
-          >
+          <QueryClientProvider client={queryClient}>
             <App />
-          </ThemeProvider>
+          </QueryClientProvider>
         </LanguageProvider>
       </AppContext.Provider>
     </AuthContext.Provider>

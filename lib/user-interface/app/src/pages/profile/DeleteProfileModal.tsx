@@ -39,7 +39,7 @@ const DeleteProfileModal: React.FC<DeleteProfileModalProps> = ({ show, onHide })
       // Close modal and redirect will happen via auth context
       onHide();
     } catch (err) {
-      console.error('Error deleting profile:', err);
+      // console.error('Error deleting profile:', err);
       setError(t('delete.error.failed'));
       setProcessing(false);
     }

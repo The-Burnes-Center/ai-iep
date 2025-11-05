@@ -6,7 +6,7 @@ import logging
 import json
 from agents import Agent, Runner, function_tool, ModelSettings
 from config import get_language_context
-from data_model import TranslationSectionContent, AbbreviationLegend, MissingInfoTranslation
+from data_model import TranslationSectionContent, AbbreviationLegend, MeetingNotesTranslation
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -105,14 +105,14 @@ class OptimizedTranslationAgent:
         language_context = get_language_context(target_language)
         
         # Content-specific guidance
-        if content_type == 'missing_info':
-            content_description = "missing information items that help parents understand what's needed for their child's IEP"
+        if content_type == 'meeting_notes':
+            content_description = "IEP meeting notes that document what was discussed and decided during the meeting"
             tone_guidance = """
-- Be supportive and encouraging (never judgmental)
-- Emphasize collaboration between parents and school  
-- Use reassuring language that helps parents feel empowered
-- Focus on actionable guidance for parents"""
-            output_format = "Array of missing info items with categories and descriptions"
+- Be supportive and informative
+- Preserve the exact meaning and tone of the original
+- Maintain all details and specifics from the original text
+- Keep the same structure and format"""
+            output_format = "Simple string with the translated meeting notes text"
         else:  # parsing_result
             content_description = "IEP document content including summaries, sections, document index, and abbreviations"
             tone_guidance = """
@@ -171,8 +171,8 @@ Remember: Use tools to ensure translation accuracy and consistency!
             # Validate based on content type
             if content_type == 'parsing_result':
                 return self._validate_parsing_result(translated_content)
-            elif content_type == 'missing_info':
-                return self._validate_missing_info(translated_content)
+            elif content_type == 'meeting_notes':
+                return self._validate_meeting_notes(translated_content)
             else:
                 return translated_content
                 
@@ -217,12 +217,12 @@ Remember: Use tools to ensure translation accuracy and consistency!
             logger.warning(f"Validation failed, returning original content: {e}")
             return content
 
-    def _validate_missing_info(self, content):
-        """Validate missing info translation structure"""
+    def _validate_meeting_notes(self, content):
+        """Validate meeting notes translation structure"""
         try:
-            validated_missing_info = MissingInfoTranslation.model_validate(content)
-            logger.info("Missing info translation validation completed")
-            return validated_missing_info.model_dump()
+            validated_meeting_notes = MeetingNotesTranslation.model_validate(content)
+            logger.info("Meeting notes translation validation completed")
+            return validated_meeting_notes.model_dump()
         except Exception as e:
-            logger.warning(f"Missing info validation failed, returning original: {e}")
+            logger.warning(f"Meeting notes validation failed, returning original: {e}")
             return content
