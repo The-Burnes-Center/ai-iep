@@ -120,12 +120,24 @@ export interface IEPDocument {
     // Add other languages as needed
   };
   
-  // Meeting notes by language (verbatim text string)
-  meetingNotes?: {
-    en?: string;
-    vi?: string;
-    es?: string;
-    zh?: string;
+  // Missing information insights by language
+  missingInfo?: {
+    en?: Array<{
+      category: string;
+      description: string;
+    }>;
+    vi?: Array<{
+      category: string;
+      description: string;
+    }>;
+    es?: Array<{
+      category: string;
+      description: string;
+    }>;
+    zh?: Array<{
+      category: string;
+      description: string;
+    }>;
     // Add other languages as needed
   };
   

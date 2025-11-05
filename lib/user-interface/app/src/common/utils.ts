@@ -19,9 +19,9 @@ export class Utils {
     }
 
     if (crypto && crypto.getRandomValues) {
-      // console.log(
-      //   "crypto.randomUUID is not available using crypto.getRandomValues"
-      // );
+      console.log(
+        "crypto.randomUUID is not available using crypto.getRandomValues"
+      );
 
       return ("" + [1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(
         /[018]/g,
@@ -35,7 +35,7 @@ export class Utils {
       );
     }
 
-    // console.log("crypto is not available");
+    console.log("crypto is not available");
     let date1 = new Date().getTime();
     let date2 =
       (typeof performance !== "undefined" &&
@@ -151,7 +151,7 @@ export class Utils {
       // return currentSession.getAccessToken().getJwtToken();
       return token;
     } catch (error) {
-      // console.error('Error getting current user session:', error);
+      console.error('Error getting current user session:', error);
       throw new Error('Authentication failed');
     }
   }

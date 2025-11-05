@@ -25,7 +25,6 @@ import ConsentForm from './pages/profile/ConsentForm';
 import WelcomeIntro from './pages/profile/WelcomeIntro';
 import AboutApp from './pages/profile/AboutApp';
 import FrequentlyAskedQuestions from './components/FrequentlyAskedQuestions';
-import ParentRightsCarousel from './components/ParentRightsCarousel';
 import AccountCenter from './pages/profile/AccountCenter';
 import SupportCenter from './pages/profile/SupportCenter';
 import SurveyForm from "./components/SurveyForm";
@@ -34,9 +33,7 @@ import DeleteAccount from "./pages/profile/DeleteAccount";
 import ChangeLanguage from "./pages/profile/ChangeLanguage";
 import ViewResources from "./pages/profile/ViewResources";
 import AboutTheProject from "./pages/profile/AboutTheProject";
-import ParentRights from "./pages/ParentRights";
-import PrivacyPolicy from "./pages/PrivacyPolicy"; 
-
+import ParentRights from "./pages/ParentRights"; 
 
 function AppContent() {
   const location = useLocation();
@@ -64,7 +61,7 @@ function AppContent() {
           <Route path="/onboarding-user" element={<OnboardingUser />} />
           <Route path="/consent-form" element={<ConsentForm />} />
           <Route path="/welcome-intro" element={<WelcomeIntro />} />
-          <Route path="/about-the-app" element={<AboutApp />} />
+          <Route path="/about-app" element={<AboutApp />} />
           <Route
                 index
                 path="/welcome-page"
@@ -89,13 +86,11 @@ function AppContent() {
             <Route path="/iep-documents" element={<IEPDocumentView />} />
             <Route path="/rights-and-onboarding" element={<RightsAndOnboarding />} />
             <Route path="/parent-rights" element={<ParentRights />} />
-            <Route path="/rights-of-parents" element={<ParentRightsCarousel />} />
             <Route path="/summary-and-translations" element={<SummaryAndTranslationsPage />} /> 
             <Route path="/revoke-consent" element={<RevokeConsent />} />
             <Route path="/frequently-asked-questions" element={<FrequentlyAskedQuestions />} />
             <Route path="/survey-form" element={<SurveyForm />} />
             <Route path="/about-aiep" element={<AboutAIEP />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       {/* </div> */}
     </div>

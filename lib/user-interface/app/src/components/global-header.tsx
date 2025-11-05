@@ -29,7 +29,7 @@ export default function GlobalHeader() {
       
       // Sign out if there is no valid session
       if (!result || Object.keys(result).length === 0) {
-        // console.log("Signed out!")
+        console.log("Signed out!")
         Auth.signOut();
         setAuthenticated(false);
         return;
@@ -64,7 +64,7 @@ export default function GlobalHeader() {
       await Auth.signOut();
       setAuthenticated(false);
     } catch (error) {
-      // console.error("Error signing out:", error);
+      console.error("Error signing out:", error);
     }
   };
 
@@ -96,7 +96,7 @@ export default function GlobalHeader() {
         // Only update if there's actually a change
         if (currentProfile.secondaryLanguage !== updatedProfile.secondaryLanguage) {
           await apiClient.profile.updateProfile(updatedProfile);
-          // console.log(`Language preference updated to: ${lang}`);
+          console.log(`Language preference updated to: ${lang}`);
           
           // Show success notification
           const languageLabels = {
@@ -109,7 +109,7 @@ export default function GlobalHeader() {
         }
       }
     } catch (error) {
-      // console.error('Failed to update language preference in profile:', error);
+      console.error('Failed to update language preference in profile:', error);
       // Don't show error to user as UI language change still works
       // The mismatch will be resolved when they manually update profile or re-upload
     }

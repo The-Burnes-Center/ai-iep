@@ -1,89 +1,20 @@
-
-.parent-rights-carousel-buttons {
-  display: flex;
-  justify-content: space-between;
-  width: 95%;
-  margin-bottom: 1rem;
-}
-
-.carousel-nav-button {
-  background-color: #F5F3EE;
-  border: 1px solid transparent;
-  border-radius: 20px;
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.carousel-nav-button:hover:not(:disabled) {
-  background-color: #E7E4DC;
-}
-
-.carousel-nav-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.arrow-icon-prev {
-  width: 15px;
-  height: 18px;
-  transform: rotate(90deg);
-}
-
-.arrow-icon-next {
-  width: 15px;
-  height: 18px;
-  transform: rotate(-90deg);
-}
+/* Mobile-first responsive design for Parent Rights Carousel Component */
 
 .parent-rights-container {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  height: 100%;
+  min-height: 60vh;
   padding: 1rem;
-}
-
-/* Base class with all shared styles */
-.parent-rights-card {
-  width: 95%;
-  display: flex;
-  flex-direction: row;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  margin-top: 3rem;
-  margin-bottom: 2rem;
-  border-radius: 12px;
-  border: 1px solid #1E1E1E;
-  padding: 1rem;
-  gap: 1.5rem;
-}
-
-/* Modifier classes for different background images */
-.parent-rights-card--pink {
-  background-image: url('/images/patterns-pink.jpg');
-}
-
-.parent-rights-card--green {
-  background-image: url('/images/patterns-dark-green.jpg');
-}
-
-/* Single h1 style for both variants */
-.parent-rights-card h1 {
-  font-size: 2.5rem;
-  color: #F5F3EE;
 }
 
 .parent-rights-carousel-wrapper {
   width: 100%;
   max-width: 90%;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
-  background: #EEEBE5;
+  background: #F5F3EE;
+  border: 1px solid #1E1E1E;
 }
 
 
@@ -105,8 +36,8 @@
 }
 
 .slide-rights-image {
-  max-width: 25%;
-  max-height: 25%;
+  max-width: 35%;
+  max-height: 35%;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -124,7 +55,7 @@
   bottom: 0;
   background: rgba(255, 255, 255, 0.95);
   z-index: 1;
-  background: #EEEBE5;
+  background: #F5F3EE;
 }
 
 .slide-rights-content {
@@ -132,9 +63,8 @@
   z-index: 2;
   text-align: start;
   color: #343a40;
-  padding: 0.25rem 0.25rem 2rem 0.25rem;
+  padding: 2rem;
   margin-bottom: 1.5rem;
-  margin-top: 1.5rem;
   max-width: 85%;
 }
 
@@ -147,12 +77,28 @@
 }
 
 .slide-rights-content p {
-  font-size: 1rem;
+  font-size: 1.2rem;
   line-height: 1.5;
   margin-bottom: 0;
   color: #6c757d;
 }
 
+/* Individual slide backgrounds - subdued colors matching Summary screen */
+.slide-1 {
+  background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+}
+
+.slide-2 {
+  background: linear-gradient(135deg, #f3e5f5 0%, #f8f9fa 100%);
+}
+
+.slide-3 {
+  background: linear-gradient(135deg, #e8f4fd 0%, #f8f9fa 100%);
+}
+
+.slide-4 {
+  background: linear-gradient(135deg, #e8f5e8 0%, #f8f9fa 100%);
+}
 
 /* Indicators styling */
 .parent-rights-carousel .carousel-indicators {
@@ -162,24 +108,19 @@
 }
 
 .parent-rights-carousel .carousel-indicators [data-bs-target] {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  border: 0.5px solid #1E1E1E;
+  border: 2px solid #E7E4DC;
   background-color: #E7E4DC;
   margin: 0 4px;
   transition: all 0.3s ease;
 }
 
 .parent-rights-carousel .carousel-indicators .active {
-  background-color: #00682F;
-  border-color: none;
-}
-
-/* Focus states for accessibility */
-.parent-rights-carousel .carousel-indicators [data-bs-target]:focus {
-  outline: none !important;  /* Remove the focus outline */
-  outline-offset: 2px;
+  background-color: #1E1E1E;
+  border-color: #1E1E1E;
+  transform: scale(1.1);
 }
 
 /* Ensure controls are hidden (double check) */
@@ -190,14 +131,15 @@
 
 @media (min-width: 992px) {
   .slide-rights-image {
-    max-width: 25%;
-    max-height: 25%;
-  }
+  max-width: 25%;
+  max-height: 25%;
+}
 
-  .slide-rights-content h2 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
-  }
+.slide-rights-content h2 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
 }
 
 
@@ -224,7 +166,7 @@
   }
 
   .slide-rights-content p {
-    font-size: 1rem;
+    font-size: 1.2rem;
     line-height: 1.4;
     color: #1E1E1E;
   }

@@ -526,30 +526,30 @@ def get_child_documents(event: Dict) -> Dict:
                     else:
                         latest_doc['abbreviations'] = {}
 
-                    # Handle meetingNotes (language map with string values)
-                    if 'meetingNotes' in doc:
+                    # Handle missingInfo (supports both old array format and new language map format)
+                    if 'missingInfo' in doc:
                         try:
-                            meeting_notes_data = clean_dynamodb_json(doc['meetingNotes'])
+                            missing_info_data = clean_dynamodb_json(doc['missingInfo'])
                             
-                            # Check if it's the language map format
-                            if isinstance(meeting_notes_data, dict):
-                                # Language map format (strings per language)
-                                latest_doc['meetingNotes'] = meeting_notes_data
-                            elif isinstance(meeting_notes_data, str):
-                                # Single string (backward compatibility)
-                                latest_doc['meetingNotes'] = {'en': meeting_notes_data}
+                            # Check if it's the new language map format
+                            if isinstance(missing_info_data, dict) and 'en' in missing_info_data:
+                                # New format: language map
+                                latest_doc['missingInfo'] = missing_info_data
+                            elif isinstance(missing_info_data, list):
+                                # Old format: array (backward compatibility)
+                                latest_doc['missingInfo'] = {'en': missing_info_data}
                             else:
                                 # Fallback
-                                latest_doc['meetingNotes'] = {'en': ''}
+                                latest_doc['missingInfo'] = {'en': []}
                         except Exception:
                             # Fallback for any parsing issues
-                            meeting_notes_raw = doc.get('meetingNotes', '')
-                            if isinstance(meeting_notes_raw, str):
-                                latest_doc['meetingNotes'] = {'en': meeting_notes_raw}
+                            missing_info_raw = doc.get('missingInfo', [])
+                            if isinstance(missing_info_raw, list):
+                                latest_doc['missingInfo'] = {'en': missing_info_raw}
                             else:
-                                latest_doc['meetingNotes'] = {'en': ''}
+                                latest_doc['missingInfo'] = {'en': []}
                     else:
-                        latest_doc['meetingNotes'] = {'en': ''}
+                        latest_doc['missingInfo'] = {'en': []}
         
         # If no document found
         if not latest_doc:

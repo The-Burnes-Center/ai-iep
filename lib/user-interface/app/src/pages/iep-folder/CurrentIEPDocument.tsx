@@ -43,7 +43,7 @@ const CurrentIEPDocument: React.FC<CurrentIEPDocumentProps> = ({ onRefreshNeeded
         onDocumentStateChange(false);
       }
     } catch (err) {
-      // console.error('Error fetching document:', err);
+      console.error('Error fetching document:', err);
       // setError('Failed to load document. Please try again.');
       // Notify parent that no document exists (due to error)
       onDocumentStateChange(false);

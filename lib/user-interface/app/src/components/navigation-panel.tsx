@@ -46,7 +46,7 @@ export default function NavigationPanel() {
       if (username && needsRefresh) {
         const fetchedSessions = await apiClient.sessions.getSessions(username);
         await updateItems(fetchedSessions);
-        // console.log("fetched sessions")
+        console.log("fetched sessions")
         // console.log(fetchedSessions);
         if (!loaded) {
           setLoaded(true);
@@ -54,7 +54,7 @@ export default function NavigationPanel() {
         setNeedsRefresh(false);
       }
     } catch (error) {
-      // console.error("Failed to load sessions:", error);
+      console.error("Failed to load sessions:", error);
       setLoaded(true);
       addNotification("error", "Could not load sessions:".concat(error.message));
       addNotification("info", "Please refresh the page");
@@ -105,7 +105,7 @@ export default function NavigationPanel() {
       if (admin) {
         const data = JSON.parse(admin);
         if (data.includes("Admin")) {
-          // console.log("admin found!")
+          console.log("admin found!")
           newItems.push({
             type: "section",
             text: "Admin",
@@ -119,7 +119,7 @@ export default function NavigationPanel() {
         }
       }
     } catch (e) {
-      // console.log(e)
+      console.log(e)
     }
     setItems(newItems);
   };

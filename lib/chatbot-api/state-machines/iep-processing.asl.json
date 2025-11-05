@@ -202,7 +202,7 @@
     },
     "ParallelWork": {
       "Type": "Parallel",
-      "Comment": "Run parsing and meeting notes extraction concurrently",
+      "Comment": "Run parsing and missing info extraction concurrently",
       "Branches": [
         {
           "StartAt": "ParsingAgent",
@@ -224,12 +224,12 @@
           }
         },
         {
-          "StartAt": "MeetingNotesAgent",
+          "StartAt": "MissingInfoAgent",
           "States": {
-            "MeetingNotesAgent": {
+            "MissingInfoAgent": {
               "Type": "Task",
-              "Resource": "${ExtractMeetingNotesArn}",
-              "Comment": "Extract IEP meeting notes verbatim",
+              "Resource": "${MissingInfoAgentArn}",
+              "Comment": "Extract missing information insights for parents",
               "Retry": [
                 {
                   "ErrorEquals": ["States.ALL"],
@@ -357,18 +357,18 @@
           }
         },
         {
-          "StartAt": "TranslateMeetingNotes",
+          "StartAt": "TranslateMissingInfo",
           "States": {
-            "TranslateMeetingNotes": {
+            "TranslateMissingInfo": {
               "Type": "Task",
               "Resource": "${TranslateContentArn}",
-              "Comment": "Translate meeting notes results to target languages",
+              "Comment": "Translate missing info results to target languages",
               "Parameters": {
                 "iep_id.$": "$.iep_id",
                 "child_id.$": "$.child_id", 
                 "user_id.$": "$.user_id",
                 "target_languages.$": "$.target_languages",
-                "content_type": "meeting_notes"
+                "content_type": "missing_info"
               },
               "Retry": [
                 {

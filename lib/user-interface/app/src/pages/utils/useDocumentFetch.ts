@@ -44,7 +44,7 @@ export const useDocumentFetch = ({
       
       try {
         const retrievedDocument = await apiClient.getMostRecentDocumentWithSummary();
-        // console.log("Fetched document data:", retrievedDocument);
+        console.log("Fetched document data:", retrievedDocument);
         
         if (retrievedDocument) {
 
@@ -60,7 +60,7 @@ export const useDocumentFetch = ({
                 prev.status !== retrievedDocument.status || 
                 prev.createdAt !== retrievedDocument.createdAt) {
                   
-              // console.log("if (prev) is true");
+              console.log("if (prev) is true");
               // Log timing when status changes
               const uploadStartTime = localStorage.getItem('iep-upload-start-time');
               if (uploadStartTime) {
@@ -68,14 +68,14 @@ export const useDocumentFetch = ({
                 const elapsedSeconds = ((currentTime - parseInt(uploadStartTime)) / 1000).toFixed(1);
                 
                 if (retrievedDocument.status === 'PROCESSING' && prev.status !== 'PROCESSING') {
-                  // console.log(`🔄 Document processing started after ${elapsedSeconds} seconds`);
-                  // console.log(`⏱️ OCR and analysis began at ${new Date(currentTime).toLocaleTimeString()}`);
+                  console.log(`🔄 Document processing started after ${elapsedSeconds} seconds`);
+                  console.log(`⏱️ OCR and analysis began at ${new Date(currentTime).toLocaleTimeString()}`);
                 } else if (retrievedDocument.status === 'PROCESSING_TRANSLATIONS' && prev.status !== 'PROCESSING_TRANSLATIONS') {
-                  // console.log(`📝 English data available after ${elapsedSeconds} seconds`);
-                  // console.log(`⏱️ English analysis completed at ${new Date(currentTime).toLocaleTimeString()}`);
+                  console.log(`📝 English data available after ${elapsedSeconds} seconds`);
+                  console.log(`⏱️ English analysis completed at ${new Date(currentTime).toLocaleTimeString()}`);
                 } else if (retrievedDocument.status === 'PROCESSED' && prev.status !== 'PROCESSED') {
-                  // console.log(`🌍 Complete translated data available after ${elapsedSeconds} seconds`);
-                  // console.log(`⏱️ Full processing completed at ${new Date(currentTime).toLocaleTimeString()}`);
+                  console.log(`🌍 Complete translated data available after ${elapsedSeconds} seconds`);
+                  console.log(`⏱️ Full processing completed at ${new Date(currentTime).toLocaleTimeString()}`);
                   // Clear the start time since processing is complete
                   localStorage.removeItem('iep-upload-start-time');
                 }
@@ -108,7 +108,7 @@ export const useDocumentFetch = ({
             processDocumentSections(retrievedDocument);
           }
         } else {
-          // console.log("else (retrievedDocument) is true");
+          console.log("else (retrievedDocument) is true");
           // Clear document data if no document found
           setDocument(prev => ({
             ...prev,
@@ -139,7 +139,7 @@ export const useDocumentFetch = ({
         
         setError(null);
       } catch (err) {
-        // console.error('Error fetching document:', err);
+        console.error('Error fetching document:', err);
       } finally {
         if (initialLoading) {
           setInitialLoading(false);

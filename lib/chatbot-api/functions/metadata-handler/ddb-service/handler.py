@@ -152,7 +152,7 @@ def save_results(params):
     child_id = params['child_id']
     user_id = params['user_id']
     results = params['results']
-    result_type = params.get('result_type', 'analysis')  # 'analysis', 'meeting_notes', 'translations'
+    result_type = params.get('result_type', 'analysis')  # 'analysis', 'missing_info', 'translations'
     
     update_expression = f"SET {result_type} = :results, updated_at = :updated_at"
     expression_values = {
@@ -315,17 +315,17 @@ def save_final_results(params):
     sections = final_result.get('sections', {})
     document_index = final_result.get('document_index', {})
     abbreviations = final_result.get('abbreviations', {})
-    meeting_notes = final_result.get('meetingNotes', {})  # Changed to map with language keys
+    missing_info = final_result.get('missingInfo', {})  # Changed to map with language keys
     
     # Build update expression for all fields
-    update_expression = "SET summaries = :summaries, sections = :sections, document_index = :document_index, abbreviations = :abbreviations, meetingNotes = :meeting_notes, updated_at = :updated_at"
+    update_expression = "SET summaries = :summaries, sections = :sections, document_index = :document_index, abbreviations = :abbreviations, missingInfo = :missing_info, updated_at = :updated_at"
     
     expression_values = {
         ':summaries': summaries,
         ':sections': sections,
         ':document_index': document_index,
         ':abbreviations': abbreviations,
-        ':meeting_notes': meeting_notes,
+        ':missing_info': missing_info,
         ':updated_at': datetime.utcnow().isoformat()
     }
     
@@ -345,16 +345,16 @@ def save_final_results(params):
             'iep_id': iep_id,
             'summaries_languages': list(summaries.keys()),
             'sections_languages': list(sections.keys()),
-            'meeting_notes_languages': list(meeting_notes.keys())
+            'missing_info_languages': list(missing_info.keys())
         }, default=str)
     }
 
 def get_analysis_data(params):
-    """Get analysis data from DynamoDB (english_result, meeting_notes_result, etc.)"""
+    """Get analysis data from DynamoDB (english_result, missing_info_result, etc.)"""
     iep_id = params['iep_id']
     child_id = params['child_id']
     user_id = params['user_id']
-    data_type = params.get('data_type', 'english_result')  # 'english_result', 'meeting_notes_result', etc.
+    data_type = params.get('data_type', 'english_result')  # 'english_result', 'missing_info_result', etc.
     
     response = table.get_item(
         Key={

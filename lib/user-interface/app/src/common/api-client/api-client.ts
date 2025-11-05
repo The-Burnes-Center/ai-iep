@@ -5,7 +5,6 @@ import { UserFeedbackClient } from "./user-feedback-client";
 import { EvaluationsClient } from "./evaluations-client";
 import { ProfileClient } from "./profile-client";
 import { PDFClient } from "./pdf-client";
-import { TeamClient } from "./team-client";
 
 export class ApiClient {
 
@@ -16,7 +15,6 @@ export class ApiClient {
   private _evaluationsClient: EvaluationsClient | undefined;
   private _profileClient: ProfileClient | undefined;
   private _pdfClient: PDFClient | undefined;
-  private _teamClient: TeamClient | undefined;
  
 
   /** Construct the Knowledge Management sub-client */
@@ -70,15 +68,6 @@ export class ApiClient {
     }
 
     return this._pdfClient;
-  }
-
-  /** Construct the Team sub-client */
-  public get team() {
-    if (!this._teamClient) {
-      this._teamClient = new TeamClient(this._appConfig);
-    }
-
-    return this._teamClient;
   }
 
   constructor(protected _appConfig: AppConfig) {}

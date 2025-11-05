@@ -15,9 +15,9 @@ export class PollingManager {
     }
     
     if (doc && (doc.status === "PROCESSING" || doc.status === "PROCESSING_TRANSLATIONS")) {
-      // console.log(`Document is ${doc.status}. Starting polling...`);
+      console.log(`Document is ${doc.status}. Starting polling...`);
       this.pollingIntervalRef.current = setInterval(() => {
-        // console.log("Polling for updates...");
+        console.log("Polling for updates...");
         onPoll();
       }, 5000);
     }

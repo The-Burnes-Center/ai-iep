@@ -89,7 +89,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
 
   // Handle successful authentication
   const handleSuccessfulAuthentication = () => {
-    // console.log('User authentication successful');
+    console.log('User authentication successful');
     // Authentication is handled, onboarding decisions will be made based on profile.showOnboarding
     onLoginSuccess();
   };
@@ -105,11 +105,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     
     try {
       const user = await Auth.signIn(normalizedUsername, password);
-      // console.log('Login successful', user);
+      console.log('Login successful', user);
       
       // Check for NEW_PASSWORD_REQUIRED challenge
       if (user.challengeName === 'NEW_PASSWORD_REQUIRED') {
-        // console.log('New password required');
+        console.log('New password required');
         setPasswordChangeRequired(true);
         setCognitoUser(user);
         setLoading(false);
@@ -119,7 +119,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       // If no challenge, proceed with normal login
       onLoginSuccess();
     } catch (err) {
-      // console.error('Login error', err);
+      console.error('Login error', err);
       if (err.code === 'UserNotConfirmedException') {
         setError(t('auth.errorUserNotConfirmed'));
       } else if (err.code === 'NotAuthorizedException') {
@@ -161,15 +161,15 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     const formattedPhone = `+1${digits.slice(-10)}`;
 
     try {
-      // console.log('Starting phone authentication for:', formattedPhone);
-      // console.log('Current auth state - smsCodeSent:', smsCodeSent, 'isNewUserConfirmation:', isNewUserConfirmation);
+      console.log('Starting phone authentication for:', formattedPhone);
+      console.log('Current auth state - smsCodeSent:', smsCodeSent, 'isNewUserConfirmation:', isNewUserConfirmation);
       
       // Try custom auth first (for existing users)
       let cognitoUser;
       try {
         cognitoUser = await Auth.signIn(formattedPhone);
-        // console.log('Existing user found, custom auth initiated');
-        // console.log('SignIn result:', { challengeName: cognitoUser.challengeName, username: cognitoUser.username });
+        console.log('Existing user found, custom auth initiated');
+        console.log('SignIn result:', { challengeName: cognitoUser.challengeName, username: cognitoUser.username });
         
         // Handle the authentication response for existing users
         if (cognitoUser.challengeName === 'CUSTOM_CHALLENGE') {
@@ -177,18 +177,18 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           setSmsCodeSent(true);
           setIsNewUserConfirmation(false);
           setSuccessMessage(t('auth.smsCodeSent'));
-          // console.log('SMS code sent for existing user');
+          console.log('SMS code sent for existing user');
         } else {
-          // console.log('User authenticated successfully');
+          console.log('User authenticated successfully');
           onLoginSuccess();
         }
         
       } catch (signInError: any) {
-        // console.log('SignIn error:', signInError.code);
+        console.log('SignIn error:', signInError.code);
         
         if (signInError.code === 'UserNotFoundException') {
           // User doesn't exist, create them first
-          // console.log('Creating new user for phone:', formattedPhone);
+          console.log('Creating new user for phone:', formattedPhone);
           
           // Generate a secure random password
           const tempPassword = 'TempPass123!' + Math.random().toString(36).substring(2, 15);
@@ -202,7 +202,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               }
             });
             
-            // console.log('New user created:', signUpResult);
+            console.log('New user created:', signUpResult);
             
             // Set up for confirmation flow
             setIsNewUserConfirmation(true);
@@ -212,7 +212,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             setSuccessMessage(t('auth.smsCodeSentNewUser'));
             
           } catch (signUpError: any) {
-            // console.error('SignUp error:', signUpError);
+            console.error('SignUp error:', signUpError);
             if (signUpError.code === 'UsernameExistsException') {
               // User was created between our attempts, try signin again
               cognitoUser = await Auth.signIn(formattedPhone);
@@ -231,14 +231,14 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           }
         } else if (signInError.code === 'UserNotConfirmedException') {
           // User exists but not confirmed - treat as new user confirmation
-          // console.log('User exists but not confirmed, setting up confirmation flow');
+          console.log('User exists but not confirmed, setting up confirmation flow');
           
           // Try to resend confirmation code for existing unconfirmed user
           try {
             await Auth.resendSignUp(formattedPhone);
-            // console.log('Resent confirmation code for existing user');
+            console.log('Resent confirmation code for existing user');
           } catch (resendError: any) {
-            // console.log('Could not resend confirmation code:', resendError.code);
+            console.log('Could not resend confirmation code:', resendError.code);
             // Continue anyway - user might still have valid code
           }
           
@@ -252,7 +252,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       }
       
     } catch (error: any) {
-      // console.error('Phone authentication error:', error);
+      console.error('Phone authentication error:', error);
       
       // Handle specific error cases
       if (error.code === 'NotAuthorizedException') {
@@ -285,10 +285,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     setSuccessMessage(null);
 
     try {
-      // console.log('Verifying SMS code:', smsCode);
-      // console.log('Is new user confirmation:', isNewUserConfirmation);
-      // console.log('Pending phone number:', pendingPhoneNumber);
-      // console.log('Cognito user for SMS:', cognitoUserForSms ? 'Present' : 'Null');
+      console.log('Verifying SMS code:', smsCode);
+      console.log('Is new user confirmation:', isNewUserConfirmation);
+      console.log('Pending phone number:', pendingPhoneNumber);
+      console.log('Cognito user for SMS:', cognitoUserForSms ? 'Present' : 'Null');
       
       if (isNewUserConfirmation) {
         // This is a signup confirmation
@@ -299,14 +299,14 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           return;
         }
         
-        // console.log('Confirming signup for:', pendingPhoneNumber);
+        console.log('Confirming signup for:', pendingPhoneNumber);
         
         // Confirm the signup
         await Auth.confirmSignUp(pendingPhoneNumber, smsCode);
-        // console.log('Signup confirmed successfully');
+        console.log('Signup confirmed successfully');
         
         // Now initiate custom auth for the confirmed user
-        // console.log('Starting custom auth after confirmation');
+        console.log('Starting custom auth after confirmation');
         
         try {
           const cognitoUser = await Auth.signIn(pendingPhoneNumber);
@@ -318,16 +318,16 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             setPendingPhoneNumber(null);
             setSmsCode(''); // Clear the confirmation code
             setSuccessMessage(t('auth.accountConfirmedNewCode'));
-            // console.log('Custom auth initiated after confirmation');
+            console.log('Custom auth initiated after confirmation');
           } else if (cognitoUser.signInUserSession) {
             // User is fully authenticated (shouldn't happen with CUSTOM_AUTH but handle gracefully)
-            // console.log('User authenticated successfully after confirmation');
+            console.log('User authenticated successfully after confirmation');
             setSuccessMessage(t('auth.accountConfirmedSuccess'));
             setTimeout(() => {
               handleSuccessfulAuthentication();
             }, 1000);
           } else {
-            // console.error('Unexpected auth state after confirmation:', cognitoUser);
+            console.error('Unexpected auth state after confirmation:', cognitoUser);
             setError('Authentication error after confirmation. Please try signing in again.');
             // Reset to phone input
             setSmsCodeSent(false);
@@ -336,7 +336,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             setSmsCode('');
           }
         } catch (postConfirmError: any) {
-          // console.error('Error starting custom auth after confirmation:', postConfirmError);
+          console.error('Error starting custom auth after confirmation:', postConfirmError);
           if (postConfirmError.code === 'UserNotConfirmedException') {
             setError('Account confirmation failed. Please try the process again.');
           } else {
@@ -359,16 +359,16 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           return;
         }
         
-        // console.log('Verifying custom auth challenge');
+        console.log('Verifying custom auth challenge');
         
         // Send the challenge response
         const result = await Auth.sendCustomChallengeAnswer(cognitoUserForSms, smsCode);
         
-        // console.log('Challenge response result:', result);
+        console.log('Challenge response result:', result);
         
         // Check if authentication is complete
         if (result.signInUserSession) {
-          // console.log('Authentication successful!');
+          console.log('Authentication successful!');
           setSuccessMessage(t('auth.phoneVerificationSuccess'));
           
           // Small delay to show success message, then redirect
@@ -378,19 +378,19 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           
         } else if (result.challengeName) {
           // Still have challenges to complete
-          // console.log('Additional challenge required:', result.challengeName);
+          console.log('Additional challenge required:', result.challengeName);
           setCognitoUserForSms(result);
           setError('Additional verification required. Please try again.');
           
         } else {
           // Unexpected state
-          // console.error('Unexpected auth state:', result);
+          console.error('Unexpected auth state:', result);
           setError('Authentication incomplete. Please try again.');
         }
       }
       
     } catch (error: any) {
-      // console.error('SMS verification error:', error);
+      console.error('SMS verification error:', error);
       
       // Handle specific error cases
       if (error.code === 'NotAuthorizedException' || error.message?.includes('Incorrect')) {
@@ -423,8 +423,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
     setSuccessMessage(null);
 
     try {
-      // console.log('Resending SMS code');
-      // console.log('Is new user confirmation:', isNewUserConfirmation);
+      console.log('Resending SMS code');
+      console.log('Is new user confirmation:', isNewUserConfirmation);
       
       if (isNewUserConfirmation) {
         // Resend signup confirmation code
@@ -435,7 +435,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           return;
         }
         
-        // console.log('Resending signup confirmation for:', pendingPhoneNumber);
+        console.log('Resending signup confirmation for:', pendingPhoneNumber);
         await Auth.resendSignUp(pendingPhoneNumber);
         setSuccessMessage(t('auth.smsCodeResent'));
         setSmsCode(''); // Clear previous code
@@ -449,7 +449,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           return;
         }
         
-        // console.log('Resending custom auth challenge');
+        console.log('Resending custom auth challenge');
         
         // For custom auth, we need to re-initiate the auth flow to get a new challenge
         // Instead of using sendCustomChallengeAnswer with 'RESEND', we restart the flow
@@ -472,13 +472,13 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             setError('Failed to resend code. Please try again.');
           }
         } catch (resendError: any) {
-          // console.error('Resend custom auth error:', resendError);
+          console.error('Resend custom auth error:', resendError);
           setError('Failed to resend code. Please try again.');
         }
       }
       
     } catch (error: any) {
-      // console.error('Resend SMS error:', error);
+      console.error('Resend SMS error:', error);
       setError(error.message || 'Failed to resend verification code. Please try again.');
     } finally {
       setLoading(false);
@@ -503,10 +503,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         newPassword    // the new password
       );
       
-      // console.log('Password change successful', user);
+      console.log('Password change successful', user);
       onLoginSuccess();
     } catch (err) {
-      // console.error('Password change error', err);
+      console.error('Password change error', err);
       setError(err.message || t('auth.errorGeneric'));
     } finally {
       setLoading(false);
@@ -523,7 +523,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       setResetSent(true);
       setSuccessMessage(t('auth.resetCodeSent'));
     } catch (err) {
-      // console.error('Forgot password error', err);
+      console.error('Forgot password error', err);
       setError(err.message || t('auth.errorGeneric'));
     } finally {
       setLoading(false);
@@ -551,7 +551,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      // console.error('Reset password error', err);
+      console.error('Reset password error', err);
       setError(err.message || t('auth.errorGeneric'));
     } finally {
       setLoading(false);
@@ -578,11 +578,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         }
       });
       
-      // console.log('Sign up successful', user);
+      console.log('Sign up successful', user);
       setIsSignUpComplete(true);
       setSuccessMessage(t('auth.signUpSuccess'));
     } catch (err) {
-      // console.error('Sign up error', err);
+      console.error('Sign up error', err);
       if (err.code === 'UsernameExistsException') {
         setError(t('auth.errorUserExists'));
       } else {
@@ -608,7 +608,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       setSignUpConfirmPassword('');
       setVerificationCode('');
     } catch (err) {
-      // console.error('Confirm sign up error', err);
+      console.error('Confirm sign up error', err);
       setError(err.message || t('auth.errorGeneric'));
     } finally {
       setLoading(false);
@@ -623,7 +623,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       await Auth.resendSignUp(signUpEmail.toLowerCase());
       setSuccessMessage(t('auth.verificationCodeResent'));
     } catch (err) {
-      // console.error('Resend confirmation error', err);
+      console.error('Resend confirmation error', err);
       setError(err.message || t('auth.errorGeneric'));
     } finally {
       setLoading(false);

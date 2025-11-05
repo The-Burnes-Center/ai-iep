@@ -59,12 +59,12 @@ def lambda_handler(event, context):
         source_payload_response = source_response['Payload'].read()
         
         if not source_payload_response:
-            if content_type == 'meeting_notes':
+            if content_type == 'missing_info':
                 print("Document not found, skipping translation")
                 event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
                 return {
                     **event_copy,
-                    'meeting_notes_translations': {},
+                    'missing_info_translations': {},
                     f'{content_type}_translation_skipped': True
                 }
             else:
@@ -76,12 +76,12 @@ def lambda_handler(event, context):
             raise Exception(f"Failed to parse DDB service response as JSON: {e}")
         
         if source_ddb_result.get('statusCode') != 200:
-            if content_type == 'meeting_notes':
+            if content_type == 'missing_info':
                 print("Document not found, skipping translation")
                 event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
                 return {
                     **event_copy,
-                    'meeting_notes_translations': {},
+                    'missing_info_translations': {},
                     f'{content_type}_translation_skipped': True
                 }
             else:
@@ -109,22 +109,22 @@ def lambda_handler(event, context):
                 'abbreviations': abbreviations.get('en', [])
             }
             
-        elif content_type == 'meeting_notes':
-            # Get English meeting notes from API fields: meetingNotes.en
-            meeting_notes = document.get('meetingNotes', {})
+        elif content_type == 'missing_info':
+            # Get English missing info from API fields: missingInfo.en
+            missing_info = document.get('missingInfo', {})
             
-            if 'en' not in meeting_notes or not meeting_notes.get('en'):
-                print("English meeting notes not found, skipping translation")
+            if 'en' not in missing_info:
+                print("English missing info not found, skipping translation")
                 event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
                 return {
                     **event_copy,
-                    'meeting_notes_translations': {},
+                    'missing_info_translations': {},
                     f'{content_type}_translation_skipped': True
                 }
             
-            # Reconstruct the format expected by translation agent (simple string)
+            # Reconstruct the format expected by translation agent
             source_result = {
-                'meeting_notes': meeting_notes.get('en', '')
+                'items': missing_info.get('en', [])
             }
         else:
             raise ValueError(f"Unsupported content_type: {content_type}")
@@ -186,16 +186,16 @@ def lambda_handler(event, context):
                 field_updates[f'sections.{lang}'] = translated_content.get('sections', [])
                 field_updates[f'document_index.{lang}'] = translated_content.get('document_index', '')
                 field_updates[f'abbreviations.{lang}'] = translated_content.get('abbreviations', [])
-        elif content_type == 'meeting_notes':
-            # Save meeting notes translations to meetingNotes fields
+        elif content_type == 'missing_info':
+            # Save missing info translations to missingInfo fields
             for lang, translated_content in translations.items():
-                # Handle meeting notes structure (should be simple string)
-                if isinstance(translated_content, dict) and 'meeting_notes' in translated_content:
-                    field_updates[f'meetingNotes.{lang}'] = translated_content['meeting_notes']
-                elif isinstance(translated_content, str):
-                    field_updates[f'meetingNotes.{lang}'] = translated_content
+                # Handle missing info structure (should be list of items)
+                if isinstance(translated_content, dict) and 'items' in translated_content:
+                    field_updates[f'missingInfo.{lang}'] = translated_content['items']
+                elif isinstance(translated_content, list):
+                    field_updates[f'missingInfo.{lang}'] = translated_content
                 else:
-                    field_updates[f'meetingNotes.{lang}'] = ''
+                    field_updates[f'missingInfo.{lang}'] = []
         
         save_payload = {
             'operation': 'save_api_fields',
@@ -231,8 +231,8 @@ def lambda_handler(event, context):
         # Set the result key based on content type
         if content_type == 'parsing_result':
             result_key = 'parsing_translations'
-        elif content_type == 'meeting_notes':
-            result_key = 'meeting_notes_translations'
+        elif content_type == 'missing_info':
+            result_key = 'missing_info_translations'
         else:
             result_key = f'{content_type}_translations'
         

@@ -18,15 +18,15 @@ export class IEPDocumentClient {
     
     // If no children exist, create a default child automatically
     if (!profile.children || profile.children.length === 0) {
-      // console.log('No children found in profile, creating default child for IEP document functionality');
+      console.log('No children found in profile, creating default child for IEP document functionality');
       
       try {
         // Create a default child
         const childResponse = await this.profileClient.addChild('My Child', 'Not specified');
-        // console.log('Successfully created default child:', childResponse.childId);
+        console.log('Successfully created default child:', childResponse.childId);
         return childResponse.childId;
       } catch (error) {
-        // console.error('Failed to create default child:', error);
+        console.error('Failed to create default child:', error);
         throw new Error('No children found in profile and failed to create default child');
       }
     }
@@ -69,7 +69,7 @@ export class IEPDocumentClient {
       const data = await response.json();
       return data;
     } catch (error) {
-      // console.error('Error:', error);
+      console.error('Error:', error);
       throw error;
     }
   }
@@ -108,7 +108,7 @@ export class IEPDocumentClient {
       
       return await response.json();
     } catch (error) {
-      // console.error('Error fetching documents:', error);
+      console.error('Error fetching documents:', error);
       throw error;
     }
   }
@@ -117,17 +117,17 @@ export class IEPDocumentClient {
   async getMostRecentDocumentWithSummary() {
     try {
       const result = await this.getDocuments();
-      // console.log("Document API response:", result);
+      console.log("Document API response:", result);
       
       // If no document is found, return null
       if (!result || Object.keys(result).length === 0) {
-        // console.log("No document found");
+        console.log("No document found");
         return null;
       }
       
       return result;
     } catch (error) {
-      // console.error('Error fetching most recent document with summary:', error);
+      console.error('Error fetching most recent document with summary:', error);
       throw error;
     }
   }
@@ -152,7 +152,7 @@ export class IEPDocumentClient {
       
       return await response.json();
     } catch (error) {
-      // console.error('Error deleting document:', error);
+      console.error('Error deleting document:', error);
       throw error;
     }
   }

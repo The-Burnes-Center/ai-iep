@@ -8,8 +8,7 @@
   },
   "dependencies": {
     "puppeteer-core": "^21.11.0",
-    "@sparticuz/chromium": "^119.0.2",
-    "marked": "^9.1.6"
+    "@sparticuz/chromium": "^119.0.2"
   },
   "keywords": ["pdf", "puppeteer", "lambda", "iep"],
   "author": "",

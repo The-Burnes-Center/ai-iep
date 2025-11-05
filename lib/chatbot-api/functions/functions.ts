@@ -34,6 +34,7 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly deleteS3Function : lambda.Function;
   public readonly getS3KnowledgeFunction : lambda.Function;
   public readonly uploadS3KnowledgeFunction : lambda.Function;
+  public readonly identifyMissingInfoFunction : lambda.Function;
   public readonly userProfileFunction : lambda.Function;
   public readonly cognitoTriggerFunction : lambda.Function;
   public readonly pdfGeneratorFunction : lambda.Function;
@@ -48,7 +49,7 @@ export class LambdaFunctionStack extends cdk.Stack {
   public readonly redactOCRFunction : lambda.Function;
   public readonly deleteOriginalFunction : lambda.Function;
   public readonly parsingAgentFunction : lambda.Function;
-  public readonly extractMeetingNotesFunction : lambda.Function;
+  public readonly missingInfoAgentFunction : lambda.Function;
   public readonly checkLanguagePrefsFunction : lambda.Function;
   public readonly translateContentFunction : lambda.Function;
   public readonly finalizeResultsFunction : lambda.Function;
@@ -333,9 +334,9 @@ export class LambdaFunctionStack extends cdk.Stack {
       900
     );
 
-    this.extractMeetingNotesFunction = createStepFunctionLambda(
-      'ExtractMeetingNotesFunction',
-      'metadata-handler/steps/extract_meeting_notes',
+    this.missingInfoAgentFunction = createStepFunctionLambda(
+      'MissingInfoAgentFunction',
+      'metadata-handler/steps/missing_info_agent',
       300
     );
 
@@ -369,7 +370,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.mistralOCRFunction,
       this.redactOCRFunction,
       this.parsingAgentFunction,
-      this.extractMeetingNotesFunction,
+      this.missingInfoAgentFunction,
       this.translateContentFunction,
       this.finalizeResultsFunction
     ];
@@ -382,6 +383,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       }));
     });
 
+    // Note: Lambda invoke permission for missing info agent will be added after identifyMissingInfoFunction is created
+
     // Load and customize the ASL definition
     const aslPath = path.join(__dirname, '../state-machines/iep-processing.asl.json');
     let aslDefinition = JSON.parse(fs.readFileSync(aslPath, 'utf8'));
@@ -393,7 +396,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       .replace(/\$\{RedactOCRArn\}/g, this.redactOCRFunction.functionArn)
       .replace(/\$\{DeleteOriginalArn\}/g, this.deleteOriginalFunction.functionArn)
       .replace(/\$\{ParsingAgentArn\}/g, this.parsingAgentFunction.functionArn)
-      .replace(/\$\{ExtractMeetingNotesArn\}/g, this.extractMeetingNotesFunction.functionArn)
+      .replace(/\$\{MissingInfoAgentArn\}/g, this.missingInfoAgentFunction.functionArn)
       .replace(/\$\{CheckLanguagePrefsArn\}/g, this.checkLanguagePrefsFunction.functionArn)
       .replace(/\$\{TranslateContentArn\}/g, this.translateContentFunction.functionArn)
       .replace(/\$\{FinalizeResultsArn\}/g, this.finalizeResultsFunction.functionArn);
@@ -413,7 +416,7 @@ export class LambdaFunctionStack extends cdk.Stack {
     this.iepProcessingStateMachine.node.addDependency(this.redactOCRFunction);
     this.iepProcessingStateMachine.node.addDependency(this.deleteOriginalFunction);
     this.iepProcessingStateMachine.node.addDependency(this.parsingAgentFunction);
-    this.iepProcessingStateMachine.node.addDependency(this.extractMeetingNotesFunction);
+    this.iepProcessingStateMachine.node.addDependency(this.missingInfoAgentFunction);
     this.iepProcessingStateMachine.node.addDependency(this.checkLanguagePrefsFunction);
     this.iepProcessingStateMachine.node.addDependency(this.translateContentFunction);
     this.iepProcessingStateMachine.node.addDependency(this.finalizeResultsFunction);
@@ -425,7 +428,7 @@ export class LambdaFunctionStack extends cdk.Stack {
       this.redactOCRFunction,
       this.deleteOriginalFunction,
       this.parsingAgentFunction,
-      this.extractMeetingNotesFunction,
+      this.missingInfoAgentFunction,
       this.checkLanguagePrefsFunction,
       this.translateContentFunction,
       this.finalizeResultsFunction
@@ -484,7 +487,7 @@ export class LambdaFunctionStack extends cdk.Stack {
         this.redactOCRFunction,
         this.deleteOriginalFunction,
         this.parsingAgentFunction,
-        this.extractMeetingNotesFunction,
+        this.missingInfoAgentFunction,
         this.checkLanguagePrefsFunction,
         this.translateContentFunction,
         this.finalizeResultsFunction,
@@ -495,6 +498,72 @@ export class LambdaFunctionStack extends cdk.Stack {
     // ==========================================
     // END OF STEP FUNCTIONS COMPONENTS
     // ==========================================
+
+    // Identify Missing Info Lambda - reads OCR from DynamoDB and calls OpenAI
+    const identifyMissingInfoFunction = new lambda.Function(scope, 'IdentifyMissingInfoFunction', {
+      runtime: lambda.Runtime.PYTHON_3_12,
+      code: lambda.Code.fromAsset(path.join(__dirname, 'identify-missing-info'), {
+        bundling: {
+          image: lambda.Runtime.PYTHON_3_12.bundlingImage,
+          command: [
+            'bash', '-c',
+            'pip install -r requirements.txt --platform manylinux2014_x86_64 --only-binary=:all: -t /asset-output && cp -au . /asset-output'
+          ],
+        },
+      }),
+      handler: 'lambda_function.lambda_handler',
+      environment: {
+        "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
+        "OPENAI_API_KEY_PARAMETER_NAME": "/ai-iep/OPENAI_API_KEY",
+        "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName
+      },
+      timeout: cdk.Duration.seconds(300),
+      logRetention: logs.RetentionDays.ONE_YEAR,
+      ...(props.kmsKey ? { environmentEncryption: props.kmsKey } : {})
+    });
+
+    // Allow reading/updating IEP documents from DynamoDB
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:Query',
+        'dynamodb:UpdateItem',
+        'dynamodb:Scan'
+      ],
+      resources: [
+        props.iepDocumentsTable.tableArn,
+        props.iepDocumentsTable.tableArn + '/index/*'
+      ]
+    }));
+
+    // Allow SSM read for OpenAI API key
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['ssm:GetParameter'],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter/ai-iep/OPENAI_API_KEY`
+      ]
+    }));
+
+    this.identifyMissingInfoFunction = identifyMissingInfoFunction;
+
+    // Grant IdentifyMissingInfoFunction permission to invoke DDB service
+    identifyMissingInfoFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['lambda:InvokeFunction'],
+      resources: [this.ddbServiceFunction.functionArn]
+    }));
+
+    // Metadata handler removed; invoke permissions and env are now managed per-step
+
+    // Add Lambda invoke permission to missing info agent step function
+    this.missingInfoAgentFunction.addEnvironment('IDENTIFY_MISSING_INFO_FUNCTION_NAME', identifyMissingInfoFunction.functionName);
+    this.missingInfoAgentFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['lambda:InvokeFunction'],
+      resources: [identifyMissingInfoFunction.functionArn]
+    }));
 
     const userProfileHandlerFunction = new lambda.Function(scope, 'UserProfileHandlerFunction', {
       runtime: lambda.Runtime.PYTHON_3_12,
@@ -666,6 +735,8 @@ export class LambdaFunctionStack extends cdk.Stack {
       uploadS3KnowledgeAPIHandlerFunction.addToRolePolicy(kmsPolicy);
       // Legacy metadata handler removed
       userProfileHandlerFunction.addToRolePolicy(kmsPolicy);
+      // Ensure IdentifyMissingInfoFunction can decrypt KMS-encrypted DynamoDB items
+      identifyMissingInfoFunction.addToRolePolicy(kmsPolicy);
       // Cognito trigger and PDF generator don't need direct KMS usage beyond env, skip
     }
   }

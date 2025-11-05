@@ -26,9 +26,16 @@ class TranslationSectionContent(BaseModel):
 
 
 # =============================================================================
-# MEETING NOTES TRANSLATION MODELS
+# MISSING INFO TRANSLATION MODELS
 # =============================================================================
 
-class MeetingNotesTranslation(BaseModel):
-    """Meeting notes translation structure - simple string"""
-    meeting_notes: str = Field(..., description="Verbatim meeting notes text translated to target language")
+class MissingInfoItem(BaseModel):
+    """Single missing information item for translation"""
+    description: str = Field(..., description="Description of what information is missing")
+    category: str = Field(..., description="Category of the missing information")
+
+
+class MissingInfoTranslation(BaseModel):
+    """Complete missing information translation structure"""
+    iepId: str = Field(..., description="IEP ID, should remain unchanged")
+    items: List[MissingInfoItem] = Field(..., description="List of missing information items")

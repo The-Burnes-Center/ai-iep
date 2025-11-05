@@ -99,7 +99,7 @@ export default function UserProfileForm() {
       await Auth.signOut();
       setAuthenticated(false);
     } catch (error) {
-      // console.error("Error signing out:", error);
+      console.error("Error signing out:", error);
     }
   };
 

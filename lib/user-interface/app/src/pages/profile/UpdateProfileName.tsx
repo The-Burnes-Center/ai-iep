@@ -48,7 +48,7 @@ export default function UpdateProfileName() {
       
       setError(null);
     } catch (err) {
-      // console.error('Error loading profile or checking document:', err);
+      console.error('Error loading profile or checking document:', err);
       setError(t('updateProfile.error.serviceUnavailable'));
     } finally {
       setLoading(false);
@@ -66,7 +66,7 @@ export default function UpdateProfileName() {
         setHasExistingDocument(false);
       }
     } catch (err) {
-      // console.error('Error checking for existing document:', err);
+      console.error('Error checking for existing document:', err);
       // If there's an error checking for documents, assume no document exists
       setHasExistingDocument(false);
     }
@@ -95,9 +95,9 @@ export default function UpdateProfileName() {
           // Create a default child with generic information
           // The user can update this later if needed
           await apiClient.profile.addChild('My Child', profile?.city || 'Not specified');
-          // console.log('Created default child for IEP document functionality');
+          console.log('Created default child for IEP document functionality');
         } catch (childError) {
-          // console.error('Error creating default child:', childError);
+          console.error('Error creating default child:', childError);
           // Don't fail the flow if child creation fails - user can add manually later
         }
       }
@@ -108,9 +108,9 @@ export default function UpdateProfileName() {
       // Mark onboarding as completed since user has finished all required steps
       try {
         await apiClient.profile.updateProfile({ showOnboarding: false });
-        // console.log('Onboarding completed - showOnboarding set to false');
+        console.log('Onboarding completed - showOnboarding set to false');
       } catch (onboardingError) {
-        // console.error('Error updating onboarding status:', onboardingError);
+        console.error('Error updating onboarding status:', onboardingError);
         // Don't fail the flow if this update fails
       }
       
@@ -121,7 +121,7 @@ export default function UpdateProfileName() {
         navigate('/account-center');
       }
     } catch (err) {
-      // console.error('Error saving parent name:', err);
+      console.error('Error saving parent name:', err);
       addNotification('error', t('updateProfile.error.saveFailed'));
     } finally {
       setSaving(false);
