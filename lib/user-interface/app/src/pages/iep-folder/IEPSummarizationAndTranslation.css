@@ -64,7 +64,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1.5rem;
+  height: 85.5px;
 }
 
 .loading-while-parent-rights p {
@@ -77,7 +77,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  height: 120px;
+  padding: 0 1rem;
 }
 
 .loading-final-screen h3 {
