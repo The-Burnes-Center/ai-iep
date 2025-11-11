@@ -6,6 +6,7 @@ import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { useLanguage } from '../../common/language-context';
 import GoToWebsiteButton from '../../components/GoToWebsiteButton';
+import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import './ProfileForms.css';
 import './UpdateProfileName.css';
 import './ProfileForms.css';
@@ -128,17 +129,18 @@ export default function AboutApp() {
         </p>
         <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={t("about.goToWebsite")} />
       </div>
-      <div className='section-header section-header--privacy'>
+      <div className='section-header section-header--privacy' onClick={() => navigate('/privacy-policy')}>
         <h5>{t("about.privacyPolicy")}</h5>
         <span className="arrow-icon">
           <img src="/images/arrow.svg" alt="" />
         </span>
       </div>
-      <div className='bottom-space'>
+      <div className='bottom-space-about-app'>
 
       </div>
       
       </div>
+      <MobileBottomNavigation />
     </>
   );
 };
