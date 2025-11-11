@@ -74,7 +74,7 @@ const SupportCenter: React.FC = () => {
                 <Col md={12} className="no-padding-inherit-faq">
                   <>
                     <h4 className="account-center-header mt-4 px-4">{t("supportCenter.title")}</h4>
-                    <Accordion className="mb-3 pb-5 account-center-accordion">
+                    <Accordion className="account-center-accordion">
                       {headers.map((header) => (
                         <Accordion.Item key={header.id} eventKey={header.id}>
                           <Accordion.Header 

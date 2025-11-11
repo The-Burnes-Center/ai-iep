@@ -88,7 +88,8 @@ const AccountCenter: React.FC = () => {
                 <Col md={12} className="no-padding-inherit-faq">
                   <>
                     <h4 className="account-center-header mt-4 px-4">{t("accountCenter.title")}</h4>
-                    <Accordion className="mb-3 pb-5 account-center-accordion">
+                    {/* Add some text to this page about what the account center does */}
+                    <Accordion className="account-center-accordion">
                       {headers.map((header) => (
                         <Accordion.Item key={header.id} eventKey={header.id}>
                           <Accordion.Header 
