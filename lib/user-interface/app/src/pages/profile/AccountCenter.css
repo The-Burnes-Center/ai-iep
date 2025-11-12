@@ -58,17 +58,33 @@
   padding: 1rem;
 }
 
-/* Custom accordion button icons - downward arrow for closed */
+/* Hide default Bootstrap accordion arrow */
 .account-center-accordion .accordion-button::after {
-  background-image: url('/images/arrow.svg');
-  background-size: 15px 18px;
-  transform: rotate(270deg);
+  display: none;
 }
 
-/* Custom accordion button icons - upward arrow for open */
-.account-center-accordion .accordion-button:not(.collapsed)::after {
-  background-image: url('/images/arrow.svg');
-  background-size: 15px 18px;
+/* Accordion title content wrapper */
+.accordion-title-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Accordion icons styling */
+.accordion-icon {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* Arrow icon color for first three items */
+.arrow-icon {
+  color: #1E1E1E;
+}
+
+/* Logout icon color for last item */
+.logout-icon {
+  color: #F01E19;
 }
 
 /* Background color for open accordion header */
@@ -84,12 +100,66 @@
   border-bottom: none;
 }
 
+.account-center-accordion .accordion-item:last-child .accordion-button {
+  color: #F01E19;
+}
+
 .no-padding-inherit-faq {
   padding-left: revert !important;
   padding-right: revert !important;
 }
 
 .account-center-accordion {
+  /* Disable accordion transitions and transforms */
+  --bs-accordion-transition: none;
+  --bs-accordion-btn-icon-transform: none;
+  --bs-accordion-btn-icon-transition: none;
+}
+
+/* Support Center Accordion - Shared styles with Account Center but no red last item */
+.support-center-accordion .accordion-header {
+  border-top: 1px solid #1E1E1E;
+}
+
+.support-center-accordion .accordion-item {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  background-color: #F5f3EE;
+}
+
+.support-center-accordion .accordion-header .accordion-button {
+  padding: 0.75rem 1rem;
+  background-color: #F5f3EE;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 500;
+  font-size: 1.125rem;
+  line-height: 2;
+  text-align: left;
+  color: #1E1E1E;
+}
+
+.support-center-accordion .accordion-body {
+  padding: 1rem;
+}
+
+.support-center-accordion .accordion-button::after {
+  display: none;
+}
+
+.support-center-accordion .accordion-button:not(.collapsed) {
+  background-color: #E7E4DC;
+}
+
+.support-center-accordion .accordion-item:first-child {
+  border-top: none;
+}
+
+.support-center-accordion .accordion-item:last-child {
+  border-bottom: none;
+}
+
+.support-center-accordion {
   /* Disable accordion transitions and transforms */
   --bs-accordion-transition: none;
   --bs-accordion-btn-icon-transform: none;

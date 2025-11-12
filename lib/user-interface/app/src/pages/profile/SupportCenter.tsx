@@ -2,7 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
-import { useLanguage } from '../../common/language-context'; 
+import { useLanguage } from '../../common/language-context';
+import { IconArrowRight } from '@tabler/icons-react';
 import './AccountCenter.css';
 
 const SupportCenter: React.FC = () => {
@@ -74,14 +75,17 @@ const SupportCenter: React.FC = () => {
                 <Col md={12} className="no-padding-inherit-faq">
                   <>
                     <h4 className="account-center-header mt-4 px-4">{t("supportCenter.title")}</h4>
-                    <Accordion className="account-center-accordion">
+                    <Accordion className="support-center-accordion">
                       {headers.map((header) => (
                         <Accordion.Item key={header.id} eventKey={header.id}>
                           <Accordion.Header 
                             onClick={() => handleAccordionClick(header.id)}
                             style={{ cursor: 'pointer' }}
                           >
-                            {header.title}
+                            <span className="accordion-title-content">
+                              {header.title}
+                              <IconArrowRight size={18} stroke={2} className="accordion-icon arrow-icon" />
+                            </span>
                           </Accordion.Header>
                         </Accordion.Item>
                       ))}

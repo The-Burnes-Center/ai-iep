@@ -4,7 +4,8 @@ import { Auth } from "aws-amplify";
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
-import { useLanguage } from '../../common/language-context'; 
+import { useLanguage } from '../../common/language-context';
+import { IconArrowRight, IconLogout } from '@tabler/icons-react';
 import './AccountCenter.css';
 
 const AccountCenter: React.FC = () => {
@@ -96,7 +97,14 @@ const AccountCenter: React.FC = () => {
                             onClick={() => handleAccordionClick(header.id)}
                             style={{ cursor: 'pointer' }}
                           >
-                            {header.title}
+                            <span className="accordion-title-content">
+                              {header.title}
+                              {header.id === '3' ? (
+                                <IconLogout size={18} stroke={2} className="accordion-icon logout-icon" />
+                              ) : (
+                                <IconArrowRight size={18} stroke={2} className="accordion-icon arrow-icon" />
+                              )}
+                            </span>
                           </Accordion.Header>
                         </Accordion.Item>
                       ))}
