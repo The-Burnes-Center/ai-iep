@@ -9,6 +9,7 @@ import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import ParentRightsCarousel from '../../components/ParentRightsCarousel';
+import ProcessingModal from '../../components/ProcessingModal';
 import { ApiClient } from '../../common/api-client/api-client';
 import { AppContext } from '../../common/app-context';
 import { useNotifications } from '../../components/notif-manager';
@@ -684,40 +685,15 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   if (isProcessing) {
     // console.log("tutorialPhase", tutorialPhase);
     return (
-      <>
-        <Container className="processing-summary-container">
-
-              {error && <Alert variant="danger">{error}</Alert>}
-              {              
-              tutorialPhase === 'parent-rights' ? (
-                <Card className="processing-summary-parent-rights-card">
-                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
-                    <div className='loading-while-parent-rights'>
-                      <p>
-                        {t('summary.processing.hangTight')}
-                      </p>
-                    </div>
-                    <LinearProgress color="success" /> 
-                    <div className="carousel-with-button">
-                      <ParentRightsCarousel slides={parentRightsSlideData} onLastSlideReached={handleLastSlideReached} headerPinkTitle={t('rights.header.title.pink')} headerGreenTitle={t('rights.header.title.green')} />
-                    </div>
-                  </Card.Body>
-                </Card>
-              ) : (
-                <Card className="processing-summary-loader-card">
-                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
-
-                    <div className='loading-final-screen'>
-                      <h3>
-                      {t('summary.processing.hangTight')}
-                      </h3>
-                    </div>
-                    <LinearProgress color="success" /> 
-                  </Card.Body>
-                </Card>
-              )}
-        </Container>
-      </>
+      <ProcessingModal 
+        error={error}
+        tutorialPhase={tutorialPhase}
+        t={t}
+        parentRightsSlideData={parentRightsSlideData}
+        onLastSlideReached={handleLastSlideReached}
+        headerPinkTitle={t('rights.header.title.pink')}
+        headerGreenTitle={t('rights.header.title.green')}
+      />
     );
   }
 
