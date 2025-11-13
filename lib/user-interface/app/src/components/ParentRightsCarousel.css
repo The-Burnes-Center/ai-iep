@@ -187,13 +187,14 @@
 
 @media (min-width: 992px) {
   .slide-rights-image {
-    max-width: 25%;
-    max-height: 25%;
+    max-width: 60%;
+    max-height: 60%;
+    padding: 0.5rem;
   }
 
   .slide-rights-content h2 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 }
 
@@ -224,6 +225,10 @@
     font-size: 1rem;
     line-height: 1.4;
     color: #1E1E1E;
+  }
+
+  .parent-rights-card h1 {
+    font-size: 2rem;
   }
 }
 
