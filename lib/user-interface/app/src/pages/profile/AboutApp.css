@@ -205,3 +205,10 @@ margin-bottom: 1rem;
   height: 150px;
   background: transparent;
 }
+
+@media (min-width: 992px) and (min-height: 700px) {
+  .about-app-all-content-container {
+    width: 50%;
+    margin: 0 auto;
+  }
+}

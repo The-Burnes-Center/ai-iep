@@ -54,7 +54,7 @@ export default function DeleteAccount() {
     <>
     <div>
       {/* Breadcrumbs */}
-      <div className="mt-3 text-start px-4">
+      <div className="mt-3 text-start px-4 breadcrumb-container">
         <Breadcrumb>
           <Breadcrumb.Item onClick={handleBackClick}>{t('deleteAccount.breadcrumb.account')}</Breadcrumb.Item>
           <Breadcrumb.Item active>{t('deleteAccount.breadcrumb.deleteAccount')}</Breadcrumb.Item>
