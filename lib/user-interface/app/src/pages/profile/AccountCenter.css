@@ -10,7 +10,6 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: url('/images/patterns-dark-green.jpg') center/cover;
   transform: rotate(180deg);
   z-index: -1;
 }
@@ -114,6 +113,7 @@
   --bs-accordion-transition: none;
   --bs-accordion-btn-icon-transform: none;
   --bs-accordion-btn-icon-transition: none;
+  border-bottom: 1px solid #1E1E1E;
 }
 
 /* Support Center Accordion - Shared styles with Account Center but no red last item */
@@ -164,4 +164,5 @@
   --bs-accordion-transition: none;
   --bs-accordion-btn-icon-transform: none;
   --bs-accordion-btn-icon-transition: none;
+  border-bottom: 1px solid #1E1E1E;
 }
