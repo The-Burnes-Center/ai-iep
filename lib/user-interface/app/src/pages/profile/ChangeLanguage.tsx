@@ -119,6 +119,7 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
 
   return (
   <>
+      <MobileBottomNavigation />
       <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4 breadcrumb-container">
@@ -172,7 +173,6 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
         </Row>
       </Container>
     </div>
-  <MobileBottomNavigation />
   </>
   );
 }

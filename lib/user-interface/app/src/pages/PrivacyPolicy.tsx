@@ -28,6 +28,7 @@ const PrivacyPolicy: React.FC = () => {
 
   return (
     <div className="privacy-policy-page">
+      <MobileBottomNavigation />
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
@@ -184,8 +185,6 @@ const PrivacyPolicy: React.FC = () => {
           </Col>
         </Row>
       </Container>
-      
-      <MobileBottomNavigation />
     </div>
   );
 };

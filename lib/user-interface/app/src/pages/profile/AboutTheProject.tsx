@@ -65,6 +65,7 @@ export default function AboutTheProject() {
 
   return (
   <>
+      <MobileBottomNavigation />
       <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
@@ -89,7 +90,6 @@ export default function AboutTheProject() {
         </Row>
       </Container>
     </div>
-  <MobileBottomNavigation />
   </>
   );
 }

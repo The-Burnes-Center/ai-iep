@@ -636,6 +636,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   if (initialLoading) {
     return (
       <>
+        <MobileBottomNavigation />
         <Container className="summary-container mt-3 mb-3">
           <Row className="mt-2">
             <Col>
@@ -648,7 +649,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             </Col>
           </Row>
         </Container>
-        <MobileBottomNavigation />
       </>
     );
   }
@@ -657,6 +657,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   if (!document) {
     return (
       <>
+        <MobileBottomNavigation />
         <Container className="summary-container mt-3 mb-3">
           <Row className="mt-2">
             <Col>
@@ -666,7 +667,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             </Col>
           </Row>
         </Container>
-        <MobileBottomNavigation />
       </>
     );
   }
@@ -705,6 +705,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Processed Container - when document is processed, failed, or in other states
   return (
     <>
+      <MobileBottomNavigation />
       <Container className="summary-container mt-3 mb-3">
         <div className="mt-2 text-start button-container d-flex justify-content-between align-items-center">
           <div className="d-flex gap-2 align-items-center">
@@ -874,7 +875,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           </Offcanvas.Body>
         </Offcanvas>
       </Container>
-      <MobileBottomNavigation />
     </>
   );
 };

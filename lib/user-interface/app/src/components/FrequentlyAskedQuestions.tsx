@@ -325,6 +325,7 @@ const FrequentlyAskedQuestions: React.FC = () => {
 
   return (
     <>
+      <MobileBottomNavigation />
       <Container className="faqs-container mt-3 mb-3">
         <Row className="mt-2">
           <Col>
@@ -354,7 +355,6 @@ const FrequentlyAskedQuestions: React.FC = () => {
           </Col>
         </Row>
       </Container>
-      <MobileBottomNavigation />
     </>
   );
 };

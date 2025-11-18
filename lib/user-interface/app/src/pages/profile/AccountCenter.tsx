@@ -81,6 +81,7 @@ const AccountCenter: React.FC = () => {
 
   return (
     <>
+      <MobileBottomNavigation />
       <Container className="account-center-container mt-3 mb-3">
         <Row className="mt-2">
           <Col>
@@ -116,7 +117,6 @@ const AccountCenter: React.FC = () => {
           </Col>
         </Row>
       </Container>
-      <MobileBottomNavigation />
     </>
   );
 };
