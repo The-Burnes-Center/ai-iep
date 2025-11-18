@@ -28,6 +28,14 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   
+  // State to track expanded/collapsed status for each language's summary
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState<Record<string, boolean>>({
+    en: false,
+    es: false,
+    vi: false,
+    zh: false
+  });
+  
   // Profile-related state
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState<boolean>(true);
@@ -459,6 +467,32 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
+  // Helper function to truncate content at character limit while preserving word boundaries
+  const truncateContent = (content: string, limit: number = 705): { truncated: string; needsTruncation: boolean } => {
+    if (!content || content.length <= limit) {
+      return { truncated: content, needsTruncation: false };
+    }
+    
+    // Find the last space before the limit to avoid cutting words
+    let truncateAt = content.lastIndexOf(' ', limit);
+    
+    // If no space found, just use the limit
+    if (truncateAt === -1) {
+      truncateAt = limit;
+    }
+    
+    const truncated = content.substring(0, truncateAt);
+    return { truncated, needsTruncation: true };
+  };
+
+  // Toggle summary expansion for a specific language
+  const toggleSummaryExpansion = (lang: string) => {
+    setIsSummaryExpanded(prev => ({
+      ...prev,
+      [lang]: !prev[lang]
+    }));
+  };
+
   // Render tab content for a specific language
   const renderTabContent = (lang: string) => {
     const hasSummary = document.summaries && document.summaries[lang];
@@ -480,13 +514,40 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             </h4>
             <Card className="summary-content mb-3">
               <Card.Body className="py-3 px-4">
-                <div 
-                  className="markdown-content"
-                  onClick={handleContentClick}
-                  dangerouslySetInnerHTML={{ 
-                    __html: processContentWithJargon(document.summaries[lang], lang)
-                  }}
-                />
+                {(() => {
+                  const fullContent = document.summaries[lang];
+                  const { truncated, needsTruncation } = truncateContent(fullContent, 705);
+                  const isExpanded = isSummaryExpanded[lang];
+                  const contentToShow = needsTruncation && !isExpanded ? truncated : fullContent;
+                  
+                  return (
+                    <div className="markdown-content" onClick={handleContentClick}>
+                      <span
+                        dangerouslySetInnerHTML={{ 
+                          __html: processContentWithJargon(contentToShow, lang)
+                        }}
+                      />
+                      {needsTruncation && (
+                        <>
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSummaryExpansion(lang);
+                            }}
+                            style={{
+                              textDecoration: 'underline',
+                              cursor: 'pointer',
+                              color: '#1E1E1E',
+                              fontWeight: '500'
+                            }}
+                          >
+                            {isExpanded ? 'Show Less' : 'Read More'}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
               </Card.Body>
             </Card>
           </>
