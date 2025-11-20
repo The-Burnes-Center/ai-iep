@@ -20,6 +20,10 @@
   padding-bottom: 1rem;
 }
 
+.faqs-accordion {
+  border-bottom: 1px solid #1E1E1E;
+}
+
 .faqs-accordion .accordion-header {
   border-top: 1px solid #1E1E1E;
 }

@@ -40,12 +40,12 @@ const SurveyForm: React.FC = () => {
       // Check if the message is from JotForm
       if (event.origin && event.origin.includes('jotform.com')) {
         // Log ALL messages from JotForm for debugging
-        console.log('📩 Message from JotForm:', event.data);
+        // console.log('📩 Message from JotForm:', event.data);
         
         // Check specifically for submission completed
         if (event.data && event.data.action === 'submission-completed') {
-          console.log('FORM SUBMITTED SUCCESSFULLY!');
-          console.log('Form ID:', event.data.formID || 'No ID provided');
+          // console.log('FORM SUBMITTED SUCCESSFULLY!');
+          // console.log('Form ID:', event.data.formID || 'No ID provided');
         }
       }
     };
@@ -70,7 +70,7 @@ const SurveyForm: React.FC = () => {
           onLoad={() => window.parent.scrollTo(0,0)}
           allowTransparency={true}
           allow="geolocation; microphone; camera; fullscreen; payment"
-          src="https://form.jotform.com/250765400338050"
+          src="https://form.jotform.com/253225624926156"
           className="jotform-iframe"
           scrolling="no"
         />

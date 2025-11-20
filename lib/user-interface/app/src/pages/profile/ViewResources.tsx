@@ -59,7 +59,7 @@ export default function ViewResources() {
   <>
       <div>
       {/* Breadcrumbs */}
-      <div className="mt-3 text-start px-4">
+      <div className="mt-3 text-start px-4 breadcrumb-container">
         <Breadcrumb>
           <Breadcrumb.Item onClick={handleBackClick}>{t("resources.breadcrumb.supportCenter")}</Breadcrumb.Item>
           <Breadcrumb.Item active>{t("resources.breadcrumb.resources")}</Breadcrumb.Item>
@@ -81,7 +81,7 @@ export default function ViewResources() {
       </Container>
       <div className='resources-list-container'>
         {resources.map((resource, index) => (
-          <div key={index} className='resource'>
+          <div key={index} className='resource-item'>
             <h5>{resource.title}</h5>
             <p>{resource.description}</p>
             <ViewResourcesButton url={resource.url} buttonText={resource.buttonText} />

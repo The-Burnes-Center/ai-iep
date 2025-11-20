@@ -1,0 +1,51 @@
+/* 
+  Mobile: No styles needed - the existing processing card styles 
+  from IEPSummarizationAndTranslation.css handle everything
+*/
+
+/* Desktop mode: Modal dialog effect (ONLY on desktop) */
+@media (min-width: 992px) and (min-height: 700px) {
+  .processing-modal-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .processing-modal-overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: #014620;
+    z-index: -100;
+    background-image: linear-gradient(to bottom, #E7E4DC 0px, #f5f3ee70 1px), linear-gradient(to right, #E7E4DC 0px, #f5f3ee70 1px);
+    background-size: 100% 40px;
+    background-repeat: repeat;
+  }
+
+  .processing-modal-container {
+    background-color: #F5F3EE;
+    height: unset;
+    min-height: 50vh;
+    max-width: 95vw;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    border: solid 1px black;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  .processing-modal-container .processing-summary-parent-rights-card,
+  .processing-modal-container .processing-summary-loader-card {
+    height: 100%;
+    min-height: 60vh;
+    width: 600px;
+  }
+
+  .processing-summary-loader-card {
+    background-color: #014620;
+  }
+}
+

@@ -18,6 +18,16 @@
     border-radius: 0;
     transition: all 0.3s ease;
   }
+
+  /* Default state for both buttons when parent is hovered */
+  .login-method-toggle-container .btn-group:hover .btn {
+    background-color: #F5F3EE;
+  }
+
+  /* The button being hovered gets dark green background */
+  .login-method-toggle-container .btn-group .btn:hover {
+    background-color: #014620 !important;
+  }
   
   /* Mobile responsive styling */
   @media (max-width: 767px) {

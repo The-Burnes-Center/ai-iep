@@ -73,7 +73,7 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete,
     
     // Log upload start time for timing measurements
     const uploadStartTime = Date.now();
-    console.log(`🚀 Document upload started at ${new Date(uploadStartTime).toLocaleTimeString()}`);
+    // console.log(`🚀 Document upload started at ${new Date(uploadStartTime).toLocaleTimeString()}`);
     localStorage.setItem('iep-upload-start-time', uploadStartTime.toString());
     
     setUploadStatus('uploading');
@@ -101,7 +101,7 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete,
         }
       );
     } catch (error) {
-      console.error('Upload error:', error);
+      // console.error('Upload error:', error);
       setGlobalError(typeof error === 'string' ? error : t('upload.error.general'));
       hasError = true;
       setUploadStatus('error');

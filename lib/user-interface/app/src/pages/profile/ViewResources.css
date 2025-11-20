@@ -4,17 +4,32 @@
   justify-content: center;
 }
 
-.resources-list-container {
-    display: flex;
-    flex-direction: column;
-    background-color: #007AD1;
-    min-height: 100px;
-    width: 100%;
-    padding: 10px 10px 100px 10px;
-    align-items: center;
+.resources-description {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
+  font-size: 1.125rem;
 }
 
-.resource {
+.resources-list-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100px;
+  width: 100%;
+  padding: 10px 10px 100px 10px;
+  align-items: center;
+  position: relative;
+}
+
+.resources-list-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/patterns-blue.jpg') center/cover;
+  transform: rotate(180deg);
+  z-index: -1;
+}
+
+.resource-item {
     display: flex;
     flex-direction: column;
     background-color: #F5F3EE;
@@ -26,22 +41,23 @@
 
 }
 
-.resource h5 {
+.resource-item h5 {
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
   font-weight: 500;
   font-size: 1.25rem;
   margin-bottom: 1rem;
 }
 
-.resource p {
+.resource-item p {
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
   font-weight: 400;
   font-size: 1.125rem;
   margin-bottom: 1rem;
 }
 
-.resources-description {
-  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-  font-weight: 400;
-  font-size: 1.125rem;
+@media (min-width: 992px) and (min-height: 700px) {
+  .resources-list-container {
+    width: 50%;
+    margin: 0 auto;
+  }
 }

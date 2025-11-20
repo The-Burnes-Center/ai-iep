@@ -1,0 +1,230 @@
+/* Privacy Policy Page Styles */
+
+.privacy-policy-page {
+  background-color: #F5F3EE;
+  min-height: 100vh;
+  width: 100%;
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+.privacy-policy-container {
+  width: 100%;
+  margin: 0 auto;
+  --bs-gutter-x: 0;
+}
+
+.privacy-policy-card {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background-color: #F5F3EE;
+}
+
+.no-padding-inherit-privacy {
+  padding-left: revert !important;
+  padding-right: revert !important;
+}
+
+/* Breadcrumb Navigation */
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-top: 1rem;
+  padding-left: 1rem;
+}
+
+.breadcrumb-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 0.05em;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+}
+
+.breadcrumb-text.active {
+  color: #333;
+}
+
+.breadcrumb-separator {
+  margin: 0 0.5rem;
+  color: #999;
+  font-weight: 600;
+}
+
+/* Main Title - h4 styling matching FAQs header */
+.privacy-policy-title {
+  font-size: 2.6rem;
+  padding-left: 1rem;
+  font-family: "Fjalla One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  padding-bottom: 1rem;
+  color: #1E1E1E;
+  margin-bottom: 0.5rem;
+}
+
+/* Effective Date */
+.effective-date {
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 500;
+  color: #1E1E1E;
+  margin-bottom: 1rem;
+  padding-left: 1rem;
+}
+
+/* Introduction */
+.privacy-intro {
+  font-size: 1rem;
+  line-height: 1.6;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 350;
+  color: #1E1E1E;
+  margin-bottom: 2rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Privacy Sections */
+.privacy-section {
+  margin-bottom: 2rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Section Heading - h5 styling */
+.section-heading {
+  font-size: 1.25rem;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 500;
+  color: #1E1E1E;
+  margin-bottom: 0.75rem;
+  margin-top: 1rem;
+  line-height: 1.4;
+}
+
+/* Subsection Heading - h6 styling */
+.subsection-heading {
+  font-size: 1.125rem;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 500;
+  color: #1E1E1E;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.section-intro {
+  font-size: 1rem;
+  line-height: 1.6;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 350;
+  color: #1E1E1E;
+  margin-bottom: 0.75rem;
+}
+
+/* Lists */
+.privacy-list {
+  list-style-type: disc;
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.privacy-list li {
+  font-size: 1rem;
+  line-height: 1.6;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 350;
+  color: #1E1E1E;
+  margin-bottom: 0.5rem;
+}
+
+.privacy-list li strong {
+  font-weight: 500;
+  color: #1E1E1E;
+}
+
+/* Contact Information */
+.contact-info {
+  font-size: 1rem;
+  line-height: 1.6;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 350;
+  color: #1E1E1E;
+  margin-bottom: 0.75rem;
+}
+
+.contact-details {
+  font-size: 1rem;
+  line-height: 1.8;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 350;
+  color: #1E1E1E;
+}
+
+.contact-details strong {
+  font-weight: 500;
+}
+
+.contact-details a {
+  color: #0040BA;
+  text-decoration: none;
+  font-weight: 400;
+}
+
+.contact-details a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .privacy-policy-title {
+    font-size: 2rem;
+    padding-left: 1rem;
+  }
+
+  .section-heading {
+    font-size: 1.125rem;
+  }
+
+  .subsection-heading {
+    font-size: 1rem;
+  }
+
+  .breadcrumb-text {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .privacy-policy-title {
+    font-size: 1.75rem;
+    padding-left: 0.75rem;
+  }
+
+  .breadcrumb-nav {
+    padding-left: 0.75rem;
+  }
+
+  .effective-date,
+  .privacy-intro,
+  .privacy-section {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .section-heading {
+    font-size: 1.0625rem;
+  }
+
+  .subsection-heading {
+    font-size: 0.9375rem;
+  }
+
+  .privacy-list {
+    padding-left: 1.5rem;
+  }
+
+  .privacy-list li {
+    font-size: 0.9375rem;
+  }
+}

@@ -25,11 +25,11 @@
   border: none;
   box-shadow: none;
   border-radius: 0;
-  height: 80vh;
-  background-image: url('/images/your-rights-bg.png');
-  background-size: cover;
+  height: 100dvh;
+  background-color: #EEEBE5;
+  background-size: auto;
   background-position: center;
-  background-repeat: no-repeat;
+  background-repeat: repeat;
 }
 
 .processing-summary-loader-card {
@@ -37,7 +37,7 @@
   box-shadow: none;
   border-radius: 0;
   height: 100vh;
-  background-image: url('/images/your-rights-bg.png');
+  background-image: url('/images/bg-your-rights.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -58,6 +58,32 @@
   background-color: transparent;
 }
 
+.loading-while-parent-rights {
+  color: #F5F3EE;
+  background-color: #014620;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 85.5px;
+}
+
+.loading-while-parent-rights p {
+  margin: 0px;
+}
+
+.loading-final-screen {
+  color: #F5F3EE;
+  background-color: #014620;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 120px;
+  padding: 0 1rem;
+}
+
+.loading-final-screen h3 {
+  margin: 0px;
+}
 .summary-container {
   width: 100%;
   margin: 0 auto;
@@ -515,13 +541,13 @@ display: none !important;
   display: inline-block;
 }
 
-.processing-summary-parent-rights-card {
+/* .processing-summary-parent-rights-card {
   background-image: none !important;
   background-color: #F5F3EE;
   display: flex;
   align-items: center;
   justify-content: center;
-}
+} */
 
 }
 
@@ -544,9 +570,9 @@ display: none !important;
   padding-bottom: 0.75rem !important; /* Override py-4 */
 }
 
-  .processing-summary-parent-rights-card {
+  /* .processing-summary-parent-rights-card {
   height: 83vh;
-}
+} */
 
   .processing-summary-app-tutorial-card {
     height: 70vh;
@@ -560,10 +586,10 @@ display: none !important;
 
 @media screen and (min-height: 620px) and (max-height: 740px) {
 
-  .processing-summary-parent-rights-card  {
+  /* .processing-summary-parent-rights-card  {
   padding-top: 0.5rem !important;
   padding-bottom: 0.5rem !important;
- }
+ } */
 
  .tutorial-button-container {
   margin-bottom: 0px !important; /* Override mb-3 */
@@ -587,9 +613,9 @@ display: none !important;
   font-size: 1.2rem !important;
 }
 
-.processing-summary-parent-rights-card {
+/* .processing-summary-parent-rights-card {
   height: 90vh !important;
-}
+} */
 
 .processing-summary-app-tutorial-card {
   height: 70vh !important;
