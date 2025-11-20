@@ -2,6 +2,7 @@
   "name": "phone-otp-auth-lambdas",
   "version": "1.0.0",
   "description": "Lambda functions for Phone OTP authentication with AWS Cognito using SNS",
+  "license": "CC-BY-NC-4.0",
   "main": "index.js",
   "dependencies": {
     "@aws-sdk/client-sns": "^3.529.1",
