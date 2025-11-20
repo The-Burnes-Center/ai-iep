@@ -3,7 +3,7 @@
   display: flex;
   justify-content: space-between;
   width: 95%;
-  margin-bottom: 1rem;
+  padding: 20px 0px;
 }
 
 .carousel-nav-button {
@@ -55,12 +55,10 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  margin-top: 3rem;
-  margin-bottom: 2rem;
+  height: 200px;
   border-radius: 12px;
   border: 1px solid #1E1E1E;
-  padding: 1rem;
-  gap: 1.5rem;
+  margin-top: 20px;
 }
 
 /* Modifier classes for different background images */
@@ -74,7 +72,9 @@
 
 /* Single h1 style for both variants */
 .parent-rights-card h1 {
+  width: 60%;
   font-size: 2.5rem;
+  padding: 1rem;
   color: #F5F3EE;
 }
 
@@ -105,9 +105,8 @@
 }
 
 .slide-rights-image {
-  max-width: 25%;
-  max-height: 25%;
-  width: auto;
+  width: 30%;
+  max-height: 100%;
   height: auto;
   object-fit: contain;
   margin-bottom: 0.5rem;
@@ -132,10 +131,8 @@
   z-index: 2;
   text-align: start;
   color: #343a40;
-  padding: 0.25rem 0.25rem 2rem 0.25rem;
-  margin-bottom: 1.5rem;
-  margin-top: 1.5rem;
-  max-width: 85%;
+  height: 228px;
+  margin-bottom: 0.5rem;
 }
 
 .slide-rights-content h2 {
@@ -190,13 +187,14 @@
 
 @media (min-width: 992px) {
   .slide-rights-image {
-    max-width: 25%;
-    max-height: 25%;
+    max-width: 60%;
+    max-height: 60%;
+    padding: 0.5rem;
   }
 
   .slide-rights-content h2 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 }
 
@@ -227,6 +225,10 @@
     font-size: 1rem;
     line-height: 1.4;
     color: #1E1E1E;
+  }
+
+  .parent-rights-card h1 {
+    font-size: 2rem;
   }
 }
 

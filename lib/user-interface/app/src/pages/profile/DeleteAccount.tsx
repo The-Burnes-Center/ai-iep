@@ -33,11 +33,12 @@ export default function DeleteAccount() {
       // Show success notification
       addNotification('success', t('delete.success'));
       
+      // Navigate to root BEFORE signing out to reset browser history
+      navigate('/', { replace: true });
+      
       // Sign out the user
       await Auth.signOut();
       setAuthenticated(false);
-      
-      // Navigation will happen via auth context
     } catch (err) {
       // console.error('Error deleting profile:', err);
       setError(t('delete.error.failed'));
@@ -53,7 +54,7 @@ export default function DeleteAccount() {
     <>
     <div>
       {/* Breadcrumbs */}
-      <div className="mt-3 text-start px-4">
+      <div className="mt-3 text-start px-4 breadcrumb-container">
         <Breadcrumb>
           <Breadcrumb.Item onClick={handleBackClick}>{t('deleteAccount.breadcrumb.account')}</Breadcrumb.Item>
           <Breadcrumb.Item active>{t('deleteAccount.breadcrumb.deleteAccount')}</Breadcrumb.Item>

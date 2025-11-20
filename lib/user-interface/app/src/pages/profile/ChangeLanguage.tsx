@@ -121,7 +121,7 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
   <>
       <div>
       {/* Breadcrumbs */}
-      <div className="mt-3 text-start px-4">
+      <div className="mt-3 text-start px-4 breadcrumb-container">
         <Breadcrumb>
           <Breadcrumb.Item onClick={handleBackClick}>{t('changeLanguage.breadcrumb.account')}</Breadcrumb.Item>
           <Breadcrumb.Item active>{t('changeLanguage.breadcrumb.changeLanguage')}</Breadcrumb.Item>

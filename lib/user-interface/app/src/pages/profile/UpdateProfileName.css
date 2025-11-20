@@ -45,3 +45,12 @@
 .breadcrumb-item a:hover {
   color: #1E1E1E !important;
 }
+
+
+@media (min-width: 992px) and (min-height: 700px) {
+  .breadcrumb-container {
+    width: 50%;
+    margin: 0 auto;
+  }
+}
+

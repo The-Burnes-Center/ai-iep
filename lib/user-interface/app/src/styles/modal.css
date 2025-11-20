@@ -37,8 +37,8 @@
 
 
   .modal-container {
-    height: unset;
-    padding: 3rem;
+  height: unset;
+  padding: 3rem;
   min-height: 50vh;
   max-width: 95vw;
   max-width: 800px;

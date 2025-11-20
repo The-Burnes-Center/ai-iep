@@ -4,7 +4,8 @@ import { Auth } from "aws-amplify";
 import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
-import { useLanguage } from '../../common/language-context'; 
+import { useLanguage } from '../../common/language-context';
+import { IconArrowRight, IconLogout } from '@tabler/icons-react';
 import './AccountCenter.css';
 
 const AccountCenter: React.FC = () => {
@@ -88,14 +89,22 @@ const AccountCenter: React.FC = () => {
                 <Col md={12} className="no-padding-inherit-faq">
                   <>
                     <h4 className="account-center-header mt-4 px-4">{t("accountCenter.title")}</h4>
-                    <Accordion className="mb-3 pb-5 account-center-accordion">
+                    {/* Add some text to this page about what the account center does */}
+                    <Accordion className="account-center-accordion">
                       {headers.map((header) => (
                         <Accordion.Item key={header.id} eventKey={header.id}>
                           <Accordion.Header 
                             onClick={() => handleAccordionClick(header.id)}
                             style={{ cursor: 'pointer' }}
                           >
-                            {header.title}
+                            <span className="accordion-title-content">
+                              {header.title}
+                              {header.id === '3' ? (
+                                <IconLogout size={18} stroke={2} className="accordion-icon logout-icon" />
+                              ) : (
+                                <IconArrowRight size={18} stroke={2} className="accordion-icon arrow-icon" />
+                              )}
+                            </span>
                           </Accordion.Header>
                         </Accordion.Item>
                       ))}

@@ -25,6 +25,13 @@
   .delete-button-login:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: #E7E4DC !important;
+    background-color: #F01E19 !important;
+  }
+  
+  .delete-button-login:active {
+    color: #E7E4DC !important;
+    background-color: #F01E19 !important;
   }
   
   .delete-button-login:disabled {

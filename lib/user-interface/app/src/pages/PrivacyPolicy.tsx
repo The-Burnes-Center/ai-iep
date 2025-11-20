@@ -1,11 +1,17 @@
 import React from 'react';
-import { Container, Row, Col, Card, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Breadcrumb } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import MobileBottomNavigation from '../components/MobileBottomNavigation';
 import { useLanguage } from '../common/language-context';
 import './PrivacyPolicy.css';
 
 const PrivacyPolicy: React.FC = () => {
+  const navigate = useNavigate();
   const { t, translationsLoaded } = useLanguage();
+
+  const handleBackClick = () => {
+    navigate('/about-the-app');
+  };
 
   // Return loading state if translations aren't ready
   if (!translationsLoaded) {
@@ -22,6 +28,14 @@ const PrivacyPolicy: React.FC = () => {
 
   return (
     <div className="privacy-policy-page">
+      {/* Breadcrumbs */}
+      <div className="mt-3 text-start px-4">
+        <Breadcrumb>
+          <Breadcrumb.Item onClick={handleBackClick}>{t("privacyPolicy.breadcrumb.about")}</Breadcrumb.Item>
+          <Breadcrumb.Item active>{t("privacyPolicy.breadcrumb.privacyPolicy")}</Breadcrumb.Item>
+        </Breadcrumb>
+      </div>
+
       <Container className="privacy-policy-container">
         <Row className="mt-2">
           <Col>
