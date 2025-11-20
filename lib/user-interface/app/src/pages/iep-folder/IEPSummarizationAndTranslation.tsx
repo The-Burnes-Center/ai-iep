@@ -8,12 +8,11 @@ import { IEPDocument, IEPSection, Language, UserProfile } from '../../common/typ
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
-// PDF generation now handled by API client
 import ParentRightsCarousel from '../../components/ParentRightsCarousel';
-import AppTutorialCarousel from '../../components/AppTutorialCarousel';
 import { ApiClient } from '../../common/api-client/api-client';
 import { AppContext } from '../../common/app-context';
 import { useNotifications } from '../../components/notif-manager';
+import LinearProgress from '@mui/material/LinearProgress';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, setLanguage, translationsLoaded } = useLanguage();
@@ -33,7 +32,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [profileLoading, setProfileLoading] = useState<boolean>(true);
   
   // Tutorial flow state management
-  const [tutorialPhase, setTutorialPhase] = useState<'app-tutorial' | 'parent-rights' | 'completed'>('app-tutorial');
+  const [tutorialPhase, setTutorialPhase] = useState< 'parent-rights' | 'completed'>('parent-rights');
 
   const [document, setDocument] = useState<IEPDocument>({
     documentId: undefined,
@@ -84,7 +83,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           setLanguage(profileData.secondaryLanguage as SupportedLanguage);
         }
       } catch (err) {
-        console.error('Error loading profile:', err);
+        // console.error('Error loading profile:', err);
         // Profile loading failure is not critical, continue with context language
       } finally {
         setProfileLoading(false);
@@ -136,24 +135,17 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Unified skip handler for the external button
   const handleSkip = () => {
-    if (tutorialPhase === 'app-tutorial') {
-      setTutorialPhase('parent-rights');
-    } else if (tutorialPhase === 'parent-rights') {
+    if (tutorialPhase === 'parent-rights') {
       setTutorialPhase('completed');
-    }
+    } 
   };
 
-  // Back button handler
-  const handleBack = () => {
-    if (tutorialPhase === 'parent-rights') {
-      setTutorialPhase('app-tutorial');
-    }
-  };
 
   // Handle when user reaches the last slide in app tutorial
+  // TODO : implement similar functionality in parent rights
   const handleLastSlideReached = () => {
-    if (tutorialPhase === 'app-tutorial') {
-      setTutorialPhase('parent-rights');
+    if (tutorialPhase === 'parent-rights') {
+      setTutorialPhase('completed');
     }
   };
 
@@ -163,87 +155,64 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     
     return [
       {
-        id: 'slide-1',
-        title: t('rights.slide1.title'),
-        content: t('rights.slide1.content'),
-        image: '/images/carousel/surprised.png'
+        id: 'privacy-slide-1',
+        type: 'privacy',
+        title: t('privacy.slide1.title'),
+        content: t('privacy.slide1.content'),
+        image: '/images/carousel/joyful.png'
       },
       {
-        id: 'slide-2',
+        id: 'privacy-slide-2',
+        type: 'privacy',
+        title: t('privacy.slide2.title'),
+        content: t('privacy.slide2.content'),
+        image: '/images/carousel/joyful.png'
+      },
+      {
+        id: 'rights-slide-1',
+        type: 'rights',
+        title: t('rights.slide1.title'),
+        content: t('rights.slide1.content'),
+        image: '/images/carousel/blissful.png'
+      },
+      {
+        id: 'rights-slide-2',
+        type: 'rights',
         title: t('rights.slide2.title'),
         content: t('rights.slide2.content'),
         image: '/images/carousel/blissful.png'
       },
       {
-        id: 'slide-3',
+        id: 'rights-slide-3',
+        type: 'rights',
         title: t('rights.slide3.title'),
         content: t('rights.slide3.content'),
-        image: '/images/carousel/joyful.png'
+        image: '/images/carousel/blissful.png'
       },
       {
-        id: 'slide-4',
+        id: 'rights-slide-4',
+        type: 'rights',
         title: t('rights.slide4.title'),
         content: t('rights.slide4.content'),
-        image: '/images/carousel/surprised.png'
+        image: '/images/carousel/blissful.png'
       },
       {
-        id: 'slide-5',
+        id: 'rights-slide-5',
+        type: 'rights',
         title: t('rights.slide5.title'),
         content: t('rights.slide5.content'),
         image: '/images/carousel/blissful.png'
       },
       {
-        id: 'slide-6',
+        id: 'rights-slide-6',
+        type: 'rights',
         title: t('rights.slide6.title'),
         content: t('rights.slide6.content'),
-        image: '/images/carousel/confident.png'
+        image: '/images/carousel/blissful.png'
       }
     ];
   }, [t, translationsLoaded]);
 
-      // AppTutorial carousel data - internationalized using useLanguage hook
-  const appTutorialSlideData = useMemo(() => {
-    if (!translationsLoaded) return [];
-    
-    return [
-      {
-        id: 'slide-1',
-        title: t('appTutorial.slide1.title'),
-        content: t('appTutorial.slide1.content'),
-        image: '/images/Opening_Section_Accordion.gif'
-      },
-      {
-        id: 'slide-2',
-        title: t('appTutorial.slide2.title'),
-        content: t('appTutorial.slide2.content'),
-        image: '/images/Highlighting_Page_Numbers.gif'
-      },
-      {
-        id: 'slide-3',
-        title: t('appTutorial.slide3.title'),
-        content: t('appTutorial.slide3.content'),
-        image: '/images/Language_Switch.gif'
-      },
-      {
-        id: 'slide-4',
-        title: t('appTutorial.slide4.title'),
-        content: t('appTutorial.slide4.content'),
-        image: '/images/Opening_Section_Accordion.gif'
-      },
-      {
-        id: 'slide-5',
-        title: t('appTutorial.slide5.title'),
-        content: t('appTutorial.slide5.content'),
-        image: '/images/Opening_Section_Accordion.gif'
-      },
-      {
-        id: 'slide-6',
-        title: t('appTutorial.slide6.title'),
-        content: t('appTutorial.slide6.content'),
-        image: '/images/Jargon_Drawer.gif'
-      }
-    ];
-  }, [t, translationsLoaded]);
 
   // Handle jargon click
   const handleContentClick = (e: React.MouseEvent) => {
@@ -358,7 +327,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           });
         }
         
-        console.log("orderedSections", orderedSections);
+        // console.log("orderedSections", orderedSections);
         
         setDocument(prev => ({
           ...prev, 
@@ -368,7 +337,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           }
         }));
       } catch (e) {
-        console.error(`Error processing ${lang} sections:`, e);
+        // console.error(`Error processing ${lang} sections:`, e);
         setDocument(prev => ({
           ...prev, 
           sections: { 
@@ -378,7 +347,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         }));
       }
     } else {
-      console.log(`No ${lang} sections found`);
+      // console.log(`No ${lang} sections found`);
       setDocument(prev => ({
         ...prev, 
         sections: { 
@@ -426,6 +395,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
 
   // Check if document is processing (includes both initial processing and translations)
   const isProcessing = document && (document.status === "PROCESSING" || document.status === "PROCESSING_TRANSLATIONS");
+
   
   // Remove the separate isTranslating check since we're treating translation as part of processing
 
@@ -435,7 +405,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       setTutorialPhase('completed');
     } else {
       // Reset to app-tutorial when processing starts
-      setTutorialPhase('app-tutorial');
+      setTutorialPhase('parent-rights');
     }
   }, [isProcessing]);
 
@@ -478,7 +448,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       // Show success notification
       addNotification('success', 'PDF generated successfully!');
     } catch (error) {
-      console.error('PDF generation failed:', error);
+      // console.error('PDF generation failed:', error);
       setPdfError(error instanceof Error ? error.message : 'Failed to generate PDF');
       
       // Show error notification
@@ -701,99 +671,52 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   }
 
 
-if(profile.showOnboarding){
-  navigate('/');
-  return null;
-}
+  if(profile.showOnboarding){
+    navigate('/');
+    return null;
+  }
 
-
-
-if(document && document.message === "No document found for this child") {
-    navigate('/iep-documents');
-}
+  if(document && document.message === "No document found for this child") {
+      navigate('/iep-documents');
+  }
 
   // Processing Container - when document is being processed
   if (isProcessing) {
+    // console.log("tutorialPhase", tutorialPhase);
     return (
       <>
         <Container className="processing-summary-container">
 
               {error && <Alert variant="danger">{error}</Alert>}
-              
-              {/* Button container - only shown during tutorial phases */}
-              {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
-                <div className="d-flex justify-content-between align-items-center mb-3 px-3 py-4 tutorial-button-container">
-                  {/* Back button - only shown during parent-rights phase */}
-                  {tutorialPhase === 'parent-rights' ? (
-                    <Button 
-                      variant="outline-secondary" 
-                      onClick={handleBack}
-                    >
-                      {t('common.back')}
-                    </Button>
-                  ) : (
-                    <div></div>
-                  )}
-                  
-                  {/* Skip button */}
-                  <Button 
-                    variant="outline-secondary" 
-                    onClick={handleSkip}
-                  >
-                    {t('common.skip')}
-                  </Button>
-                </div>
-              )}
-              
-              {/* Title div - only shown during tutorial phases */}
-              {(tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights') && (
-                <div className="text-center py-2 tutorial-title-container">
-
-
-                  <h3>
-                    {tutorialPhase === 'app-tutorial' 
-                      ? t('tutorial.appTutorial.title')
-                      : t('tutorial.parentRights.title')
-                    }
-                  </h3>
-                  {
-                    tutorialPhase === 'app-tutorial' && (
-                      <p className="text-muted text-center example-video-text">{t('tutorial.exampleVideo')}</p>
-                    )
-                  }             
-                </div>
-              )}
-              
-              {tutorialPhase === 'app-tutorial' ? (
-                <Card className="processing-summary-app-tutorial-card">
-                  <Card.Body className="processing-summary-card-body pt-0 pb-0">
-                    <div className="carousel-with-button">
-                      <AppTutorialCarousel slides={appTutorialSlideData} onLastSlideReached={handleLastSlideReached} />
-                    </div>
-                  </Card.Body>
-                </Card>
-              ) : tutorialPhase === 'parent-rights' ? (
+              {              
+              tutorialPhase === 'parent-rights' ? (
                 <Card className="processing-summary-parent-rights-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
+                    <div className='loading-while-parent-rights'>
+                      <p>
+                        {t('summary.processing.hangTight')}
+                      </p>
+                    </div>
+                    <LinearProgress color="success" /> 
                     <div className="carousel-with-button">
-                      <ParentRightsCarousel slides={parentRightsSlideData} />
+                      <ParentRightsCarousel slides={parentRightsSlideData} onLastSlideReached={handleLastSlideReached} headerPinkTitle={t('rights.header.title.pink')} headerGreenTitle={t('rights.header.title.green')} />
                     </div>
                   </Card.Body>
                 </Card>
               ) : (
                 <Card className="processing-summary-loader-card">
                   <Card.Body className="processing-summary-card-body pt-0 pb-0">
-                    <div className="d-flex flex-column align-items-center">
-                      <Spinner animation="border" role="status">
-                        <span className="visually-hidden">{t('summary.loading')}</span>
-                      </Spinner>
-                      <p className="desktop-processing-spinner-text mt-3">Processing Summary ...</p>
+
+                    <div className='loading-final-screen'>
+                      <h3>
+                      {t('summary.processing.hangTight')}
+                      </h3>
                     </div>
+                    <LinearProgress color="success" /> 
                   </Card.Body>
                 </Card>
               )}
         </Container>
-        <MobileBottomNavigation tutorialPhaseEnabled={true} tutorialPhase={tutorialPhase}/>
       </>
     );
   }

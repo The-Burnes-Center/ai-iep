@@ -52,14 +52,14 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       setTranslations(translationModule.default);
       setTranslationsLoaded(true); // Set to true when translations are loaded
     } catch (error) {
-      console.error(`Failed to load translations for ${lang}:`, error);
+      // console.error(`Failed to load translations for ${lang}:`, error);
       // Fallback to English if translation file is missing
       if (lang !== 'en') {
         try {
           const fallbackModule = await import('../translations/en.json');
           setTranslations(fallbackModule.default);
         } catch (fallbackError) {
-          console.error('Failed to load fallback translations:', fallbackError);
+          // console.error('Failed to load fallback translations:', fallbackError);
         }
       }
       setTranslationsLoaded(true); // Still set to true even if there was an error
