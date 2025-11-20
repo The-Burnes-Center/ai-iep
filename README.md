@@ -331,8 +331,6 @@ We welcome contributions! Please follow these steps:
 
 This work is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/deed.en).
 
-© 2025 The Burnes Center for Social Change
-
 ### License Terms
 
 You are free to:
