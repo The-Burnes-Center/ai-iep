@@ -61,6 +61,7 @@ const SurveyForm: React.FC = () => {
 
   return (
     <div className="survey-form-container">
+      <MobileBottomNavigation />
       <h2 className="survey-form-title">Survey Form:</h2>
 
       <div className="jotform-container">
@@ -75,8 +76,6 @@ const SurveyForm: React.FC = () => {
           scrolling="no"
         />
       </div>
-
-      <MobileBottomNavigation />
     </div>
   );
 };

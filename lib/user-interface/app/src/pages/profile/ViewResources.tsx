@@ -57,6 +57,7 @@ export default function ViewResources() {
 
   return (
   <>
+      <MobileBottomNavigation />
       <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4 breadcrumb-container">
@@ -89,7 +90,6 @@ export default function ViewResources() {
         ))}
       </div>
     </div>
-  <MobileBottomNavigation />
   </>
   );
 }

@@ -127,6 +127,7 @@ export default function UserProfileForm() {
 
   return (
     <>
+    <MobileBottomNavigation />
     <Container className="mt-4">
       <div className="mt-3 text-start">
         <Button variant="outline-secondary" onClick={handleBackClick}>
@@ -199,7 +200,6 @@ export default function UserProfileForm() {
       show={showDeleteModal} 
       onHide={() => setShowDeleteModal(false)} 
     />
-    <MobileBottomNavigation />
     </>
   );
 }

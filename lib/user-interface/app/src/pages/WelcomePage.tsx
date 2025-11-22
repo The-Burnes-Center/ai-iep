@@ -58,6 +58,7 @@ export default function WelcomePage() {
 
   return (
     <>
+    <MobileBottomNavigation />
     <Container fluid className="welcome-container">
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
@@ -126,7 +127,6 @@ export default function WelcomePage() {
         </Col>
       </Row>
     </Container>
-    <MobileBottomNavigation />
     </>
   );
 }

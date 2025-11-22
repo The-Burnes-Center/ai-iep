@@ -156,6 +156,7 @@ export default function UpdateProfileName() {
 
   return (
     <>
+    <MobileBottomNavigation />
     <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-center px-4 breadcrumb-container">
@@ -206,7 +207,6 @@ export default function UpdateProfileName() {
         </Row>
       </Container>
     </div>
-    <MobileBottomNavigation />
     </>
   );
 }

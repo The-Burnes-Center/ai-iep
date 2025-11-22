@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../common/language-context';
-import { IconFileDescription, IconHelp, IconUser, IconInfoCircle } from '@tabler/icons-react';
+import { IconFileDescription, IconHeartHandshake, IconUser, IconInfoCircle } from '@tabler/icons-react';
 import './MobileBottomNavigation.css';
 
 interface MobileBottomNavigationProps {
@@ -24,7 +24,7 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({
       route: '/summary-and-translations'
     },
     {
-      icon: IconHelp,
+      icon: IconHeartHandshake,
       label: t('navigation.support') || 'Support',
       route: '/support-center'
     },

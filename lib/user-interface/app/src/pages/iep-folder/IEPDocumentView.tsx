@@ -33,6 +33,7 @@ const IEPDocumentView: React.FC = () => {
 
   return (
     <>
+    <MobileBottomNavigation />
     <Container className="document-container mt-4 mb-5">
       <div className="mt-3 text-start">
         <Button variant="outline-secondary" onClick={handleBackClick}>
@@ -66,7 +67,6 @@ const IEPDocumentView: React.FC = () => {
         </Col>
       </Row>
     </Container>
-        <MobileBottomNavigation />
     </>
   );
 };

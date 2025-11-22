@@ -9,9 +9,9 @@ const AboutAIEP: React.FC = () => {
       minHeight: '100vh',
       width: '100%'
     }}>
+      <MobileBottomNavigation />
       <h2>This page is under maintenance</h2>
       {/* About AIEP content will go here */}
-      <MobileBottomNavigation />
     </div>
   );
 };
