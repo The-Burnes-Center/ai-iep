@@ -217,6 +217,7 @@ background-color: #F5f3EE;
   line-height: 2;
   text-align: left;
   color: #1E1E1E;
+  padding-left: 1rem;
 }
 
 .no-padding-inherit {
@@ -549,8 +550,35 @@ display: none !important;
   justify-content: center;
 } */
 
+.summary-container {
+  max-width: 100%;
 }
 
+.summary-header {
+  padding: 0 9rem;
+}
+
+.summary-content .card-body {
+  padding: 0 9rem;
+}
+
+.button-container {
+  padding: 0 9rem;
+}
+
+.key-insights-header {
+  padding: 0 9rem;
+}
+
+.summary-accordion .accordion-header .accordion-button {
+  padding: 0.75rem 9rem;
+}
+
+.summary-card-header {
+  width: 70%;
+}
+
+}
 
 /* Mobile responsive drawer */
 @media (max-width: 768px) {

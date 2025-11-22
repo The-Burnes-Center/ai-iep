@@ -509,11 +509,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Summary Section */}
         {hasSummary ? (
           <>
-            <h4 className="summary-header mt-4 px-4">
+            <h4 className="summary-header mt-4">
               {isEnglishTab ? 'IEP Summary' : t('summary.iepSummary')}
             </h4>
             <Card className="summary-content mb-3">
-              <Card.Body className="py-3 px-4">
+              <Card.Body>
                 {(() => {
                   const fullContent = document.summaries[lang];
                   const { truncated, needsTruncation } = truncateContent(fullContent, 705);
@@ -588,7 +588,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Sections Accordion */}
         {hasSections ? (
           <>
-            <h4 className="key-insights-header mt-4 mb-3 px-3">
+            <h4 className="key-insights-header mt-4 mb-3">
               {isEnglishTab ? 'Key Insights' : t('summary.keyInsights')}
             </h4>
             <Accordion className="mb-3 summary-accordion">
