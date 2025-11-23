@@ -3,6 +3,7 @@ import { AuthContext } from '../../common/auth-context';
 import { Auth } from "aws-amplify";
 import { useNavigate } from 'react-router-dom';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import { useLanguage } from '../../common/language-context';
 import { IconArrowRight, IconLogout } from '@tabler/icons-react';
@@ -117,6 +118,7 @@ const AccountCenter: React.FC = () => {
           </Col>
         </Row>
       </Container>
+      <AIEPFooter />
     </>
   );
 };

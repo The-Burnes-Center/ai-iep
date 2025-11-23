@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { IEPDocumentClient } from '../../common/api-client/iep-document-client';
@@ -207,6 +208,7 @@ export default function UpdateProfileName() {
         </Row>
       </Container>
     </div>
+    <AIEPFooter />
     </>
   );
 }

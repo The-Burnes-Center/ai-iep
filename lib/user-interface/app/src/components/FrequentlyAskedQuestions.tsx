@@ -1,5 +1,6 @@
 import React from 'react';
 import MobileTopNavigation from './MobileTopNavigation';
+import AIEPFooter from './AIEPFooter';
 import { Container, Row, Col, Card, Accordion} from 'react-bootstrap';
 import './FrequentlyAskedQuestions.css';
 import { useLanguage } from '../common/language-context'; 
@@ -355,6 +356,7 @@ const FrequentlyAskedQuestions: React.FC = () => {
           </Col>
         </Row>
       </Container>
+      <AIEPFooter />
     </>
   );
 };

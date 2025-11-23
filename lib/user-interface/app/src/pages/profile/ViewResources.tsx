@@ -2,6 +2,7 @@ import { Container, Row, Col, Breadcrumb, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../common/language-context';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import ViewResourcesButton from '../../components/ViewResourcesButton';
 import './ChangeLanguage.css';
 import './ProfileForms.css';
@@ -90,6 +91,7 @@ export default function ViewResources() {
         ))}
       </div>
     </div>
+    <AIEPFooter />
   </>
   );
 }

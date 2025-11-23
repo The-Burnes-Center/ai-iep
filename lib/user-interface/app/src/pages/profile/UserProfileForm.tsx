@@ -9,6 +9,7 @@ import { useNotifications } from '../../components/notif-manager';
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useNavigate } from 'react-router-dom';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import DeleteProfileModal from './DeleteProfileModal';
 import './ProfileForms.css';
 
@@ -200,6 +201,7 @@ export default function UserProfileForm() {
       show={showDeleteModal} 
       onHide={() => setShowDeleteModal(false)} 
     />
+    <AIEPFooter />
     </>
   );
 }

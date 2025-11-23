@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MobileTopNavigation from './MobileTopNavigation';
+import AIEPFooter from './AIEPFooter';
 import './SurveyForm.css';
 
 // Extend Window interface to include jotformEmbedHandler
@@ -76,6 +77,7 @@ const SurveyForm: React.FC = () => {
           scrolling="no"
         />
       </div>
+      <AIEPFooter />
     </div>
   );
 };

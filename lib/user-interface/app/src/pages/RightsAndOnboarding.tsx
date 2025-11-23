@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import { useLanguage } from '../common/language-context';
 import MobileTopNavigation from '../components/MobileTopNavigation';
+import AIEPFooter from '../components/AIEPFooter';
 import './RightsAndOnboarding.css';
 
 const RightsAndOnboarding: React.FC = () => {
@@ -46,6 +47,7 @@ const RightsAndOnboarding: React.FC = () => {
         </Col>
       </Row>
     </Container>
+    <AIEPFooter />
     </>
   );
 };

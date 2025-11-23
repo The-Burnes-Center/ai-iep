@@ -6,6 +6,7 @@ import CurrentIEPDocument from './CurrentIEPDocument';
 import './IEPDocumentView.css';
 import { useLanguage } from '../../common/language-context';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 
 const IEPDocumentView: React.FC = () => {
   const navigate = useNavigate();
@@ -67,6 +68,7 @@ const IEPDocumentView: React.FC = () => {
         </Col>
       </Row>
     </Container>
+    <AIEPFooter />
     </>
   );
 };

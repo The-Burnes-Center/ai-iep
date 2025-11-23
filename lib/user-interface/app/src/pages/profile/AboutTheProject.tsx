@@ -3,6 +3,7 @@ import { Container, Form, Button, Row, Col, Alert, Spinner, Breadcrumb } from 'r
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
@@ -90,6 +91,7 @@ export default function AboutTheProject() {
         </Row>
       </Container>
     </div>
+    <AIEPFooter />
   </>
   );
 }

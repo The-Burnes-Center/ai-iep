@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Row, Col, Card, Spinner, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import MobileTopNavigation from '../components/MobileTopNavigation';
+import AIEPFooter from '../components/AIEPFooter';
 import { useLanguage } from '../common/language-context';
 import './PrivacyPolicy.css';
 
@@ -185,6 +186,7 @@ const PrivacyPolicy: React.FC = () => {
           </Col>
         </Row>
       </Container>
+      <AIEPFooter />
     </div>
   );
 };

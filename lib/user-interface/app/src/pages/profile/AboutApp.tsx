@@ -7,6 +7,7 @@ import { ApiClient } from '../../common/api-client/api-client';
 import { useLanguage } from '../../common/language-context';
 import GoToWebsiteButton from '../../components/GoToWebsiteButton';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import './ProfileForms.css';
 import './UpdateProfileName.css';
 import './ProfileForms.css';
@@ -142,6 +143,7 @@ export default function AboutApp() {
       </div>
       
       </div>
+      <AIEPFooter />
     </>
   );
 };
