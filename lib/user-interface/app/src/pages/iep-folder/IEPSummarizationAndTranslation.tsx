@@ -10,6 +10,7 @@ import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileBottomNavigation from '../../components/MobileBottomNavigation';
 import ParentRightsCarousel from '../../components/ParentRightsCarousel';
 import ProcessingModal from '../../components/ProcessingModal';
+import AIEPFooter from '../../components/AIEPFooter';
 import { ApiClient } from '../../common/api-client/api-client';
 import { AppContext } from '../../common/app-context';
 import { useNotifications } from '../../components/notif-manager';
@@ -936,6 +937,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           </Offcanvas.Body>
         </Offcanvas>
       </Container>
+      <AIEPFooter />
     </>
   );
 };
