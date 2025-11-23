@@ -301,6 +301,12 @@
     "navigation.rights": "权利",
     "navigation.processing": "您的文档正在处理中...",
 
+    "footer.tagline": "与社区 <br /> 共同设计 <br /> 人工智能",
+    "footer.home": "首页",
+    "footer.uploadIEP": "上传 IEP",
+    "footer.supportCenter": "支持中心",
+    "footer.aboutUs": "关于我们",
+
     "accountCenter.title": "账号中心",
     "accountCenter.updateProfile": "更新您的个人资料",
     "accountCenter.changeLanguage": "更改您的语言",

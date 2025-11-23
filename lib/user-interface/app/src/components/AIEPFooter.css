@@ -42,6 +42,15 @@
   padding: 4rem 0rem;
 }
 
+.footer-project-partners-logo a {
+  display: inline-block;
+  transition: opacity 0.3s ease;
+}
+
+.footer-project-partners-logo a:hover {
+  opacity: 0.7;
+}
+
 .footer-logo {
   display: flex;
   flex-direction: column;
@@ -83,6 +92,11 @@
   color: white;
   font-size: 16px;
   cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+
+.footer-links li:hover {
+  opacity: 0.7;
 }
 
 /* Mobile styles - min-width: 360px, min-height: 954.75px */

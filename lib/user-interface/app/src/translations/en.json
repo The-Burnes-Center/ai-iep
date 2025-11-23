@@ -315,6 +315,12 @@
     "navigation.rights": "Rights",
     "navigation.processing": "Your document is being processed...",
 
+    "footer.tagline": "Designing AI <br /> with and for <br /> communities",
+    "footer.home": "Home",
+    "footer.uploadIEP": "Upload An IEP",
+    "footer.supportCenter": "Support Center",
+    "footer.aboutUs": "About Us",
+
     "accountCenter.title": "Account Center",
     "accountCenter.updateProfile": "Update Your Profile",
     "accountCenter.changeLanguage": "Change your Language",
