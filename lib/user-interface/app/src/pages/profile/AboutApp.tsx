@@ -6,7 +6,7 @@ import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { useLanguage } from '../../common/language-context';
 import GoToWebsiteButton from '../../components/GoToWebsiteButton';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
 import './ProfileForms.css';
 import './UpdateProfileName.css';
 import './ProfileForms.css';
@@ -49,7 +49,7 @@ export default function AboutApp() {
 
   return (
     <>
-      <MobileBottomNavigation />
+      <MobileTopNavigation />
       <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4 breadcrumb-container">

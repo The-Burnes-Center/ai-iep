@@ -8,7 +8,7 @@ import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useNavigate } from 'react-router-dom';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
 import DeleteProfileModal from './DeleteProfileModal';
 import './ProfileForms.css';
 
@@ -127,7 +127,7 @@ export default function UserProfileForm() {
 
   return (
     <>
-    <MobileBottomNavigation />
+    <MobileTopNavigation />
     <Container className="mt-4">
       <div className="mt-3 text-start">
         <Button variant="outline-secondary" onClick={handleBackClick}>

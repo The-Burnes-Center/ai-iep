@@ -2,7 +2,7 @@ import React, {useContext} from 'react';
 import { AuthContext } from '../../common/auth-context';
 import { Auth } from "aws-amplify";
 import { useNavigate } from 'react-router-dom';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import { useLanguage } from '../../common/language-context';
 import { IconArrowRight, IconLogout } from '@tabler/icons-react';
@@ -81,7 +81,7 @@ const AccountCenter: React.FC = () => {
 
   return (
     <>
-      <MobileBottomNavigation />
+      <MobileTopNavigation />
       <Container className="account-center-container mt-3 mb-3">
         <Row className="mt-2">
           <Col>

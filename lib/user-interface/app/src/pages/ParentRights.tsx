@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import MobileBottomNavigation from '../components/MobileBottomNavigation';
+import MobileTopNavigation from '../components/MobileTopNavigation';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import '../components/FrequentlyAskedQuestions.css';
 import { useLanguage } from '../common/language-context'; 
@@ -61,7 +61,7 @@ const ParentRights: React.FC = () => {
 
   return (
     <>
-      <MobileBottomNavigation />
+      <MobileTopNavigation />
       <Container className="faqs-container mt-3 mb-3">
         <Row className="mt-2">
           <Col>

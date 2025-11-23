@@ -1,5 +1,5 @@
-/* Mobile Bottom Navigation Styles */
-.mobile-bottom-navigation {
+/* Mobile Top Navigation Styles */
+.mobile-top-navigation {
   position: sticky;
   top: 0;
   left: 0;
@@ -95,7 +95,7 @@
 
 /* Show only on mobile devices */
 @media (max-width: 768px) {
-  .mobile-bottom-navigation {
+  .mobile-top-navigation {
     display: block;
   }
   
@@ -133,7 +133,7 @@
 
 /* Tablet portrait - hide navigation */
 @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
-  .mobile-bottom-navigation {
+  .mobile-top-navigation {
     display: block;
   }
 }

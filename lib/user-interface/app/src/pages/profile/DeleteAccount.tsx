@@ -10,7 +10,7 @@ import { useLanguage } from '../../common/language-context';
 import './UpdateProfileName.css';
 import './ProfileForms.css';
 import DeleteButton from '../../components/DeleteButton';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
 
 export default function DeleteAccount() {
   const [processing, setProcessing] = useState(false);
@@ -52,7 +52,7 @@ export default function DeleteAccount() {
 
   return (
     <>
-    <MobileBottomNavigation />
+    <MobileTopNavigation />
     <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4 breadcrumb-container">

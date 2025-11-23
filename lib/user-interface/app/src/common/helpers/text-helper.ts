@@ -11,4 +11,38 @@ export abstract class TextHelper {
       ? `(${selectedItems.length}/${items.length})`
       : `(${items.length})`;
   }
+
+  /**
+   * Formats a Unix timestamp (seconds since epoch) to a human-readable date string
+   * @param timestamp - Unix timestamp in seconds
+   * @param languageCode - Language code ('en', 'es', 'vi', 'zh') to determine locale
+   * @returns Formatted date string (e.g., "May 23, 2025")
+   */
+  static formatUnixTimestamp(timestamp: number | undefined, languageCode: string = 'en'): string {
+    if (!timestamp) {
+      return '';
+    }
+    
+    // Map language codes to proper locale strings
+    const localeMap: Record<string, string> = {
+      'en': 'en-US',
+      'es': 'es-ES',
+      'vi': 'vi-VN',
+      'zh': 'zh-CN'
+    };
+    
+    const locale = localeMap[languageCode] || 'en-US';
+    
+    // Convert Unix timestamp (seconds) to milliseconds for JavaScript Date
+    const date = new Date(timestamp * 1000);
+    
+    // Format the date based on locale
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    
+    return date.toLocaleDateString(locale, options);
+  }
 }

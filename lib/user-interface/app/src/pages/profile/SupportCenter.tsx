@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import { useLanguage } from '../../common/language-context';
 import { IconArrowRight } from '@tabler/icons-react';
@@ -67,7 +67,7 @@ const SupportCenter: React.FC = () => {
 
   return (
     <>
-      <MobileBottomNavigation />
+      <MobileTopNavigation />
       <Container className="account-center-container mt-3 mb-3">
         <Row className="mt-2">
           <Col>

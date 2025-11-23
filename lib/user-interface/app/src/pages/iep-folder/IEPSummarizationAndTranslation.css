@@ -210,6 +210,14 @@ background-color: #F5f3EE;
   padding-bottom: 0rem; /*Only different from profile-title*/
 }
 
+.summary-updated-at {
+  padding-left: 1rem;
+}
+
+.summary-updated-at span {
+  font-style: italic;
+}
+
 .key-insights-header {
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
   font-weight: 500;
@@ -555,6 +563,10 @@ display: none !important;
 }
 
 .summary-header {
+  padding: 0 9rem;
+}
+
+.summary-updated-at {
   padding: 0 9rem;
 }
 

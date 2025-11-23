@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import MobileBottomNavigation from './MobileBottomNavigation';
+import MobileTopNavigation from './MobileTopNavigation';
 import './SurveyForm.css';
 
 // Extend Window interface to include jotformEmbedHandler
@@ -61,7 +61,7 @@ const SurveyForm: React.FC = () => {
 
   return (
     <div className="survey-form-container">
-      <MobileBottomNavigation />
+      <MobileTopNavigation />
       <h2 className="survey-form-title">Survey Form:</h2>
 
       <div className="jotform-container">

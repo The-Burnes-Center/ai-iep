@@ -7,7 +7,7 @@ import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection, Language, UserProfile } from '../../common/types';
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
 import ParentRightsCarousel from '../../components/ParentRightsCarousel';
 import ProcessingModal from '../../components/ProcessingModal';
 import AIEPFooter from '../../components/AIEPFooter';
@@ -15,6 +15,7 @@ import { ApiClient } from '../../common/api-client/api-client';
 import { AppContext } from '../../common/app-context';
 import { useNotifications } from '../../components/notif-manager';
 import LinearProgress from '@mui/material/LinearProgress';
+import { TextHelper } from '../../common/helpers/text-helper';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, setLanguage, translationsLoaded } = useLanguage();
@@ -510,6 +511,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Summary Section */}
         {hasSummary ? (
           <>
+          <div className="summary-updated-at">  
+            {document.updatedAt && (
+              <span>Last update: {TextHelper.formatUnixTimestamp(document.updatedAt, lang)}</span>
+            )}
+          </div>
             <h4 className="summary-header mt-4">
               {isEnglishTab ? 'IEP Summary' : t('summary.iepSummary')}
             </h4>
@@ -698,7 +704,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   if (initialLoading) {
     return (
       <>
-        <MobileBottomNavigation />
+        <MobileTopNavigation />
         <Container className="summary-container mt-3 mb-3">
           <Row className="mt-2">
             <Col>
@@ -719,7 +725,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   if (!document) {
     return (
       <>
-        <MobileBottomNavigation />
+        <MobileTopNavigation />
         <Container className="summary-container mt-3 mb-3">
           <Row className="mt-2">
             <Col>
@@ -767,7 +773,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Processed Container - when document is processed, failed, or in other states
   return (
     <>
-      <MobileBottomNavigation />
+      <MobileTopNavigation />
       <Container className="summary-container mt-3 mb-3">
         <div className="mt-2 text-start button-container d-flex justify-content-between align-items-center">
           <div className="d-flex gap-2 align-items-center">

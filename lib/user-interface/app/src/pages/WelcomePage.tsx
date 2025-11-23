@@ -4,7 +4,7 @@ import { Auth } from 'aws-amplify';
 import { AuthContext } from '../common/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../common/language-context'; 
-import MobileBottomNavigation from '../components/MobileBottomNavigation';
+import MobileTopNavigation from '../components/MobileTopNavigation';
 import './WelcomePage.css';
 
 export default function WelcomePage() {
@@ -58,7 +58,7 @@ export default function WelcomePage() {
 
   return (
     <>
-    <MobileBottomNavigation />
+    <MobileTopNavigation />
     <Container fluid className="welcome-container">
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>

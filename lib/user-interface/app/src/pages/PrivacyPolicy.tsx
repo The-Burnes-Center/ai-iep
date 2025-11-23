@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Row, Col, Card, Spinner, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import MobileBottomNavigation from '../components/MobileBottomNavigation';
+import MobileTopNavigation from '../components/MobileTopNavigation';
 import { useLanguage } from '../common/language-context';
 import './PrivacyPolicy.css';
 
@@ -28,7 +28,7 @@ const PrivacyPolicy: React.FC = () => {
 
   return (
     <div className="privacy-policy-page">
-      <MobileBottomNavigation />
+      <MobileTopNavigation />
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
