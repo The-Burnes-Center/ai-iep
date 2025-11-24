@@ -493,6 +493,7 @@ def get_child_documents(event: Dict) -> Dict:
                     # Construct the base document
                     latest_doc = {
                         'iepId': doc['iepId'],
+                        'documentId': doc['iepId'],  # Also include documentId for frontend compatibility
                         'childId': doc['childId'],
                         'documentUrl': doc.get('documentUrl', f"s3://{os.environ.get('BUCKET', '')}/{doc['iepId']}"),
                         'status': doc.get('status', 'PROCESSING'),
@@ -502,54 +503,100 @@ def get_child_documents(event: Dict) -> Dict:
                         'updatedAt': doc.get('updatedAt', '')
                     }
                     
-                    # Handle summaries with proper structure
-                    if 'summaries' in doc:
-                        latest_doc['summaries'] = clean_dynamodb_json(doc['summaries'])
-                    else:
-                        latest_doc['summaries'] = {}
-                    
-                    # Handle sections with proper structure (array format)
-                    if 'sections' in doc:
-                        latest_doc['sections'] = clean_dynamodb_json(doc['sections'])
-                    else:
-                        latest_doc['sections'] = {}
-                    
-                    # Handle document index
-                    if 'document_index' in doc:
-                        latest_doc['document_index'] = clean_dynamodb_json(doc['document_index'])
-                    else:
-                        latest_doc['document_index'] = {}
-                    
-                    # Handle abbreviations
-                    if 'abbreviations' in doc:
-                        latest_doc['abbreviations'] = clean_dynamodb_json(doc['abbreviations'])
-                    else:
-                        latest_doc['abbreviations'] = {}
-
-                    # Handle meetingNotes (language map with string values)
-                    if 'meetingNotes' in doc:
+                    # Check if content is in S3 (new format) or DynamoDB (old format)
+                    if 'contentS3Reference' in doc:
+                        # New format: fetch content from S3
+                        s3_ref = doc['contentS3Reference']
                         try:
-                            meeting_notes_data = clean_dynamodb_json(doc['meetingNotes'])
+                            s3 = boto3.client('s3')
+                            response = s3.get_object(Bucket=s3_ref['bucket'], Key=s3_ref['s3Key'])
+                            content_json = response['Body'].read().decode('utf-8')
+                            content = json.loads(content_json)
                             
-                            # Check if it's the language map format
-                            if isinstance(meeting_notes_data, dict):
-                                # Language map format (strings per language)
-                                latest_doc['meetingNotes'] = meeting_notes_data
-                            elif isinstance(meeting_notes_data, str):
-                                # Single string (backward compatibility)
-                                latest_doc['meetingNotes'] = {'en': meeting_notes_data}
-                            else:
-                                # Fallback
-                                latest_doc['meetingNotes'] = {'en': ''}
-                        except Exception:
-                            # Fallback for any parsing issues
-                            meeting_notes_raw = doc.get('meetingNotes', '')
-                            if isinstance(meeting_notes_raw, str):
-                                latest_doc['meetingNotes'] = {'en': meeting_notes_raw}
-                            else:
-                                latest_doc['meetingNotes'] = {'en': ''}
+                            # Merge content into latest_doc
+                            latest_doc.update({
+                                'summaries': content.get('summaries', {}),
+                                'sections': content.get('sections', {}),
+                                'document_index': content.get('document_index', {}),
+                                'abbreviations': content.get('abbreviations', {}),
+                                'meetingNotes': content.get('meetingNotes', {})
+                            })
+                            print(f"Successfully fetched content from S3 for {doc['iepId']}")
+                        except Exception as e:
+                            print(f"Error fetching content from S3 for {doc['iepId']}: {str(e)}")
+                            # Fallback to empty content
+                            latest_doc.update({
+                                'summaries': {},
+                                'sections': {},
+                                'document_index': {},
+                                'abbreviations': {},
+                                'meetingNotes': {}
+                            })
                     else:
-                        latest_doc['meetingNotes'] = {'en': ''}
+                        # Old format: migrate to S3 (lazy migration)
+                        print(f"Migrating {doc['iepId']}/{doc['childId']} to S3 (lazy migration)")
+                        try:
+                            # Call DDB service to migrate
+                            lambda_client = boto3.client('lambda')
+                            ddb_service_name = os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
+                            
+                            migrate_payload = {
+                                'operation': 'get_document_with_content',
+                                'params': {
+                                    'iep_id': doc['iepId'],
+                                    'child_id': doc['childId'],
+                                    'user_id': user_id
+                                }
+                            }
+                            
+                            migrate_response = lambda_client.invoke(
+                                FunctionName=ddb_service_name,
+                                InvocationType='RequestResponse',
+                                Payload=json.dumps(migrate_payload)
+                            )
+                            
+                            migrate_result = json.loads(migrate_response['Payload'].read())
+                            
+                            if migrate_result.get('statusCode') == 200:
+                                migrated_doc = json.loads(migrate_result['body'])
+                                # Update latest_doc with migrated content
+                                latest_doc.update({
+                                    'summaries': migrated_doc.get('summaries', {}),
+                                    'sections': migrated_doc.get('sections', {}),
+                                    'document_index': migrated_doc.get('document_index', {}),
+                                    'abbreviations': migrated_doc.get('abbreviations', {}),
+                                    'meetingNotes': migrated_doc.get('meetingNotes', {})
+                                })
+                                print(f"Successfully migrated {doc['iepId']} to S3")
+                            else:
+                                # Migration failed, use old format
+                                print(f"Migration failed for {doc['iepId']}, using old format")
+                                latest_doc.update({
+                                    'summaries': clean_dynamodb_json(doc.get('summaries', {})),
+                                    'sections': clean_dynamodb_json(doc.get('sections', {})),
+                                    'document_index': clean_dynamodb_json(doc.get('document_index', {})),
+                                    'abbreviations': clean_dynamodb_json(doc.get('abbreviations', {})),
+                                    'meetingNotes': clean_dynamodb_json(doc.get('meetingNotes', {}))
+                                })
+                        except Exception as e:
+                            print(f"Error migrating document {doc['iepId']}: {str(e)}")
+                            # Fallback to old format
+                            latest_doc.update({
+                                'summaries': clean_dynamodb_json(doc.get('summaries', {})),
+                                'sections': clean_dynamodb_json(doc.get('sections', {})),
+                                'document_index': clean_dynamodb_json(doc.get('document_index', {})),
+                                'abbreviations': clean_dynamodb_json(doc.get('abbreviations', {})),
+                                'meetingNotes': clean_dynamodb_json(doc.get('meetingNotes', {}))
+                            })
+                        
+                        # Ensure meetingNotes is in correct format
+                        if 'meetingNotes' in latest_doc:
+                            if isinstance(latest_doc['meetingNotes'], str):
+                                latest_doc['meetingNotes'] = {'en': latest_doc['meetingNotes']}
+                            elif not isinstance(latest_doc['meetingNotes'], dict):
+                                latest_doc['meetingNotes'] = {'en': ''}
+                        else:
+                            latest_doc['meetingNotes'] = {'en': ''}
         
         # If no document found
         if not latest_doc:
@@ -628,6 +675,24 @@ def delete_child_documents(event: Dict) -> Dict:
                 # Delete each document record that belongs to this user
                 for doc in response['Items']:
                     if 'userId' not in doc or doc['userId'] == user_id:
+                        # Delete S3 content if it exists (new format)
+                        if 'contentS3Reference' in doc:
+                            s3_ref = doc['contentS3Reference']
+                            try:
+                                s3.delete_object(Bucket=s3_ref['bucket'], Key=s3_ref['s3Key'])
+                                print(f"Deleted S3 content: {s3_ref['s3Key']}")
+                            except Exception as e:
+                                print(f"Error deleting S3 content: {str(e)}")
+                        
+                        # Also delete the S3 key pattern for old format (if exists)
+                        s3_key_pattern = f"iep-data/{doc['iepId']}/{doc['childId']}/content.json"
+                        try:
+                            s3.delete_object(Bucket=bucket_name, Key=s3_key_pattern)
+                            print(f"Deleted potential S3 content: {s3_key_pattern}")
+                        except Exception as e:
+                            # Ignore if doesn't exist
+                            pass
+                        
                         # Check for document_index field before deletion
                         if 'document_index' in doc:
                             print(f"Deleting document with document_index field: {doc['iepId']}")

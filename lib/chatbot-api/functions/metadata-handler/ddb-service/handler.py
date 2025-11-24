@@ -8,6 +8,12 @@ import boto3
 import traceback
 from datetime import datetime
 from decimal import Decimal
+from s3_content_handler import (
+    save_content_to_s3, 
+    get_content_from_s3, 
+    delete_content_from_s3,
+    migrate_dynamodb_to_s3
+)
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
@@ -53,6 +59,12 @@ def lambda_handler(event, context):
             return save_api_fields(params)
         elif operation == 'append_to_list_field':
             return append_to_list_field(params)
+        elif operation == 'get_document_with_content':
+            return get_document_with_content(params)
+        elif operation == 'save_content_to_s3':
+            return save_content_to_s3_operation(params)
+        elif operation == 'delete_content_from_s3':
+            return delete_content_from_s3_operation(params)
         else:
             raise ValueError(f"Unknown operation: {operation}")
             
@@ -306,50 +318,63 @@ def get_ocr_data(params):
     }
 
 def save_final_results(params):
-    """Save final results to DynamoDB in API-compatible format"""
+    """Save final results to S3 (new format) instead of DynamoDB"""
     iep_id = params['iep_id']
     child_id = params['child_id']
     user_id = params['user_id']
     final_result = params['final_result']
     
-    # Extract individual components from final result
-    summaries = final_result.get('summaries', {})
-    sections = final_result.get('sections', {})
-    document_index = final_result.get('document_index', {})
-    abbreviations = final_result.get('abbreviations', {})
-    meeting_notes = final_result.get('meetingNotes', {})  # Changed to map with language keys
-    
-    # Build update expression for all fields
-    update_expression = "SET summaries = :summaries, sections = :sections, document_index = :document_index, abbreviations = :abbreviations, meetingNotes = :meeting_notes, updated_at = :updated_at"
-    
-    expression_values = {
-        ':summaries': summaries,
-        ':sections': sections,
-        ':document_index': document_index,
-        ':abbreviations': abbreviations,
-        ':meeting_notes': meeting_notes,
-        ':updated_at': datetime.utcnow().isoformat()
+    # Extract content components (all languages, all fields)
+    content = {
+        'summaries': final_result.get('summaries', {}),
+        'sections': final_result.get('sections', {}),
+        'document_index': final_result.get('document_index', {}),
+        'abbreviations': final_result.get('abbreviations', {}),
+        'meetingNotes': final_result.get('meetingNotes', {})
     }
     
-    table.update_item(
-        Key={
-            'iepId': iep_id,
-            'childId': child_id
-        },
-        UpdateExpression=update_expression,
-        ExpressionAttributeValues=expression_values
-    )
-    
-    return {
-        'statusCode': 200,
-        'body': json.dumps({
-            'message': 'Final results saved successfully',
-            'iep_id': iep_id,
-            'summaries_languages': list(summaries.keys()),
-            'sections_languages': list(sections.keys()),
-            'meeting_notes_languages': list(meeting_notes.keys())
-        }, default=str)
-    }
+    try:
+        # Save content to S3
+        s3_ref = save_content_to_s3(iep_id, child_id, content)
+        
+        # Update DynamoDB with S3 reference and remove old fields
+        table.update_item(
+            Key={
+                'iepId': iep_id,
+                'childId': child_id
+            },
+            UpdateExpression="""
+                SET contentS3Reference = :s3_ref,
+                    updated_at = :updated_at
+                REMOVE summaries, sections, document_index, abbreviations, meetingNotes
+            """,
+            ExpressionAttributeValues={
+                ':s3_ref': s3_ref,
+                ':updated_at': datetime.utcnow().isoformat()
+            }
+        )
+        
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': 'Final results saved successfully to S3',
+                'iep_id': iep_id,
+                's3_reference': s3_ref,
+                'summaries_languages': list(content['summaries'].keys()),
+                'sections_languages': list(content['sections'].keys()),
+                'meeting_notes_languages': list(content['meetingNotes'].keys())
+            }, default=str)
+        }
+    except Exception as e:
+        print(f"Error saving final results to S3: {str(e)}")
+        traceback.print_exc()
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'error': f'Failed to save final results to S3: {str(e)}',
+                'iep_id': iep_id
+            }, default=str)
+        }
 
 def get_analysis_data(params):
     """Get analysis data from DynamoDB (english_result, meeting_notes_result, etc.)"""
@@ -596,4 +621,176 @@ def append_to_list_field(params):
                 'iep_id': iep_id,
                 'field_path': field_path
             }, default=str)
+        }
+
+def get_document_with_content(params):
+    """Get document with content (handles lazy migration from DynamoDB to S3)"""
+    iep_id = params['iep_id']
+    child_id = params['child_id']
+    user_id = params['user_id']
+    
+    response = table.get_item(
+        Key={
+            'iepId': iep_id,
+            'childId': child_id
+        }
+    )
+    
+    if 'Item' not in response:
+        return {
+            'statusCode': 404,
+            'body': json.dumps({'error': 'Document not found'})
+        }
+    
+    item = response['Item']
+    
+    # Check if content is in S3 (new format) or DynamoDB (old format)
+    if 'contentS3Reference' in item:
+        # New format: fetch from S3
+        s3_ref = item['contentS3Reference']
+        content = get_content_from_s3(s3_ref['s3Key'], s3_ref['bucket'])
+        
+        if content:
+            # Merge metadata with content
+            result = {k: v for k, v in item.items() if k != 'contentS3Reference'}
+            result.update(content)
+            return {
+                'statusCode': 200,
+                'body': json.dumps(result, default=str)
+            }
+        else:
+            # S3 fetch failed, return metadata only
+            print(f"Warning: Failed to fetch content from S3 for {iep_id}/{child_id}")
+            return {
+                'statusCode': 200,
+                'body': json.dumps(item, default=str)
+            }
+    else:
+        # Old format: migrate to S3
+        print(f"Migrating {iep_id}/{child_id} from DynamoDB to S3 (lazy migration)")
+        s3_ref = migrate_dynamodb_to_s3(iep_id, child_id, item, table)
+        
+        if s3_ref:
+            # Re-fetch item to get updated version
+            response = table.get_item(
+                Key={
+                    'iepId': iep_id,
+                    'childId': child_id
+                }
+            )
+            item = response['Item']
+            
+            if 'contentS3Reference' in item:
+                s3_ref = item['contentS3Reference']
+                content = get_content_from_s3(s3_ref['s3Key'], s3_ref['bucket'])
+                
+                if content:
+                    result = {k: v for k, v in item.items() if k != 'contentS3Reference'}
+                    result.update(content)
+                    return {
+                        'statusCode': 200,
+                        'body': json.dumps(result, default=str)
+                    }
+        
+        # Migration failed or no content, return as-is
+        print(f"Warning: Migration failed or no content for {iep_id}/{child_id}")
+        return {
+            'statusCode': 200,
+            'body': json.dumps(item, default=str)
+        }
+
+def save_content_to_s3_operation(params):
+    """Save content to S3 and update DynamoDB reference"""
+    iep_id = params['iep_id']
+    child_id = params['child_id']
+    content = params['content']  # Full content dict with all languages
+    
+    try:
+        s3_ref = save_content_to_s3(iep_id, child_id, content)
+        
+        # Update DynamoDB - remove old fields and add S3 reference
+        table.update_item(
+            Key={
+                'iepId': iep_id,
+                'childId': child_id
+            },
+            UpdateExpression="""
+                SET contentS3Reference = :s3_ref,
+                    updated_at = :updated_at
+                REMOVE summaries, sections, document_index, abbreviations, meetingNotes
+            """,
+            ExpressionAttributeValues={
+                ':s3_ref': s3_ref,
+                ':updated_at': datetime.utcnow().isoformat()
+            }
+        )
+        
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': 'Content saved to S3 successfully',
+                's3_reference': s3_ref,
+                'iep_id': iep_id
+            }, default=str)
+        }
+    except Exception as e:
+        print(f"Error saving content to S3: {str(e)}")
+        traceback.print_exc()
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'error': f'Failed to save content to S3: {str(e)}',
+                'iep_id': iep_id
+            }, default=str)
+        }
+
+def delete_content_from_s3_operation(params):
+    """Delete content from S3"""
+    iep_id = params['iep_id']
+    child_id = params['child_id']
+    
+    # Get S3 reference from DynamoDB
+    response = table.get_item(
+        Key={
+            'iepId': iep_id,
+            'childId': child_id
+        }
+    )
+    
+    if 'Item' not in response:
+        return {
+            'statusCode': 404,
+            'body': json.dumps({'error': 'Document not found'})
+        }
+    
+    item = response['Item']
+    
+    if 'contentS3Reference' in item:
+        s3_ref = item['contentS3Reference']
+        success = delete_content_from_s3(s3_ref['s3Key'], s3_ref['bucket'])
+        
+        if success:
+            return {
+                'statusCode': 200,
+                'body': json.dumps({
+                    'message': 'Content deleted from S3 successfully',
+                    'iep_id': iep_id
+                })
+            }
+        else:
+            return {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'error': 'Failed to delete content from S3',
+                    'iep_id': iep_id
+                })
+            }
+    else:
+        # No S3 content to delete
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': 'No S3 content to delete',
+                'iep_id': iep_id
+            })
         }

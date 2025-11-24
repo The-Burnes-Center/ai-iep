@@ -505,6 +505,7 @@ export class LambdaFunctionStack extends cdk.Stack {
         "IEP_DOCUMENTS_TABLE": props.iepDocumentsTable.tableName,
         "BUCKET": props.knowledgeBucket.bucketName,
         "USER_POOL_ID": props.userPool.userPoolId,
+        "DDB_SERVICE_FUNCTION_NAME": this.ddbServiceFunction.functionName,
         "AIEP_KMS_KEY_ALIAS": ((): string => {
           const env = getEnvironment();
           return env === 'staging' ? 'alias/aiep/app' : 'alias/aiep/app-prod';
@@ -555,6 +556,15 @@ export class LambdaFunctionStack extends cdk.Stack {
         'cognito-idp:AdminDeleteUser'
       ],
       resources: [props.userPool.userPoolArn]
+    }));
+    
+    // Add Lambda invoke permissions to call DDB service
+    userProfileHandlerFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'lambda:InvokeFunction'
+      ],
+      resources: [this.ddbServiceFunction.functionArn]
     }));
 
     this.userProfileFunction = userProfileHandlerFunction;
