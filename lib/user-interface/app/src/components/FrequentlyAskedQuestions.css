@@ -161,3 +161,10 @@
 .faq-content li {
   margin-bottom: 0.5rem;
 }
+
+
+@media (min-width: 992px) { 
+  .faqs-container {
+    height: 100%;
+  }
+}
