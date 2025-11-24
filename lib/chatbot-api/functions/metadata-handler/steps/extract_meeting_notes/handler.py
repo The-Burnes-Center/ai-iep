@@ -71,7 +71,7 @@ def _extract_meeting_notes(ocr_text: str) -> Dict[str, Any]:
             {'role': 'user', 'content': f"{BASE_INSTRUCTIONS}\n\nOCR_TEXT:\n{ocr_text}"}
         ]
         resp = client.chat.completions.create(
-            model='gpt-4o',
+            model='gpt-5.1',
             messages=messages,
             temperature=0.0
         )

@@ -41,14 +41,14 @@ CATEGORIES = ["IEP"]
 
 def get_english_only_prompt() -> str:
     """
-    Generate the instruction prompt for IEP analysis using GPT-4.1.
+    Generate the instruction prompt for IEP analysis using GPT-5.1.
     This will produce a SingleLanguageIEP output structure.
     """
     required_sections = list(IEP_SECTIONS.keys())
     sections_list = "', '".join(required_sections)
     
     return f'''
-You are an expert IEP document analyzer using GPT-4.1. 
+You are an expert IEP document analyzer using GPT-5.1. 
 Your goal is to produce a complete analysis of an IEP document with the following structure for the parent of the student:
 
 {{
