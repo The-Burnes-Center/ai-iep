@@ -86,7 +86,7 @@ export default function ConsentForm() {
   );
 
   const handleBackClick = () => {
-    navigate('/onboarding-user');
+    navigate('/');
   };
 
   if (loading) {

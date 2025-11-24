@@ -194,7 +194,7 @@ export default function PreferredLanguage() {
       if (isUpdatingFromProfile) {
         navigate('/profile');
       } else {
-        navigate('/onboarding-user');
+        navigate('/consent-form');
       }
     } catch (err) {
       addNotification('error', 'Failed to update language preference');
