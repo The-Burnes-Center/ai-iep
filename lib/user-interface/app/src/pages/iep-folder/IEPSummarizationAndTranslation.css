@@ -587,7 +587,13 @@ display: none !important;
 }
 
 .summary-card-header {
+  margin-top: 1.5rem;
   width: 70%;
+}
+
+
+.summary-accordion .accordion-body {
+  padding: 1.5rem 9rem;
 }
 
 }
