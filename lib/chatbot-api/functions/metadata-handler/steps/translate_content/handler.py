@@ -177,56 +177,125 @@ def lambda_handler(event, context):
         print(f"{content_type} translation completed for {len(translations)} languages")
         
         # Save translations directly to API-compatible fields 
-        field_updates = {}
+        # Save each field separately to avoid DynamoDB item size limit (400KB)
+        saved_fields = []
+        failed_fields = []
         
         if content_type == 'parsing_result':
             # Save parsing translations to summaries, sections, document_index, abbreviations
+            # Save each field separately to avoid size limit issues
             for lang, translated_content in translations.items():
-                field_updates[f'summaries.{lang}'] = translated_content.get('summary', '')
-                field_updates[f'sections.{lang}'] = translated_content.get('sections', [])
-                field_updates[f'document_index.{lang}'] = translated_content.get('document_index', '')
-                field_updates[f'abbreviations.{lang}'] = translated_content.get('abbreviations', [])
+                field_mappings = [
+                    (f'summaries.{lang}', translated_content.get('summary', '')),
+                    (f'sections.{lang}', translated_content.get('sections', [])),
+                    (f'document_index.{lang}', translated_content.get('document_index', '')),
+                    (f'abbreviations.{lang}', translated_content.get('abbreviations', []))
+                ]
+                
+                for field_path, field_value in field_mappings:
+                    try:
+                        save_payload = {
+                            'operation': 'save_api_fields',
+                            'params': {
+                                'iep_id': iep_id,
+                                'user_id': user_id,
+                                'child_id': child_id,
+                                'field_updates': {field_path: field_value}
+                            }
+                        }
+                        
+                        save_response = lambda_client.invoke(
+                            FunctionName=ddb_service_name,
+                            InvocationType='RequestResponse',
+                            Payload=json.dumps(save_payload)
+                        )
+                        
+                        save_payload_response = save_response['Payload'].read()
+                        
+                        if not save_payload_response:
+                            print(f"Warning: Empty response when saving {field_path}")
+                            failed_fields.append(field_path)
+                            continue
+                        
+                        try:
+                            save_result = json.loads(save_payload_response)
+                        except json.JSONDecodeError as e:
+                            print(f"Warning: Failed to parse response for {field_path}: {e}")
+                            failed_fields.append(field_path)
+                            continue
+                        
+                        if not save_result or save_result.get('statusCode') != 200:
+                            print(f"Warning: Failed to save {field_path}: {save_result}")
+                            failed_fields.append(field_path)
+                        else:
+                            saved_fields.append(field_path)
+                            print(f"Successfully saved {field_path}")
+                    except Exception as e:
+                        print(f"Error saving {field_path}: {str(e)}")
+                        failed_fields.append(field_path)
+                        
         elif content_type == 'meeting_notes':
             # Save meeting notes translations to meetingNotes fields
             for lang, translated_content in translations.items():
                 # Handle meeting notes structure (should be simple string)
                 if isinstance(translated_content, dict) and 'meeting_notes' in translated_content:
-                    field_updates[f'meetingNotes.{lang}'] = translated_content['meeting_notes']
+                    field_value = translated_content['meeting_notes']
                 elif isinstance(translated_content, str):
-                    field_updates[f'meetingNotes.{lang}'] = translated_content
+                    field_value = translated_content
                 else:
-                    field_updates[f'meetingNotes.{lang}'] = ''
+                    field_value = ''
+                
+                field_path = f'meetingNotes.{lang}'
+                
+                try:
+                    save_payload = {
+                        'operation': 'save_api_fields',
+                        'params': {
+                            'iep_id': iep_id,
+                            'user_id': user_id,
+                            'child_id': child_id,
+                            'field_updates': {field_path: field_value}
+                        }
+                    }
+                    
+                    save_response = lambda_client.invoke(
+                        FunctionName=ddb_service_name,
+                        InvocationType='RequestResponse',
+                        Payload=json.dumps(save_payload)
+                    )
+                    
+                    save_payload_response = save_response['Payload'].read()
+                    
+                    if not save_payload_response:
+                        print(f"Warning: Empty response when saving {field_path}")
+                        failed_fields.append(field_path)
+                        continue
+                    
+                    try:
+                        save_result = json.loads(save_payload_response)
+                    except json.JSONDecodeError as e:
+                        print(f"Warning: Failed to parse response for {field_path}: {e}")
+                        failed_fields.append(field_path)
+                        continue
+                    
+                    if not save_result or save_result.get('statusCode') != 200:
+                        print(f"Warning: Failed to save {field_path}: {save_result}")
+                        failed_fields.append(field_path)
+                    else:
+                        saved_fields.append(field_path)
+                        print(f"Successfully saved {field_path}")
+                except Exception as e:
+                    print(f"Error saving {field_path}: {str(e)}")
+                    failed_fields.append(field_path)
         
-        save_payload = {
-            'operation': 'save_api_fields',
-            'params': {
-                'iep_id': iep_id,
-                'user_id': user_id,
-                'child_id': child_id,
-                'field_updates': field_updates
-            }
-        }
-        
-        save_response = lambda_client.invoke(
-            FunctionName=ddb_service_name,
-            InvocationType='RequestResponse',
-            Payload=json.dumps(save_payload)
-        )
-        
-        save_payload_response = save_response['Payload'].read()
-        
-        if not save_payload_response:
-            raise Exception("Empty response from DDB service during save")
-        
-        try:
-            save_result = json.loads(save_payload_response)
-        except json.JSONDecodeError as e:
-            raise Exception(f"Failed to parse save DDB service response as JSON: {e}")
-        
-        if not save_result or save_result.get('statusCode') != 200:
-            raise Exception(f"Failed to save {content_type} translations to API fields: {save_result}")
-        
-        print(f"{content_type} translations saved directly to API fields: {list(field_updates.keys())}")
+        # Report results
+        if failed_fields:
+            print(f"Warning: Some fields failed to save: {failed_fields}")
+            # Only raise exception if ALL fields failed
+            if not saved_fields:
+                raise Exception(f"Failed to save all {content_type} translation fields: {failed_fields}")
+        else:
+            print(f"{content_type} translations saved successfully: {saved_fields}")
         
         # Set the result key based on content type
         if content_type == 'parsing_result':
