@@ -648,9 +648,11 @@ def get_document_with_content(params):
     if 'contentS3Reference' in item:
         # New format: fetch from S3
         s3_ref = item['contentS3Reference']
+        print(f"Found S3 reference for {iep_id}/{child_id}: {s3_ref.get('s3Key', 'N/A')}")
         content = get_content_from_s3(s3_ref['s3Key'], s3_ref['bucket'])
         
         if content:
+            print(f"Successfully retrieved content from S3. Keys: {list(content.keys())}")
             # Merge metadata with content
             result = {k: v for k, v in item.items() if k != 'contentS3Reference'}
             result.update(content)
@@ -668,6 +670,7 @@ def get_document_with_content(params):
     else:
         # Old format: migrate to S3
         print(f"Migrating {iep_id}/{child_id} from DynamoDB to S3 (lazy migration)")
+        print(f"Document keys before migration: {list(item.keys())}")
         s3_ref = migrate_dynamodb_to_s3(iep_id, child_id, item, table)
         
         if s3_ref:

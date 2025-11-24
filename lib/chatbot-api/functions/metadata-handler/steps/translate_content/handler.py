@@ -36,13 +36,13 @@ def lambda_handler(event, context):
         
         print(f"Translating {content_type} to languages: {target_languages}")
         
-        # Get source data from DynamoDB - now from API fields instead of old result format
+        # Get source data from DynamoDB/S3 - use get_document_with_content to handle S3 storage
         lambda_client = boto3.client('lambda')
         ddb_service_name = os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
         
-        # Get the document which contains the new API field structure
+        # Get the document with content (handles S3 storage and lazy migration)
         source_payload = {
-            'operation': 'get_document',
+            'operation': 'get_document_with_content',
             'params': {
                 'iep_id': iep_id,
                 'user_id': user_id,
@@ -89,6 +89,7 @@ def lambda_handler(event, context):
         
         document = json.loads(source_ddb_result['body'])
         print(f"Retrieved document for {content_type} translation")
+        print(f"Document keys: {list(document.keys())}")
         
         # Extract English content based on content type from new API field structure
         if content_type == 'parsing_result':
@@ -98,7 +99,12 @@ def lambda_handler(event, context):
             document_index = document.get('document_index', {})
             abbreviations = document.get('abbreviations', {})
             
+            print(f"Content structure - summaries keys: {list(summaries.keys()) if isinstance(summaries, dict) else 'not a dict'}, sections keys: {list(sections.keys()) if isinstance(sections, dict) else 'not a dict'}")
+            
             if 'en' not in summaries or 'en' not in sections:
+                print(f"Error: summaries.en exists: {'en' in summaries}, sections.en exists: {'en' in sections}")
+                print(f"Full summaries: {summaries}")
+                print(f"Full sections: {sections}")
                 raise Exception("English parsing data not found - summaries.en or sections.en missing")
             
             # Reconstruct the format expected by translation agent
