@@ -703,13 +703,51 @@ def get_document_with_content(params):
         }
 
 def save_content_to_s3_operation(params):
-    """Save content to S3 and update DynamoDB reference"""
+    """Save content to S3 and update DynamoDB reference - merges with existing content"""
     iep_id = params['iep_id']
     child_id = params['child_id']
-    content = params['content']  # Full content dict with all languages
+    new_content = params['content']  # New content dict with all languages
     
     try:
-        s3_ref = save_content_to_s3(iep_id, child_id, content)
+        # Get existing content from S3 if it exists (for merging)
+        response = table.get_item(
+            Key={
+                'iepId': iep_id,
+                'childId': child_id
+            }
+        )
+        
+        existing_content = {}
+        if 'Item' in response:
+            item = response['Item']
+            if 'contentS3Reference' in item:
+                s3_ref = item['contentS3Reference']
+                existing_content = get_content_from_s3(s3_ref['s3Key'], s3_ref['bucket']) or {}
+                print(f"Found existing content in S3, merging with new content")
+        
+        # Merge existing content with new content (new content takes precedence for non-empty values)
+        merged_content = {
+            'summaries': existing_content.get('summaries', {}),
+            'sections': existing_content.get('sections', {}),
+            'document_index': existing_content.get('document_index', {}),
+            'abbreviations': existing_content.get('abbreviations', {}),
+            'meetingNotes': existing_content.get('meetingNotes', {})
+        }
+        
+        # Merge new content - only update non-empty values
+        for field in ['summaries', 'sections', 'document_index', 'abbreviations', 'meetingNotes']:
+            if field in new_content and new_content[field]:
+                if isinstance(new_content[field], dict):
+                    # Merge dictionaries (e.g., {'en': '...', 'es': '...'})
+                    merged_content[field].update(new_content[field])
+                else:
+                    # Replace non-dict values
+                    merged_content[field] = new_content[field]
+        
+        print(f"Merged content - meetingNotes keys: {list(merged_content.get('meetingNotes', {}).keys())}")
+        
+        # Save merged content to S3
+        s3_ref = save_content_to_s3(iep_id, child_id, merged_content)
         
         # Update DynamoDB - remove old fields and add S3 reference
         table.update_item(
@@ -731,9 +769,10 @@ def save_content_to_s3_operation(params):
         return {
             'statusCode': 200,
             'body': json.dumps({
-                'message': 'Content saved to S3 successfully',
+                'message': 'Content saved to S3 successfully (merged)',
                 's3_reference': s3_ref,
-                'iep_id': iep_id
+                'iep_id': iep_id,
+                'merged_fields': list(merged_content.keys())
             }, default=str)
         }
     except Exception as e:

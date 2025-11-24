@@ -53,13 +53,14 @@ def lambda_handler(event, context):
         
         print(f"User {user_id} needs translation for: {target_languages}")
         
-        # Don't pass through progress/current_step as they're managed by state machine
-        event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
-        return {
-            **event_copy,
+        # Preserve progress/current_step/status values in state machine state
+        # These are managed by the state machine but need to be preserved through this step
+        result = {
+            **event,  # Preserve all input including progress tracking
             'translation_needed': len(target_languages) > 0,
             'target_languages': target_languages
         }
+        return result
         
     except Exception as e:
         print(f"CheckLanguagePrefs error: {str(e)}")
