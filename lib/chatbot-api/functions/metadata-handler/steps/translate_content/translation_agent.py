@@ -56,7 +56,7 @@ class OptimizedTranslationAgent:
                 return f"Could not access terminology for {term}"
         return get_iep_terminology
 
-    def translate_content_with_agent(self, content, target_language, content_type="parsing_result", model="gpt-4.1"):
+    def translate_content_with_agent(self, content, target_language, content_type="parsing_result", model="gpt-5.1"):
         """
         High-performance single-language translation using agent framework.
         Optimized for new pipeline's distributed architecture.

@@ -60,7 +60,7 @@ The IEP processing workflow uses comprehensive status tracking with real-time pr
 ### Agent Hierarchy and Tools
 
 #### Main Agent ("IEP Document Analyzer")
-- **Model**: OpenAI GPT-4.1 (default)
+- **Model**: OpenAI GPT-5.1 (default)
 - **Instructions**: Provided by prompts in `steps/parsing_agent/config.py`
 - **Tools**:
   - **OCR Tools**:
@@ -71,7 +71,7 @@ The IEP processing workflow uses comprehensive status tracking with real-time pr
     - `get_section_info`: Returns key points and descriptions for IEP sections
 
 #### Translation Agent ("OptimizedTranslationAgent")
-- **Model**: OpenAI GPT-4.1 (default)
+- **Model**: OpenAI GPT-5.1 (default)
 - **Instructions**: Translation-specific prompts in `steps/translate_content/translation_agent.py`
 - **Tools**:
   - `get_language_context_for_translation`: Provides language context for translation
