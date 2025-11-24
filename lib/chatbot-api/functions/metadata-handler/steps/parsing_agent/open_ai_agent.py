@@ -7,6 +7,11 @@ from openai import OpenAI
 from agents import Agent, Runner, function_tool, ModelSettings
 from config import get_english_only_prompt, IEP_SECTIONS, SECTION_KEY_POINTS
 from agents.exceptions import MaxTurnsExceeded
+try:
+    from agents.exceptions import ModelBehaviorError
+except ImportError:
+    # ModelBehaviorError might not exist in all versions
+    ModelBehaviorError = Exception
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -125,12 +130,26 @@ class OpenAIAgent:
                 "Analyze IEP document in English only according to instructions.",
                 max_turns=150
             )
+            raw_output = result.final_output
         except MaxTurnsExceeded as e:
             logger.error(f"Max turns exceeded: {str(e)}")
             return {"error": "Max turns exceeded"}
+        except ModelBehaviorError as e:
+            logger.error(f"Model behavior error (likely validation failure): {str(e)}")
+            # Try to extract partial output if available
+            if hasattr(e, 'final_output') and e.final_output:
+                logger.info("Attempting to recover from partial output")
+                raw_output = e.final_output
+            elif hasattr(e, 'result') and hasattr(e.result, 'final_output'):
+                logger.info("Attempting to recover from result object")
+                raw_output = e.result.final_output
+            else:
+                # If we can't recover, try to parse the error message for JSON
+                error_str = str(e)
+                logger.warning(f"Could not recover output, error: {error_str}")
+                return {"error": f"Model behavior error: {error_str}"}
 
         # Parse & validate
-        raw_output = result.final_output
         try:
             if isinstance(raw_output, str):
                 cleaned = raw_output.replace('```json','').replace('```','').strip()
@@ -142,7 +161,10 @@ class OpenAIAgent:
                 data = SingleLanguageIEP.model_validate(raw_output, strict=False)
             elif isinstance(raw_output, SingleLanguageIEP):
                 logger.info("Output is already a SingleLanguageIEP instance")
-                data = raw_output
+                # Convert to dict, ensure complete sections, then re-validate
+                parsed_dict = raw_output.model_dump()
+                parsed_dict = self._ensure_complete_english_sections(parsed_dict)
+                data = SingleLanguageIEP.model_validate(parsed_dict, strict=False)
             else:
                 output_type = type(raw_output).__name__
                 logger.error(f"Unexpected output type: {output_type}")
@@ -152,6 +174,19 @@ class OpenAIAgent:
             return data.model_dump()
         except Exception as e:
             logger.error(f"Validation error: {str(e)}")
+            # Log what sections were actually present
+            if isinstance(raw_output, (dict, SingleLanguageIEP)):
+                try:
+                    if isinstance(raw_output, SingleLanguageIEP):
+                        sections_data = raw_output.model_dump().get('sections', [])
+                    else:
+                        sections_data = raw_output.get('sections', [])
+                    if sections_data:
+                        present_titles = [s.get('title') if isinstance(s, dict) else getattr(s, 'title', '') for s in sections_data]
+                        logger.error(f"Present sections: {present_titles}")
+                        logger.error(f"Total sections found: {len(sections_data)}")
+                except Exception as log_err:
+                    logger.error(f"Error logging section info: {log_err}")
             logger.error(traceback.format_exc(limit=3))
             return {"error": f"Validation failed: {str(e)}"}
 
@@ -164,13 +199,27 @@ class OpenAIAgent:
         required_sections = set(IEP_SECTIONS.keys())
         
         if 'sections' not in data:
+            logger.warning("No 'sections' key found in data, initializing empty list")
             data['sections'] = []
         
-        # Get existing section titles
-        existing_titles = {section.get('title', '') for section in data['sections']}
+        # Get existing section titles - handle both dict and object formats
+        existing_titles = set()
+        for section in data['sections']:
+            if isinstance(section, dict):
+                title = section.get('title', '')
+            else:
+                # Handle Pydantic model instances
+                title = getattr(section, 'title', '')
+            if title:
+                existing_titles.add(title)
+        
+        logger.info(f"Found {len(existing_titles)} existing sections: {existing_titles}")
         
         # Find missing sections
         missing_sections = required_sections - existing_titles
+        
+        if missing_sections:
+            logger.warning(f"Missing {len(missing_sections)} required sections: {missing_sections}")
         
         # Add missing sections
         for missing_section in missing_sections:
@@ -183,6 +232,7 @@ class OpenAIAgent:
                 'page_numbers': [1]  # Default to page 1
             })
         
+        logger.info(f"Final section count: {len(data['sections'])}")
         return data
 
     def _ensure_complete_sections(self, data):

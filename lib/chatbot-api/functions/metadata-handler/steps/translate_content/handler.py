@@ -117,21 +117,48 @@ def lambda_handler(event, context):
             
         elif content_type == 'meeting_notes':
             # Get English meeting notes from API fields: meetingNotes.en
-            meeting_notes = document.get('meetingNotes', {})
+            meeting_notes_raw = document.get('meetingNotes')
             
-            if 'en' not in meeting_notes or not meeting_notes.get('en'):
-                print("English meeting notes not found, skipping translation")
-                event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
-                return {
-                    **event_copy,
-                    'meeting_notes_translations': {},
-                    f'{content_type}_translation_skipped': True
+            # Debug logging
+            print(f"meetingNotes type: {type(meeting_notes_raw)}")
+            print(f"meetingNotes value: {meeting_notes_raw}")
+            
+            # Handle different data types
+            source_result = None
+            if meeting_notes_raw is None:
+                meeting_notes = {}
+            elif isinstance(meeting_notes_raw, dict):
+                meeting_notes = meeting_notes_raw
+            elif isinstance(meeting_notes_raw, str):
+                # If it's a string, treat it as English content
+                print("meetingNotes is a string, treating as English content")
+                source_result = {
+                    'meeting_notes': meeting_notes_raw
                 }
+            else:
+                print(f"Unexpected meetingNotes type: {type(meeting_notes_raw)}, defaulting to empty dict")
+                meeting_notes = {}
             
-            # Reconstruct the format expected by translation agent (simple string)
-            source_result = {
-                'meeting_notes': meeting_notes.get('en', '')
-            }
+            # If we haven't set source_result yet (dict case), check for English content
+            if source_result is None:
+                # Check for English meeting notes in dict structure
+                if not isinstance(meeting_notes, dict) or 'en' not in meeting_notes or not meeting_notes.get('en'):
+                    print(f"English meeting notes not found. meetingNotes structure: {meeting_notes}")
+                    print(f"meetingNotes is dict: {isinstance(meeting_notes, dict)}")
+                    if isinstance(meeting_notes, dict):
+                        print(f"meetingNotes keys: {list(meeting_notes.keys())}")
+                        print(f"meetingNotes['en'] value: {meeting_notes.get('en')}")
+                    event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
+                    return {
+                        **event_copy,
+                        'meeting_notes_translations': {},
+                        f'{content_type}_translation_skipped': True
+                    }
+                
+                # Reconstruct the format expected by translation agent (simple string)
+                source_result = {
+                    'meeting_notes': meeting_notes.get('en', '')
+                }
         else:
             raise ValueError(f"Unsupported content_type: {content_type}")
         
