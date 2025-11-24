@@ -81,20 +81,19 @@ export default function PreferredLanguage() {
         // Check if the user has already completed some required fields to determine where to start
         const hasLanguage = data && data.secondaryLanguage;
         const hasConsent = data && data.consentGiven === true;
-        const hasCompleteParentData = data && data.parentName;
 
         // If all conditions are false, show survey form
-        if (!hasLanguage && !hasConsent && !hasCompleteParentData) {
-          // console.log("Showing survey form - no language, consent, or parent data");
+        if (!hasLanguage && !hasConsent) {
+          // console.log("Showing survey form - no language or consent");
           setShowSurveyForm(true);
           setError(null);
           return;
         }
 
-        // If user has language and consent but missing parent data, go to parent form
-        if (hasLanguage && hasConsent && !hasCompleteParentData) {
-          // console.log("hasLanguage && hasConsent && !hasCompleteParentData");
-          navigate('/view-and-add-parent');
+        // If user has language and consent, go directly to IEP documents
+        if (hasLanguage && hasConsent) {
+          // console.log("hasLanguage && hasConsent - going to IEP documents");
+          navigate('/iep-documents');
           return;
         }
 
@@ -194,7 +193,7 @@ export default function PreferredLanguage() {
       if (isUpdatingFromProfile) {
         navigate('/profile');
       } else {
-        navigate('/onboarding-user');
+        navigate('/consent-form');
       }
     } catch (err) {
       addNotification('error', 'Failed to update language preference');
