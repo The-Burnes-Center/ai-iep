@@ -21,6 +21,12 @@ def lambda_handler(event, context):
         user_id = event['user_id']
         child_id = event['child_id']
         
+        # Validate that this is a document file, not a JSON content file
+        if s3_key.endswith('content.json') or '/content.json' in s3_key or s3_key.lower().endswith('.json'):
+            error_message = f"Cannot process JSON file as document: {s3_key}. Only PDF/image files can be processed with OCR."
+            print(error_message)
+            raise Exception(error_message)
+        
         # Process document with Mistral OCR
         print(f"Processing document: s3://{s3_bucket}/{s3_key}")
         ocr_result = process_document_with_mistral_ocr(s3_bucket, s3_key)

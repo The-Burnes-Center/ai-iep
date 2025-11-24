@@ -25,6 +25,16 @@ def lambda_handler(event, context):
             
             print(f"Processing S3 event for object: {bucket}/{key}")
             
+            # Skip content.json files - these are our internal content storage files, not documents to process
+            if key.endswith('content.json') or '/content.json' in key:
+                print(f"Skipping content.json file: {key} - this is internal content storage, not a document to process")
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({
+                        'message': f'Skipped content.json file: {key}'
+                    })
+                }
+            
             # Extract user ID, child ID, and IEP ID from the key
             key_parts = key.split('/')
             if len(key_parts) < 3:
@@ -39,6 +49,17 @@ def lambda_handler(event, context):
             user_id = key_parts[0]
             child_id = key_parts[1] 
             iep_id = key_parts[2]
+            
+            # Also check if the filename is a JSON file (should not process JSON files as documents)
+            filename = key_parts[-1] if len(key_parts) > 0 else ''
+            if filename.lower().endswith('.json'):
+                print(f"Skipping JSON file: {key} - JSON files are not documents to process")
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({
+                        'message': f'Skipped JSON file: {key}'
+                    })
+                }
             
             print(f"Extracted: user_id={user_id}, child_id={child_id}, iep_id={iep_id}")
             
