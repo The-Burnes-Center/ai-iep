@@ -51,6 +51,8 @@ def lambda_handler(event, context):
             return save_final_results(params)
         elif operation == 'save_api_fields':
             return save_api_fields(params)
+        elif operation == 'append_to_list_field':
+            return append_to_list_field(params)
         else:
             raise ValueError(f"Unknown operation: {operation}")
             
@@ -510,5 +512,88 @@ def save_api_fields(params):
                 'error': f'Failed to save API fields: {str(e)}',
                 'iep_id': iep_id,
                 'attempted_fields': list(field_updates.keys())
+            }, default=str)
+        }
+
+def append_to_list_field(params):
+    """Append items to a list field in DynamoDB (e.g., sections.es)"""
+    iep_id = params['iep_id']
+    child_id = params['child_id'] 
+    user_id = params['user_id']
+    field_path = params['field_path']  # e.g., 'sections.es'
+    items_to_append = params['items']  # List of items to append
+    
+    print(f"Appending {len(items_to_append)} items to {field_path} for {iep_id}")
+    
+    # Parse field path (e.g., 'sections.es' -> parent='sections', lang='es')
+    if '.' not in field_path:
+        raise ValueError(f"Invalid field path format: {field_path}. Expected format: 'parent.lang'")
+    
+    parts = field_path.split('.')
+    if len(parts) != 2:
+        raise ValueError(f"Invalid field path format: {field_path}. Expected format: 'parent.lang'")
+    
+    parent_field, lang_key = parts
+    
+    # First, ensure parent map exists
+    try:
+        table.update_item(
+            Key={
+                'iepId': iep_id,
+                'childId': child_id
+            },
+            UpdateExpression="SET #parent = if_not_exists(#parent, :empty_map), #updated_at = :updated_at",
+            ExpressionAttributeNames={
+                '#parent': parent_field,
+                '#updated_at': 'updated_at'
+            },
+            ExpressionAttributeValues={
+                ':empty_map': {},
+                ':updated_at': datetime.utcnow().isoformat()
+            }
+        )
+    except Exception as e:
+        print(f"Error initializing parent map: {str(e)}")
+        # Continue anyway - it might already exist
+    
+    # Append items to the list using list_append
+    # If the list doesn't exist, create it with the items; otherwise append
+    try:
+        table.update_item(
+            Key={
+                'iepId': iep_id,
+                'childId': child_id
+            },
+            UpdateExpression="SET #parent.#lang = list_append(if_not_exists(#parent.#lang, :empty_list), :items), #updated_at = :updated_at",
+            ExpressionAttributeNames={
+                '#parent': parent_field,
+                '#lang': lang_key,
+                '#updated_at': 'updated_at'
+            },
+            ExpressionAttributeValues={
+                ':empty_list': [],
+                ':items': items_to_append,
+                ':updated_at': datetime.utcnow().isoformat()
+            }
+        )
+        
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': f'Appended {len(items_to_append)} items to {field_path}',
+                'iep_id': iep_id,
+                'field_path': field_path,
+                'items_appended': len(items_to_append)
+            }, default=str)
+        }
+        
+    except Exception as e:
+        print(f"Error appending to list field: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'error': f'Failed to append to list field: {str(e)}',
+                'iep_id': iep_id,
+                'field_path': field_path
             }, default=str)
         }

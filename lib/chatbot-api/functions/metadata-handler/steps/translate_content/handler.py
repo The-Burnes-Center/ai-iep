@@ -177,7 +177,7 @@ def lambda_handler(event, context):
         print(f"{content_type} translation completed for {len(translations)} languages")
         
         # Save translations directly to API-compatible fields 
-        # Save each field separately to avoid DynamoDB item size limit (400KB)
+        # Save each field individually to avoid DynamoDB item size limit (400KB)
         saved_fields = []
         failed_fields = []
         
@@ -185,14 +185,17 @@ def lambda_handler(event, context):
             # Save parsing translations to summaries, sections, document_index, abbreviations
             # Save each field separately to avoid size limit issues
             for lang, translated_content in translations.items():
-                field_mappings = [
+                # Handle sections separately - split into chunks and append incrementally
+                sections_list = translated_content.get('sections', [])
+                
+                # Save other fields normally
+                other_field_mappings = [
                     (f'summaries.{lang}', translated_content.get('summary', '')),
-                    (f'sections.{lang}', translated_content.get('sections', [])),
                     (f'document_index.{lang}', translated_content.get('document_index', '')),
                     (f'abbreviations.{lang}', translated_content.get('abbreviations', []))
                 ]
                 
-                for field_path, field_value in field_mappings:
+                for field_path, field_value in other_field_mappings:
                     try:
                         save_payload = {
                             'operation': 'save_api_fields',
@@ -233,6 +236,99 @@ def lambda_handler(event, context):
                     except Exception as e:
                         print(f"Error saving {field_path}: {str(e)}")
                         failed_fields.append(field_path)
+                
+                # Handle sections: split into chunks and save incrementally
+                if sections_list:
+                    sections_field_path = f'sections.{lang}'
+                    num_sections = len(sections_list)
+                    # Split into 2 chunks
+                    chunk_size = max(1, (num_sections + 1) // 2)  # At least 1 item per chunk
+                    chunks = [sections_list[i:i + chunk_size] for i in range(0, num_sections, chunk_size)]
+                    
+                    print(f"Splitting {num_sections} sections into {len(chunks)} chunks for {sections_field_path}")
+                    
+                    for chunk_idx, chunk in enumerate(chunks):
+                        try:
+                            if chunk_idx == 0:
+                                # First chunk: SET the initial list
+                                save_payload = {
+                                    'operation': 'save_api_fields',
+                                    'params': {
+                                        'iep_id': iep_id,
+                                        'user_id': user_id,
+                                        'child_id': child_id,
+                                        'field_updates': {sections_field_path: chunk}
+                                    }
+                                }
+                                
+                                save_response = lambda_client.invoke(
+                                    FunctionName=ddb_service_name,
+                                    InvocationType='RequestResponse',
+                                    Payload=json.dumps(save_payload)
+                                )
+                                
+                                save_payload_response = save_response['Payload'].read()
+                                
+                                if not save_payload_response:
+                                    print(f"Warning: Empty response when saving {sections_field_path} chunk {chunk_idx + 1}")
+                                    failed_fields.append(f"{sections_field_path}_chunk_{chunk_idx + 1}")
+                                    continue
+                                
+                                try:
+                                    save_result = json.loads(save_payload_response)
+                                except json.JSONDecodeError as e:
+                                    print(f"Warning: Failed to parse response for {sections_field_path} chunk {chunk_idx + 1}: {e}")
+                                    failed_fields.append(f"{sections_field_path}_chunk_{chunk_idx + 1}")
+                                    continue
+                                
+                                if not save_result or save_result.get('statusCode') != 200:
+                                    print(f"Warning: Failed to save {sections_field_path} chunk {chunk_idx + 1}: {save_result}")
+                                    failed_fields.append(f"{sections_field_path}_chunk_{chunk_idx + 1}")
+                                else:
+                                    saved_fields.append(f"{sections_field_path}_chunk_{chunk_idx + 1}")
+                                    print(f"Successfully saved {sections_field_path} chunk {chunk_idx + 1} ({len(chunk)} items)")
+                            else:
+                                # Subsequent chunks: append to existing list
+                                append_payload = {
+                                    'operation': 'append_to_list_field',
+                                    'params': {
+                                        'iep_id': iep_id,
+                                        'user_id': user_id,
+                                        'child_id': child_id,
+                                        'field_path': sections_field_path,
+                                        'items': chunk
+                                    }
+                                }
+                                
+                                append_response = lambda_client.invoke(
+                                    FunctionName=ddb_service_name,
+                                    InvocationType='RequestResponse',
+                                    Payload=json.dumps(append_payload)
+                                )
+                                
+                                append_payload_response = append_response['Payload'].read()
+                                
+                                if not append_payload_response:
+                                    print(f"Warning: Empty response when appending {sections_field_path} chunk {chunk_idx + 1}")
+                                    failed_fields.append(f"{sections_field_path}_chunk_{chunk_idx + 1}")
+                                    continue
+                                
+                                try:
+                                    append_result = json.loads(append_payload_response)
+                                except json.JSONDecodeError as e:
+                                    print(f"Warning: Failed to parse response for {sections_field_path} chunk {chunk_idx + 1}: {e}")
+                                    failed_fields.append(f"{sections_field_path}_chunk_{chunk_idx + 1}")
+                                    continue
+                                
+                                if not append_result or append_result.get('statusCode') != 200:
+                                    print(f"Warning: Failed to append {sections_field_path} chunk {chunk_idx + 1}: {append_result}")
+                                    failed_fields.append(f"{sections_field_path}_chunk_{chunk_idx + 1}")
+                                else:
+                                    saved_fields.append(f"{sections_field_path}_chunk_{chunk_idx + 1}")
+                                    print(f"Successfully appended {sections_field_path} chunk {chunk_idx + 1} ({len(chunk)} items)")
+                        except Exception as e:
+                            print(f"Error saving {sections_field_path} chunk {chunk_idx + 1}: {str(e)}")
+                            failed_fields.append(f"{sections_field_path}_chunk_{chunk_idx + 1}")
                         
         elif content_type == 'meeting_notes':
             # Save meeting notes translations to meetingNotes fields
