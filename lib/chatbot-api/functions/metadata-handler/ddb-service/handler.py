@@ -724,6 +724,7 @@ def save_content_to_s3_operation(params):
                 s3_ref = item['contentS3Reference']
                 existing_content = get_content_from_s3(s3_ref['s3Key'], s3_ref['bucket']) or {}
                 print(f"Found existing content in S3, merging with new content")
+                print(f"Existing meetingNotes keys: {list(existing_content.get('meetingNotes', {}).keys())}")
         
         # Merge existing content with new content (new content takes precedence for non-empty values)
         merged_content = {
@@ -734,17 +735,30 @@ def save_content_to_s3_operation(params):
             'meetingNotes': existing_content.get('meetingNotes', {})
         }
         
+        print(f"Before merge - existing meetingNotes keys: {list(merged_content.get('meetingNotes', {}).keys())}")
+        print(f"New content meetingNotes: {new_content.get('meetingNotes', 'NOT_PRESENT')}")
+        
         # Merge new content - only update non-empty values
         for field in ['summaries', 'sections', 'document_index', 'abbreviations', 'meetingNotes']:
-            if field in new_content and new_content[field]:
+            if field in new_content:
                 if isinstance(new_content[field], dict):
                     # Merge dictionaries (e.g., {'en': '...', 'es': '...'})
-                    merged_content[field].update(new_content[field])
+                    # Only merge if the dict has actual content (not empty)
+                    if new_content[field]:
+                        print(f"Merging {field} - new keys: {list(new_content[field].keys())}")
+                        merged_content[field].update(new_content[field])
+                    else:
+                        print(f"Skipping {field} - empty dict, preserving existing content")
+                    # If new_content[field] is empty dict, don't overwrite existing content
                 else:
-                    # Replace non-dict values
-                    merged_content[field] = new_content[field]
+                    # Replace non-dict values only if non-empty
+                    if new_content[field]:
+                        merged_content[field] = new_content[field]
         
-        print(f"Merged content - meetingNotes keys: {list(merged_content.get('meetingNotes', {}).keys())}")
+        print(f"After merge - meetingNotes keys: {list(merged_content.get('meetingNotes', {}).keys())}")
+        if 'en' in merged_content.get('meetingNotes', {}):
+            en_length = len(merged_content['meetingNotes']['en'])
+            print(f"English meeting notes length: {en_length} characters")
         
         # Save merged content to S3
         s3_ref = save_content_to_s3(iep_id, child_id, merged_content)

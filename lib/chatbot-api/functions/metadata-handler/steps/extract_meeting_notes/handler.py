@@ -222,8 +222,16 @@ def lambda_handler(event, context):
             'meetingNotes': existing_doc.get('meetingNotes', {})
         }
         
+        # Ensure meetingNotes is a dict
+        if not isinstance(content['meetingNotes'], dict):
+            content['meetingNotes'] = {}
+        
         # Update meeting notes with English extraction
+        print(f"Extracting meeting notes - length: {len(meeting_notes_text)} characters")
+        print(f"Existing meetingNotes keys before update: {list(content['meetingNotes'].keys())}")
         content['meetingNotes']['en'] = meeting_notes_text
+        print(f"MeetingNotes keys after update: {list(content['meetingNotes'].keys())}")
+        print(f"English meeting notes length: {len(content['meetingNotes'].get('en', ''))} characters")
         
         # Save complete content to S3 (all fields in one operation)
         save_payload = {
