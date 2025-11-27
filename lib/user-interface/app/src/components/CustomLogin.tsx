@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Auth } from 'aws-amplify';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Container, 
   Row, 
@@ -12,6 +13,7 @@ import {
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './CustomLogin.css'; // Import the custom CSS file
 import { useLanguage, SupportedLanguage } from '../common/language-context';
+import { useAuth } from '../common/auth-provider';
 import AuthHeader from './AuthHeader';
 import PasswordInput from './PasswordInput';
 import PasswordRequirements from './PasswordRequirements';
@@ -25,13 +27,14 @@ import LoginMethodToggle from './LoginMethodToggle';
 import FormLabel from './FormLabel';
 import VerificationCodeInput from './VerificationCodeInput';
 
-interface CustomLoginProps {
-  onLoginSuccess: () => void;
-}
-
-const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
+const CustomLogin: React.FC = () => {
   // Get translation function and language setter from context
   const { t, language, setLanguage } = useLanguage();
+  
+  // Get auth functions and navigation
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   // Existing state variables
   const [username, setUsername] = useState('');
@@ -90,8 +93,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Handle successful authentication
   const handleSuccessfulAuthentication = () => {
     // console.log('User authentication successful');
-    // Authentication is handled, onboarding decisions will be made based on profile.showOnboarding
-    onLoginSuccess();
+    // Navigate to where user was trying to go, or default to /preferred-language
+    // PreferredLanguage will handle onboarding decisions based on profile.showOnboarding
+    const from = location.state?.from?.pathname || '/preferred-language';
+    navigate(from, { replace: true });
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -116,8 +121,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         return;
       }
       
-      // If no challenge, proceed with normal login
-      onLoginSuccess();
+      // Update auth context with logged in user
+      login(user);
+      
+      // Navigate to appropriate page
+      handleSuccessfulAuthentication();
     } catch (err) {
       // console.error('Login error', err);
       if (err.code === 'UserNotConfirmedException') {
@@ -178,10 +186,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           setIsNewUserConfirmation(false);
           setSuccessMessage(t('auth.smsCodeSent'));
           // console.log('SMS code sent for existing user');
-        } else {
-          // console.log('User authenticated successfully');
-          onLoginSuccess();
-        }
+              } else {
+                // console.log('User authenticated successfully');
+                login(cognitoUser);
+                handleSuccessfulAuthentication();
+              }
         
       } catch (signInError: any) {
         // console.log('SignIn error:', signInError.code);
@@ -223,7 +232,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 setIsNewUserConfirmation(false);
                 setSuccessMessage(t('auth.smsCodeSent'));
               } else {
-                onLoginSuccess();
+                login(cognitoUser);
+                handleSuccessfulAuthentication();
               }
             } else {
               throw signUpError;
@@ -504,7 +514,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       );
       
       // console.log('Password change successful', user);
-      onLoginSuccess();
+      // Update auth context
+      login(user);
+      
+      // Navigate to appropriate page
+      handleSuccessfulAuthentication();
     } catch (err) {
       // console.error('Password change error', err);
       setError(err.message || t('auth.errorGeneric'));

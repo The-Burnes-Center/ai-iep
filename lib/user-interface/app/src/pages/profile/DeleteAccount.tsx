@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { Auth } from 'aws-amplify';
-import { AuthContext } from '../../common/auth-context';
+import { useAuth } from '../../common/auth-provider';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context'; 
 import './UpdateProfileName.css';
@@ -19,7 +19,7 @@ export default function DeleteAccount() {
   const navigate = useNavigate();
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
-  const { setAuthenticated } = useContext(AuthContext);
+  const { setAuthenticated } = useAuth();
   const { addNotification } = useNotifications();
   const { t } = useLanguage();
 

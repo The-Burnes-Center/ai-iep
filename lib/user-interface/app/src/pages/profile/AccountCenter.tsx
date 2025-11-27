@@ -1,5 +1,5 @@
-import React, {useContext} from 'react';
-import { AuthContext } from '../../common/auth-context';
+import React from 'react';
+import { useAuth } from '../../common/auth-provider';
 import { Auth } from "aws-amplify";
 import { useNavigate } from 'react-router-dom';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
@@ -12,9 +12,7 @@ import './AccountCenter.css';
 const AccountCenter: React.FC = () => {
 
   const { t, translationsLoaded } = useLanguage();
-
-  const { setAuthenticated } = useContext(AuthContext);
-
+  const { setAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Return loading state if translations aren't ready

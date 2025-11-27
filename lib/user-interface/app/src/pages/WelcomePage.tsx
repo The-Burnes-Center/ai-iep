@@ -1,7 +1,7 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Auth } from 'aws-amplify';
-import { AuthContext } from '../common/auth-context';
+import { useAuth } from '../common/auth-provider';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../common/language-context'; 
 import MobileTopNavigation from '../components/MobileTopNavigation';
@@ -9,7 +9,7 @@ import AIEPFooter from '../components/AIEPFooter';
 import './WelcomePage.css';
 
 export default function WelcomePage() {
-  const { setAuthenticated } = useContext(AuthContext);
+  const { setAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>('');
   const { t } = useLanguage();
