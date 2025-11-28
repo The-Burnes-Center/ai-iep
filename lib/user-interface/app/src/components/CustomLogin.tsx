@@ -26,6 +26,7 @@ import LanguageDropdown from './LanguageDropdown';
 import LoginMethodToggle from './LoginMethodToggle';
 import FormLabel from './FormLabel';
 import VerificationCodeInput from './VerificationCodeInput';
+import LandingTopNavigation from './LandingTopNavigation';
 
 const CustomLogin: React.FC = () => {
   // Get translation function and language setter from context
@@ -828,9 +829,11 @@ const CustomLogin: React.FC = () => {
 
   // Main login form with mobile login option
   return (
-    <Container fluid className="login-container d-flex align-items-center justify-content-center">
-      <Col xs={12} sm={8} md={6} lg={4}>
-        <AuthHeader title={t('auth.signInHeader')} />
+    <>
+      <LandingTopNavigation />
+      <Container fluid className="login-container d-flex align-items-center justify-content-center">
+        <Col xs={12} sm={8} md={6} lg={4}>
+          <AuthHeader title={t('auth.signInHeader')} />
 
       <LanguageDropdown 
         language={language}
@@ -1060,6 +1063,7 @@ const CustomLogin: React.FC = () => {
         </div>
       )}
     </Container>
+    </>
   );
 };
 

@@ -5,7 +5,11 @@ import { trackPageView } from '../common/helpers/analytics-helper';
 // Auth components
 import CustomLogin from './CustomLogin';
 
+// Navigation components
+import LandingTopNavigation from './LandingTopNavigation';
+
 // Protected pages
+import SupportCenter from '../pages/profile/SupportCenter';
 import PreferredLanguage from '../pages/profile/PreferredLanguage';
 import OnboardingUser from '../pages/profile/OnboardingUser';
 import UserProfileForm from '../pages/profile/UserProfileForm';
@@ -23,7 +27,6 @@ import AboutApp from '../pages/profile/AboutApp';
 import FrequentlyAskedQuestions from '../components/FrequentlyAskedQuestions';
 import ParentRightsCarousel from '../components/ParentRightsCarousel';
 import AccountCenter from '../pages/profile/AccountCenter';
-import SupportCenter from '../pages/profile/SupportCenter';
 import SurveyForm from '../components/SurveyForm';
 import AboutAIEP from '../components/AboutAIEP';
 import DeleteAccount from '../pages/profile/DeleteAccount';
@@ -49,6 +52,22 @@ export default function AppRoutes() {
       {/* ===== PUBLIC ROUTES ===== */}
       {/* Login at root - shown when not authenticated */}
       <Route path="/" element={<CustomLogin />} />
+      
+      {/* About the project - public route */}
+      <Route path="/about-the-project" element={
+        <AboutApp 
+          NavigationComponent={LandingTopNavigation} 
+          showBreadcrumbs={false} 
+        />
+      } />
+      
+      {/* Support center - public route */}
+      <Route path="/support" element={
+        <SupportCenter 
+          NavigationComponent={LandingTopNavigation} 
+          showAboutApp={false} 
+        />
+      } />
       
       {/* ===== PROTECTED ROUTES ===== */}
       <Route element={<ProtectedRoute />}>

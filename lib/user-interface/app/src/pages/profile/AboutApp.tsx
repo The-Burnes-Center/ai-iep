@@ -7,13 +7,22 @@ import { ApiClient } from '../../common/api-client/api-client';
 import { useLanguage } from '../../common/language-context';
 import GoToWebsiteButton from '../../components/GoToWebsiteButton';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
+import LandingTopNavigation from '../../components/LandingTopNavigation';
 import AIEPFooter from '../../components/AIEPFooter';
 import './ProfileForms.css';
 import './UpdateProfileName.css';
 import './ProfileForms.css';
 import './AboutApp.css';
 
-export default function AboutApp() {
+interface AboutAppProps {
+  NavigationComponent?: React.ComponentType;
+  showBreadcrumbs?: boolean;
+}
+
+export default function AboutApp({ 
+  NavigationComponent = MobileTopNavigation,
+  showBreadcrumbs = true 
+}: AboutAppProps = {}) {
   const navigate = useNavigate();
   const appContext = useContext(AppContext);
   const { t, translationsLoaded } = useLanguage();
@@ -50,15 +59,17 @@ export default function AboutApp() {
 
   return (
     <>
-      <MobileTopNavigation />
+      <NavigationComponent />
       <div>
-      {/* Breadcrumbs */}
-      <div className="mt-3 text-start px-4 breadcrumb-container">
-        <Breadcrumb>
-          <Breadcrumb.Item onClick={handleBackClick}>{t("about.breadcrumb.supportCenter")}</Breadcrumb.Item>
-          <Breadcrumb.Item active>{t("about.breadcrumb.about")}</Breadcrumb.Item>
-        </Breadcrumb>
-      </div>
+      {/* Breadcrumbs - only show when enabled */}
+      {showBreadcrumbs && (
+        <div className="mt-3 text-start px-4 breadcrumb-container">
+          <Breadcrumb>
+            <Breadcrumb.Item onClick={handleBackClick}>{t("about.breadcrumb.supportCenter")}</Breadcrumb.Item>
+            <Breadcrumb.Item active>{t("about.breadcrumb.about")}</Breadcrumb.Item>
+          </Breadcrumb>
+        </div>
+      )}
     
         <Container 
           fluid 
