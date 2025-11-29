@@ -1,19 +1,15 @@
 import React from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
 import LandingTopNavigation from '../components/LandingTopNavigation';
 import './LandingPage.css';
+import MultiFaceGreenBanner from '../components/MultiFaceGreenBanner';
 
 const LandingPage: React.FC = () => { 
     return (
         <>
         <LandingTopNavigation />
-        <Container >
-            <Row>
-                <Col>
-                    <h1>Landing Page</h1>
-                </Col>
-            </Row>
-        </Container>
+        <div className="landing-page-container">
+            <MultiFaceGreenBanner />
+        </div>
         </>
 
     )

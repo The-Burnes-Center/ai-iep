@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
-import LandingTopNavigation from '../../components/LandingTopNavigation';
 import AIEPFooter from '../../components/AIEPFooter';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import { useLanguage } from '../../common/language-context';
