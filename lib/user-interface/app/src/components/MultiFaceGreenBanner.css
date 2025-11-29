@@ -5,6 +5,22 @@
     position: relative;
 }
 
+.multi-face-green-banner-divider {
+    background-color: #00682F;
+    width: 100%;
+    min-height: 60px;
+}
+
+.yellow-pattern-stripe-desktop,
+.yellow-pattern-stripe-mobile {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0;
+  padding: 0;
+  object-fit: cover;
+}
+
 .multi-face-green-banner-content {
     display: flex;
     justify-content: space-between;
@@ -14,7 +30,7 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: center;
+    align-items: flex-start;
     width: 30%;
 }
 
@@ -22,6 +38,7 @@
     font-size: 1rem;
     color: #F5F3EE;
     width: 100%;
+    margin-bottom: 2rem;
 }
 
 .multi-face-green-banner-faces-container {
@@ -33,8 +50,12 @@
 
 .multi-face-green-banner-title {
     font-size: 2rem;
+    font-family: "Fjalla One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
     color: #F5F3EE;
     width: 100%;
+    margin-bottom: 2rem;
 }
 
 @media (max-width: 768px) { 
@@ -44,14 +65,33 @@
         flex-direction: column; 
     }
 
+    .yellow-pattern-stripe-desktop {
+        display: none;
+      }
+      
+      .yellow-pattern-stripe-mobile {
+        display: block;
+      }
+
     .multi-face-green-banner-content { 
         flex-direction: column-reverse;
+        align-items: center;
     }
 
     .multi-face-green-banner-text {
-        align-self: center;
+        align-self: flex-start;
         width: 80%;
     }
+
+    .multi-face-green-banner-text-container {
+        width: 90%;
+    }
+
+    .multi-face-green-banner-faces-container {
+        align-self: flex-start;
+    }
+
+
 }
 
 @media (min-width: 769px) {
@@ -60,11 +100,25 @@
         min-height: 462px;
         flex-direction: row;
         align-items: center;
+        justify-content: center;
     }
+
+      
+  .yellow-pattern-stripe-desktop {
+    display: block;
+  }
+  
+  .yellow-pattern-stripe-mobile {
+    display: none;
+  }
 
     .multi-face-green-banner-content { 
         flex-direction: row;
         justify-content: center;
         align-items: flex-start;
+    }
+
+    .multi-face-green-banner-text {
+        width: 90%;
     }
 }

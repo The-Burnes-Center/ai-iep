@@ -222,3 +222,35 @@
   background-color: #f9f9f9; /* Adjust as needed */
   border: 1px solid #ddd; /* Adjust as needed */
 }
+
+/* Create Account Button */
+.create_account_button {
+  background-color: #00682F !important;
+  border-color: #1E1E1E !important;
+  color: #F5F3EE !important;
+  margin: 0 5px;
+  padding-left: 1.2rem !important;
+  padding-right: 1.2rem !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-family: akzidenz-grotesk-next-conden, sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1rem !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 20px !important;
+  transition: all 0.1s ease !important;
+  min-width: 120px;
+}
+
+.create_account_button:hover {
+  background-color: #00682F !important;
+  border-color: #00682F !important;
+  color: #F5F3EE !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
