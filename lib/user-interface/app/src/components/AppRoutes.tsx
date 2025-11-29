@@ -8,8 +8,14 @@ import CustomLogin from './CustomLogin';
 // Navigation components
 import LandingTopNavigation from './LandingTopNavigation';
 
-// Protected pages
+// Public pages
+import LandingPage from '../pages/LandingPage';
+
+// Public and Protected pages
 import SupportCenter from '../pages/profile/SupportCenter';
+import AboutApp from '../pages/profile/AboutApp';
+
+// Protected pages
 import PreferredLanguage from '../pages/profile/PreferredLanguage';
 import OnboardingUser from '../pages/profile/OnboardingUser';
 import UserProfileForm from '../pages/profile/UserProfileForm';
@@ -23,7 +29,6 @@ import RevokeConsent from '../pages/profile/RevokeConsent';
 import RightsAndOnboarding from '../pages/RightsAndOnboarding';
 import ConsentForm from '../pages/profile/ConsentForm';
 import WelcomeIntro from '../pages/profile/WelcomeIntro';
-import AboutApp from '../pages/profile/AboutApp';
 import FrequentlyAskedQuestions from '../components/FrequentlyAskedQuestions';
 import ParentRightsCarousel from '../components/ParentRightsCarousel';
 import AccountCenter from '../pages/profile/AccountCenter';
@@ -51,6 +56,8 @@ export default function AppRoutes() {
     <Routes>
       {/* ===== PUBLIC ROUTES ===== */}
       {/* Login at root - shown when not authenticated */}
+      <Route path="/home" element={<LandingPage />} />
+
       <Route path="/" element={<CustomLogin />} />
       
       {/* About the project - public route */}

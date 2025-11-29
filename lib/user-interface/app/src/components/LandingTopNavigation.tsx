@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../common/language-context';
-import { IconFileDescription, IconHeartHandshake, IconInfoCircle } from '@tabler/icons-react';
+import { IconFileDescription, IconHeartHandshake, IconInfoCircle, IconHome } from '@tabler/icons-react';
 import './LandingTopNavigation.css';
 
 interface LandingTopNavigationProps {
@@ -18,6 +18,11 @@ const LandingTopNavigation: React.FC<LandingTopNavigationProps> = ({
   const { t } = useLanguage();
 
   const navigationItems = [
+    {
+      icon: IconHome,
+      label: t('navigation.home') || 'Home',
+      route: '/home'
+    },
     {
       icon: IconFileDescription,
       label: t('navigation.uploadIEP') || 'Upload An IEP',
