@@ -443,5 +443,9 @@
     "privacyPolicy.contact.title": "Contacto",
     "privacyPolicy.contact.intro": "Si tiene preguntas sobre esta Política de Privacidad, contáctenos en:",
     "privacyPolicy.contact.organization": "The GovLab",
-    "privacyPolicy.contact.email": "Correo electrónico:"
+    "privacyPolicy.contact.email": "Correo electrónico:",
+
+    "landing.greenBanner.title": "Todos los niños merecen educación, sin importar sus necesidades",
+    "landing.greenBanner.description": "Así como las plantas, cada niño aprende a su manera. Algunos necesitan luz, otros sombra, algunos florecen rápido, otros toman su tiempo. La herramienta AIEP ayuda a las familias a cuidar las necesidades educativas de sus hijos.",
+    "landing.greenBanner.createAccountButton": "CREAR CUENTA"
   }

@@ -1,32 +1,35 @@
+import { useLanguage } from '../common/language-context';
 import './SummarizeTranslateAdvocateBanner.css';
 
 const SummarizeTranslateAdvocateBanner: React.FC = () => {
+    const { t } = useLanguage();
+
     return (
         <div className='summarize-translate-advocate-banner-container'>
 
         <div className='summarize-translate-advocate-cards-container'>
             <div className='summarize-translate-advocate-card'>
                 <img src="/images/Summarize_Illustration.png" alt="Summarize" className='summarize-translate-advocate-image' />
-                <h2 className='summarize-translate-advocate-title'>Summarize</h2>
+                <h2 className='summarize-translate-advocate-title'>{t("onboarding.carousel.heading.summarize")}</h2>
                 <p className='summarize-translate-advocate-text'>
-                    The tool will break down the key aspects of the IEP document into easy-to-understand language.
+                    {t("onboarding.carousel.paragraph.summarize")}
                 </p>
             </div>
         
             <div className='summarize-translate-advocate-card'>
-                <img src="/images/Translate_Illustration.png" alt="Summarize" className='summarize-translate-advocate-image' />
-                <h2 className='summarize-translate-advocate-title'>Translate</h2>
+                <img src="/images/Translate_Illustration.png" alt="Translate" className='summarize-translate-advocate-image' />
+                <h2 className='summarize-translate-advocate-title'>{t("onboarding.carousel.heading.translate")}</h2>
                 <p className='summarize-translate-advocate-text'>
-                    AIEP can also translate the summaries of IEP documents into your language of choice.
+                    {t("onboarding.carousel.paragraph.translate")}
                 </p>
             </div>
 
 
             <div className='summarize-translate-advocate-card'>
-                <img src="/images/Advocate_Illustration.png" alt="Summarize" className='summarize-translate-advocate-image' />
-                <h2 className='summarize-translate-advocate-title'>Advocate</h2>
+                <img src="/images/Advocate_Illustration.png" alt="Advocate" className='summarize-translate-advocate-image' />
+                <h2 className='summarize-translate-advocate-title'>{t("onboarding.carousel.heading.advocate")}</h2>
                 <p className='summarize-translate-advocate-text'>
-                    Advocate for your child’s education by exploring the IEP and understandingyour rights.
+                    {t("onboarding.carousel.paragraph.advocate")}
                 </p>
             </div>   
         </div>

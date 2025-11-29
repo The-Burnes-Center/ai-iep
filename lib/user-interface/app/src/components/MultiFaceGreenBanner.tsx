@@ -1,18 +1,21 @@
 import React from 'react';
+import { useLanguage } from '../common/language-context';
 import './MultiFaceGreenBanner.css';
 import CreateAccountButton from './CreateAccountButton';
 
 const MultiFaceGreenBanner: React.FC = () => {
+    const { t } = useLanguage();
+
     return (
         <>
             <div className='multi-face-green-banner-container'>
                 <div className='multi-face-green-banner-content' >
                     <div className='multi-face-green-banner-text-container'>
-                        <h2 className='multi-face-green-banner-title'>All children deserve education, regardless of their needs</h2>
-                        <p className='multi-face-green-banner-text'>Just like plants, each child learns in their own way. Some need light, some need shade, some bloom quickly, others take time. The AIEP tool helps families care for their child's educational needs.</p>
+                        <h2 className='multi-face-green-banner-title'>{t("landing.greenBanner.title")}</h2>
+                        <p className='multi-face-green-banner-text'>{t("landing.greenBanner.description")}</p>
                         <CreateAccountButton 
                             onClick={() => console.log('Create Account clicked')} 
-                            buttonText="CREATE ACCOUNT"
+                            buttonText={t("landing.greenBanner.createAccountButton")}
                         />
                     </div>
                     <div className='multi-face-green-banner-faces-container'>
