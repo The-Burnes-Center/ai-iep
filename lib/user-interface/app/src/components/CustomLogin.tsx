@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { Auth } from 'aws-amplify';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Container, 
-  Row, 
-  Col, 
   Form, 
   Button, 
   Alert, 
@@ -648,7 +645,7 @@ const CustomLogin: React.FC = () => {
   // Show password change form if required
   if (passwordChangeRequired) {
     return (
-      <Col xs={12} sm={8} md={6} lg={4}>
+      <>
         <AuthHeader title={t('auth.changePassword')} />
         
         <Form onSubmit={handleCompleteNewPassword}>
@@ -687,7 +684,7 @@ const CustomLogin: React.FC = () => {
               />              
           </div>
         </Form>
-      </Col>
+      </>
     );
   }
 
@@ -723,7 +720,7 @@ const CustomLogin: React.FC = () => {
   // Show sign up form
   if (showSignUp) {
     return (
-      <Col xs={12} sm={8} md={6} lg={4}>
+      <>
         <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} />
           
           {!isSignUpComplete ? (
@@ -819,15 +816,14 @@ const CustomLogin: React.FC = () => {
               </div>
             </Form>
           )}
-      </Col>
+      </>
     );
   }
 
   // Main login form with mobile login option
   return (
     <>
-      <Col xs={12} sm={8} md={6} lg={4}>
-          <AuthHeader title={t('auth.signInHeader')} />
+      <AuthHeader title={t('auth.signInHeader')} />
 
       <LanguageDropdown 
         language={language}
@@ -1046,7 +1042,6 @@ const CustomLogin: React.FC = () => {
             </div>
           </Form>
         )}
-      </Col>
       
       {/* SMS Frequency Disclaimer - positioned at bottom */}
       {showMobileLogin && (

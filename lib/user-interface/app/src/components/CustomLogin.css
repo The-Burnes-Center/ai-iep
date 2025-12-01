@@ -10,6 +10,7 @@
 /* Background color for login container */
 .login-container {
   background-color: #F5F3EE;
+  margin-bottom: 10rem;
 }
 
 /* Primary button color override */

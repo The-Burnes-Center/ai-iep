@@ -1,5 +1,5 @@
 import React from 'react';
-import { Col, Form } from 'react-bootstrap';
+import { Form } from 'react-bootstrap';
 import AuthHeader from './AuthHeader';
 import EmailInput from './EmailInput';
 import PasswordInput from './PasswordInput';
@@ -57,7 +57,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
   handleResetPassword
 }) => {
   return (
-    <Col xs={12} sm={8} md={6} lg={4}>
+    <>
       <AuthHeader title={t('auth.resetPassword')} />
         
         {!resetSent ? (
@@ -134,7 +134,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
             </div>
           </Form>
         )}
-    </Col>
+    </>
   );
 };
 

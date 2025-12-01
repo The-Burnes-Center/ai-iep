@@ -1,0 +1,15 @@
+.hero-section-container {
+    background-color: #014620;
+    width: 100%;
+    display: flex;
+    padding: 2rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-section-login-container {
+    width: 100%;
+    background-color: #F5F3EE;
+    padding: 2rem;
+    border-radius: 20px;
+}

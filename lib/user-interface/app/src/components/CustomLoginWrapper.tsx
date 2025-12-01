@@ -1,8 +1,9 @@
 import React from 'react';
-import { Container } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import LandingTopNavigation from './LandingTopNavigation';
 import CustomLogin from './CustomLogin';
 import './CustomLogin.css';
+import AIEPFooter from './AIEPFooter';
 
 /**
  * CustomLoginWrapper - Layout wrapper for authentication pages
@@ -10,6 +11,7 @@ import './CustomLogin.css';
  * This component provides the standard layout for login/auth pages:
  * - Top navigation
  * - Centered container with custom styling
+ * - Row and Col layout wrapper
  * - CustomLogin component as content
  * 
  * This separation allows CustomLogin to be used in different layouts
@@ -20,8 +22,13 @@ const CustomLoginWrapper: React.FC = () => {
     <>
       <LandingTopNavigation />
       <Container fluid className="login-container d-flex align-items-center justify-content-center">
-        <CustomLogin />
+        <Row className="w-100 justify-content-center">
+          <Col xs={12} sm={8} md={6} lg={4}>
+            <CustomLogin />
+          </Col>
+        </Row>
       </Container>
+      <AIEPFooter />
     </>
   );
 };

@@ -36,14 +36,14 @@
 
 
 @media (max-width: 768px) {  
-    .multi-face-green-banner-container { 
+    .summarize-translate-advocate-banner-container { 
         min-height: 1546px;
     }
 }
 
 
 @media (min-width: 769px) {
-    .multi-face-green-banner-container { 
+    .summarize-translate-advocate-banner-container { 
         min-height: 581px;
     }
 
