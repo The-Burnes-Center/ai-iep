@@ -648,48 +648,46 @@ const CustomLogin: React.FC = () => {
   // Show password change form if required
   if (passwordChangeRequired) {
     return (
-      <Container fluid className="login-container d-flex align-items-center justify-content-center">
-        <Col xs={12} sm={8} md={6} lg={4}>
-          <AuthHeader title={t('auth.changePassword')} />
+      <Col xs={12} sm={8} md={6} lg={4}>
+        <AuthHeader title={t('auth.changePassword')} />
+        
+        <Form onSubmit={handleCompleteNewPassword}>
+          <PasswordInput
+            label={t('auth.newPassword')}
+            placeholder={t('auth.enterNewPassword')}
+            value={newPassword}
+            onChange={setNewPassword}
+            showPassword={showNewPassword}
+            onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
+            required
+          />
+
+          <PasswordRequirements 
+            title={t('auth.passwordRequirements')}
+            firstRequirement={t('auth.passwordRequirement1')}
+            secondRequirement={t('auth.passwordRequirement2')}
+          />
           
-          <Form onSubmit={handleCompleteNewPassword}>
-            <PasswordInput
-              label={t('auth.newPassword')}
-              placeholder={t('auth.enterNewPassword')}
-              value={newPassword}
-              onChange={setNewPassword}
-              showPassword={showNewPassword}
-              onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
-              required
-            />
+          <PasswordInput
+            label={t('auth.passwordConfirm')}
+            placeholder={t('auth.passwordConfirm')}
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            showPassword={showConfirmPassword}
+            onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
+            required
+          />
 
-            <PasswordRequirements 
-              title={t('auth.passwordRequirements')}
-              firstRequirement={t('auth.passwordRequirement1')}
-              secondRequirement={t('auth.passwordRequirement2')}
-            />
-            
-            <PasswordInput
-              label={t('auth.passwordConfirm')}
-              placeholder={t('auth.passwordConfirm')}
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              showPassword={showConfirmPassword}
-              onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
-              required
-            />
-
-            {error && <Alert variant="danger">{error}</Alert>}
-            
-            <div className="d-grid gap-2">
-                <SubmitButton 
-                  loading={loading}
-                  buttonText={t('auth.changePassword')}
-                />              
-            </div>
-          </Form>
-        </Col>
-      </Container>
+          {error && <Alert variant="danger">{error}</Alert>}
+          
+          <div className="d-grid gap-2">
+              <SubmitButton 
+                loading={loading}
+                buttonText={t('auth.changePassword')}
+              />              
+          </div>
+        </Form>
+      </Col>
     );
   }
 
@@ -725,9 +723,8 @@ const CustomLogin: React.FC = () => {
   // Show sign up form
   if (showSignUp) {
     return (
-      <Container fluid className="login-container d-flex align-items-center justify-content-center">
-        <Col xs={12} sm={8} md={6} lg={4}>
-          <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} />
+      <Col xs={12} sm={8} md={6} lg={4}>
+        <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} />
           
           {!isSignUpComplete ? (
             <Form onSubmit={handleSignUp}>
@@ -822,17 +819,14 @@ const CustomLogin: React.FC = () => {
               </div>
             </Form>
           )}
-        </Col>
-      </Container>
+      </Col>
     );
   }
 
   // Main login form with mobile login option
   return (
     <>
-      <LandingTopNavigation />
-      <Container fluid className="login-container d-flex align-items-center justify-content-center">
-        <Col xs={12} sm={8} md={6} lg={4}>
+      <Col xs={12} sm={8} md={6} lg={4}>
           <AuthHeader title={t('auth.signInHeader')} />
 
       <LanguageDropdown 
@@ -1062,7 +1056,6 @@ const CustomLogin: React.FC = () => {
           </p>
         </div>
       )}
-    </Container>
     </>
   );
 };

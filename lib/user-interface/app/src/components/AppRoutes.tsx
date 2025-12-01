@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { trackPageView } from '../common/helpers/analytics-helper';
 
 // Auth components
-import CustomLogin from './CustomLogin';
+import CustomLoginWrapper from './CustomLoginWrapper';
 
 // Navigation components
 import LandingTopNavigation from './LandingTopNavigation';
@@ -58,7 +58,7 @@ export default function AppRoutes() {
       {/* Login at root - shown when not authenticated */}
       <Route path="/home" element={<LandingPage />} />
 
-      <Route path="/" element={<CustomLogin />} />
+      <Route path="/" element={<CustomLoginWrapper />} />
       
       {/* About the project - public route */}
       <Route path="/about-the-project" element={
