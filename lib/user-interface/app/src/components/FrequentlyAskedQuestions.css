@@ -8,7 +8,8 @@
   border: none;
   box-shadow: none;
   border-radius: 0;
-  background-color: #F5f3EE;
+  background-color: #F5f3EE;  
+  margin-bottom: 10rem;
 }
 
 .faqs-header {
@@ -160,11 +161,4 @@
 
 .faq-content li {
   margin-bottom: 0.5rem;
-}
-
-
-@media (min-width: 992px) { 
-  .faqs-container {
-    height: 100%;
-  }
 }

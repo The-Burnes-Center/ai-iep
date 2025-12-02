@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../common/language-context';
-import { IconFileDescription, IconHeartHandshake, IconInfoCircle, IconHome } from '@tabler/icons-react';
+import { IconFileDescription, IconHelpCircle, IconInfoCircle, IconHome } from '@tabler/icons-react';
 import './LandingTopNavigation.css';
 
 interface LandingTopNavigationProps {
@@ -29,9 +29,9 @@ const LandingTopNavigation: React.FC<LandingTopNavigationProps> = ({
       route: '/'
     },
     {
-      icon: IconHeartHandshake,
-      label: t('navigation.support') || 'Support Center',
-      route: '/support'
+      icon: IconHelpCircle,
+      label: t('navigation.faqs') || 'FAQs',
+      route: '/faqs'
     },
     {
       icon: IconInfoCircle,
