@@ -311,7 +311,7 @@
     "navigation.processing": "Tài liệu của bạn đang được xử lý...",
     "navigation.uploadIEP": "Tải lên IEP",
 
-    "footer.tagline": "Thiết kế AI <br /> cùng với và cho <br /> cộng đồng",
+    "footer.tagline": "Thiết kế AI\ncùng với và cho\ncộng đồng",
     "footer.home": "Trang chủ",
     "footer.uploadIEP": "Tải lên IEP",
     "footer.supportCenter": "Trung Tâm Hỗ Trợ",
@@ -450,6 +450,9 @@
     "privacyPolicy.contact.intro": "Nếu bạn có câu hỏi về Chính Sách Bảo Mật này, vui lòng liên hệ với chúng tôi tại:",
     "privacyPolicy.contact.organization": "The GovLab",
     "privacyPolicy.contact.email": "Email:",
+
+    "hero.title": "Chương trình Giáo dục\nCá nhân hóa, dễ dàng tiếp cận",
+    "hero.description": "Công cụ AIEP có thể giúp bạn hiểu các tài liệu IEP của con bạn.",
 
     "landing.greenBanner.title": "Tất cả trẻ em đều xứng đáng được giáo dục, bất kể nhu cầu của chúng",
     "landing.greenBanner.description": "Giống như cây cối, mỗi đứa trẻ học theo cách riêng của mình. Một số cần ánh sáng, một số cần bóng mát, một số nở hoa nhanh, những đứa khác mất thời gian. Công cụ AIEP giúp các gia đình chăm sóc nhu cầu giáo dục của con mình.",

@@ -318,7 +318,7 @@
     "navigation.processing": "Your document is being processed...",
     "navigation.uploadIEP": "Upload An IEP",
 
-    "footer.tagline": "Designing AI <br /> with and for <br /> communities",
+    "footer.tagline": "Designing AI\nwith and for\ncommunities",
     "footer.home": "Home",
     "footer.uploadIEP": "Upload An IEP",
     "footer.supportCenter": "Support Center",
@@ -457,6 +457,9 @@
     "privacyPolicy.contact.intro": "If you have questions about this Privacy Policy, please contact us at:",
     "privacyPolicy.contact.organization": "The GovLab",
     "privacyPolicy.contact.email": "Email:",
+
+    "hero.title": "Individualized Education\nPlans, made accessible",
+    "hero.description": "The AIEP tool can help you understand your child's IEP documents.",
 
     "landing.greenBanner.title": "All children deserve education, regardless of their needs",
     "landing.greenBanner.description": "Just like plants, each child learns in their own way. Some need light, some need shade, some bloom quickly, others take time. The AIEP tool helps families care for their child's educational needs.",

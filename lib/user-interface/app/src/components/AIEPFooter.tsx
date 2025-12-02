@@ -27,7 +27,7 @@ const AIEPFooter: React.FC = () => {
       <div className="footer-content">
         <div className="footer-logo">
             <img src="/images/aiep-logo-vertical-white.svg" alt="AIEP Logo" />
-            <p dangerouslySetInnerHTML={{ __html: t('footer.tagline') }} />
+            <p className="footer-tagline">{t('footer.tagline')}</p>
         </div>
         <div className="footer-links">
             <ul>

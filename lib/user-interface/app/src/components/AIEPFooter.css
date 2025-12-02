@@ -71,6 +71,10 @@
   line-height: 1.5;
 }
 
+.footer-tagline {
+  white-space: pre-line;
+}
+
 .footer-links {
   display: flex;
   justify-content: center;

@@ -304,7 +304,7 @@
     "navigation.processing": "您的文档正在处理中...",
     "navigation.uploadIEP": "上传 IEP",
 
-    "footer.tagline": "与社区 <br /> 共同设计 <br /> 人工智能",
+    "footer.tagline": "与社区\n共同设计\n人工智能",
     "footer.home": "首页",
     "footer.uploadIEP": "上传 IEP",
     "footer.supportCenter": "支持中心",
@@ -443,6 +443,9 @@
     "privacyPolicy.contact.intro": "如果您对本隐私政策有疑问，请通过以下方式联系我们：",
     "privacyPolicy.contact.organization": "The GovLab",
     "privacyPolicy.contact.email": "电子邮件：",
+
+    "hero.title": "个性化教育计划，\n让您轻松理解",
+    "hero.description": "AIEP工具可以帮助您理解孩子的IEP文档。",
 
     "landing.greenBanner.title": "所有儿童都应该接受教育，无论他们的需求如何",
     "landing.greenBanner.description": "就像植物一样，每个孩子都以自己的方式学习。有些需要光，有些需要阴凉，有些开花很快，有些需要时间。AIEP工具帮助家庭照顾孩子的教育需求。",
