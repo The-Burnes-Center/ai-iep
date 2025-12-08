@@ -250,6 +250,11 @@
         line-height: 1.4;
         color: #1E1E1E;
     }
+
+    .banner-card h1 {
+        font-size: 2.25rem;
+    }
+
 }
 
 @media (min-width: 769px) {  
