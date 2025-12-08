@@ -5,6 +5,7 @@ import MultiFaceGreenBanner from '../components/MultiFaceGreenBanner';
 import SummarizeTranslateAdvocateBanner from '../components/SummarizeTranslateAdvocateBanner';
 import HeroSection from '../components/HeroSection';
 import AIEPFooter from '../components/AIEPFooter';
+import ParentRightsBanner from '../components/ParentRightsBanner';
 
 const LandingPage: React.FC = () => { 
     return (
@@ -14,6 +15,7 @@ const LandingPage: React.FC = () => {
             <HeroSection />
             <SummarizeTranslateAdvocateBanner />
             <MultiFaceGreenBanner />
+            <ParentRightsBanner />
             <AIEPFooter />
         </div>
         </>

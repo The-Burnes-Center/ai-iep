@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Carousel } from 'react-bootstrap';
 import './ParentRightsCarousel.css';
 
-const defaultSlideData = [
+export const defaultSlideData = [
       {
         id: 'slide-1',
         title: 'Your data is safe',
@@ -35,14 +35,14 @@ const defaultSlideData = [
       },
     ];
 
-interface SlideData {
+export interface SlideData {
   id: string;
   title: string;
   content: string;
   image: string;
 }
 
-interface ParentRightsCarouselProps {
+export interface ParentRightsCarouselProps {
   slides?: SlideData[];
   className?: string;
   onLastSlideReached?: () => void;
