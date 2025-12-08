@@ -14,7 +14,6 @@ import LandingPage from '../pages/LandingPage';
 // Public and Protected pages
 import SupportCenter from '../pages/profile/SupportCenter';
 import AboutApp from '../pages/profile/AboutApp';
-import FrequentlyAskedQuestionsPublic from '../components/FrequentlyAskedQuestions';
 
 // Protected pages
 import PreferredLanguage from '../pages/profile/PreferredLanguage';
@@ -78,7 +77,11 @@ export default function AppRoutes() {
       } />
       
       {/* FAQs - public route */}
-      <Route path="/faqs" element={<FrequentlyAskedQuestionsPublic />} />
+      <Route path="/faqs" element={
+        <FrequentlyAskedQuestions 
+          NavigationComponent={LandingTopNavigation} 
+        />
+      } />
       
       {/* ===== PROTECTED ROUTES ===== */}
       <Route element={<ProtectedRoute />}>

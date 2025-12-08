@@ -5,7 +5,13 @@ import { Container, Row, Col, Card, Accordion} from 'react-bootstrap';
 import './FrequentlyAskedQuestions.css';
 import { useLanguage } from '../common/language-context'; 
 
-const FrequentlyAskedQuestions: React.FC = () => {
+interface FrequentlyAskedQuestionsProps {
+  NavigationComponent?: React.ComponentType;
+}
+
+const FrequentlyAskedQuestions: React.FC<FrequentlyAskedQuestionsProps> = ({ 
+  NavigationComponent = MobileTopNavigation 
+}) => {
   // Multilingual FAQ data
   const faqsByLanguage = {
     // English (en) FAQs
@@ -326,7 +332,7 @@ const FrequentlyAskedQuestions: React.FC = () => {
 
   return (
     <>
-      <MobileTopNavigation />
+      <NavigationComponent />
       <Container className="faqs-container mt-3 mb-3">
         <Row className="mt-2">
           <Col>
