@@ -33,6 +33,24 @@ export const defaultSlideData = [
         content: "You can consent to all, some, or none of the proposed services - your child won't receive new services without your approval.",
         image: '/images/carousel/blissful.png'
       },
+      {
+        id: 'slide-6',
+        title: 'You can request a meeting',
+        content: 'You have the right to request an IEP meeting at any time, not just at the annual review, and the school must schedule it within 30 days.',
+        image: '/images/carousel/joyful.png'
+      },
+      {
+        id: 'slide-7',
+        title: 'You can reschedule',
+        content: "If an administrator isn't present at the meeting, you have the right to reschedule for a time when they can attend.",
+        image: '/images/carousel/surprised.png'
+      },
+      {
+        id: 'slide-8',
+        title: 'You must be given a booklet of your rights',
+        content: 'By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting.',
+        image: '/images/carousel/blissful.png'
+      },
     ];
 
 export interface SlideData {

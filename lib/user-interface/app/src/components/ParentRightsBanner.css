@@ -218,6 +218,19 @@
         min-height: 450px;
     }
 
+    .parent-rights-banner-content-left,
+    .parent-rights-banner-content-right {
+        width: 100%;
+    }
+
+    .parent-rights-banner-content-left {
+        padding: 4rem 0.5rem;
+    }
+
+    .banner-slide-content {
+        height: 200px;
+    }
+
     .banner-carousel-wrapper {
         max-width: 95%;
     }
