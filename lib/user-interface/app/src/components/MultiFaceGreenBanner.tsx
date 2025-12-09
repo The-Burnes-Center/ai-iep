@@ -25,12 +25,12 @@ const MultiFaceGreenBanner: React.FC = () => {
             </div>
             <div className='multi-face-green-banner-divider'>
                 <img 
-                    src="/images/yellow-pattern-stripe-desktop.png" 
+                    src="/images/orange-pattern-stripe-desktop.png" 
                     alt="Yellow pattern stripe" 
                     className="yellow-pattern-stripe-desktop"
                 />
                 <img 
-                    src="/images/yellow-pattern-stripe-mobile.png" 
+                    src="/images/orange-pattern-stripe-mobile.png" 
                     alt="Yellow pattern stripe" 
                     className="yellow-pattern-stripe-mobile"
                 />

@@ -52,14 +52,10 @@
   position: relative;
 }
 
-.team-members-list-container::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: url('/images/patterns-orange.jpg') center/cover;
-  transform: rotate(180deg);
-  z-index: -1;
+.team-members-list-container {
+  background-color: #FF8724;
 }
+
 .team-member-item {
   display: flex;
   flex-direction: row;
@@ -117,16 +113,42 @@ margin-bottom: 1rem;
   border: 1px solid #1E1E1E;
 }
 
+.privacy-policy-header {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  padding: 10px 10px 10px 20px;
+  justify-content: flex-start;
+  border: 1px solid #1E1E1E;
+}
+
 .section-header h5 {
-  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-  font-weight: 500;
-  font-size: 1.125rem;
-  margin-bottom: 5px;
-  margin-top: 0px;
+  font-size: 2rem;
+  font-family: "Fjalla One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  width: 50%;
+  margin: auto;
+  min-height: 2.4rem;
+}
+
+.privacy-policy-header h5 {
+font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+font-weight: 500;
+font-size: 1.125rem;
+margin-bottom: 5px;
+margin-top: 0px;
 }
 
 .section-header--team {
-  background-color: #FF8724;
+  background: url('/images/orange-pattern-stripe-mobile.png') center/cover;
+  position: relative;
+}
+
+.section-header--about {
+  background: url('/images/yellow-pattern-stripe-mobile.png') center/cover;
+  position: relative;
+  margin-bottom: 2rem;
 }
 
 .section-header--innovate {
@@ -187,6 +209,11 @@ margin-bottom: 1rem;
     transform: rotate(-90deg);
 }
 
+.privacy-policy-header .arrow-icon {
+  margin-left: auto;
+  margin-right: 15px;
+}
+
 .section-header--privacy {
   justify-content: space-between;
   align-items: center;
@@ -198,7 +225,7 @@ margin-bottom: 1rem;
 }
 
 .about-app-intro-container {
-  padding-bottom: 60px;
+  padding-bottom: 20px;
 }
 
 .bottom-space-about-app {
@@ -206,9 +233,78 @@ margin-bottom: 1rem;
   background: transparent;
 }
 
+.about-app-header {
+  font-size: 1.5rem;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;;
+  font-weight: 500;
+  font-style: normal;
+  padding-bottom: 1rem;
+  padding-top: 1rem;
+}
+
+.about-app-list {
+  font-size: 1.125rem;
+  font-weight: 350;
+  line-height: 1.6;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  padding-bottom: 1.5rem;
+  padding-left: 1.5rem;
+  margin: 0;
+}
+
+.about-app-list li {
+  margin-bottom: 0.5rem;
+}
+
+.about-text {
+  font-size: 1.125rem;
+  font-weight: 350;
+  line-height: 2;
+  line-height: 1.6;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+}
+
+.about-hero-image {
+  max-width: 15%;
+  height: auto;
+}
+
 @media (min-width: 992px) and (min-height: 700px) {
   .about-app-all-content-container {
-    width: 50%;
     margin: 0 auto;
   }
-}
+
+  .section-header--team {
+    background: url('/images/orange-pattern-stripe-desktop.png') center/cover;
+    position: relative;
+  }
+
+  .section-header--about {
+    background: url('/images/yellow-pattern-stripe-desktop.png') center/cover;
+    position: relative;
+  }
+
+  .team-members-list-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  .team-member-item {
+    width: calc(33.333% - 80px);
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .team-member-item-image {
+    margin-right: 0;
+    margin-bottom: 10px;
+    justify-content: center;
+  }
+
+  .team-member-item-content {
+    width: 100%;
+  }
+}   
