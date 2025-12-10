@@ -150,42 +150,26 @@ export default function AboutApp({
             <h5> </h5>
           </div>
 
-
-        <Container 
-          fluid 
-          className="about-app-intro-container"
-          >
-          <Row style={{ width: '100%', justifyContent: 'center' }}>
-            <Col xs={12} md={8} lg={6}>
-              <div className="profile-form">
-                <h4 className='about-app-header'>About the GovLab</h4>
-                <p className='about-text'>The GovLab’s mission is to improve people’s lives by changing the way we govern. Our goal is to strengthen the ability of institutions – including but not limited to governments – and people to work more openly, collaboratively, effectively and legitimately to make better decisions and solve public problems.</p>
-                <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={t("about.goToWebsite")} />
-              </div>  
-            </Col>
-          </Row>
+        <div className="about-app-partner-container">
+          <div className='about-app-partner-container-text'>
+            <h4 className='about-app-header'>About the GovLab</h4>
+            <p className='about-text'>The GovLab’s mission is to improve people’s lives by changing the way we govern. Our goal is to strengthen the ability of institutions – including but not limited to governments – and people to work more openly, collaboratively, effectively and legitimately to make better decisions and solve public problems.</p>
+            <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={t("about.goToWebsite")} />          </div>
           <div className='gov-lab-logo-container'>
               <img src="/images/the_govlab_logo 1.png" alt="The Gov Lab Logo" />
           </div>
-        </Container>
+        </div>
 
-        <Container 
-          fluid 
-          className="about-app-intro-container"
-          >
-          <Row style={{ width: '100%', justifyContent: 'center' }}>
-            <Col xs={12} md={8} lg={6}>
-              <div className="profile-form">
-                <h4 className='about-app-header'>About Innovate Public Schools</h4>
-                <p className='about-text'>Innovate Public Schools is a nonprofit organization dedicated to building the capacity of parents and families to organize, advocate, and demand high quality schools for their children.</p>
-                <GoToWebsiteButton url={"https://innovateschools.org/"} buttonText={t("about.goToWebsite")} />
-                </div>  
-            </Col>
-          </Row>
-          <div className='innovate-schools-logo-container'>
-            <img src="/images/innovate_logo.png" alt="Innovate Public Schools Logo" />
+        <div className="about-app-partner-container">
+          <div className='about-app-partner-container-text'>
+            <h4 className='about-app-header'>About Innovate Public Schools</h4>
+            <p className='about-text'>Innovate Public Schools is a nonprofit organization dedicated to building the capacity of parents and families to organize, advocate, and demand high quality schools for their children.</p>
+            <GoToWebsiteButton url={"https://innovateschools.org/"} buttonText={t("about.goToWebsite")} />
           </div>
-        </Container>
+          <div className='innovate-schools-logo-container'>
+              <img src="/images/innovate_logo.png" alt="Innovate Public Schools Logo" />
+          </div>
+        </div>
 
         <div className='privacy-policy-header section-header--privacy' onClick={() => navigate('/privacy-policy')}>
           <h5>{t("about.privacyPolicy")}</h5>

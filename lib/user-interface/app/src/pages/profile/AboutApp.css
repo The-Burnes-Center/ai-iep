@@ -179,6 +179,7 @@ margin-top: 0px;
   width: 100%;
   background-color: transparent;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -190,7 +191,6 @@ margin-top: 0px;
 
 .gov-lab-logo-container {
   width: 100%;
-  background-color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -267,6 +267,28 @@ margin-top: 0px;
 .about-hero-image {
   max-width: 15%;
   height: auto;
+  margin-top: 1rem;
+}
+
+.about-app-partner-container {
+  display: flex;
+  flex-direction: column-reverse;
+  min-height: 100px;
+  width: 100%;
+  justify-content: center;
+  background: transparent;
+  padding: 2rem;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0 auto;
+}
+
+.about-app-partner-container-text {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 @media (min-width: 992px) and (min-height: 700px) {
@@ -306,5 +328,18 @@ margin-top: 0px;
 
   .team-member-item-content {
     width: 100%;
+  }
+
+  .gov-lab-logo-container {
+    width: 50%;
+  }
+
+  .innovate-schools-logo-container {
+    width: 50%;
+  }
+
+  .about-app-partner-container {
+    width: 70%;
+    flex-direction: row;
   }
 }   
