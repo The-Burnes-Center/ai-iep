@@ -78,14 +78,14 @@ export default function AboutApp({
             <Col xs={12} md={8} lg={6}>
               <div className="profile-form">
                 <img src="/images/carousel/blissful.png" alt="" className="about-hero-image" />
-                <h4 className="update-profile-header">The AI-EP Project: Designing AI <br/> with and for Communities</h4>   
+                <h4 className="update-profile-header" style={{ whiteSpace: 'pre-line' }}>{t("about.projectTitle")}</h4>   
               </div>  
             </Col>
           </Row>
         </Container>
 
         <div className='section-header section-header--about'>
-          <h5>About The Project</h5>
+          <h5>{t("about.title")}</h5>
         </div>
 
         <Container 
@@ -95,28 +95,28 @@ export default function AboutApp({
           <Row style={{ width: '100%', justifyContent: 'center' }}>
             <Col xs={12} md={8} lg={6}>
               <div className="profile-form">
-                <p className='about-text'>With the support of the <a href="https://chanzuckerberg.com/" target="_blank" rel="noopener noreferrer">Chan Zuckerberg Initiative</a>, the <a href="https://burnes.northeastern.edu/" target="_blank" rel="noopener noreferrer">Burnes Center for Social Change</a>, its <a href="https://burnes.northeastern.edu/ai-for-impact-coop/" target="_blank" rel="noopener noreferrer">AI for Impact program</a>, and <a href="https://innovateschools.org/" target="_blank" rel="noopener noreferrer">Innovate Public Schools</a> are working with families in California and Massachusetts to use artificial intelligence to enhance educational outcomes for learners with disabilities. At the same time, we are learning how to develop public purpose AI with communities.</p> 
-                <h4 className='about-app-header'>The Problem</h4>
-                <p className='about-text'>With engagement from 1000+ parents, our team is building a free, open source AI-powered tool together with parents and caregivers that will : </p>
+                <p className='about-text' dangerouslySetInnerHTML={{ __html: t("about.intro") }} />
+                <h4 className='about-app-header'>{t("about.theProblem")}</h4>
+                <p className='about-text'>{t("about.problemDescription")}</p>
                 <ul className='about-app-list'>
-                  <li>Translate IEPs into multiple languages</li>
-                  <li>Simplify complex educational jargon</li>
-                  <li>Summarize key information</li>
-                  <li>Enable natural conversation with the document through text or voice</li>
-                  <li>Create personalized recommendations and meeting checklists</li>
+                  <li>{t("about.problemList.translate")}</li>
+                  <li>{t("about.problemList.simplify")}</li>
+                  <li>{t("about.problemList.summarize")}</li>
+                  <li>{t("about.problemList.conversation")}</li>
+                  <li>{t("about.problemList.recommendations")}</li>
                 </ul>
-                <p className='about-text'>We want to empower families to advocate effectively for their children's education. The Community-Centered AI project is about reimagining how AI is developed. By positioning affected communities as architects of their own solutions, we're working toward a future where responsible AI goes beyond mitigating risks and actively advances equity and empowerment.</p>
+                <p className='about-text'>{t("about.empowerFamilies")}</p>
               
-                <h4 className='about-app-header'>Our Research Questions</h4>
-                <p className='about-text'>At the same time, we are studying : </p>
+                <h4 className='about-app-header'>{t("about.researchQuestions")}</h4>
+                <p className='about-text'>{t("about.researchDescription")}</p>
                 <ul className='about-app-list'>
-                  <li>How can we effectively educate community members about AI so they can meaningfully participate in its development? </li>
-                  <li>What methods make co-design processes efficient and respectful of community members' time? </li>
-                  <li>How can we leverage AI to amplify diverse community voices? </li>
-                  <li>How can we translate community insights into practical technological solutions? </li>
-                  <li>What strategies increase equity in AI design, especially for vulnerable populations?</li>
+                  <li>{t("about.researchList.educate")}</li>
+                  <li>{t("about.researchList.codesign")}</li>
+                  <li>{t("about.researchList.amplify")}</li>
+                  <li>{t("about.researchList.translateInsights")}</li>
+                  <li>{t("about.researchList.equity")}</li>
                 </ul>
-                <p className='about-text'>In addition to the free AIEP tool, the project will produce a course and curriculum for community AI training and a playbook for community-centered AI development.</p>
+                <p className='about-text'>{t("about.projectOutcomes")}</p>
               
               </div>  
             </Col>
@@ -152,9 +152,10 @@ export default function AboutApp({
 
         <div className="about-app-partner-container">
           <div className='about-app-partner-container-text'>
-            <h4 className='about-app-header'>About the GovLab</h4>
-            <p className='about-text'>The GovLab’s mission is to improve people’s lives by changing the way we govern. Our goal is to strengthen the ability of institutions – including but not limited to governments – and people to work more openly, collaboratively, effectively and legitimately to make better decisions and solve public problems.</p>
-            <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={t("about.goToWebsite")} />          </div>
+            <h4 className='about-app-header'>{t("about.aboutTheGovLab")}</h4>
+            <p className='about-text'>{t("about.theGovLabDescription")}</p>
+            <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={t("about.goToWebsite")} />
+          </div>
           <div className='gov-lab-logo-container'>
               <img src="/images/the_govlab_logo 1.png" alt="The Gov Lab Logo" />
           </div>
@@ -162,8 +163,8 @@ export default function AboutApp({
 
         <div className="about-app-partner-container">
           <div className='about-app-partner-container-text'>
-            <h4 className='about-app-header'>About Innovate Public Schools</h4>
-            <p className='about-text'>Innovate Public Schools is a nonprofit organization dedicated to building the capacity of parents and families to organize, advocate, and demand high quality schools for their children.</p>
+            <h4 className='about-app-header'>{t("about.aboutInnovatePublicSchools")}</h4>
+            <p className='about-text'>{t("about.innovatePublicSchoolsDescription")}</p>
             <GoToWebsiteButton url={"https://innovateschools.org/"} buttonText={t("about.goToWebsite")} />
           </div>
           <div className='innovate-schools-logo-container'>
