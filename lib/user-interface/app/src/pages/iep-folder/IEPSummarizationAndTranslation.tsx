@@ -41,6 +41,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Profile-related state
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState<boolean>(true);
+  const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null);
+  const [saving, setSaving] = useState<boolean>(false);
   
   // Tutorial flow state management
   const [tutorialPhase, setTutorialPhase] = useState< 'parent-rights' | 'completed'>('parent-rights');
@@ -90,6 +92,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         setProfileLoading(true);
         const profileData = await apiClient.profile.getProfile();
         setProfile(profileData);
+        setOriginalProfile(profileData);
         
         // Sync the language context if profile has a different secondary language
         if (profileData?.secondaryLanguage && profileData.secondaryLanguage !== language) {
@@ -131,30 +134,37 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     { value: 'vi', label: 'Tiếng Việt' }
   ];
 
-  const languageOptions = preferredLanguage === 'en' 
-    ? [{ value: 'en', label: 'English' }] 
-    : [
-        { value: 'en', label: 'English' },
-        allLanguageOptions.find(option => option.value === preferredLanguage)!
-      ].filter(Boolean);
+  const languageOptions = allLanguageOptions.filter(option => 
+    document.summaries && document.summaries[option.value]
+  );
 
-  // Show dropdown only when preferredLanguage has content in summaries and there's more than 1 summary with content
-  const shouldShowLanguageDropdown = 
-    document.status === "PROCESSED" && 
-    document.summaries && 
-    document.summaries[preferredLanguage] && 
-    document.summaries[preferredLanguage].length > 0 &&
-    Object.values(document.summaries).filter(s => s && s.length > 0).length > 1;
+  const handlePreferredLanguageChange = async (languageCode: string) => {
+    if (!profile || languageCode === profile.secondaryLanguage) return;
+    
+    const updatedProfile = {...profile, secondaryLanguage: languageCode};
+    setProfile(updatedProfile);
+    
+    try {
+      setSaving(true);
+      await apiClient.profile.updateProfile(updatedProfile);
+      
+      // Update language context
+      setLanguage(languageCode as SupportedLanguage);
+      
+      setOriginalProfile(updatedProfile);
+      addNotification('success', t('profile.success.update'));
+    } catch (err) {
+      // Revert on error
+      setProfile(originalProfile);
+      addNotification('error', t('profile.error.update'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Handle language change - updates tab content and app language
   const handleLanguageChange = (lang: SupportedLanguage) => {
-    // Mark that user has manually selected a language (prevents auto-reset by useEffect)
-    setHasUserSelectedLanguage(true);
-    // Update dropdown selection and active tab immediately
-    setSelectedLanguage(lang);
-    setActiveTab(lang);
-    // Also update the app's global language for system text
-    setLanguage(lang);
+    handlePreferredLanguageChange(lang);
   };
 
 
@@ -813,8 +823,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             )}
           </div>
           
-          {/* Language Dropdown - Only show if preferred language is not English and not processing */}
-          {shouldShowLanguageDropdown && !isProcessing && document && document.status === "PROCESSED" && (
+          {/* Language Dropdown - Only show if more than one language available and not processing */}
+          {!isProcessing && document && document.status === "PROCESSED" && languageOptions.length > 1 && (
             <Dropdown>
               <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
                 {languageOptions.find(option => option.value === selectedLanguage)?.label || 'English'}
