@@ -97,9 +97,9 @@ class OpenAIAgent:
         get_section_info.__doc__ = doc
         return get_section_info
 
-    def analyze_document(self, model="gpt-5.1"):
+    def analyze_document(self, model="gpt-4.1"):
         """
-        Analyze an IEP document in English only using GPT-5.1.
+        Analyze an IEP document in English only using GPT-4.1.
         Returns a dict matching SingleLanguageIEP schema.
         """
         if not self.api_key:
