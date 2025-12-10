@@ -21,6 +21,7 @@ interface ForgotPasswordProps {
   confirmPassword: string;
   showNewPassword: boolean;
   showConfirmPassword: boolean;
+  showLogo?: boolean;
   setResetEmail: (value: string) => void;
   setResetCode: (value: string) => void;
   setNewPassword: (value: string) => void;
@@ -45,6 +46,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
   confirmPassword,
   showNewPassword,
   showConfirmPassword,
+  showLogo = true,
   setResetEmail,
   setResetCode,
   setNewPassword,
@@ -58,7 +60,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
 }) => {
   return (
     <>
-      <AuthHeader title={t('auth.resetPassword')} />
+      <AuthHeader title={t('auth.resetPassword')} showLogo={showLogo} />
         
         {!resetSent ? (
           <Form onSubmit={handleForgotPassword}>

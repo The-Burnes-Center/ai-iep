@@ -25,7 +25,11 @@ import FormLabel from './FormLabel';
 import VerificationCodeInput from './VerificationCodeInput';
 import LandingTopNavigation from './LandingTopNavigation';
 
-const CustomLogin: React.FC = () => {
+interface CustomLoginProps {
+  showLogo?: boolean;
+}
+
+const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
   // Get translation function and language setter from context
   const { t, language, setLanguage } = useLanguage();
   
@@ -646,7 +650,7 @@ const CustomLogin: React.FC = () => {
   if (passwordChangeRequired) {
     return (
       <>
-        <AuthHeader title={t('auth.changePassword')} />
+        <AuthHeader title={t('auth.changePassword')} showLogo={showLogo} />
         
         <Form onSubmit={handleCompleteNewPassword}>
           <PasswordInput
@@ -703,6 +707,7 @@ const CustomLogin: React.FC = () => {
           confirmPassword={confirmPassword}
           showNewPassword={showNewPassword}
           showConfirmPassword={showConfirmPassword}
+          showLogo={showLogo}
           setResetEmail={setResetEmail}
           setResetCode={setResetCode}
           setNewPassword={setNewPassword}
@@ -721,7 +726,7 @@ const CustomLogin: React.FC = () => {
   if (showSignUp) {
     return (
       <>
-        <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} />
+        <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} showLogo={showLogo} />
           
           {!isSignUpComplete ? (
             <Form onSubmit={handleSignUp}>
@@ -823,7 +828,7 @@ const CustomLogin: React.FC = () => {
   // Main login form with mobile login option
   return (
     <>
-      <AuthHeader title={t('auth.signInHeader')} />
+      <AuthHeader title={t('auth.signInHeader')} showLogo={showLogo} />
 
       <LanguageDropdown 
         language={language}

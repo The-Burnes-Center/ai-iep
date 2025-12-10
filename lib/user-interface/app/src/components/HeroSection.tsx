@@ -19,7 +19,7 @@ const HeroSection: React.FC = () => {
                 </div>
                 <div className='hero-section-login-container'>
                     <div className='hero-section-login-container-content'>
-                        <CustomLogin />
+                        <CustomLogin showLogo={false} />
                     </div> 
                 </div>
             </div>

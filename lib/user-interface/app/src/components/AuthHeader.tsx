@@ -4,21 +4,25 @@ interface AuthHeaderProps {
   logoSrc?: string;
   logoAlt?: string;
   className?: string;
+  showLogo?: boolean;
 }
 
 const AuthHeader: React.FC<AuthHeaderProps> = ({ 
   title, 
   logoSrc = "/images/aiep-logo-vertical.svg",
   logoAlt = "AIEP Logo",
-  className = '' 
+  className = '',
+  showLogo = true
 }) => {
   return (
     <div className={`text-center mb-4 ${className}`}>
-      <img 
-        src={logoSrc} 
-        alt={logoAlt} 
-        className="aiep-logo mb-3" 
-      />
+      {showLogo && (
+        <img 
+          src={logoSrc} 
+          alt={logoAlt} 
+          className="aiep-logo mb-3" 
+        />
+      )}
       <h4>{title}</h4>
     </div>
   );

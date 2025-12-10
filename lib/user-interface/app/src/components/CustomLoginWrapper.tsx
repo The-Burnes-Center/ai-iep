@@ -24,7 +24,7 @@ const CustomLoginWrapper: React.FC = () => {
       <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Row className="w-100 justify-content-center">
           <Col xs={12} sm={8} md={6} lg={4}>
-            <CustomLogin />
+            <CustomLogin showLogo={true} />
           </Col>
         </Row>
       </Container>
