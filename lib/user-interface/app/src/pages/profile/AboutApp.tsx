@@ -95,7 +95,7 @@ export default function AboutApp({
           <Row style={{ width: '100%', justifyContent: 'center' }}>
             <Col xs={12} md={8} lg={6}>
               <div className="profile-form">
-                <p className='about-text'>With the support of the Chan Zuckerberg Initiative, the Burnes Center for Social Change, its AI for Impact program, and Innovate Public Schools are working with families in California and Massachusetts to use artificial intelligence to enhance educational outcomes for learners with disabilities. At the same time, we are learning how to develop public purpose AI with communities.</p> 
+                <p className='about-text'>With the support of the <a href="https://chanzuckerberg.com/" target="_blank" rel="noopener noreferrer">Chan Zuckerberg Initiative</a>, the <a href="https://burnes.northeastern.edu/" target="_blank" rel="noopener noreferrer">Burnes Center for Social Change</a>, its <a href="https://burnes.northeastern.edu/ai-for-impact-coop/" target="_blank" rel="noopener noreferrer">AI for Impact program</a>, and <a href="https://innovateschools.org/" target="_blank" rel="noopener noreferrer">Innovate Public Schools</a> are working with families in California and Massachusetts to use artificial intelligence to enhance educational outcomes for learners with disabilities. At the same time, we are learning how to develop public purpose AI with communities.</p> 
                 <h4 className='about-app-header'>The Problem</h4>
                 <p className='about-text'>With engagement from 1000+ parents, our team is building a free, open source AI-powered tool together with parents and caregivers that will : </p>
                 <ul className='about-app-list'>

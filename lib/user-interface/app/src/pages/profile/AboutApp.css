@@ -264,6 +264,15 @@ margin-top: 0px;
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
 }
 
+.about-text a,
+.about-text a:link,
+.about-text a:visited,
+.about-text a:hover,
+.about-text a:active,
+.about-text a:focus {
+  color: #1E1E1E;
+}
+
 .about-hero-image {
   max-width: 15%;
   height: auto;
