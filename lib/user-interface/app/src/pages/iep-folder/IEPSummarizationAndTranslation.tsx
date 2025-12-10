@@ -76,6 +76,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('en');
   // Add state for dropdown language selection (separate from global language preference)
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
+  // Track if user has manually selected a language (to prevent auto-reset)
+  const [hasUserSelectedLanguage, setHasUserSelectedLanguage] = useState<boolean>(false);
   const navigate = useNavigate();
   
   // Get preferred language from profile API, fallback to context language, then to 'en'
@@ -109,6 +111,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     // Don't initialize until initial loading is complete
     if (initialLoading) return;
     
+    // Skip if user has manually selected a language via the dropdown
+    if (hasUserSelectedLanguage) return;
+    
     if (preferredLanguage !== 'en' && hasContent(preferredLanguage)) {
       setSelectedLanguage(preferredLanguage);
       setActiveTab(preferredLanguage);
@@ -116,7 +121,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       setSelectedLanguage('en');
       setActiveTab('en');
     }
-  }, [preferredLanguage, initialLoading, document.summaries, document.sections]);
+  }, [preferredLanguage, initialLoading, document.summaries, document.sections, hasUserSelectedLanguage]);
 
   // Dynamic language options - only show English and preferred language
   const allLanguageOptions = [
@@ -133,14 +138,23 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         allLanguageOptions.find(option => option.value === preferredLanguage)!
       ].filter(Boolean);
 
-  // Don't show dropdown if preferred language is English
-  const shouldShowLanguageDropdown = preferredLanguage !== 'en' && document.status && document.status === "PROCESSED" && Object.keys(document.summaries).length > 1;
+  // Show dropdown only when preferredLanguage has content in summaries and there's more than 1 summary with content
+  const shouldShowLanguageDropdown = 
+    document.status === "PROCESSED" && 
+    document.summaries && 
+    document.summaries[preferredLanguage] && 
+    document.summaries[preferredLanguage].length > 0 &&
+    Object.values(document.summaries).filter(s => s && s.length > 0).length > 1;
 
-  // Handle language change - now just controls tab content, no API calls
+  // Handle language change - updates tab content and app language
   const handleLanguageChange = (lang: SupportedLanguage) => {
+    // Mark that user has manually selected a language (prevents auto-reset by useEffect)
+    setHasUserSelectedLanguage(true);
     // Update dropdown selection and active tab immediately
     setSelectedLanguage(lang);
     setActiveTab(lang);
+    // Also update the app's global language for system text
+    setLanguage(lang);
   };
 
 
