@@ -55,7 +55,7 @@
   align-items: center;
   width: 100%;
   border: 1px solid #dee2e6;
-  border-radius: 8px;
+  border-radius: 20px;
   overflow: hidden;
   background-color: #fff;
   position: relative;
@@ -74,8 +74,8 @@
 }
 
 .seamless-file-button {
-  background-color: #0d6efd;
-  color: white;
+  background-color: #F5F3EE;
+  color: #1E1E1E;
   border: none;
   padding: 0.75rem 1rem;
   font-family: akzidenz-grotesk-next-conden, sans-serif;
@@ -86,7 +86,8 @@
   cursor: pointer;
   pointer-events: none;
   white-space: nowrap;
-  border-radius: 0;
+  border: 1px solid #CBC6BC;
+  border-radius: 20px 0 0 20px;
 }
 
 .seamless-file-container.disabled .seamless-file-button {
@@ -101,7 +102,7 @@
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
   font-weight: 400;
   font-size: 1rem;
-  background-color: #f8f9fa;
+  background-color: #E7E4DC;
   border: none;
   margin: 0;
   min-height: auto;

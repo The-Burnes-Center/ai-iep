@@ -101,6 +101,8 @@
     "upload.success": "¡El archivo se ha subido correctamente!",
     "upload.error": "Error al subir el archivo. Inténtelo de nuevo.",
     "upload.button": "Subir Documento",
+    "upload.selectFile": "Seleccionar Archivo",
+    "upload.noFileSelected": "Ningún Archivo Seleccionado",
     "upload.replaceDocument": "REEMPLAZAR DOCUMENTO IEP",
     
     "current.loading": "Cargando...",

@@ -101,6 +101,8 @@
     "upload.success": "Tệp đã được tải lên thành công!",
     "upload.error": "Lỗi khi tải lên tệp. Vui lòng thử lại.",
     "upload.button": "Tải lên tài liệu",
+    "upload.selectFile": "Chọn Tệp",
+    "upload.noFileSelected": "Chưa Chọn Tệp",
     "upload.replaceDocument": "THAY THẾ TÀI LIỆU IEP",
     
     "current.loading": "Đang tải...",
