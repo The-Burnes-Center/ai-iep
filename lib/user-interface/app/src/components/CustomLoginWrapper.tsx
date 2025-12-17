@@ -5,6 +5,13 @@ import CustomLogin from './CustomLogin';
 import './CustomLogin.css';
 import AIEPFooter from './AIEPFooter';
 
+const publicFooterLinks = [
+  { route: '/home', labelKey: 'footer.home' },
+  { route: '/', labelKey: 'footer.uploadIEP' },
+  { route: '/faqs', labelKey: 'footer.faqs' },
+  { route: '/about-the-project', labelKey: 'footer.aboutUs' },
+];
+
 /**
  * CustomLoginWrapper - Layout wrapper for authentication pages
  * 
@@ -28,7 +35,7 @@ const CustomLoginWrapper: React.FC = () => {
           </Col>
         </Row>
       </Container>
-      <AIEPFooter />
+      <AIEPFooter footerLinks={publicFooterLinks} />
     </>
   );
 };

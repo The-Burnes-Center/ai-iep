@@ -3,7 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../common/language-context';
 import './AIEPFooter.css';
 
-const AIEPFooter: React.FC = () => {
+interface FooterLink {
+  route: string;
+  labelKey: string;
+}
+
+interface AIEPFooterProps {
+  footerLinks?: FooterLink[];
+}
+
+const defaultFooterLinks: FooterLink[] = [
+  { route: '/summary-and-translations', labelKey: 'footer.home' },
+  { route: '/iep-documents', labelKey: 'footer.uploadIEP' },
+  { route: '/support-center', labelKey: 'footer.supportCenter' },
+  { route: '/about-the-app', labelKey: 'footer.aboutUs' },
+];
+
+const AIEPFooter: React.FC<AIEPFooterProps> = ({ footerLinks = defaultFooterLinks }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
@@ -31,10 +47,11 @@ const AIEPFooter: React.FC = () => {
         </div>
         <div className="footer-links">
             <ul>
-                <li onClick={() => handleNavigation('/summary-and-translations')}>{t('footer.home')}</li>
-                <li onClick={() => handleNavigation('/iep-documents')}>{t('footer.uploadIEP')}</li>
-                <li onClick={() => handleNavigation('/support-center')}>{t('footer.supportCenter')}</li>
-                <li onClick={() => handleNavigation('/about-the-app')}>{t('footer.aboutUs')}</li>
+                {footerLinks.map((link, index) => (
+                  <li key={index} onClick={() => handleNavigation(link.route)}>
+                    {t(link.labelKey)}
+                  </li>
+                ))}
             </ul>
         </div>
         <div className="footer-project-partners">

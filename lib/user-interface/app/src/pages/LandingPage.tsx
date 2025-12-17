@@ -8,6 +8,13 @@ import AIEPFooter from '../components/AIEPFooter';
 import ParentRightsBanner from '../components/ParentRightsBanner';
 import ResourcesBanner from '../components/ResourcesBanner';
 
+const publicFooterLinks = [
+    { route: '/home', labelKey: 'footer.home' },
+    { route: '/', labelKey: 'footer.uploadIEP' },
+    { route: '/faqs', labelKey: 'footer.faqs' },
+    { route: '/about-the-project', labelKey: 'footer.aboutUs' },
+];
+
 const LandingPage: React.FC = () => { 
     return (
         <>
@@ -18,7 +25,7 @@ const LandingPage: React.FC = () => {
             <MultiFaceGreenBanner />
             <ParentRightsBanner />
             <ResourcesBanner />
-            <AIEPFooter />
+            <AIEPFooter footerLinks={publicFooterLinks} />
         </div>
         </>
 

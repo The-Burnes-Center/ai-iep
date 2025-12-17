@@ -60,26 +60,19 @@ export default function AppRoutes() {
 
       <Route path="/" element={<CustomLoginWrapper />} />
       
+      {/* FAQs - public route */}
+      <Route path="/faqs" element={
+        <FrequentlyAskedQuestions 
+          NavigationComponent={LandingTopNavigation} 
+        />
+      } />
+
+      
       {/* About the project - public route */}
       <Route path="/about-the-project" element={
         <AboutApp 
           NavigationComponent={LandingTopNavigation} 
           showBreadcrumbs={false} 
-        />
-      } />
-      
-      {/* Support center - public route */}
-      <Route path="/support" element={
-        <SupportCenter 
-          NavigationComponent={LandingTopNavigation} 
-          showAboutApp={false} 
-        />
-      } />
-      
-      {/* FAQs - public route */}
-      <Route path="/faqs" element={
-        <FrequentlyAskedQuestions 
-          NavigationComponent={LandingTopNavigation} 
         />
       } />
       
