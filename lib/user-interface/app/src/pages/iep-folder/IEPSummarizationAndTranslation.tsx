@@ -493,22 +493,23 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
-  // Helper function to truncate content at character limit while preserving word boundaries
-  const truncateContent = (content: string, limit: number = 705): { truncated: string; needsTruncation: boolean } => {
-    if (!content || content.length <= limit) {
+  // Helper function to truncate content to the first paragraph
+  const truncateContent = (content: string): { truncated: string; needsTruncation: boolean } => {
+    if (!content) {
       return { truncated: content, needsTruncation: false };
     }
     
-    // Find the last space before the limit to avoid cutting words
-    let truncateAt = content.lastIndexOf(' ', limit);
+    // Split by double newline (paragraph separator)
+    const paragraphs = content.split(/\n\n+/);
     
-    // If no space found, just use the limit
-    if (truncateAt === -1) {
-      truncateAt = limit;
+    // If there's only one paragraph (or no paragraph breaks), no truncation needed
+    if (paragraphs.length <= 1) {
+      return { truncated: content, needsTruncation: false };
     }
     
-    const truncated = content.substring(0, truncateAt);
-    return { truncated, needsTruncation: true };
+    // Return the first paragraph as truncated content
+    const firstParagraph = paragraphs[0].trim();
+    return { truncated: firstParagraph, needsTruncation: true };
   };
 
   // Toggle summary expansion for a specific language
@@ -547,7 +548,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               <Card.Body>
                 {(() => {
                   const fullContent = document.summaries[lang];
-                  const { truncated, needsTruncation } = truncateContent(fullContent, 705);
+                  console.log("fullContent", fullContent);
+                  const { truncated, needsTruncation } = truncateContent(fullContent);
                   const isExpanded = isSummaryExpanded[lang];
                   const contentToShow = needsTruncation && !isExpanded ? truncated : fullContent;
                   
