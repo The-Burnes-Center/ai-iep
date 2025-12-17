@@ -76,6 +76,9 @@
     "summary.reuploadButton": "Tải Lên Lại Tài Liệu",
     "summary.noPreferredLanguageContent.title": "Nội Dung Không Có Sẵn Bằng Ngôn Ngữ Ưa Thích",
     "summary.noPreferredLanguageContent.message": "Tài liệu này đã được xử lý trước khi thiết lập ngôn ngữ ưa thích của bạn. Tải lên lại tài liệu để dịch sang ngôn ngữ ưa thích của bạn.",
+    "summary.lastUpdate": "Cập nhật lần cuối:",
+    "summary.showLess": "Thu Gọn",
+    "summary.readMore": "Đọc Thêm",
 
     "sections.studentInfo": "Về Học Sinh",
     "sections.accommodations": "Điều Chỉnh Hỗ Trợ",

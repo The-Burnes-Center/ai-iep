@@ -76,6 +76,9 @@
     "summary.reuploadButton": "重新上传文档",
     "summary.noPreferredLanguageContent.title": "您的首选语言内容不可用",
     "summary.noPreferredLanguageContent.message": "此文档在设置您的语言偏好之前已被处理。请重新上传您的文档以将其翻译成您的首选语言。",
+    "summary.lastUpdate": "最后更新:",
+    "summary.showLess": "收起",
+    "summary.readMore": "阅读更多",
 
     "sections.studentInfo": "关于学生",
     "sections.accommodations": "调整措施",

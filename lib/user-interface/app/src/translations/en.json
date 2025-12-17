@@ -76,6 +76,9 @@
     "summary.reuploadButton": "Re-upload Document",
     "summary.noPreferredLanguageContent.title": "Content Not Available in Your Preferred Language",
     "summary.noPreferredLanguageContent.message": "This document was processed before your language preference was set. Re-upload your document to get it translated into your preferred language.",
+    "summary.lastUpdate": "Last update:",
+    "summary.showLess": "Show Less",
+    "summary.readMore": "Read More",
 
     "sections.studentInfo": "About Student",
     "sections.accommodations": "Accommodations",

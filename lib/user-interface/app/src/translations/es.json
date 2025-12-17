@@ -76,6 +76,9 @@
     "summary.reuploadButton": "Volver a Subir Documento",
     "summary.noPreferredLanguageContent.title": "Contenido No Disponible en Su Idioma Preferido",
     "summary.noPreferredLanguageContent.message": "Este documento fue procesado antes de que se estableciera su preferencia de idioma. Vuelva a subir su documento para traducirlo a su idioma preferido.",
+    "summary.lastUpdate": "Última actualización:",
+    "summary.showLess": "Mostrar Menos",
+    "summary.readMore": "Leer Más",
 
     "sections.studentInfo": "Sobre el Estudiante",
     "sections.accommodations": "Adaptaciones",

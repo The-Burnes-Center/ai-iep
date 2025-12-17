@@ -537,7 +537,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           <>
           <div className="summary-updated-at">  
             {document.updatedAt && (
-              <span>Last update: {TextHelper.formatUnixTimestamp(document.updatedAt, lang)}</span>
+              <span>{t('summary.lastUpdate')} {TextHelper.formatUnixTimestamp(document.updatedAt, lang)}</span>
             )}
           </div>
             <h4 className="summary-header mt-4">
@@ -572,7 +572,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                               fontWeight: '500'
                             }}
                           >
-                            {isExpanded ? 'Show Less' : 'Read More'}
+                            {isExpanded ? t('summary.showLess') : t('summary.readMore')}
                           </span>
                         </>
                       )}

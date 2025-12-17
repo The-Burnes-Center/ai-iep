@@ -396,7 +396,6 @@ filter: invert(1) grayscale(100%) brightness(200%);
 
 .summary-content .markdown-content p {
 margin-bottom: 1.8rem;
-line-height: 1.8;
 }
 
 .summary-content .markdown-content ul, 
