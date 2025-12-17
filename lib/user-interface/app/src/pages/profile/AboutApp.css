@@ -108,7 +108,7 @@ margin-bottom: 1rem;
   display: flex;
   flex-direction: row;
   width: 100%;
-  padding: 10px 10px 10px 20px;
+  padding: 20px 10px 20px 20px;
   justify-content: flex-start;
   border: 1px solid #1E1E1E;
 }
@@ -129,7 +129,6 @@ margin-bottom: 1rem;
   font-family: "Fjalla One", sans-serif;
   font-weight: 400;
   font-style: normal;
-  width: 50%;
   margin: auto;
   min-height: 2.4rem;
 }
@@ -360,5 +359,9 @@ margin-top: 0px;
 
   .privacy-policy-header {
     width: 70%;
+  }
+
+  .section-header h5 {
+    width: 50%;
   }
 }   

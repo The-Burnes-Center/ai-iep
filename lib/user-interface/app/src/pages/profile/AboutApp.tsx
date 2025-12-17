@@ -154,7 +154,7 @@ export default function AboutApp({
           <div className='about-app-partner-container-text'>
             <h4 className='about-app-header'>{t("about.aboutTheGovLab")}</h4>
             <p className='about-text'>{t("about.theGovLabDescription")}</p>
-            <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={t("about.goToWebsite")} />
+            <GoToWebsiteButton url={"https://thegovlab.org/"} buttonText={t("about.learnMore")} />
           </div>
           <div className='gov-lab-logo-container'>
               <img src="/images/the_govlab_logo 1.png" alt="The Gov Lab Logo" />
@@ -165,7 +165,7 @@ export default function AboutApp({
           <div className='about-app-partner-container-text'>
             <h4 className='about-app-header'>{t("about.aboutInnovatePublicSchools")}</h4>
             <p className='about-text'>{t("about.innovatePublicSchoolsDescription")}</p>
-            <GoToWebsiteButton url={"https://innovateschools.org/"} buttonText={t("about.goToWebsite")} />
+            <GoToWebsiteButton url={"https://innovateschools.org/"} buttonText={t("about.learnMore")} />
           </div>
           <div className='innovate-schools-logo-container'>
               <img src="/images/innovate_logo.png" alt="Innovate Public Schools Logo" />
