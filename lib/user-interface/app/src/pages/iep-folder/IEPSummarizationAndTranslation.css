@@ -425,15 +425,25 @@ padding: 0 1rem;
 .download-button {
   font-family: 'akzidenz-grotesk-next-pro', sans-serif;
   border-radius: 15px;
+  letter-spacing: 0.1em;
 }
 /* Language dropdown styling in button-container */
 .button-container .dropdown .dropdown-toggle {
 background-color: #F5F3EE;
-border: 1px solid #1E1E1E;
+border: 1px solid #CBC6BC;
 border-radius: 30px;
 color: #1E1E1E;
 min-width: 100px;
-padding: 0.5rem 1rem;
+padding: 0.5rem 1.5rem;
+font-weight: 500;
+font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+letter-spacing: 0.05em;
+}
+
+.language-dropdown-toggle .dropdown-toggle {
+  font-weight: 500;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  letter-spacing: 0.05em;
 }
 
 .button-container .dropdown .dropdown-toggle:hover,

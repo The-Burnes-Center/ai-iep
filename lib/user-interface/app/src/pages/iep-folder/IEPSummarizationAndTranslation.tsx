@@ -827,9 +827,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           
           {/* Language Dropdown - Only show if more than one language available and not processing */}
           {!isProcessing && document && document.status === "PROCESSED" && languageOptions.length > 1 && (
-            <Dropdown>
+            <Dropdown className='language-dropdown-toggle'>
               <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
-                {languageOptions.find(option => option.value === selectedLanguage)?.label || 'English'}
+                {(languageOptions.find(option => option.value === selectedLanguage)?.label || 'English').toUpperCase()}
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 {languageOptions.map(option => (
@@ -838,7 +838,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
                     active={selectedLanguage === option.value}
                   >
-                    {getTabTitle(option.value)}
+                    {option.label.toUpperCase()}
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>
