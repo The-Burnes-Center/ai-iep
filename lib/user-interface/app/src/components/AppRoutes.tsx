@@ -67,13 +67,18 @@ export default function AppRoutes() {
         />
       } />
 
-      
+
       {/* About the project - public route */}
       <Route path="/about-the-project" element={
         <AboutApp 
           NavigationComponent={LandingTopNavigation} 
           showBreadcrumbs={false} 
         />
+      } />
+
+      {/* Privacy Policy - public route */}
+      <Route path="/public-privacy-policy" element={
+        <PrivacyPolicy isPublic={true} />
       } />
       
       {/* ===== PROTECTED ROUTES ===== */}
@@ -115,7 +120,6 @@ export default function AppRoutes() {
         <Route path="/frequently-asked-questions" element={<FrequentlyAskedQuestions />} />
         <Route path="/survey-form" element={<SurveyForm />} />
         <Route path="/about-aiep" element={<AboutAIEP />} />
-        <Route path="/about-the-project" element={<AboutTheProject />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       </Route>
     </Routes>

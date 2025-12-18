@@ -179,7 +179,7 @@ export default function AboutApp({
           </div>
         </div>
 
-        <div className='privacy-policy-header section-header--privacy' onClick={() => navigate('/privacy-policy')}>
+        <div className='privacy-policy-header section-header--privacy' onClick={() => navigate(showBreadcrumbs ? '/privacy-policy' : '/public-privacy-policy')}>
           <h5>{t("about.privacyPolicy")}</h5>
           <span className="arrow-icon">
             <img src="/images/arrow.svg" alt="" />

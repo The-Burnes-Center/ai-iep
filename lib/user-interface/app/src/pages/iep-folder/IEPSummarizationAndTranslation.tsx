@@ -507,9 +507,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       return { truncated: content, needsTruncation: false };
     }
     
-    // Return the first paragraph as truncated content
+    // Return the first paragraph as truncated content with ".." appended to indicate continuation
     const firstParagraph = paragraphs[0].trim();
-    return { truncated: firstParagraph, needsTruncation: true };
+    return { truncated: firstParagraph + '..', needsTruncation: true };
   };
 
   // Toggle summary expansion for a specific language
@@ -838,7 +838,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
                     active={selectedLanguage === option.value}
                   >
-                    {option.label}
+                    {getTabTitle(option.value)}
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>

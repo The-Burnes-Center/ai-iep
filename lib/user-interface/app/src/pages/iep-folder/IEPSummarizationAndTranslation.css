@@ -375,7 +375,7 @@ filter: invert(1) grayscale(100%) brightness(200%);
 
 
 .summary-content .markdown-content p {
-margin-bottom: 1.8rem;
+margin-bottom: 1rem;
 }
 
 .summary-content .markdown-content ul, 
@@ -430,7 +430,7 @@ padding: 0 1rem;
 .button-container .dropdown .dropdown-toggle {
 background-color: #F5F3EE;
 border: 1px solid #1E1E1E;
-border-radius: 10px;
+border-radius: 30px;
 color: #1E1E1E;
 min-width: 100px;
 padding: 0.5rem 1rem;

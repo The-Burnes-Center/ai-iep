@@ -2,16 +2,28 @@ import React from 'react';
 import { Container, Row, Col, Card, Spinner, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import MobileTopNavigation from '../components/MobileTopNavigation';
+import LandingTopNavigation from '../components/LandingTopNavigation';
 import AIEPFooter from '../components/AIEPFooter';
 import { useLanguage } from '../common/language-context';
 import './PrivacyPolicy.css';
 
-const PrivacyPolicy: React.FC = () => {
+const publicFooterLinks = [
+  { route: '/home', labelKey: 'footer.home' },
+  { route: '/', labelKey: 'footer.uploadIEP' },
+  { route: '/faqs', labelKey: 'footer.faqs' },
+  { route: '/about-the-project', labelKey: 'footer.aboutUs' },
+];
+
+interface PrivacyPolicyProps {
+  isPublic?: boolean;
+}
+
+const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isPublic = false }) => {
   const navigate = useNavigate();
   const { t, translationsLoaded } = useLanguage();
 
   const handleBackClick = () => {
-    navigate('/about-the-app');
+    navigate(isPublic ? '/about-the-project' : '/about-the-app');
   };
 
   // Return loading state if translations aren't ready
@@ -27,9 +39,11 @@ const PrivacyPolicy: React.FC = () => {
     );
   }
 
+  const NavigationComponent = isPublic ? LandingTopNavigation : MobileTopNavigation;
+
   return (
     <div className="privacy-policy-page">
-      <MobileTopNavigation />
+      <NavigationComponent />
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4">
         <Breadcrumb>
@@ -186,7 +200,7 @@ const PrivacyPolicy: React.FC = () => {
           </Col>
         </Row>
       </Container>
-      <AIEPFooter />
+      <AIEPFooter footerLinks={isPublic ? publicFooterLinks : undefined} />
     </div>
   );
 };
