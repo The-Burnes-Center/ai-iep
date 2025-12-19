@@ -191,84 +191,84 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     return [
       {
         id: 'privacy-slide-1',
-        type: 'privacy',
+        type: 'privacy' as const,
         title: t('privacy.slide1.title'),
         content: t('privacy.slide1.content'),
         image: '/images/carousel/joyful.png'
       },
       {
         id: 'privacy-slide-2',
-        type: 'privacy',
+        type: 'privacy' as const,
         title: t('privacy.slide2.title'),
         content: t('privacy.slide2.content'),
         image: '/images/carousel/joyful.png'
       },
       {
         id: 'rights-slide-1',
-        type: 'rights',
+        type: 'rights' as const,
         title: t('rights.slide1.title'),
         content: t('rights.slide1.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-2',
-        type: 'rights',
+        type: 'rights' as const,
         title: t('rights.slide2.title'),
         content: t('rights.slide2.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-3',
-        type: 'rights',
+        type: 'rights' as const,
         title: t('rights.slide3.title'),
         content: t('rights.slide3.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-4',
-        type: 'rights',
+        type: 'rights' as const,
         title: t('rights.slide4.title'),
         content: t('rights.slide4.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-5',
-        type: 'rights',
+        type: 'rights' as const,
         title: t('rights.slide5.title'),
         content: t('rights.slide5.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-6',
-        type: 'rights',
+        type: 'rights' as const,
         title: t('rights.slide6.title'),
         content: t('rights.slide6.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'tutorial-slide-1',
-        type: 'tutorial',
+        type: 'tutorial' as const,
         title: t('rights.slide7.title'),
         content: t('rights.slide7.content'),
         image: '/images/tutorial-01.jpg'
       },
       {
         id: 'tutorial-slide-2',
-        type: 'tutorial',
+        type: 'tutorial' as const,
         title: t('rights.slide8.title'),
         content: t('rights.slide8.content'),
         image: '/images/tutorial-02.jpg'
       },
       {
         id: 'tutorial-slide-3',
-        type: 'tutorial',
+        type: 'tutorial' as const,
         title: t('rights.slide9.title'),
         content: t('rights.slide9.content'),
         image: '/images/tutorial-03.jpg'
       },
       {
         id: 'tutorial-slide-4',
-        type: 'tutorial',
+        type: 'tutorial' as const,
         title: t('rights.slide10.title'),
         content: t('rights.slide10.content'),
         image: '/images/tutorial-04.jpg'
