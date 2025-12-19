@@ -8,7 +8,7 @@ import { IEPDocument, IEPSection, Language, UserProfile } from '../../common/typ
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
 import MobileTopNavigation from '../../components/MobileTopNavigation';
-import ParentRightsCarousel from '../../components/ParentRightsCarousel';
+import ParentRightsCarousel, { SlideData } from '../../components/ParentRightsCarousel';
 import ProcessingModal from '../../components/ProcessingModal';
 import AIEPFooter from '../../components/AIEPFooter';
 import { ApiClient } from '../../common/api-client/api-client';
@@ -191,89 +191,89 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     return [
       {
         id: 'privacy-slide-1',
-        type: 'privacy' as const,
+        type: 'privacy',
         title: t('privacy.slide1.title'),
         content: t('privacy.slide1.content'),
         image: '/images/carousel/joyful.png'
       },
       {
         id: 'privacy-slide-2',
-        type: 'privacy' as const,
+        type: 'privacy',
         title: t('privacy.slide2.title'),
         content: t('privacy.slide2.content'),
         image: '/images/carousel/joyful.png'
       },
       {
         id: 'rights-slide-1',
-        type: 'rights' as const,
+        type: 'rights',
         title: t('rights.slide1.title'),
         content: t('rights.slide1.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-2',
-        type: 'rights' as const,
+        type: 'rights',
         title: t('rights.slide2.title'),
         content: t('rights.slide2.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-3',
-        type: 'rights' as const,
+        type: 'rights',
         title: t('rights.slide3.title'),
         content: t('rights.slide3.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-4',
-        type: 'rights' as const,
+        type: 'rights',
         title: t('rights.slide4.title'),
         content: t('rights.slide4.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-5',
-        type: 'rights' as const,
+        type: 'rights',
         title: t('rights.slide5.title'),
         content: t('rights.slide5.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'rights-slide-6',
-        type: 'rights' as const,
+        type: 'rights',
         title: t('rights.slide6.title'),
         content: t('rights.slide6.content'),
         image: '/images/carousel/blissful.png'
       },
       {
         id: 'tutorial-slide-1',
-        type: 'tutorial' as const,
+        type: 'tutorial',
         title: t('rights.slide7.title'),
         content: t('rights.slide7.content'),
         image: '/images/tutorial-01.jpg'
       },
       {
         id: 'tutorial-slide-2',
-        type: 'tutorial' as const,
+        type: 'tutorial',
         title: t('rights.slide8.title'),
         content: t('rights.slide8.content'),
         image: '/images/tutorial-02.jpg'
       },
       {
         id: 'tutorial-slide-3',
-        type: 'tutorial' as const,
+        type: 'tutorial',
         title: t('rights.slide9.title'),
         content: t('rights.slide9.content'),
         image: '/images/tutorial-03.jpg'
       },
       {
         id: 'tutorial-slide-4',
-        type: 'tutorial' as const,
+        type: 'tutorial',
         title: t('rights.slide10.title'),
         content: t('rights.slide10.content'),
         image: '/images/tutorial-04.jpg'
       }
-    ];
+    ] as SlideData[];
   }, [t, translationsLoaded]);
 
 
