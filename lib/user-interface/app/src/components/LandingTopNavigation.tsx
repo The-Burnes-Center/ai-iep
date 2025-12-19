@@ -21,12 +21,12 @@ const LandingTopNavigation: React.FC<LandingTopNavigationProps> = ({
     {
       icon: IconHome,
       label: t('navigation.home') || 'Home',
-      route: '/home'
+      route: '/'
     },
     {
       icon: IconFileDescription,
       label: t('navigation.uploadIEP') || 'Upload An IEP',
-      route: '/'
+      route: '/login'
     },
     {
       icon: IconHelpCircle,

@@ -55,10 +55,11 @@ export default function AppRoutes() {
   return (
     <Routes>
       {/* ===== PUBLIC ROUTES ===== */}
-      {/* Login at root - shown when not authenticated */}
-      <Route path="/home" element={<LandingPage />} />
+      {/* Home/Landing page at root */}
+      <Route path="/" element={<LandingPage />} />
 
-      <Route path="/" element={<CustomLoginWrapper />} />
+      {/* Login page */}
+      <Route path="/login" element={<CustomLoginWrapper />} />
       
       {/* FAQs - public route */}
       <Route path="/faqs" element={

@@ -14,8 +14,8 @@ import './ProfileForms.css';
 import './AboutApp.css';
 
 const publicFooterLinks = [
-  { route: '/home', labelKey: 'footer.home' },
-  { route: '/', labelKey: 'footer.uploadIEP' },
+  { route: '/', labelKey: 'footer.home' },
+  { route: '/login', labelKey: 'footer.uploadIEP' },
   { route: '/faqs', labelKey: 'footer.faqs' },
   { route: '/about-the-project', labelKey: 'footer.aboutUs' },
 ];

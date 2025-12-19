@@ -335,6 +335,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
             // User is fully authenticated (shouldn't happen with CUSTOM_AUTH but handle gracefully)
             // console.log('User authenticated successfully after confirmation');
             setSuccessMessage(t('auth.accountConfirmedSuccess'));
+            
+            // Update auth context with logged in user
+            login(cognitoUser);
+            
             setTimeout(() => {
               handleSuccessfulAuthentication();
             }, 1000);
@@ -382,6 +386,9 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
         if (result.signInUserSession) {
           // console.log('Authentication successful!');
           setSuccessMessage(t('auth.phoneVerificationSuccess'));
+          
+          // Update auth context with logged in user
+          login(result);
           
           // Small delay to show success message, then redirect
           setTimeout(() => {
