@@ -14,15 +14,15 @@ const ParentRightsBanner: React.FC<ParentRightsCarouselProps> = ({ slides, class
         
         return [
             // Privacy slides (first 2)
-            { id: 'slide-1', title: t('privacy.slide1.title'), content: t('privacy.slide1.content'), image: '/images/carousel/surprised.png' },
-            { id: 'slide-2', title: t('privacy.slide2.title'), content: t('privacy.slide2.content'), image: '/images/carousel/blissful.png' },
+            { id: 'slide-1', type: 'privacy' as const, title: t('privacy.slide1.title'), content: t('privacy.slide1.content'), image: '/images/carousel/surprised.png' },
+            { id: 'slide-2', type: 'privacy' as const, title: t('privacy.slide2.title'), content: t('privacy.slide2.content'), image: '/images/carousel/blissful.png' },
             // Rights slides (slides 3-8)
-            { id: 'slide-3', title: t('rights.slide1.title'), content: t('rights.slide1.content'), image: '/images/carousel/joyful.png' },
-            { id: 'slide-4', title: t('rights.slide2.title'), content: t('rights.slide2.content'), image: '/images/carousel/surprised.png' },
-            { id: 'slide-5', title: t('rights.slide3.title'), content: t('rights.slide3.content'), image: '/images/carousel/blissful.png' },
-            { id: 'slide-6', title: t('rights.slide4.title'), content: t('rights.slide4.content'), image: '/images/carousel/joyful.png' },
-            { id: 'slide-7', title: t('rights.slide5.title'), content: t('rights.slide5.content'), image: '/images/carousel/surprised.png' },
-            { id: 'slide-8', title: t('rights.slide6.title'), content: t('rights.slide6.content'), image: '/images/carousel/blissful.png' },
+            { id: 'slide-3', type: 'rights' as const, title: t('rights.slide1.title'), content: t('rights.slide1.content'), image: '/images/carousel/joyful.png' },
+            { id: 'slide-4', type: 'rights' as const, title: t('rights.slide2.title'), content: t('rights.slide2.content'), image: '/images/carousel/surprised.png' },
+            { id: 'slide-5', type: 'rights' as const, title: t('rights.slide3.title'), content: t('rights.slide3.content'), image: '/images/carousel/blissful.png' },
+            { id: 'slide-6', type: 'rights' as const, title: t('rights.slide4.title'), content: t('rights.slide4.content'), image: '/images/carousel/joyful.png' },
+            { id: 'slide-7', type: 'rights' as const, title: t('rights.slide5.title'), content: t('rights.slide5.content'), image: '/images/carousel/surprised.png' },
+            { id: 'slide-8', type: 'rights' as const, title: t('rights.slide6.title'), content: t('rights.slide6.content'), image: '/images/carousel/blissful.png' },
         ];
     }, [t, translationsLoaded]);
 

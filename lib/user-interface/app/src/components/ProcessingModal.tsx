@@ -10,7 +10,7 @@ interface ProcessingModalProps {
   t: (key: string) => string;
   parentRightsSlideData: Array<{
     id: string;
-    type: string;
+    type: 'privacy' | 'rights' | 'tutorial';
     title: string;
     content: string;
     image: string;
