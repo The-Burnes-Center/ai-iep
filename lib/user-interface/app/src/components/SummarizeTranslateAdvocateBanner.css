@@ -1,0 +1,57 @@
+.summarize-translate-advocate-banner-container {
+    background-color: #014620;
+    width: 100%;
+    display: flex;
+    position: relative;
+    justify-content: center;
+}
+
+
+.summarize-translate-advocate-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8rem;
+}
+
+.summarize-translate-advocate-card {
+    padding: 1rem;
+    max-width: 350px;
+}
+
+.summarize-translate-advocate-image {
+    margin-bottom: 2rem;
+}
+
+.summarize-translate-advocate-title {
+    color: #F5F3EE;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.summarize-translate-advocate-text {
+    font-size: 1rem;
+    color: #F5F3EE;
+    margin-bottom: 2rem;
+}
+
+
+@media (max-width: 768px) {  
+    .summarize-translate-advocate-banner-container { 
+        min-height: 1546px;
+    }
+
+    .summarize-translate-advocate-cards-container {
+        gap: 0px;
+    }
+}
+
+
+@media (min-width: 769px) {
+    .summarize-translate-advocate-banner-container { 
+        min-height: 581px;
+    }
+
+    .summarize-translate-advocate-cards-container {
+        flex-direction: row;
+    }
+}

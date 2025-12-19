@@ -16,9 +16,6 @@ const GoToWebsiteButton = ({ url, buttonText }: GoToWebsiteButtonProps) => {
       rel="noopener noreferrer"
     >
       {buttonText}
-      <span className="arrow-icon">
-        <img src="/images/arrow.svg" alt="" />
-      </span>
     </Button>
   );
 };

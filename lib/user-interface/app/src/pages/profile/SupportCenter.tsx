@@ -1,12 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import { useLanguage } from '../../common/language-context';
 import { IconArrowRight } from '@tabler/icons-react';
 import './AccountCenter.css';
 
-const SupportCenter: React.FC = () => {
+interface SupportCenterProps {
+  NavigationComponent?: React.ComponentType;
+  showAboutApp?: boolean;
+}
+
+const SupportCenter: React.FC<SupportCenterProps> = ({ 
+  NavigationComponent = MobileTopNavigation,
+  showAboutApp = true 
+}) => {
 
   const { t, translationsLoaded } = useLanguage();
 
@@ -32,12 +41,9 @@ const SupportCenter: React.FC = () => {
         navigate('/frequently-asked-questions');
         break;
       case '1':
-        navigate('/onboarding-user');
-        break;
-      case '2':
         navigate('/view-resources');
         break;
-      case '3':
+      case '2':
         navigate('/about-the-app');
         break;
       default:
@@ -45,7 +51,7 @@ const SupportCenter: React.FC = () => {
     }
   };
 
-  // FAQ data object
+  // Build headers array conditionally
   const headers = [
     {
       id: "0",
@@ -53,20 +59,17 @@ const SupportCenter: React.FC = () => {
     },
     {
       id: "1",
-      title: t("supportCenter.goToOnboarding"),
-    },
-    {
-      id: "2",
       title: t("supportCenter.resources"), 
     },
-    {
-      id: "3",
+    ...(showAboutApp ? [{
+      id: "2",
       title: t("supportCenter.aboutTheApp"),
-    },
+    }] : []),
   ];
 
   return (
     <>
+      <NavigationComponent />
       <Container className="account-center-container mt-3 mb-3">
         <Row className="mt-2">
           <Col>
@@ -97,7 +100,7 @@ const SupportCenter: React.FC = () => {
           </Col>
         </Row>
       </Container>
-      <MobileBottomNavigation />
+      <AIEPFooter />
     </>
   );
 };

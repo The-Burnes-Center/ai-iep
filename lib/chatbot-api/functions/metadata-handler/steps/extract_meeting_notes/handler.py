@@ -71,7 +71,7 @@ def _extract_meeting_notes(ocr_text: str) -> Dict[str, Any]:
             {'role': 'user', 'content': f"{BASE_INSTRUCTIONS}\n\nOCR_TEXT:\n{ocr_text}"}
         ]
         resp = client.chat.completions.create(
-            model='gpt-4o',
+            model='gpt-4.1',
             messages=messages,
             temperature=0.0
         )
@@ -185,18 +185,61 @@ def lambda_handler(event, context):
         # Extract meeting notes text from result structure
         meeting_notes_text = meeting_notes_result.get('meeting_notes', '')
         
-        # Save meeting notes directly to API-compatible field (meetingNotes.en)
-        field_updates = {
-            'meetingNotes.en': meeting_notes_text
-        }
-        
-        save_payload = {
-            'operation': 'save_api_fields',
+        # Get existing content (from S3 or DynamoDB) to merge meeting notes
+        get_content_payload = {
+            'operation': 'get_document_with_content',
             'params': {
                 'iep_id': iep_id,
-                'user_id': user_id,
                 'child_id': child_id,
-                'field_updates': field_updates
+                'user_id': user_id
+            }
+        }
+        
+        get_content_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(get_content_payload)
+        )
+        
+        get_content_payload_response = get_content_response['Payload'].read()
+        
+        if not get_content_payload_response:
+            raise Exception("Empty response when getting existing content")
+        
+        get_content_result = json.loads(get_content_payload_response)
+        
+        if get_content_result.get('statusCode') != 200:
+            raise Exception(f"Failed to get existing content: {get_content_result}")
+        
+        existing_doc = json.loads(get_content_result['body'])
+        
+        # Build content structure with existing data and new meeting notes
+        content = {
+            'summaries': existing_doc.get('summaries', {}),
+            'sections': existing_doc.get('sections', {}),
+            'document_index': existing_doc.get('document_index', {}),
+            'abbreviations': existing_doc.get('abbreviations', {}),
+            'meetingNotes': existing_doc.get('meetingNotes', {})
+        }
+        
+        # Ensure meetingNotes is a dict
+        if not isinstance(content['meetingNotes'], dict):
+            content['meetingNotes'] = {}
+        
+        # Update meeting notes with English extraction
+        print(f"Extracting meeting notes - length: {len(meeting_notes_text)} characters")
+        print(f"Existing meetingNotes keys before update: {list(content['meetingNotes'].keys())}")
+        content['meetingNotes']['en'] = meeting_notes_text
+        print(f"MeetingNotes keys after update: {list(content['meetingNotes'].keys())}")
+        print(f"English meeting notes length: {len(content['meetingNotes'].get('en', ''))} characters")
+        
+        # Save complete content to S3 (all fields in one operation)
+        save_payload = {
+            'operation': 'save_content_to_s3',
+            'params': {
+                'iep_id': iep_id,
+                'child_id': child_id,
+                'content': content
             }
         }
         
@@ -209,17 +252,24 @@ def lambda_handler(event, context):
         # Handle Lambda invoke response safely
         save_payload_response = save_response['Payload'].read()
         
-        if save_payload_response:
-            try:
-                save_result = json.loads(save_payload_response)
-                if save_result and save_result.get('statusCode') == 200:
-                    print("Meeting notes saved directly to API field (meetingNotes.en)")
-                else:
-                    print(f"Warning: Failed to save meeting notes to API field: {save_result}")
-            except json.JSONDecodeError as e:
-                print(f"Warning: Failed to parse save DDB service response: {e}")
-        else:
-            print("Warning: Empty response from DDB service during meeting notes save")
+        if not save_payload_response:
+            raise Exception("Empty response when saving content to S3")
+        
+        try:
+            save_result = json.loads(save_payload_response)
+            if save_result and save_result.get('statusCode') == 200:
+                print("Meeting notes saved to S3 (all fields updated in one operation)")
+            else:
+                error_body = save_result.get('body', '')
+                error_msg = error_body
+                try:
+                    error_data = json.loads(error_body)
+                    error_msg = error_data.get('error', error_body)
+                except:
+                    pass
+                raise Exception(f"Failed to save content to S3: {error_msg}")
+        except json.JSONDecodeError as e:
+            raise Exception(f"Failed to parse save DDB service response: {e}")
         
         # Return minimal event (no need to pass large data through Step Functions)
         event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}

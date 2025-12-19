@@ -33,6 +33,21 @@
           "ResultPath": "$.error"
         }
       ],
+      "Next": "SetInitialProgress"
+    },
+    "SetInitialProgress": {
+      "Type": "Pass",
+      "Comment": "Set initial progress values in state",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id",
+        "user_id.$": "$.user_id",
+        "s3_bucket.$": "$.s3_bucket",
+        "s3_key.$": "$.s3_key",
+        "progress": 5,
+        "current_step": "start",
+        "status": "PROCESSING"
+      },
       "Next": "MistralOCR"
     },
     "MistralOCR": {
@@ -88,6 +103,21 @@
           "ResultPath": "$.error"
         }
       ],
+      "Next": "SetOCRProgress"
+    },
+    "SetOCRProgress": {
+      "Type": "Pass",
+      "Comment": "Set OCR progress values in state",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id",
+        "user_id.$": "$.user_id",
+        "s3_bucket.$": "$.s3_bucket",
+        "s3_key.$": "$.s3_key",
+        "progress": 15,
+        "current_step": "ocr_complete",
+        "status": "PROCESSING"
+      },
       "Next": "RedactOCR"
     },
     "RedactOCR": {
@@ -143,6 +173,21 @@
           "ResultPath": "$.error"
         }
       ],
+      "Next": "SetRedactionProgress"
+    },
+    "SetRedactionProgress": {
+      "Type": "Pass",
+      "Comment": "Set redaction progress values in state",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id",
+        "user_id.$": "$.user_id",
+        "s3_bucket.$": "$.s3_bucket",
+        "s3_key.$": "$.s3_key",
+        "progress": 20,
+        "current_step": "pii_redaction_complete",
+        "status": "PROCESSING"
+      },
       "Next": "DeleteOriginal"
     },
     "DeleteOriginal": {
@@ -198,6 +243,21 @@
           "ResultPath": "$.error"
         }
       ],
+      "Next": "SetCleanupProgress"
+    },
+    "SetCleanupProgress": {
+      "Type": "Pass",
+      "Comment": "Set cleanup progress values in state",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id",
+        "user_id.$": "$.user_id",
+        "s3_bucket.$": "$.s3_bucket",
+        "s3_key.$": "$.s3_key",
+        "progress": 22,
+        "current_step": "cleanup_complete",
+        "status": "PROCESSING"
+      },
       "Next": "ParallelWork"
     },
     "ParallelWork": {
@@ -284,6 +344,21 @@
           "ResultPath": "$.error"
         }
       ],
+      "Next": "SetAnalysisProgress"
+    },
+    "SetAnalysisProgress": {
+      "Type": "Pass",
+      "Comment": "Set analysis progress values in state",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id",
+        "user_id.$": "$.user_id",
+        "s3_bucket.$": "$.s3_bucket",
+        "s3_key.$": "$.s3_key",
+        "progress": 65,
+        "current_step": "analysis_complete",
+        "status": "PROCESSING"
+      },
       "Next": "CheckLanguagePrefs"
     },
     "CheckLanguagePrefs": {
@@ -295,7 +370,10 @@
         "child_id.$": "$.child_id", 
         "user_id.$": "$.user_id",
         "s3_bucket.$": "$.s3_bucket",
-        "s3_key.$": "$.s3_key"
+        "s3_key.$": "$.s3_key",
+        "progress.$": "$.progress",
+        "current_step.$": "$.current_step",
+        "status.$": "$.status"
       },
       "Retry": [
         {
@@ -424,6 +502,23 @@
           "ResultPath": "$.error"
         }
       ],
+      "Next": "SetTranslationProgress"
+    },
+    "SetTranslationProgress": {
+      "Type": "Pass",
+      "Comment": "Set translation progress values in state",
+      "Parameters": {
+        "iep_id.$": "$.iep_id",
+        "child_id.$": "$.child_id",
+        "user_id.$": "$.user_id",
+        "s3_bucket.$": "$.s3_bucket",
+        "s3_key.$": "$.s3_key",
+        "progress": 85,
+        "current_step": "translation_complete",
+        "status": "PROCESSING",
+        "target_languages.$": "$.target_languages",
+        "translation_needed.$": "$.translation_needed"
+      },
       "Next": "FinalizeResults"
     },
     "FinalizeResults": {
@@ -435,7 +530,10 @@
         "child_id.$": "$.child_id", 
         "user_id.$": "$.user_id",
         "target_languages.$": "$.target_languages",
-        "translation_needed.$": "$.translation_needed"
+        "translation_needed.$": "$.translation_needed",
+        "progress.$": "$.progress",
+        "current_step.$": "$.current_step",
+        "status.$": "$.status"
       },
       "Retry": [
         {

@@ -1,0 +1,283 @@
+.parent-rights-banner-container {
+    background-color: #F5F3EE;
+    width: 100%;
+    display: flex;
+    position: relative;
+}
+
+.parent-rights-banner-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.parent-rights-banner-content-left,
+.parent-rights-banner-content-right {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Banner Card Styles */
+.banner-card {
+    width: 95%;
+    display: flex;
+    flex-direction: row;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 200px;
+    border-radius: 12px;
+    border: 1px solid #1E1E1E;
+    margin-top: 20px;
+}
+
+.banner-card--pink {
+    background-image: url('/images/patterns-pink.jpg');
+}
+
+.banner-card--green {
+    background-image: url('/images/patterns-dark-green.jpg');
+}
+
+.banner-card h1 {
+    width: 60%;
+    font-size: 2.5rem;
+    padding: 1rem;
+    color: #F5F3EE;
+}
+
+.banner-slide-image {
+    width: 30%;
+    max-height: 100%;
+    height: auto;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+    z-index: 2;
+    position: relative;
+}
+
+/* Banner Carousel Wrapper */
+.banner-carousel-wrapper {
+    width: 100%;
+    max-width: 90%;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.banner-carousel .carousel-inner {
+    border-radius: 8px;
+}
+
+/* Banner Carousel Slide */
+.banner-carousel-slide {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.banner-carousel-slide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    z-index: 1;
+    background: #F5F3EE;
+}
+
+/* Banner Slide Content */
+.banner-slide-content {
+    position: relative;
+    z-index: 2;
+    text-align: start;
+    color: #343a40;
+    height: 228px;
+    margin-bottom: 0.5rem;
+}
+
+.banner-slide-content h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+    color: #1E1E1E;
+}
+
+.banner-slide-content p {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 0;
+    color: #6c757d;
+}
+
+/* Banner Carousel Buttons */
+.banner-carousel-buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 95%;
+    padding: 20px 0px;
+}
+
+.banner-nav-button {
+    background-color: #F5F3EE;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.banner-nav-button:hover:not(:disabled) {
+    background-color: #E7E4DC;
+}
+
+.banner-nav-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.banner-arrow-prev {
+    width: 15px;
+    height: 18px;
+    transform: rotate(90deg);
+}
+
+.banner-arrow-next {
+    width: 15px;
+    height: 18px;
+    transform: rotate(-90deg);
+}
+
+/* Banner Carousel Indicators */
+.banner-carousel .carousel-indicators {
+    bottom: 1rem;
+    z-index: 3;
+    margin-bottom: 0;
+}
+
+.banner-carousel .carousel-indicators [data-bs-target] {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 0.5px solid #1E1E1E;
+    background-color: #F5F3EE;
+    margin: 0 4px;
+    transition: all 0.3s ease;
+}
+
+.banner-carousel .carousel-indicators .active {
+    background-color: #00682F;
+    border-color: none;
+}
+
+.banner-carousel .carousel-indicators [data-bs-target]:focus {
+    outline: none !important;
+    outline-offset: 2px;
+}
+
+.banner-carousel .carousel-control-prev,
+.banner-carousel .carousel-control-next {
+    display: none !important;
+}
+
+/* Banner Carousel Animations */
+.banner-carousel .carousel-item {
+    transition: transform 0.6s ease-in-out;
+}
+
+.banner-carousel .carousel-item.active {
+    display: flex;
+}
+
+.banner-carousel .carousel-item-next,
+.banner-carousel .carousel-item-prev {
+    display: flex;
+}
+
+.banner-carousel .carousel-indicators [data-bs-target]:focus {
+    outline: 2px solid #0040BA;
+    outline-offset: 2px;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {  
+    .parent-rights-banner-container {
+        min-height: 450px;
+    }
+
+    .parent-rights-banner-content-left,
+    .parent-rights-banner-content-right {
+        width: 100%;
+    }
+
+    .parent-rights-banner-content-left {
+        padding: 4rem 0.5rem;
+    }
+
+    .banner-slide-content {
+        height: 200px;
+    }
+
+    .banner-carousel-wrapper {
+        max-width: 95%;
+    }
+
+    .banner-slide-content {
+        max-width: 90%;
+    }
+
+    .banner-slide-content h2 {
+        font-size: 1.5rem;
+        margin-bottom: 0.8rem;
+        color: #1E1E1E;
+    }
+
+    .banner-slide-content p {
+        font-size: 1rem;
+        line-height: 1.4;
+        color: #1E1E1E;
+    }
+
+    .banner-card h1 {
+        font-size: 2.25rem;
+    }
+
+}
+
+@media (min-width: 769px) {  
+    .parent-rights-banner-container { 
+        min-height: 598px;
+    }
+
+    .parent-rights-banner-content {
+        flex-direction: row;
+    }
+
+    .parent-rights-banner-content-left {
+        padding: 7rem;
+    }
+
+    .banner-slide-image {
+        max-width: 60%;
+        max-height: 60%;
+        padding: 0.5rem;
+    }
+
+    .banner-slide-content h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+}

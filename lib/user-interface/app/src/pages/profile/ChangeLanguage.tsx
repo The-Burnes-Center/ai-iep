@@ -2,7 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Spinner, Breadcrumb } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
@@ -119,6 +120,7 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
 
   return (
   <>
+      <MobileTopNavigation />
       <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4 breadcrumb-container">
@@ -172,7 +174,7 @@ const handlePreferredLanguageChange = async (languageCode: string) => {
         </Row>
       </Container>
     </div>
-  <MobileBottomNavigation />
+    <AIEPFooter />
   </>
   );
 }

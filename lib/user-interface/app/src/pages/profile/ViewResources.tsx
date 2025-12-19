@@ -1,7 +1,8 @@
 import { Container, Row, Col, Breadcrumb, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../common/language-context';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import ViewResourcesButton from '../../components/ViewResourcesButton';
 import './ChangeLanguage.css';
 import './ProfileForms.css';
@@ -57,6 +58,7 @@ export default function ViewResources() {
 
   return (
   <>
+      <MobileTopNavigation />
       <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4 breadcrumb-container">
@@ -89,7 +91,7 @@ export default function ViewResources() {
         ))}
       </div>
     </div>
-  <MobileBottomNavigation />
+    <AIEPFooter />
   </>
   );
 }

@@ -7,13 +7,15 @@ import './IEPSummarizationAndTranslation.css';
 import { IEPDocument, IEPSection, Language, UserProfile } from '../../common/types';
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useDocumentFetch, processContentWithJargon } from '../utils';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
-import ParentRightsCarousel from '../../components/ParentRightsCarousel';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
+import ParentRightsCarousel, { SlideData } from '../../components/ParentRightsCarousel';
 import ProcessingModal from '../../components/ProcessingModal';
+import AIEPFooter from '../../components/AIEPFooter';
 import { ApiClient } from '../../common/api-client/api-client';
 import { AppContext } from '../../common/app-context';
 import { useNotifications } from '../../components/notif-manager';
 import LinearProgress from '@mui/material/LinearProgress';
+import { TextHelper } from '../../common/helpers/text-helper';
 
 const IEPSummarizationAndTranslation: React.FC = () => {
   const { t, language, setLanguage, translationsLoaded } = useLanguage();
@@ -28,9 +30,19 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState<boolean>(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   
+  // State to track expanded/collapsed status for each language's summary
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState<Record<string, boolean>>({
+    en: false,
+    es: false,
+    vi: false,
+    zh: false
+  });
+  
   // Profile-related state
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState<boolean>(true);
+  const [originalProfile, setOriginalProfile] = useState<UserProfile | null>(null);
+  const [saving, setSaving] = useState<boolean>(false);
   
   // Tutorial flow state management
   const [tutorialPhase, setTutorialPhase] = useState< 'parent-rights' | 'completed'>('parent-rights');
@@ -66,6 +78,8 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('en');
   // Add state for dropdown language selection (separate from global language preference)
   const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
+  // Track if user has manually selected a language (to prevent auto-reset)
+  const [hasUserSelectedLanguage, setHasUserSelectedLanguage] = useState<boolean>(false);
   const navigate = useNavigate();
   
   // Get preferred language from profile API, fallback to context language, then to 'en'
@@ -78,6 +92,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         setProfileLoading(true);
         const profileData = await apiClient.profile.getProfile();
         setProfile(profileData);
+        setOriginalProfile(profileData);
         
         // Sync the language context if profile has a different secondary language
         if (profileData?.secondaryLanguage && profileData.secondaryLanguage !== language) {
@@ -99,6 +114,9 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     // Don't initialize until initial loading is complete
     if (initialLoading) return;
     
+    // Skip if user has manually selected a language via the dropdown
+    if (hasUserSelectedLanguage) return;
+    
     if (preferredLanguage !== 'en' && hasContent(preferredLanguage)) {
       setSelectedLanguage(preferredLanguage);
       setActiveTab(preferredLanguage);
@@ -106,7 +124,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
       setSelectedLanguage('en');
       setActiveTab('en');
     }
-  }, [preferredLanguage, initialLoading, document.summaries, document.sections]);
+  }, [preferredLanguage, initialLoading, document.summaries, document.sections, hasUserSelectedLanguage]);
 
   // Dynamic language options - only show English and preferred language
   const allLanguageOptions = [
@@ -116,21 +134,37 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     { value: 'vi', label: 'Tiếng Việt' }
   ];
 
-  const languageOptions = preferredLanguage === 'en' 
-    ? [{ value: 'en', label: 'English' }] 
-    : [
-        { value: 'en', label: 'English' },
-        allLanguageOptions.find(option => option.value === preferredLanguage)!
-      ].filter(Boolean);
+  const languageOptions = allLanguageOptions.filter(option => 
+    document.summaries && document.summaries[option.value]
+  );
 
-  // Don't show dropdown if preferred language is English
-  const shouldShowLanguageDropdown = preferredLanguage !== 'en' && document.status && document.status === "PROCESSED" && Object.keys(document.summaries).length > 1;
+  const handlePreferredLanguageChange = async (languageCode: string) => {
+    if (!profile || languageCode === profile.secondaryLanguage) return;
+    
+    const updatedProfile = {...profile, secondaryLanguage: languageCode};
+    setProfile(updatedProfile);
+    
+    try {
+      setSaving(true);
+      await apiClient.profile.updateProfile(updatedProfile);
+      
+      // Update language context
+      setLanguage(languageCode as SupportedLanguage);
+      
+      setOriginalProfile(updatedProfile);
+      addNotification('success', t('profile.success.update'));
+    } catch (err) {
+      // Revert on error
+      setProfile(originalProfile);
+      addNotification('error', t('profile.error.update'));
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  // Handle language change - now just controls tab content, no API calls
+  // Handle language change - updates tab content and app language
   const handleLanguageChange = (lang: SupportedLanguage) => {
-    // Update dropdown selection and active tab immediately
-    setSelectedLanguage(lang);
-    setActiveTab(lang);
+    handlePreferredLanguageChange(lang);
   };
 
 
@@ -210,8 +244,36 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         title: t('rights.slide6.title'),
         content: t('rights.slide6.content'),
         image: '/images/carousel/blissful.png'
+      },
+      {
+        id: 'tutorial-slide-1',
+        type: 'tutorial',
+        title: t('rights.slide7.title'),
+        content: t('rights.slide7.content'),
+        image: '/images/tutorial-01.jpg'
+      },
+      {
+        id: 'tutorial-slide-2',
+        type: 'tutorial',
+        title: t('rights.slide8.title'),
+        content: t('rights.slide8.content'),
+        image: '/images/tutorial-02.jpg'
+      },
+      {
+        id: 'tutorial-slide-3',
+        type: 'tutorial',
+        title: t('rights.slide9.title'),
+        content: t('rights.slide9.content'),
+        image: '/images/tutorial-03.jpg'
+      },
+      {
+        id: 'tutorial-slide-4',
+        type: 'tutorial',
+        title: t('rights.slide10.title'),
+        content: t('rights.slide10.content'),
+        image: '/images/tutorial-04.jpg'
       }
-    ];
+    ] as SlideData[];
   }, [t, translationsLoaded]);
 
 
@@ -459,6 +521,33 @@ const IEPSummarizationAndTranslation: React.FC = () => {
     }
   };
 
+  // Helper function to truncate content to the first paragraph
+  const truncateContent = (content: string): { truncated: string; needsTruncation: boolean } => {
+    if (!content) {
+      return { truncated: content, needsTruncation: false };
+    }
+    
+    // Split by double newline (paragraph separator)
+    const paragraphs = content.split(/\n\n+/);
+    
+    // If there's only one paragraph (or no paragraph breaks), no truncation needed
+    if (paragraphs.length <= 1) {
+      return { truncated: content, needsTruncation: false };
+    }
+    
+    // Return the first paragraph as truncated content with ".." appended to indicate continuation
+    const firstParagraph = paragraphs[0].trim();
+    return { truncated: firstParagraph + '..', needsTruncation: true };
+  };
+
+  // Toggle summary expansion for a specific language
+  const toggleSummaryExpansion = (lang: string) => {
+    setIsSummaryExpanded(prev => ({
+      ...prev,
+      [lang]: !prev[lang]
+    }));
+  };
+
   // Render tab content for a specific language
   const renderTabContent = (lang: string) => {
     const hasSummary = document.summaries && document.summaries[lang];
@@ -475,18 +564,50 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Summary Section */}
         {hasSummary ? (
           <>
-            <h4 className="summary-header mt-4 px-4">
+          <div className="summary-updated-at">  
+            {document.updatedAt && (
+              <span>{t('summary.lastUpdate')} {TextHelper.formatUnixTimestamp(document.updatedAt, lang)}</span>
+            )}
+          </div>
+            <h4 className="summary-header mt-4">
               {isEnglishTab ? 'IEP Summary' : t('summary.iepSummary')}
             </h4>
             <Card className="summary-content mb-3">
-              <Card.Body className="py-3 px-4">
-                <div 
-                  className="markdown-content"
-                  onClick={handleContentClick}
-                  dangerouslySetInnerHTML={{ 
-                    __html: processContentWithJargon(document.summaries[lang], lang)
-                  }}
-                />
+              <Card.Body>
+                {(() => {
+                  const fullContent = document.summaries[lang];
+                  const { truncated, needsTruncation } = truncateContent(fullContent);
+                  const isExpanded = isSummaryExpanded[lang];
+                  const contentToShow = needsTruncation && !isExpanded ? truncated : fullContent;
+                  
+                  return (
+                    <div className="markdown-content" onClick={handleContentClick}>
+                      <span
+                        dangerouslySetInnerHTML={{ 
+                          __html: processContentWithJargon(contentToShow, lang)
+                        }}
+                      />
+                      {needsTruncation && (
+                        <>
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSummaryExpansion(lang);
+                            }}
+                            style={{
+                              textDecoration: 'underline',
+                              cursor: 'pointer',
+                              color: '#1E1E1E',
+                              fontWeight: '500'
+                            }}
+                          >
+                            {isExpanded ? t('summary.showLess') : t('summary.readMore')}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
               </Card.Body>
             </Card>
           </>
@@ -527,7 +648,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         {/* Sections Accordion */}
         {hasSections ? (
           <>
-            <h4 className="key-insights-header mt-4 mb-3 px-3">
+            <h4 className="key-insights-header mt-4 mb-3">
               {isEnglishTab ? 'Key Insights' : t('summary.keyInsights')}
             </h4>
             <Accordion className="mb-3 summary-accordion">
@@ -636,6 +757,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   if (initialLoading) {
     return (
       <>
+        <MobileTopNavigation />
         <Container className="summary-container mt-3 mb-3">
           <Row className="mt-2">
             <Col>
@@ -648,7 +770,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             </Col>
           </Row>
         </Container>
-        <MobileBottomNavigation />
       </>
     );
   }
@@ -657,6 +778,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   if (!document) {
     return (
       <>
+        <MobileTopNavigation />
         <Container className="summary-container mt-3 mb-3">
           <Row className="mt-2">
             <Col>
@@ -666,7 +788,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             </Col>
           </Row>
         </Container>
-        <MobileBottomNavigation />
       </>
     );
   }
@@ -705,6 +826,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
   // Processed Container - when document is processed, failed, or in other states
   return (
     <>
+      <MobileTopNavigation />
       <Container className="summary-container mt-3 mb-3">
         <div className="mt-2 text-start button-container d-flex justify-content-between align-items-center">
           <div className="d-flex gap-2 align-items-center">
@@ -730,11 +852,11 @@ const IEPSummarizationAndTranslation: React.FC = () => {
             )}
           </div>
           
-          {/* Language Dropdown - Only show if preferred language is not English and not processing */}
-          {shouldShowLanguageDropdown && !isProcessing && document && document.status === "PROCESSED" && (
-            <Dropdown>
+          {/* Language Dropdown - Only show if more than one language available and not processing */}
+          {!isProcessing && document && document.status === "PROCESSED" && languageOptions.length > 1 && (
+            <Dropdown className='language-dropdown-toggle'>
               <Dropdown.Toggle variant="outline-primary" id="language-dropdown" size="sm">
-                {languageOptions.find(option => option.value === selectedLanguage)?.label || 'English'}
+                {(languageOptions.find(option => option.value === selectedLanguage)?.label || 'English').toUpperCase()}
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 {languageOptions.map(option => (
@@ -743,7 +865,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
                     onClick={() => handleLanguageChange(option.value as SupportedLanguage)}
                     active={selectedLanguage === option.value}
                   >
-                    {option.label}
+                    {option.label.toUpperCase()}
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>
@@ -874,7 +996,7 @@ const IEPSummarizationAndTranslation: React.FC = () => {
           </Offcanvas.Body>
         </Offcanvas>
       </Container>
-      <MobileBottomNavigation />
+      <AIEPFooter />
     </>
   );
 };

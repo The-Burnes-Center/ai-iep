@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { Navbar, Container, Nav, Button, Dropdown } from 'react-bootstrap';
 import { Auth } from "aws-amplify";
-import { AuthContext } from "../common/auth-context"; 
+import { useAuth } from "../common/auth-provider";
 import { AppContext } from "../common/app-context";
 import { ApiClient } from "../common/api-client/api-client";
 import { CHATBOT_NAME } from "../common/constants";
@@ -14,7 +14,7 @@ import './global-header.css';
 
 export default function GlobalHeader() {
   const [userName, setUserName] = useState<string | null>(null);
-  const { setAuthenticated } = useContext(AuthContext); 
+  const { setAuthenticated } = useAuth();
   const appContext = useContext(AppContext);
   const { language, setLanguage } = useLanguage();
   const { addNotification } = useNotifications();
@@ -60,7 +60,7 @@ export default function GlobalHeader() {
   // When user signs out Auth.signOut() clears out all the tokens
   const handleSignOut = async () => {
     try {
-      navigate('/', { replace: true });
+      navigate('/login', { replace: true });
       await Auth.signOut();
       setAuthenticated(false);
     } catch (error) {

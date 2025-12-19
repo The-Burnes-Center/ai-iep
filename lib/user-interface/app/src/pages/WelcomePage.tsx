@@ -1,14 +1,15 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Auth } from 'aws-amplify';
-import { AuthContext } from '../common/auth-context';
+import { useAuth } from '../common/auth-provider';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../common/language-context'; 
-import MobileBottomNavigation from '../components/MobileBottomNavigation';
+import MobileTopNavigation from '../components/MobileTopNavigation';
+import AIEPFooter from '../components/AIEPFooter';
 import './WelcomePage.css';
 
 export default function WelcomePage() {
-  const { setAuthenticated } = useContext(AuthContext);
+  const { setAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>('');
   const { t } = useLanguage();
@@ -58,6 +59,7 @@ export default function WelcomePage() {
 
   return (
     <>
+    <MobileTopNavigation />
     <Container fluid className="welcome-container">
       <Row style={{ width: '100%', justifyContent: 'center' }}>
         <Col xs={12} md={8} lg={6}>
@@ -126,7 +128,7 @@ export default function WelcomePage() {
         </Col>
       </Row>
     </Container>
-    <MobileBottomNavigation />
+    <AIEPFooter />
     </>
   );
 }

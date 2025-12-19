@@ -36,13 +36,13 @@ def lambda_handler(event, context):
         
         print(f"Translating {content_type} to languages: {target_languages}")
         
-        # Get source data from DynamoDB - now from API fields instead of old result format
+        # Get source data from DynamoDB/S3 - use get_document_with_content to handle S3 storage
         lambda_client = boto3.client('lambda')
         ddb_service_name = os.environ.get('DDB_SERVICE_FUNCTION_NAME', 'DDBService')
         
-        # Get the document which contains the new API field structure
+        # Get the document with content (handles S3 storage and lazy migration)
         source_payload = {
-            'operation': 'get_document',
+            'operation': 'get_document_with_content',
             'params': {
                 'iep_id': iep_id,
                 'user_id': user_id,
@@ -89,6 +89,7 @@ def lambda_handler(event, context):
         
         document = json.loads(source_ddb_result['body'])
         print(f"Retrieved document for {content_type} translation")
+        print(f"Document keys: {list(document.keys())}")
         
         # Extract English content based on content type from new API field structure
         if content_type == 'parsing_result':
@@ -98,7 +99,12 @@ def lambda_handler(event, context):
             document_index = document.get('document_index', {})
             abbreviations = document.get('abbreviations', {})
             
+            print(f"Content structure - summaries keys: {list(summaries.keys()) if isinstance(summaries, dict) else 'not a dict'}, sections keys: {list(sections.keys()) if isinstance(sections, dict) else 'not a dict'}")
+            
             if 'en' not in summaries or 'en' not in sections:
+                print(f"Error: summaries.en exists: {'en' in summaries}, sections.en exists: {'en' in sections}")
+                print(f"Full summaries: {summaries}")
+                print(f"Full sections: {sections}")
                 raise Exception("English parsing data not found - summaries.en or sections.en missing")
             
             # Reconstruct the format expected by translation agent
@@ -111,21 +117,48 @@ def lambda_handler(event, context):
             
         elif content_type == 'meeting_notes':
             # Get English meeting notes from API fields: meetingNotes.en
-            meeting_notes = document.get('meetingNotes', {})
+            meeting_notes_raw = document.get('meetingNotes')
             
-            if 'en' not in meeting_notes or not meeting_notes.get('en'):
-                print("English meeting notes not found, skipping translation")
-                event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
-                return {
-                    **event_copy,
-                    'meeting_notes_translations': {},
-                    f'{content_type}_translation_skipped': True
+            # Debug logging
+            print(f"meetingNotes type: {type(meeting_notes_raw)}")
+            print(f"meetingNotes value: {meeting_notes_raw}")
+            
+            # Handle different data types
+            source_result = None
+            if meeting_notes_raw is None:
+                meeting_notes = {}
+            elif isinstance(meeting_notes_raw, dict):
+                meeting_notes = meeting_notes_raw
+            elif isinstance(meeting_notes_raw, str):
+                # If it's a string, treat it as English content
+                print("meetingNotes is a string, treating as English content")
+                source_result = {
+                    'meeting_notes': meeting_notes_raw
                 }
+            else:
+                print(f"Unexpected meetingNotes type: {type(meeting_notes_raw)}, defaulting to empty dict")
+                meeting_notes = {}
             
-            # Reconstruct the format expected by translation agent (simple string)
-            source_result = {
-                'meeting_notes': meeting_notes.get('en', '')
-            }
+            # If we haven't set source_result yet (dict case), check for English content
+            if source_result is None:
+                # Check for English meeting notes in dict structure
+                if not isinstance(meeting_notes, dict) or 'en' not in meeting_notes or not meeting_notes.get('en'):
+                    print(f"English meeting notes not found. meetingNotes structure: {meeting_notes}")
+                    print(f"meetingNotes is dict: {isinstance(meeting_notes, dict)}")
+                    if isinstance(meeting_notes, dict):
+                        print(f"meetingNotes keys: {list(meeting_notes.keys())}")
+                        print(f"meetingNotes['en'] value: {meeting_notes.get('en')}")
+                    event_copy = {k: v for k, v in event.items() if k not in ['progress', 'current_step']}
+                    return {
+                        **event_copy,
+                        'meeting_notes_translations': {},
+                        f'{content_type}_translation_skipped': True
+                    }
+                
+                # Reconstruct the format expected by translation agent (simple string)
+                source_result = {
+                    'meeting_notes': meeting_notes.get('en', '')
+                }
         else:
             raise ValueError(f"Unsupported content_type: {content_type}")
         
@@ -176,57 +209,106 @@ def lambda_handler(event, context):
         
         print(f"{content_type} translation completed for {len(translations)} languages")
         
-        # Save translations directly to API-compatible fields 
-        field_updates = {}
-        
-        if content_type == 'parsing_result':
-            # Save parsing translations to summaries, sections, document_index, abbreviations
-            for lang, translated_content in translations.items():
-                field_updates[f'summaries.{lang}'] = translated_content.get('summary', '')
-                field_updates[f'sections.{lang}'] = translated_content.get('sections', [])
-                field_updates[f'document_index.{lang}'] = translated_content.get('document_index', '')
-                field_updates[f'abbreviations.{lang}'] = translated_content.get('abbreviations', [])
-        elif content_type == 'meeting_notes':
-            # Save meeting notes translations to meetingNotes fields
-            for lang, translated_content in translations.items():
-                # Handle meeting notes structure (should be simple string)
-                if isinstance(translated_content, dict) and 'meeting_notes' in translated_content:
-                    field_updates[f'meetingNotes.{lang}'] = translated_content['meeting_notes']
-                elif isinstance(translated_content, str):
-                    field_updates[f'meetingNotes.{lang}'] = translated_content
-                else:
-                    field_updates[f'meetingNotes.{lang}'] = ''
-        
-        save_payload = {
-            'operation': 'save_api_fields',
+        # Get existing content (from S3 or DynamoDB) to merge translations
+        get_content_payload = {
+            'operation': 'get_document_with_content',
             'params': {
                 'iep_id': iep_id,
-                'user_id': user_id,
                 'child_id': child_id,
-                'field_updates': field_updates
+                'user_id': user_id
             }
         }
         
-        save_response = lambda_client.invoke(
+        get_content_response = lambda_client.invoke(
             FunctionName=ddb_service_name,
             InvocationType='RequestResponse',
-            Payload=json.dumps(save_payload)
+            Payload=json.dumps(get_content_payload)
         )
         
-        save_payload_response = save_response['Payload'].read()
+        get_content_payload_response = get_content_response['Payload'].read()
         
-        if not save_payload_response:
-            raise Exception("Empty response from DDB service during save")
+        if not get_content_payload_response:
+            raise Exception("Empty response when getting existing content")
         
-        try:
-            save_result = json.loads(save_payload_response)
-        except json.JSONDecodeError as e:
-            raise Exception(f"Failed to parse save DDB service response as JSON: {e}")
+        get_content_result = json.loads(get_content_payload_response)
         
-        if not save_result or save_result.get('statusCode') != 200:
-            raise Exception(f"Failed to save {content_type} translations to API fields: {save_result}")
+        if get_content_result.get('statusCode') != 200:
+            raise Exception(f"Failed to get existing content: {get_content_result}")
         
-        print(f"{content_type} translations saved directly to API fields: {list(field_updates.keys())}")
+        existing_doc = json.loads(get_content_result['body'])
+        
+        # Build content structure with existing data and new translations
+        content = {
+            'summaries': existing_doc.get('summaries', {}),
+            'sections': existing_doc.get('sections', {}),
+            'document_index': existing_doc.get('document_index', {}),
+            'abbreviations': existing_doc.get('abbreviations', {}),
+            'meetingNotes': existing_doc.get('meetingNotes', {})
+        }
+        
+        # Merge new translations into content
+        if content_type == 'parsing_result':
+            for lang, translated_content in translations.items():
+                # Update summaries
+                if 'summary' in translated_content:
+                    content['summaries'][lang] = translated_content['summary']
+                
+                # Update sections
+                if 'sections' in translated_content:
+                    content['sections'][lang] = translated_content['sections']
+                
+                # Update document_index
+                if 'document_index' in translated_content:
+                    content['document_index'][lang] = translated_content['document_index']
+                
+                # Update abbreviations
+                if 'abbreviations' in translated_content:
+                    content['abbreviations'][lang] = translated_content['abbreviations']
+        
+        elif content_type == 'meeting_notes':
+            for lang, translated_content in translations.items():
+                # Handle meeting notes structure (should be simple string)
+                if isinstance(translated_content, dict) and 'meeting_notes' in translated_content:
+                    content['meetingNotes'][lang] = translated_content['meeting_notes']
+                elif isinstance(translated_content, str):
+                    content['meetingNotes'][lang] = translated_content
+                else:
+                    content['meetingNotes'][lang] = ''
+        
+        # Save complete content to S3
+        save_content_payload = {
+            'operation': 'save_content_to_s3',
+            'params': {
+                'iep_id': iep_id,
+                'child_id': child_id,
+                'content': content
+            }
+        }
+        
+        save_content_response = lambda_client.invoke(
+            FunctionName=ddb_service_name,
+            InvocationType='RequestResponse',
+            Payload=json.dumps(save_content_payload)
+        )
+        
+        save_content_payload_response = save_content_response['Payload'].read()
+        
+        if not save_content_payload_response:
+            raise Exception("Empty response when saving content to S3")
+        
+        save_content_result = json.loads(save_content_payload_response)
+        
+        if save_content_result.get('statusCode') != 200:
+            error_body = save_content_result.get('body', '')
+            error_msg = error_body
+            try:
+                error_data = json.loads(error_body)
+                error_msg = error_data.get('error', error_body)
+            except:
+                pass
+            raise Exception(f"Failed to save content to S3: {error_msg}")
+        
+        print(f"{content_type} translations saved successfully to S3")
         
         # Set the result key based on content type
         if content_type == 'parsing_result':

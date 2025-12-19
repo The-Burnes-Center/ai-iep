@@ -1,14 +1,14 @@
-/* Mobile Bottom Navigation Styles */
-.mobile-bottom-navigation {
-  position: fixed;
-  bottom: 0;
+/* Mobile Top Navigation Styles */
+.mobile-top-navigation {
+  position: sticky;
+  top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
   background-color: #00682F;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   padding: 8px 0;
-  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  padding-top: max(8px, env(safe-area-inset-top));
 }
 
 .processing-header {
@@ -95,7 +95,7 @@
 
 /* Show only on mobile devices */
 @media (max-width: 768px) {
-  .mobile-bottom-navigation {
+  .mobile-top-navigation {
     display: block;
   }
   
@@ -133,7 +133,7 @@
 
 /* Tablet portrait - hide navigation */
 @media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
-  .mobile-bottom-navigation {
+  .mobile-top-navigation {
     display: block;
   }
 }

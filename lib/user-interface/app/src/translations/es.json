@@ -76,6 +76,9 @@
     "summary.reuploadButton": "Volver a Subir Documento",
     "summary.noPreferredLanguageContent.title": "Contenido No Disponible en Su Idioma Preferido",
     "summary.noPreferredLanguageContent.message": "Este documento fue procesado antes de que se estableciera su preferencia de idioma. Vuelva a subir su documento para traducirlo a su idioma preferido.",
+    "summary.lastUpdate": "Última actualización:",
+    "summary.showLess": "Mostrar Menos",
+    "summary.readMore": "Leer Más",
 
     "sections.studentInfo": "Sobre el Estudiante",
     "sections.accommodations": "Adaptaciones",
@@ -101,6 +104,8 @@
     "upload.success": "¡El archivo se ha subido correctamente!",
     "upload.error": "Error al subir el archivo. Inténtelo de nuevo.",
     "upload.button": "Subir Documento",
+    "upload.selectFile": "Elegir archivo",
+    "upload.noFileSelected": "Sin archivo",
     "upload.replaceDocument": "REEMPLAZAR DOCUMENTO IEP",
     
     "current.loading": "Cargando...",
@@ -257,8 +262,8 @@
     "onboarding.carousel.paragraph.translate": "AIEP traduce los resúmenes de documentos IEP a su idioma preferido.",
     "onboarding.carousel.paragraph.advocate": "Abogue por la educación de su hijo explorando el IEP y sus derechos.",
 
-    "rights.header.title.green": "Sus datos están seguros con nosotros",
-    "rights.header.title.pink": "Sus derechos como padre",
+    "rights.header.title.green": "Sus datos están seguros",
+    "rights.header.title.pink": "Sus derechos",
 
 
     "rights.slide1.title": "Puede solicitar un traductor",
@@ -273,6 +278,14 @@
     "rights.slide5.content": "Si un administrador no está presente en la reunión, tiene derecho a reprogramarla para cuando pueda asistir.",
     "rights.slide6.title": "Debe recibir un folleto de sus derechos",
     "rights.slide6.content": "Por ley, su administrador de caso debe proporcionarle un folleto con sus derechos como padre antes de la reunión del IEP.",
+    "rights.slide7.title": "Obtenga una primera vista del documento IEP completo",
+    "rights.slide7.content": "En la parte superior de la pantalla, encontrará un breve resumen de la información que encontramos en su documento IEP.",
+    "rights.slide8.title": "Comprenda las ideas principales del IEP",
+    "rights.slide8.content": "En las secciones a continuación, encontrará las ideas clave que extrajimos del documento que subió. Haga clic en los títulos para leer la información.",
+    "rights.slide9.title": "Encuentre el significado de términos complejos",
+    "rights.slide9.content": "Cada vez que vea una palabra azul, podrá hacer clic en ella para mostrar su definición. Cuando termine, haga clic en la X para volver a su resumen.",
+    "rights.slide10.title": "Compare el contenido con el IEP original",
+    "rights.slide10.content": "Debajo del título de cada idea clave, encontrará el número de página de donde obtuvimos la información. Si algo no le parece correcto, ¡siempre verifique!",
 
     "privacy.slide1.title": "Su IEP no será modificado",
     "privacy.slide1.content": "Estamos creando un documento separado con su resumen. Podrá descargarlo como PDF.",
@@ -296,12 +309,22 @@
 
     "glossary.header": "Glosario",
 
+    "navigation.home": "Inicio",
     "navigation.summary": "Resumen",
     "navigation.support": "Soporte",
+    "navigation.faqs": "Preguntas Frecuentes",
     "navigation.account": "Cuenta", 
     "navigation.about": "Acerca de",
     "navigation.rights": "Derechos",
     "navigation.processing": "Su documento está siendo procesado...",
+    "navigation.uploadIEP": "Cargar un IEP",
+
+    "footer.tagline": "Diseñando IA\ncon y para\nlas comunidades",
+    "footer.home": "Inicio",
+    "footer.uploadIEP": "Cargar un IEP",
+    "footer.supportCenter": "Centro de Soporte",
+    "footer.aboutUs": "Acerca de Nosotros",
+    "footer.faqs": "Preguntas Frecuentes",
 
     "accountCenter.title": "Centro de Cuenta",
     "accountCenter.updateProfile": "Actualizar Su Perfil",
@@ -317,7 +340,25 @@
 
     "about.breadcrumb.supportCenter": "CENTRO DE SOPORTE",
     "about.breadcrumb.about": "ACERCA DE",
+    "about.projectTitle": "El Proyecto AI-EP: Diseñando IA\ncon y para las Comunidades",
     "about.title": "Acerca del Proyecto",
+    "about.intro": "Con el apoyo de la <a href=\"https://chanzuckerberg.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Iniciativa Chan Zuckerberg</a>, el <a href=\"https://burnes.northeastern.edu/\" target=\"_blank\" rel=\"noopener noreferrer\">Centro Burnes para el Cambio Social</a>, su programa <a href=\"https://burnes.northeastern.edu/ai-for-impact-coop/\" target=\"_blank\" rel=\"noopener noreferrer\">AI for Impact</a>, e <a href=\"https://innovateschools.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Innovate Public Schools</a> están trabajando con familias en California y Massachusetts para usar inteligencia artificial para mejorar los resultados educativos de estudiantes con discapacidades. Al mismo tiempo, estamos aprendiendo cómo desarrollar IA de propósito público con las comunidades.",
+    "about.theProblem": "El Problema",
+    "about.problemDescription": "Con la participación de más de 1000 padres, nuestro equipo está construyendo una herramienta gratuita y de código abierto impulsada por IA junto con padres y cuidadores que:",
+    "about.problemList.translate": "Traducir IEPs a múltiples idiomas",
+    "about.problemList.simplify": "Simplificar la jerga educativa compleja",
+    "about.problemList.summarize": "Resumir información clave",
+    "about.problemList.conversation": "Permitir conversación natural con el documento a través de texto o voz",
+    "about.problemList.recommendations": "Crear recomendaciones personalizadas y listas de verificación para reuniones",
+    "about.empowerFamilies": "Queremos empoderar a las familias para que aboguen eficazmente por la educación de sus hijos. El proyecto de IA Centrada en la Comunidad trata de reimaginar cómo se desarrolla la IA. Al posicionar a las comunidades afectadas como arquitectos de sus propias soluciones, estamos trabajando hacia un futuro donde la IA responsable va más allá de mitigar riesgos y promueve activamente la equidad y el empoderamiento.",
+    "about.researchQuestions": "Nuestras Preguntas de Investigación",
+    "about.researchDescription": "Al mismo tiempo, estamos estudiando:",
+    "about.researchList.educate": "¿Cómo podemos educar eficazmente a los miembros de la comunidad sobre la IA para que puedan participar significativamente en su desarrollo?",
+    "about.researchList.codesign": "¿Qué métodos hacen que los procesos de co-diseño sean eficientes y respetuosos del tiempo de los miembros de la comunidad?",
+    "about.researchList.amplify": "¿Cómo podemos aprovechar la IA para amplificar las voces diversas de la comunidad?",
+    "about.researchList.translateInsights": "¿Cómo podemos traducir las perspectivas de la comunidad en soluciones tecnológicas prácticas?",
+    "about.researchList.equity": "¿Qué estrategias aumentan la equidad en el diseño de IA, especialmente para poblaciones vulnerables?",
+    "about.projectOutcomes": "Además de la herramienta gratuita AI-EP, el proyecto producirá un curso y plan de estudios para la capacitación comunitaria en IA y un manual para el desarrollo de IA centrada en la comunidad.",
     "about.description": "AI-IEP facilita la comprensión de los documentos del Programa de Educación Individualizada mediante traducción impulsada por IA, lenguaje simplificado y recursos útiles para padres.",
     "about.thankYouParents": "¡Gracias, padres!",
     "about.thankYouAdvocating": "¡Gracias por abogar por el derecho de los niños a la educación!",
@@ -329,6 +370,7 @@
     "about.theGovLabDescription": "La misión de The GovLab es mejorar la vida de las personas cambiando la forma en que gobernamos. Nuestro objetivo es fortalecer la capacidad de las instituciones – incluyendo pero no limitándose a los gobiernos – y las personas para trabajar de manera más abierta, colaborativa, efectiva y legítima para tomar mejores decisiones y resolver problemas públicos.",
     "about.goToWebsite": "IR AL SITIO WEB",
     "about.privacyPolicy": "Política de Privacidad",
+    "about.learnMore": "MÁS INFORMACIÓN",
 
     "resources.title": "Recursos",
     "resources.breadcrumb.supportCenter": "CENTRO DE SOPORTE",
@@ -435,5 +477,12 @@
     "privacyPolicy.contact.title": "Contacto",
     "privacyPolicy.contact.intro": "Si tiene preguntas sobre esta Política de Privacidad, contáctenos en:",
     "privacyPolicy.contact.organization": "The GovLab",
-    "privacyPolicy.contact.email": "Correo electrónico:"
+    "privacyPolicy.contact.email": "Correo electrónico:",
+
+    "hero.title": "Planes de Educación\nIndividualizados, hechos accesibles",
+    "hero.description": "La herramienta AIEP puede ayudarle a entender los documentos IEP de su hijo.",
+
+    "landing.greenBanner.title": "Todos los niños merecen educación, sin importar sus necesidades",
+    "landing.greenBanner.description": "Así como las plantas, cada niño aprende a su manera. Algunos necesitan luz, otros sombra, algunos florecen rápido, otros toman su tiempo. La herramienta AIEP ayuda a las familias a cuidar las necesidades educativas de sus hijos.",
+    "landing.greenBanner.createAccountButton": "CREAR CUENTA"
   }

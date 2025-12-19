@@ -5,6 +5,9 @@ import AppConfigured from "./components/app-configured";
 import { StorageHelper } from "./common/helpers/storage-helper";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import './styles/app.scss';
+import './styles/modal.css';
+import './styles/buttons.css';
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement

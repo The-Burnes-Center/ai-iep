@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { Auth } from 'aws-amplify';
-import { AuthContext } from '../../common/auth-context';
+import { useAuth } from '../../common/auth-provider';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context'; 
 import './UpdateProfileName.css';
 import './ProfileForms.css';
 import DeleteButton from '../../components/DeleteButton';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 
 export default function DeleteAccount() {
   const [processing, setProcessing] = useState(false);
@@ -18,7 +19,7 @@ export default function DeleteAccount() {
   const navigate = useNavigate();
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
-  const { setAuthenticated } = useContext(AuthContext);
+  const { setAuthenticated } = useAuth();
   const { addNotification } = useNotifications();
   const { t } = useLanguage();
 
@@ -52,6 +53,7 @@ export default function DeleteAccount() {
 
   return (
     <>
+    <MobileTopNavigation />
     <div>
       {/* Breadcrumbs */}
       <div className="mt-3 text-start px-4 breadcrumb-container">
@@ -85,7 +87,7 @@ export default function DeleteAccount() {
         </Row>
       </Container>
     </div>
-    <MobileBottomNavigation />
+    <AIEPFooter />
     </>
   );
 }

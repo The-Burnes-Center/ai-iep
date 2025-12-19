@@ -1,10 +1,24 @@
 import React from 'react';
-import MobileBottomNavigation from './MobileBottomNavigation';
+import MobileTopNavigation from './MobileTopNavigation';
+import AIEPFooter from './AIEPFooter';
 import { Container, Row, Col, Card, Accordion} from 'react-bootstrap';
 import './FrequentlyAskedQuestions.css';
-import { useLanguage } from '../common/language-context'; 
+import { useLanguage } from '../common/language-context';
 
-const FrequentlyAskedQuestions: React.FC = () => {
+const publicFooterLinks = [
+  { route: '/', labelKey: 'footer.home' },
+  { route: '/login', labelKey: 'footer.uploadIEP' },
+  { route: '/faqs', labelKey: 'footer.faqs' },
+  { route: '/about-the-project', labelKey: 'footer.aboutUs' },
+]; 
+
+interface FrequentlyAskedQuestionsProps {
+  NavigationComponent?: React.ComponentType;
+}
+
+const FrequentlyAskedQuestions: React.FC<FrequentlyAskedQuestionsProps> = ({ 
+  NavigationComponent = MobileTopNavigation 
+}) => {
   // Multilingual FAQ data
   const faqsByLanguage = {
     // English (en) FAQs
@@ -325,6 +339,7 @@ const FrequentlyAskedQuestions: React.FC = () => {
 
   return (
     <>
+      <NavigationComponent />
       <Container className="faqs-container mt-3 mb-3">
         <Row className="mt-2">
           <Col>
@@ -333,7 +348,7 @@ const FrequentlyAskedQuestions: React.FC = () => {
                 <Col md={12} className="no-padding-inherit-faq">
                   <>
                     <h4 className="faqs-header mt-4 px-4">{getFaqHeaderText()}</h4>
-                    <Accordion defaultActiveKey="0" className="mb-3 pb-5 faqs-accordion">
+                    <Accordion defaultActiveKey="0" className="mb-3 faqs-accordion">
                       {displayFaqs.map((faq) => (
                         <Accordion.Item key={faq.id} eventKey={faq.id}>
                           <Accordion.Header>
@@ -354,7 +369,7 @@ const FrequentlyAskedQuestions: React.FC = () => {
           </Col>
         </Row>
       </Container>
-      <MobileBottomNavigation />
+      <AIEPFooter footerLinks={publicFooterLinks} />
     </>
   );
 };

@@ -2,13 +2,14 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Container, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import { Auth } from "aws-amplify";
 import { AppContext } from '../../common/app-context';
-import { AuthContext } from '../../common/auth-context';
+import { useAuth } from '../../common/auth-provider';
 import { ApiClient } from '../../common/api-client/api-client';
 import { UserProfile } from '../../common/types';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage, SupportedLanguage } from '../../common/language-context';
 import { useNavigate } from 'react-router-dom';
-import MobileBottomNavigation from '../../components/MobileBottomNavigation';
+import MobileTopNavigation from '../../components/MobileTopNavigation';
+import AIEPFooter from '../../components/AIEPFooter';
 import DeleteProfileModal from './DeleteProfileModal';
 import './ProfileForms.css';
 
@@ -21,7 +22,7 @@ const LANGUAGE_OPTIONS = [
 
 export default function UserProfileForm() {
   const appContext = useContext(AppContext);
-  const { setAuthenticated } = useContext(AuthContext);
+  const { setAuthenticated } = useAuth();
   const apiClient = new ApiClient(appContext);
   const { addNotification } = useNotifications();
   const { t, setLanguage } = useLanguage();
@@ -127,6 +128,7 @@ export default function UserProfileForm() {
 
   return (
     <>
+    <MobileTopNavigation />
     <Container className="mt-4">
       <div className="mt-3 text-start">
         <Button variant="outline-secondary" onClick={handleBackClick}>
@@ -199,7 +201,7 @@ export default function UserProfileForm() {
       show={showDeleteModal} 
       onHide={() => setShowDeleteModal(false)} 
     />
-    <MobileBottomNavigation />
+    <AIEPFooter />
     </>
   );
 }

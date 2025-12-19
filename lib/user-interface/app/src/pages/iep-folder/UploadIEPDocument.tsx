@@ -148,11 +148,22 @@ const UploadIEPDocument: React.FC<UploadIEPDocumentProps> = ({ onUploadComplete,
           
           <Form>
             <Form.Group controlId="formFile" className="mb-3">
-              <Form.Control 
-                type="file" 
-                onChange={handleFileChange}
-                disabled={uploadStatus === 'uploading'}
-              />
+              <div className={`seamless-file-upload`}>
+                <input
+                  type="file"
+                  id="fileUpload"
+                  onChange={handleFileChange}
+                  disabled={uploadStatus === 'uploading'}
+                />
+                <div className={`seamless-file-container ${uploadStatus === 'uploading' ? 'disabled' : ''}`}>
+                  <span className="seamless-file-button">
+                    {t('upload.selectFile')}
+                  </span>
+                  <span className={`seamless-file-text ${file ? 'has-file' : ''}`}>
+                    {file ? file.name : t('upload.noFileSelected')}
+                  </span>
+                </div>
+              </div>
               {fileError && (
                 <Form.Text className="text-danger">
                   {fileError}

@@ -1,0 +1,86 @@
+.resources-banner-container {
+    background-color: #007AD1;
+    width: 100%;
+    display: flex;
+    position: relative;
+}
+
+.resources-banner-content {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 4rem;
+    width: 100%;
+}
+
+.resources-banner-title {
+    font-size: 2rem;
+    font-family: "Fjalla One", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    color: #F5F3EE;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.resources-banner-list-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    gap: 2rem;
+}
+
+.resources-banner-item {
+    display: flex;
+    flex-direction: column;
+    background-color: #F5F3EE;
+    min-height: 100px;
+    width: 100%;
+    min-width: 300px;
+    min-height: 300px;
+    border-radius: 20px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.resources-banner-item h5 {
+    font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+    font-weight: 500;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.resources-banner-item p {
+    font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+    font-weight: 400;
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) { 
+    .resources-banner-container {
+        min-height: 584px;
+    }
+
+    .resources-banner-content {
+        padding: 2rem 1rem;
+    }
+
+    .resources-banner-list-container {
+        flex-direction: column;
+    }
+
+    .resources-banner-item {
+        min-height: 150px;
+    }
+}
+
+@media (min-width: 769px) {
+    .resources-banner-container {
+        min-height: 550px;
+    }
+
+    .resources-banner-list-container {
+        width: 60%;
+    }
+}

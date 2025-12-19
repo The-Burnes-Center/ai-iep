@@ -2,7 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import { useLanguage } from '../common/language-context';
-import MobileBottomNavigation from '../components/MobileBottomNavigation';
+import MobileTopNavigation from '../components/MobileTopNavigation';
+import AIEPFooter from '../components/AIEPFooter';
 import './RightsAndOnboarding.css';
 
 const RightsAndOnboarding: React.FC = () => {
@@ -25,6 +26,7 @@ const RightsAndOnboarding: React.FC = () => {
 
   return (
     <>
+    <MobileTopNavigation />
     <Container className="mt-4 mb-5">
       <div className="mt-3 text-start">
         <Button variant="outline-secondary" onClick={handleBackClick}>
@@ -45,7 +47,7 @@ const RightsAndOnboarding: React.FC = () => {
         </Col>
       </Row>
     </Container>
-        <MobileBottomNavigation />
+    <AIEPFooter />
     </>
   );
 };

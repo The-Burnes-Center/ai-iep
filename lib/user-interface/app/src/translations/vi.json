@@ -76,6 +76,9 @@
     "summary.reuploadButton": "Tải Lên Lại Tài Liệu",
     "summary.noPreferredLanguageContent.title": "Nội Dung Không Có Sẵn Bằng Ngôn Ngữ Ưa Thích",
     "summary.noPreferredLanguageContent.message": "Tài liệu này đã được xử lý trước khi thiết lập ngôn ngữ ưa thích của bạn. Tải lên lại tài liệu để dịch sang ngôn ngữ ưa thích của bạn.",
+    "summary.lastUpdate": "Cập nhật lần cuối:",
+    "summary.showLess": "Thu Gọn",
+    "summary.readMore": "Đọc Thêm",
 
     "sections.studentInfo": "Về Học Sinh",
     "sections.accommodations": "Điều Chỉnh Hỗ Trợ",
@@ -101,6 +104,8 @@
     "upload.success": "Tệp đã được tải lên thành công!",
     "upload.error": "Lỗi khi tải lên tệp. Vui lòng thử lại.",
     "upload.button": "Tải lên tài liệu",
+    "upload.selectFile": "Chọn Tệp",
+    "upload.noFileSelected": "Chưa Chọn Tệp",
     "upload.replaceDocument": "THAY THẾ TÀI LIỆU IEP",
     
     "current.loading": "Đang tải...",
@@ -262,8 +267,8 @@
     "onboarding.carousel.paragraph.translate": "AIEP dịch tóm tắt tài liệu IEP sang ngôn ngữ bạn chọn.",
     "onboarding.carousel.paragraph.advocate": "Ủng hộ giáo dục con bạn bằng cách tìm hiểu IEP và quyền lợi.",
 
-    "rights.header.title.green": "Dữ liệu của bạn được bảo mật với chúng tôi",
-    "rights.header.title.pink": "Quyền của bạn với tư cách phụ huynh",
+    "rights.header.title.green": "Dữ liệu của bạn an toàn",
+    "rights.header.title.pink": "Quyền của phụ huynh",
 
 
     "rights.slide1.title": "Bạn có thể yêu cầu phiên dịch",
@@ -278,6 +283,14 @@
     "rights.slide5.content": "Nếu quản trị viên không có mặt tại cuộc họp, bạn có quyền sắp xếp lại lịch họp vào thời điểm họ có thể tham dự.",
     "rights.slide6.title": "Bạn phải được cung cấp sách hướng dẫn quyền lợi",
     "rights.slide6.content": "Theo luật, người quản lý hồ sơ của bạn phải cung cấp cho bạn một cuốn sách nhỏ về quyền phụ huynh trước cuộc họp IEP.",
+    "rights.slide7.title": "Xem sơ lược toàn bộ tài liệu IEP",
+    "rights.slide7.content": "Ở đầu màn hình, bạn sẽ thấy một bản tóm tắt ngắn về thông tin chúng tôi tìm thấy trong tài liệu IEP của bạn.",
+    "rights.slide8.title": "Hiểu các thông tin chính từ IEP",
+    "rights.slide8.content": "Trong các phần bên dưới, bạn sẽ tìm thấy những thông tin quan trọng chúng tôi rút ra từ tài liệu bạn đã tải lên. Nhấp vào tiêu đề để đọc thông tin.",
+    "rights.slide9.title": "Tìm ý nghĩa của các thuật ngữ phức tạp",
+    "rights.slide9.content": "Mỗi khi bạn thấy một từ màu xanh, bạn có thể nhấp vào đó để xem định nghĩa của nó. Khi hoàn tất, nhấp vào X để quay lại bản tóm tắt.",
+    "rights.slide10.title": "So sánh nội dung với IEP gốc",
+    "rights.slide10.content": "Bên dưới tiêu đề của mỗi thông tin quan trọng, bạn sẽ thấy số trang nơi chúng tôi lấy thông tin. Nếu có điều gì không đúng, hãy luôn kiểm tra lại!",
 
     "privacy.slide1.title": "IEP của bạn sẽ không bị thay đổi",
     "privacy.slide1.content": "Chúng tôi đang tạo một tài liệu riêng với bản tóm tắt của bạn. Bạn sẽ có thể tải xuống dưới dạng PDF.",
@@ -301,12 +314,22 @@
 
     "glossary.header": "Bảng chú giải",
 
+    "navigation.home": "Trang chủ",
     "navigation.summary": "Tóm tắt",
     "navigation.support": "Hỗ trợ",
+    "navigation.faqs": "Câu Hỏi Thường Gặp",
     "navigation.account": "Tài khoản",
     "navigation.about": "Giới thiệu", 
     "navigation.rights": "Quyền lợi",
     "navigation.processing": "Tài liệu của bạn đang được xử lý...",
+    "navigation.uploadIEP": "Tải lên IEP",
+
+    "footer.tagline": "Thiết kế AI\ncùng với và cho\ncộng đồng",
+    "footer.home": "Trang chủ",
+    "footer.uploadIEP": "Tải lên IEP",
+    "footer.supportCenter": "Trung Tâm Hỗ Trợ",
+    "footer.aboutUs": "Về Chúng Tôi",
+    "footer.faqs": "Câu Hỏi Thường Gặp",
 
     "accountCenter.title": "Trung Tâm Tài Khoản",
     "accountCenter.updateProfile": "Cập Nhật Hồ Sơ Của Bạn",
@@ -322,7 +345,25 @@
 
     "about.breadcrumb.supportCenter": "TRUNG TÂM HỖ TRỢ",
     "about.breadcrumb.about": "GIỚI THIỆU",
+    "about.projectTitle": "Dự Án AI-EP: Thiết Kế AI\ncùng với và cho Cộng Đồng",
     "about.title": "Về Dự Án",
+    "about.intro": "Với sự hỗ trợ của <a href=\"https://chanzuckerberg.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Sáng kiến Chan Zuckerberg</a>, <a href=\"https://burnes.northeastern.edu/\" target=\"_blank\" rel=\"noopener noreferrer\">Trung tâm Burnes vì Thay đổi Xã hội</a>, chương trình <a href=\"https://burnes.northeastern.edu/ai-for-impact-coop/\" target=\"_blank\" rel=\"noopener noreferrer\">AI for Impact</a>, và <a href=\"https://innovateschools.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Innovate Public Schools</a> đang làm việc với các gia đình ở California và Massachusetts để sử dụng trí tuệ nhân tạo nhằm nâng cao kết quả giáo dục cho học sinh khuyết tật. Đồng thời, chúng tôi đang học cách phát triển AI phục vụ mục đích công cộng cùng với cộng đồng.",
+    "about.theProblem": "Vấn Đề",
+    "about.problemDescription": "Với sự tham gia của hơn 1000 phụ huynh, nhóm của chúng tôi đang xây dựng một công cụ miễn phí, mã nguồn mở được hỗ trợ bởi AI cùng với phụ huynh và người chăm sóc để:",
+    "about.problemList.translate": "Dịch IEP sang nhiều ngôn ngữ",
+    "about.problemList.simplify": "Đơn giản hóa thuật ngữ giáo dục phức tạp",
+    "about.problemList.summarize": "Tóm tắt thông tin quan trọng",
+    "about.problemList.conversation": "Cho phép trò chuyện tự nhiên với tài liệu qua văn bản hoặc giọng nói",
+    "about.problemList.recommendations": "Tạo đề xuất cá nhân hóa và danh sách kiểm tra cho cuộc họp",
+    "about.empowerFamilies": "Chúng tôi muốn trao quyền cho các gia đình để vận động hiệu quả cho giáo dục của con em họ. Dự án AI Lấy Cộng đồng làm Trung tâm là về việc tái hình dung cách AI được phát triển. Bằng cách đặt các cộng đồng bị ảnh hưởng làm kiến trúc sư cho các giải pháp của riêng họ, chúng tôi đang hướng tới một tương lai nơi AI có trách nhiệm vượt ra ngoài việc giảm thiểu rủi ro và tích cực thúc đẩy công bằng và trao quyền.",
+    "about.researchQuestions": "Câu Hỏi Nghiên Cứu Của Chúng Tôi",
+    "about.researchDescription": "Đồng thời, chúng tôi đang nghiên cứu:",
+    "about.researchList.educate": "Làm thế nào chúng ta có thể giáo dục hiệu quả các thành viên cộng đồng về AI để họ có thể tham gia có ý nghĩa vào quá trình phát triển?",
+    "about.researchList.codesign": "Những phương pháp nào làm cho quy trình đồng thiết kế hiệu quả và tôn trọng thời gian của các thành viên cộng đồng?",
+    "about.researchList.amplify": "Làm thế nào chúng ta có thể tận dụng AI để khuếch đại tiếng nói đa dạng của cộng đồng?",
+    "about.researchList.translateInsights": "Làm thế nào chúng ta có thể chuyển đổi những hiểu biết của cộng đồng thành các giải pháp công nghệ thực tế?",
+    "about.researchList.equity": "Những chiến lược nào tăng cường công bằng trong thiết kế AI, đặc biệt cho các nhóm dân số dễ bị tổn thương?",
+    "about.projectOutcomes": "Ngoài công cụ AI-EP miễn phí, dự án sẽ tạo ra một khóa học và chương trình giảng dạy cho đào tạo AI cộng đồng và một cẩm nang cho phát triển AI lấy cộng đồng làm trung tâm.",
     "about.description": "AI-IEP giúp các tài liệu Chương trình Giáo dục Cá nhân hóa dễ hiểu hơn thông qua dịch thuật hỗ trợ AI, ngôn ngữ đơn giản hóa và các tài nguyên hữu ích cho phụ huynh.",
     "about.thankYouParents": "Cảm ơn các bậc phụ huynh!",
     "about.thankYouAdvocating": "Cảm ơn bạn đã bảo vệ quyền được giáo dục của trẻ em!",
@@ -334,6 +375,7 @@
     "about.theGovLabDescription": "Sứ mệnh của The GovLab là cải thiện cuộc sống của mọi người bằng cách thay đổi cách chúng ta quản trị. Mục tiêu của chúng tôi là tăng cường khả năng của các tổ chức – bao gồm nhưng không giới hạn ở chính phủ – và con người để làm việc một cách cởi mở, hợp tác, hiệu quả và hợp pháp hơn để đưa ra quyết định tốt hơn và giải quyết các vấn đề công cộng.",
     "about.goToWebsite": "ĐẾN TRANG WEB",
     "about.privacyPolicy": "Chính Sách Bảo Mật",
+    "about.learnMore": "TÌM HIỂU THÊM",
 
     "resources.title": "Tài Nguyên",
     "resources.breadcrumb.supportCenter": "TRUNG TÂM HỖ TRỢ",
@@ -440,5 +482,12 @@
     "privacyPolicy.contact.title": "Liên Hệ",
     "privacyPolicy.contact.intro": "Nếu bạn có câu hỏi về Chính Sách Bảo Mật này, vui lòng liên hệ với chúng tôi tại:",
     "privacyPolicy.contact.organization": "The GovLab",
-    "privacyPolicy.contact.email": "Email:"
+    "privacyPolicy.contact.email": "Email:",
+
+    "hero.title": "Chương trình Giáo dục\nCá nhân hóa, dễ dàng tiếp cận",
+    "hero.description": "Công cụ AIEP có thể giúp bạn hiểu các tài liệu IEP của con bạn.",
+
+    "landing.greenBanner.title": "Tất cả trẻ em đều xứng đáng được giáo dục, bất kể nhu cầu của chúng",
+    "landing.greenBanner.description": "Giống như cây cối, mỗi đứa trẻ học theo cách riêng của mình. Một số cần ánh sáng, một số cần bóng mát, một số nở hoa nhanh, những đứa khác mất thời gian. Công cụ AIEP giúp các gia đình chăm sóc nhu cầu giáo dục của con mình.",
+    "landing.greenBanner.createAccountButton": "TẠO TÀI KHOẢN"
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Col, Form } from 'react-bootstrap';
+import { Form } from 'react-bootstrap';
 import AuthHeader from './AuthHeader';
 import EmailInput from './EmailInput';
 import PasswordInput from './PasswordInput';
@@ -21,6 +21,7 @@ interface ForgotPasswordProps {
   confirmPassword: string;
   showNewPassword: boolean;
   showConfirmPassword: boolean;
+  showLogo?: boolean;
   setResetEmail: (value: string) => void;
   setResetCode: (value: string) => void;
   setNewPassword: (value: string) => void;
@@ -45,6 +46,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
   confirmPassword,
   showNewPassword,
   showConfirmPassword,
+  showLogo = true,
   setResetEmail,
   setResetCode,
   setNewPassword,
@@ -57,9 +59,8 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
   handleResetPassword
 }) => {
   return (
-    <Container fluid className="login-container d-flex align-items-center justify-content-center">
-      <Col xs={12} sm={8} md={6} lg={4}>
-        <AuthHeader title={t('auth.resetPassword')} />
+    <>
+      <AuthHeader title={t('auth.resetPassword')} showLogo={showLogo} />
         
         {!resetSent ? (
           <Form onSubmit={handleForgotPassword}>
@@ -135,8 +136,7 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({
             </div>
           </Form>
         )}
-      </Col>
-    </Container>
+    </>
   );
 };
 

@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import App from "../app";
-import { Amplify, Auth } from "aws-amplify";
+import { BrowserRouter } from "react-router-dom";
+import { Amplify } from "aws-amplify";
 import { AppConfig } from "../common/types";
 import { AppContext } from "../common/app-context";
 import { LanguageProvider } from "../common/language-context";
-import { AuthContext } from "../common/auth-context"; 
+import { AuthProvider } from "../common/auth-provider";
 import { Alert, StatusIndicator } from "@cloudscape-design/components";
 import { StorageHelper } from "../common/helpers/storage-helper";
 import { Mode } from "@cloudscape-design/global-styles";
-import CustomLogin from "./CustomLogin";
+import AppRoutes from "./AppRoutes";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 
@@ -24,32 +24,22 @@ const queryClient = new QueryClient({
 export default function AppConfigured() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [error, setError] = useState<boolean | null>(null);
-  const [authenticated, setAuthenticated] = useState<boolean>(null);
   const [theme, setTheme] = useState(StorageHelper.getTheme());
-  const [configured, setConfigured] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Load AWS configuration on mount
   useEffect(() => {
     const loadConfig = async () => {
       try {
         const result = await fetch("/aws-exports.json");
         const awsExports = await result.json();
 
+        // Configure Amplify once
         Amplify.configure(awsExports);
 
         setConfig(awsExports);
-        setConfigured(true);
-        
-        try {
-          const user = await Auth.currentAuthenticatedUser();
-          if (user) {
-            setAuthenticated(true);
-          }
-        } catch (e) {
-          // console.log("No authenticated user found");
-        }
       } catch (e) {
-        // console.error("Error loading configuration:", e);
+        console.error("Error loading configuration:", e);
         setError(true);
       } finally {
         setIsLoading(false);
@@ -59,10 +49,7 @@ export default function AppConfigured() {
     loadConfig();
   }, []);
 
-  const handleLoginSuccess = () => {
-    setAuthenticated(true);
-  };
-
+  // Theme management
   useEffect(() => {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -93,27 +80,29 @@ export default function AppConfigured() {
     };
   }, [theme]);
 
+  // Loading state
   if (isLoading) {
     return (
       <div
         style={{
           width: "100%",
-          height: "100%",
+          height: "100vh",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
         }}
       >
-        <StatusIndicator type="loading">Loading</StatusIndicator>
+        <StatusIndicator type="loading">Loading configuration...</StatusIndicator>
       </div>
     );
   }
 
-  if (error) {
+  // Error state
+  if (error || !config) {
     return (
       <div
         style={{
-          height: "100%",
+          height: "100vh",
           width: "100%",
           display: "flex",
           justifyContent: "center",
@@ -131,27 +120,19 @@ export default function AppConfigured() {
     );
   }
 
-  // Important: Wrapping the CustomLogin component with LanguageProvider
-  // ensures the login flow has access to translations
-  if (!authenticated) {
-    return (
-      <AppContext.Provider value={config}>
-        <LanguageProvider>
-            <CustomLogin onLoginSuccess={handleLoginSuccess} />
-        </LanguageProvider>
-      </AppContext.Provider>
-    );
-  }
-
+  // Always render the router with all providers
+  // The router will handle showing login vs protected routes based on auth state
   return (
-    <AuthContext.Provider value={{ authenticated, setAuthenticated }}>
-      <AppContext.Provider value={config}>
-        <LanguageProvider>
+    <AppContext.Provider value={config}>
+      <LanguageProvider>
+        <AuthProvider>
           <QueryClientProvider client={queryClient}>
-            <App />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
           </QueryClientProvider>
-        </LanguageProvider>
-      </AppContext.Provider>
-    </AuthContext.Provider>
+        </AuthProvider>
+      </LanguageProvider>
+    </AppContext.Provider>
   );
 }

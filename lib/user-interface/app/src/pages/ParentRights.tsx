@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import MobileBottomNavigation from '../components/MobileBottomNavigation';
+import MobileTopNavigation from '../components/MobileTopNavigation';
+import AIEPFooter from '../components/AIEPFooter';
 import { Container, Row, Col, Card, Accordion, Spinner} from 'react-bootstrap';
 import '../components/FrequentlyAskedQuestions.css';
 import { useLanguage } from '../common/language-context'; 
@@ -59,40 +60,41 @@ const ParentRights: React.FC = () => {
      );
    }
 
-   return (
-     <>
-       <Container className="faqs-container mt-3 mb-3">
-         <Row className="mt-2">
-           <Col>
-             <Card className="faqs-card">
-               <Row className="g-0">
-                 <Col md={12} className="no-padding-inherit-faq">
-                   <>
-                     <h4 className="faqs-header mt-4 px-4">{t('rights.title')}</h4>
-                     <Accordion defaultActiveKey="0" className="mb-3 faqs-accordion">
-                       {rightsByLanguage.map((faq) => (
-                         <Accordion.Item key={faq.id} eventKey={faq.id}>
-                           <Accordion.Header>
-                             {faq.title}
-                           </Accordion.Header>
-                           <Accordion.Body>
-                             <div className="faq-content">
-                               {faq.content}
-                             </div>
-                           </Accordion.Body>
-                         </Accordion.Item>
-                       ))}
-                     </Accordion>
-                   </>
-                 </Col>
-               </Row>
-             </Card>
-           </Col>
-         </Row>
-       </Container>
-       <MobileBottomNavigation />
-     </>
-   );
+  return (
+    <>
+      <MobileTopNavigation />
+      <Container className="faqs-container mt-3 mb-3">
+        <Row className="mt-2">
+          <Col>
+            <Card className="faqs-card">
+              <Row className="g-0">
+                <Col md={12} className="no-padding-inherit-faq">
+                  <>
+                    <h4 className="faqs-header mt-4 px-4">{t('rights.title')}</h4>
+                    <Accordion defaultActiveKey="0" className="mb-3 faqs-accordion">
+                      {rightsByLanguage.map((faq) => (
+                        <Accordion.Item key={faq.id} eventKey={faq.id}>
+                          <Accordion.Header>
+                            {faq.title}
+                          </Accordion.Header>
+                          <Accordion.Body>
+                            <div className="faq-content">
+                              {faq.content}
+                            </div>
+                          </Accordion.Body>
+                        </Accordion.Item>
+                      ))}
+                    </Accordion>
+                  </>
+                </Col>
+              </Row>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+      <AIEPFooter />
+    </>
+  );
 };
 
 export default ParentRights; 

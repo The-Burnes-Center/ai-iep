@@ -3,7 +3,7 @@ import { Modal, Button, Alert } from 'react-bootstrap';
 import { AppContext } from '../../common/app-context';
 import { ApiClient } from '../../common/api-client/api-client';
 import { Auth } from 'aws-amplify';
-import { AuthContext } from '../../common/auth-context';
+import { useAuth } from '../../common/auth-provider';
 import { useNotifications } from '../../components/notif-manager';
 import { useLanguage } from '../../common/language-context';
 
@@ -17,7 +17,7 @@ const DeleteProfileModal: React.FC<DeleteProfileModalProps> = ({ show, onHide })
   const [error, setError] = useState<string | null>(null);
   const appContext = useContext(AppContext);
   const apiClient = new ApiClient(appContext);
-  const { setAuthenticated } = useContext(AuthContext);
+  const { setAuthenticated } = useAuth();
   const { addNotification } = useNotifications();
   const { t } = useLanguage();
 

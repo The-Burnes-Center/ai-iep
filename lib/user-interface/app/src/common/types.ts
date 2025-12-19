@@ -85,7 +85,8 @@ export interface IEPDocument {
   status?: "PROCESSING" | "PROCESSING_TRANSLATIONS" | "PROCESSED" | "FAILED";
   progress?: number; // Processing progress percentage (0-100)
   current_step?: string; // Current processing step (e.g., "initializing", "ocr_complete", "redacting", etc.)
-  createdAt?: string;
+  createdAt?: number; // Unix timestamp (seconds since epoch)
+  updatedAt?: number; // Unix timestamp (seconds since epoch)
   message?: string;
   
   // Document content by language

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Auth } from 'aws-amplify';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Container, 
-  Row, 
-  Col, 
   Form, 
   Button, 
   Alert, 
@@ -12,6 +10,7 @@ import {
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './CustomLogin.css'; // Import the custom CSS file
 import { useLanguage, SupportedLanguage } from '../common/language-context';
+import { useAuth } from '../common/auth-provider';
 import AuthHeader from './AuthHeader';
 import PasswordInput from './PasswordInput';
 import PasswordRequirements from './PasswordRequirements';
@@ -24,14 +23,20 @@ import LanguageDropdown from './LanguageDropdown';
 import LoginMethodToggle from './LoginMethodToggle';
 import FormLabel from './FormLabel';
 import VerificationCodeInput from './VerificationCodeInput';
+import LandingTopNavigation from './LandingTopNavigation';
 
 interface CustomLoginProps {
-  onLoginSuccess: () => void;
+  showLogo?: boolean;
 }
 
-const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
+const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
   // Get translation function and language setter from context
   const { t, language, setLanguage } = useLanguage();
+  
+  // Get auth functions and navigation
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   // Existing state variables
   const [username, setUsername] = useState('');
@@ -90,8 +95,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Handle successful authentication
   const handleSuccessfulAuthentication = () => {
     // console.log('User authentication successful');
-    // Authentication is handled, onboarding decisions will be made based on profile.showOnboarding
-    onLoginSuccess();
+    // Navigate to where user was trying to go, or default to /preferred-language
+    // PreferredLanguage will handle onboarding decisions based on profile.showOnboarding
+    const from = location.state?.from?.pathname || '/preferred-language';
+    navigate(from, { replace: true });
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -116,8 +123,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         return;
       }
       
-      // If no challenge, proceed with normal login
-      onLoginSuccess();
+      // Update auth context with logged in user
+      login(user);
+      
+      // Navigate to appropriate page
+      handleSuccessfulAuthentication();
     } catch (err) {
       // console.error('Login error', err);
       if (err.code === 'UserNotConfirmedException') {
@@ -178,10 +188,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           setIsNewUserConfirmation(false);
           setSuccessMessage(t('auth.smsCodeSent'));
           // console.log('SMS code sent for existing user');
-        } else {
-          // console.log('User authenticated successfully');
-          onLoginSuccess();
-        }
+              } else {
+                // console.log('User authenticated successfully');
+                login(cognitoUser);
+                handleSuccessfulAuthentication();
+              }
         
       } catch (signInError: any) {
         // console.log('SignIn error:', signInError.code);
@@ -223,7 +234,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
                 setIsNewUserConfirmation(false);
                 setSuccessMessage(t('auth.smsCodeSent'));
               } else {
-                onLoginSuccess();
+                login(cognitoUser);
+                handleSuccessfulAuthentication();
               }
             } else {
               throw signUpError;
@@ -323,6 +335,10 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             // User is fully authenticated (shouldn't happen with CUSTOM_AUTH but handle gracefully)
             // console.log('User authenticated successfully after confirmation');
             setSuccessMessage(t('auth.accountConfirmedSuccess'));
+            
+            // Update auth context with logged in user
+            login(cognitoUser);
+            
             setTimeout(() => {
               handleSuccessfulAuthentication();
             }, 1000);
@@ -370,6 +386,9 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
         if (result.signInUserSession) {
           // console.log('Authentication successful!');
           setSuccessMessage(t('auth.phoneVerificationSuccess'));
+          
+          // Update auth context with logged in user
+          login(result);
           
           // Small delay to show success message, then redirect
           setTimeout(() => {
@@ -504,7 +523,11 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
       );
       
       // console.log('Password change successful', user);
-      onLoginSuccess();
+      // Update auth context
+      login(user);
+      
+      // Navigate to appropriate page
+      handleSuccessfulAuthentication();
     } catch (err) {
       // console.error('Password change error', err);
       setError(err.message || t('auth.errorGeneric'));
@@ -633,48 +656,46 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show password change form if required
   if (passwordChangeRequired) {
     return (
-      <Container fluid className="login-container d-flex align-items-center justify-content-center">
-        <Col xs={12} sm={8} md={6} lg={4}>
-          <AuthHeader title={t('auth.changePassword')} />
+      <>
+        <AuthHeader title={t('auth.changePassword')} showLogo={showLogo} />
+        
+        <Form onSubmit={handleCompleteNewPassword}>
+          <PasswordInput
+            label={t('auth.newPassword')}
+            placeholder={t('auth.enterNewPassword')}
+            value={newPassword}
+            onChange={setNewPassword}
+            showPassword={showNewPassword}
+            onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
+            required
+          />
+
+          <PasswordRequirements 
+            title={t('auth.passwordRequirements')}
+            firstRequirement={t('auth.passwordRequirement1')}
+            secondRequirement={t('auth.passwordRequirement2')}
+          />
           
-          <Form onSubmit={handleCompleteNewPassword}>
-            <PasswordInput
-              label={t('auth.newPassword')}
-              placeholder={t('auth.enterNewPassword')}
-              value={newPassword}
-              onChange={setNewPassword}
-              showPassword={showNewPassword}
-              onToggleVisibility={() => setShowNewPassword(!showNewPassword)}
-              required
-            />
+          <PasswordInput
+            label={t('auth.passwordConfirm')}
+            placeholder={t('auth.passwordConfirm')}
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            showPassword={showConfirmPassword}
+            onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
+            required
+          />
 
-            <PasswordRequirements 
-              title={t('auth.passwordRequirements')}
-              firstRequirement={t('auth.passwordRequirement1')}
-              secondRequirement={t('auth.passwordRequirement2')}
-            />
-            
-            <PasswordInput
-              label={t('auth.passwordConfirm')}
-              placeholder={t('auth.passwordConfirm')}
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              showPassword={showConfirmPassword}
-              onToggleVisibility={() => setShowConfirmPassword(!showConfirmPassword)}
-              required
-            />
-
-            {error && <Alert variant="danger">{error}</Alert>}
-            
-            <div className="d-grid gap-2">
-                <SubmitButton 
-                  loading={loading}
-                  buttonText={t('auth.changePassword')}
-                />              
-            </div>
-          </Form>
-        </Col>
-      </Container>
+          {error && <Alert variant="danger">{error}</Alert>}
+          
+          <div className="d-grid gap-2">
+              <SubmitButton 
+                loading={loading}
+                buttonText={t('auth.changePassword')}
+              />              
+          </div>
+        </Form>
+      </>
     );
   }
 
@@ -693,6 +714,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           confirmPassword={confirmPassword}
           showNewPassword={showNewPassword}
           showConfirmPassword={showConfirmPassword}
+          showLogo={showLogo}
           setResetEmail={setResetEmail}
           setResetCode={setResetCode}
           setNewPassword={setNewPassword}
@@ -710,9 +732,8 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
   // Show sign up form
   if (showSignUp) {
     return (
-      <Container fluid className="login-container d-flex align-items-center justify-content-center">
-        <Col xs={12} sm={8} md={6} lg={4}>
-          <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} />
+      <>
+        <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} showLogo={showLogo} />
           
           {!isSignUpComplete ? (
             <Form onSubmit={handleSignUp}>
@@ -807,16 +828,14 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
               </div>
             </Form>
           )}
-        </Col>
-      </Container>
+      </>
     );
   }
 
   // Main login form with mobile login option
   return (
-    <Container fluid className="login-container d-flex align-items-center justify-content-center">
-      <Col xs={12} sm={8} md={6} lg={4}>
-        <AuthHeader title={t('auth.signInHeader')} />
+    <>
+      <AuthHeader title={t('auth.signInHeader')} showLogo={showLogo} />
 
       <LanguageDropdown 
         language={language}
@@ -1035,7 +1054,6 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
             </div>
           </Form>
         )}
-      </Col>
       
       {/* SMS Frequency Disclaimer - positioned at bottom */}
       {showMobileLogin && (
@@ -1045,7 +1063,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ onLoginSuccess }) => {
           </p>
         </div>
       )}
-    </Container>
+    </>
   );
 };
 

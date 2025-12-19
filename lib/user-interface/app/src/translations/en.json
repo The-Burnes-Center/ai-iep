@@ -76,6 +76,9 @@
     "summary.reuploadButton": "Re-upload Document",
     "summary.noPreferredLanguageContent.title": "Content Not Available in Your Preferred Language",
     "summary.noPreferredLanguageContent.message": "This document was processed before your language preference was set. Re-upload your document to get it translated into your preferred language.",
+    "summary.lastUpdate": "Last update:",
+    "summary.showLess": "Show Less",
+    "summary.readMore": "Read More",
 
     "sections.studentInfo": "About Student",
     "sections.accommodations": "Accommodations",
@@ -99,6 +102,8 @@
     "upload.success": "File has been uploaded successfully!",
     "upload.error": "Error uploading file. Please try again.",
     "upload.button": "Upload Document",
+    "upload.selectFile": "Select File",
+    "upload.noFileSelected": "No File Selected",
     "upload.replaceDocument": "UPDATE IEP DOCUMENT",
 
     "update.profile.child": "Child",
@@ -285,8 +290,16 @@
     "rights.slide5.content": "If an administrator isn't present at the meeting, you have the right to reschedule for a time when they can attend.",
     "rights.slide6.title": "You must be given a booklet of your rights",
     "rights.slide6.content": "By law, your case manager must provide you with a booklet of your parental rights before the IEP meeting.",
+    "rights.slide7.title": "Get a first glimpse of the entire IEP document",
+    "rights.slide7.content": "At the top of the screen, you will find a short summary of the information we found on your IEP document.",
+    "rights.slide8.title": "Understand the main insights from the IEP",
+    "rights.slide8.content": "In the sections below, you will find the key insights we drew from the document you uploaded. Click on the titles to read the information.",
+    "rights.slide9.title": "Find the meaning of complex terms",
+    "rights.slide9.content": "Whenever you see a blue word, you will be able to click on it to show its definition. When you're done, click on the X to return to your summary.",
+    "rights.slide10.title": "Contrast the content with the original IEP",
+    "rights.slide10.content": "Below the title of each key insight, you will find the page number where we took the information from. If something feels wrong, always double check!",
 
-    "privacy.slide1.title": "Your IEP won’t be changed",
+    "privacy.slide1.title": "Your IEP won't be changed",
     "privacy.slide1.content": "We’re creating a separate document with your summary. You will be able to download it as a PDF.",
     "privacy.slide2.title": "We care about your privacy",
     "privacy.slide2.content": "We’re removing your personal information from the summaries. We will not store any of your or your child’s personal details.",
@@ -308,12 +321,22 @@
   
     "glossary.header": "Glossary",
 
+    "navigation.home": "Home",
     "navigation.summary": "Summary",
     "navigation.support": "Support", 
+    "navigation.faqs": "FAQs",
     "navigation.account": "Account",
     "navigation.about": "About",
     "navigation.rights": "Rights",
     "navigation.processing": "Your document is being processed...",
+    "navigation.uploadIEP": "Upload An IEP",
+
+    "footer.tagline": "Designing AI\nwith and for\ncommunities",
+    "footer.home": "Home",
+    "footer.uploadIEP": "Upload An IEP",
+    "footer.supportCenter": "Support Center",
+    "footer.aboutUs": "About Us",
+    "footer.faqs": "FAQs",
 
     "accountCenter.title": "Account Center",
     "accountCenter.updateProfile": "Update Your Profile",
@@ -329,7 +352,25 @@
 
     "about.breadcrumb.supportCenter": "SUPPORT CENTER",
     "about.breadcrumb.about": "ABOUT",
+    "about.projectTitle": "The AI-EP Project: Designing AI\nwith and for Communities",
     "about.title": "About The Project",
+    "about.intro": "With the support of the <a href=\"https://chanzuckerberg.com/\" target=\"_blank\" rel=\"noopener noreferrer\">Chan Zuckerberg Initiative</a>, the <a href=\"https://burnes.northeastern.edu/\" target=\"_blank\" rel=\"noopener noreferrer\">Burnes Center for Social Change</a>, its <a href=\"https://burnes.northeastern.edu/ai-for-impact-coop/\" target=\"_blank\" rel=\"noopener noreferrer\">AI for Impact program</a>, and <a href=\"https://innovateschools.org/\" target=\"_blank\" rel=\"noopener noreferrer\">Innovate Public Schools</a> are working with families in California and Massachusetts to use artificial intelligence to enhance educational outcomes for learners with disabilities. At the same time, we are learning how to develop public purpose AI with communities.",
+    "about.theProblem": "The Problem",
+    "about.problemDescription": "With engagement from 1000+ parents, our team is building a free, open source AI-powered tool together with parents and caregivers that will:",
+    "about.problemList.translate": "Translate IEPs into multiple languages",
+    "about.problemList.simplify": "Simplify complex educational jargon",
+    "about.problemList.summarize": "Summarize key information",
+    "about.problemList.conversation": "Enable natural conversation with the document through text or voice",
+    "about.problemList.recommendations": "Create personalized recommendations and meeting checklists",
+    "about.empowerFamilies": "We want to empower families to advocate effectively for their children's education. The Community-Centered AI project is about reimagining how AI is developed. By positioning affected communities as architects of their own solutions, we're working toward a future where responsible AI goes beyond mitigating risks and actively advances equity and empowerment.",
+    "about.researchQuestions": "Our Research Questions",
+    "about.researchDescription": "At the same time, we are studying:",
+    "about.researchList.educate": "How can we effectively educate community members about AI so they can meaningfully participate in its development?",
+    "about.researchList.codesign": "What methods make co-design processes efficient and respectful of community members' time?",
+    "about.researchList.amplify": "How can we leverage AI to amplify diverse community voices?",
+    "about.researchList.translateInsights": "How can we translate community insights into practical technological solutions?",
+    "about.researchList.equity": "What strategies increase equity in AI design, especially for vulnerable populations?",
+    "about.projectOutcomes": "In addition to the free AI-EP tool, the project will produce a course and curriculum for community AI training and a playbook for community-centered AI development.",
     "about.description": "AI-IEP makes Individualized Education Program documents easier to understand through AI-powered translation, simplified language, and helpful resources for parents.",
     "about.thankYouParents": "Thank you, parents!",
     "about.thankYouAdvocating": "Thank you for advocating for children's right to education!",
@@ -341,6 +382,7 @@
     "about.theGovLabDescription": "The GovLab's mission is to improve people's lives by changing the way we govern. Our goal is to strengthen the ability of institutions – including but not limited to governments – and people to work more openly, collaboratively, effectively and legitimately to make better decisions and solve public problems.",
     "about.goToWebsite": "GO TO WEBSITE",
     "about.privacyPolicy": "Privacy Policy",
+    "about.learnMore": "LEARN MORE",
 
     "resources.title": "Resources",
     "resources.breadcrumb.supportCenter": "SUPPORT CENTER",
@@ -447,5 +489,12 @@
     "privacyPolicy.contact.title": "Contact",
     "privacyPolicy.contact.intro": "If you have questions about this Privacy Policy, please contact us at:",
     "privacyPolicy.contact.organization": "The GovLab",
-    "privacyPolicy.contact.email": "Email:"
+    "privacyPolicy.contact.email": "Email:",
+
+    "hero.title": "Individualized Education\nPlans, made accessible",
+    "hero.description": "The AIEP tool can help you understand your child's IEP documents.",
+
+    "landing.greenBanner.title": "All children deserve education, regardless of their needs",
+    "landing.greenBanner.description": "Just like plants, each child learns in their own way. Some need light, some need shade, some bloom quickly, others take time. The AIEP tool helps families care for their child's educational needs.",
+    "landing.greenBanner.createAccountButton": "CREATE ACCOUNT"
   }
