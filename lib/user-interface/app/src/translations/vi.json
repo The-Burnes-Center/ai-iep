@@ -267,8 +267,8 @@
     "onboarding.carousel.paragraph.translate": "AIEP dịch tóm tắt tài liệu IEP sang ngôn ngữ bạn chọn.",
     "onboarding.carousel.paragraph.advocate": "Ủng hộ giáo dục con bạn bằng cách tìm hiểu IEP và quyền lợi.",
 
-    "rights.header.title.green": "Dữ liệu của bạn được bảo mật với chúng tôi",
-    "rights.header.title.pink": "Quyền của bạn với tư cách phụ huynh",
+    "rights.header.title.green": "Dữ liệu của bạn an toàn",
+    "rights.header.title.pink": "Quyền của phụ huynh",
 
 
     "rights.slide1.title": "Bạn có thể yêu cầu phiên dịch",
@@ -283,6 +283,14 @@
     "rights.slide5.content": "Nếu quản trị viên không có mặt tại cuộc họp, bạn có quyền sắp xếp lại lịch họp vào thời điểm họ có thể tham dự.",
     "rights.slide6.title": "Bạn phải được cung cấp sách hướng dẫn quyền lợi",
     "rights.slide6.content": "Theo luật, người quản lý hồ sơ của bạn phải cung cấp cho bạn một cuốn sách nhỏ về quyền phụ huynh trước cuộc họp IEP.",
+    "rights.slide7.title": "Xem sơ lược toàn bộ tài liệu IEP",
+    "rights.slide7.content": "Ở đầu màn hình, bạn sẽ thấy một bản tóm tắt ngắn về thông tin chúng tôi tìm thấy trong tài liệu IEP của bạn.",
+    "rights.slide8.title": "Hiểu các thông tin chính từ IEP",
+    "rights.slide8.content": "Trong các phần bên dưới, bạn sẽ tìm thấy những thông tin quan trọng chúng tôi rút ra từ tài liệu bạn đã tải lên. Nhấp vào tiêu đề để đọc thông tin.",
+    "rights.slide9.title": "Tìm ý nghĩa của các thuật ngữ phức tạp",
+    "rights.slide9.content": "Mỗi khi bạn thấy một từ màu xanh, bạn có thể nhấp vào đó để xem định nghĩa của nó. Khi hoàn tất, nhấp vào X để quay lại bản tóm tắt.",
+    "rights.slide10.title": "So sánh nội dung với IEP gốc",
+    "rights.slide10.content": "Bên dưới tiêu đề của mỗi thông tin quan trọng, bạn sẽ thấy số trang nơi chúng tôi lấy thông tin. Nếu có điều gì không đúng, hãy luôn kiểm tra lại!",
 
     "privacy.slide1.title": "IEP của bạn sẽ không bị thay đổi",
     "privacy.slide1.content": "Chúng tôi đang tạo một tài liệu riêng với bản tóm tắt của bạn. Bạn sẽ có thể tải xuống dưới dạng PDF.",

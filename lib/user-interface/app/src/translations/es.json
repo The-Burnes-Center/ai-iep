@@ -104,8 +104,8 @@
     "upload.success": "¡El archivo se ha subido correctamente!",
     "upload.error": "Error al subir el archivo. Inténtelo de nuevo.",
     "upload.button": "Subir Documento",
-    "upload.selectFile": "Seleccionar Archivo",
-    "upload.noFileSelected": "Ningún Archivo Seleccionado",
+    "upload.selectFile": "Elegir archivo",
+    "upload.noFileSelected": "Sin archivo",
     "upload.replaceDocument": "REEMPLAZAR DOCUMENTO IEP",
     
     "current.loading": "Cargando...",
@@ -262,8 +262,8 @@
     "onboarding.carousel.paragraph.translate": "AIEP traduce los resúmenes de documentos IEP a su idioma preferido.",
     "onboarding.carousel.paragraph.advocate": "Abogue por la educación de su hijo explorando el IEP y sus derechos.",
 
-    "rights.header.title.green": "Sus datos están seguros con nosotros",
-    "rights.header.title.pink": "Sus derechos como padre",
+    "rights.header.title.green": "Sus datos están seguros",
+    "rights.header.title.pink": "Sus derechos",
 
 
     "rights.slide1.title": "Puede solicitar un traductor",
@@ -278,6 +278,14 @@
     "rights.slide5.content": "Si un administrador no está presente en la reunión, tiene derecho a reprogramarla para cuando pueda asistir.",
     "rights.slide6.title": "Debe recibir un folleto de sus derechos",
     "rights.slide6.content": "Por ley, su administrador de caso debe proporcionarle un folleto con sus derechos como padre antes de la reunión del IEP.",
+    "rights.slide7.title": "Obtenga una primera vista del documento IEP completo",
+    "rights.slide7.content": "En la parte superior de la pantalla, encontrará un breve resumen de la información que encontramos en su documento IEP.",
+    "rights.slide8.title": "Comprenda las ideas principales del IEP",
+    "rights.slide8.content": "En las secciones a continuación, encontrará las ideas clave que extrajimos del documento que subió. Haga clic en los títulos para leer la información.",
+    "rights.slide9.title": "Encuentre el significado de términos complejos",
+    "rights.slide9.content": "Cada vez que vea una palabra azul, podrá hacer clic en ella para mostrar su definición. Cuando termine, haga clic en la X para volver a su resumen.",
+    "rights.slide10.title": "Compare el contenido con el IEP original",
+    "rights.slide10.content": "Debajo del título de cada idea clave, encontrará el número de página de donde obtuvimos la información. Si algo no le parece correcto, ¡siempre verifique!",
 
     "privacy.slide1.title": "Su IEP no será modificado",
     "privacy.slide1.content": "Estamos creando un documento separado con su resumen. Podrá descargarlo como PDF.",

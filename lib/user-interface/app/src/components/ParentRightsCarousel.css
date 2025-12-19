@@ -78,6 +78,30 @@
   color: #F5F3EE;
 }
 
+.tutorial-card {
+  width: 95%;
+  display: flex;
+  flex-direction: row;
+  background-image: var(--tutorial-bg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 240px;
+  border-radius: 12px;
+  border: 1px solid #1E1E1E;
+  margin-top: 20px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .parent-rights-carousel-wrapper {
   width: 100%;
   max-width: 90%;
@@ -132,7 +156,7 @@
   text-align: start;
   color: #343a40;
   height: 228px;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .slide-rights-content h2 {
@@ -153,7 +177,6 @@
 
 /* Indicators styling */
 .parent-rights-carousel .carousel-indicators {
-  bottom: 1rem;
   z-index: 3;
   margin-bottom: 0;
 }

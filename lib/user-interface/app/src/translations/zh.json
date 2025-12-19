@@ -261,8 +261,8 @@
     "onboarding.carousel.paragraph.translate": "AIEP还可以将文档的摘要部分翻译成您选择的任意语言，以供无障碍阅读",
     "onboarding.carousel.paragraph.advocate": "通过了解IEP以及各方的合法义务，您可以为您孩子有力争取自身的合法权益",
 
-    "rights.header.title.green": "您的数据在我们这里是安全的",
-    "rights.header.title.pink": "您作为家长的权利",
+    "rights.header.title.green": "您的数据安全",
+    "rights.header.title.pink": "家长的权利",
 
     "rights.slide1.title": "您可以要求翻译",
     "rights.slide1.content": "您可以为IEP会议请求一名翻译，以确保沟通清晰。",
@@ -276,6 +276,14 @@
     "rights.slide5.content": "如果管理人员缺席会议，您有权重新安排他们能够参加的时间。",
     "rights.slide6.title": "您必须获得权利手册",
     "rights.slide6.content": "根据法律，您的案例经理必须在IEP会议前向您提供一本关于家长权利的手册。",
+    "rights.slide7.title": "初步了解整个IEP文档",
+    "rights.slide7.content": "在屏幕顶部，您会看到我们在您的IEP文档中找到的信息的简短摘要。",
+    "rights.slide8.title": "理解IEP的主要内容",
+    "rights.slide8.content": "在下面的部分中，您将找到我们从您上传的文档中提取的关键信息。点击标题阅读详细信息。",
+    "rights.slide9.title": "查找复杂术语的含义",
+    "rights.slide9.content": "每当您看到蓝色字词时，点击它即可显示其定义。完成后，点击X返回摘要。",
+    "rights.slide10.title": "将内容与原始IEP对照",
+    "rights.slide10.content": "在每个关键信息的标题下方，您会看到我们获取信息的页码。如果有疑问，请务必核实！",
 
     "privacy.slide1.title": "您的IEP不会被更改",
     "privacy.slide1.content": "我们正在创建一个包含您摘要的单独文档。您将能够以PDF格式下载它。",

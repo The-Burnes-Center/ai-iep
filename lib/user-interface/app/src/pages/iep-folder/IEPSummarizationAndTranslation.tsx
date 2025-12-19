@@ -244,6 +244,34 @@ const IEPSummarizationAndTranslation: React.FC = () => {
         title: t('rights.slide6.title'),
         content: t('rights.slide6.content'),
         image: '/images/carousel/blissful.png'
+      },
+      {
+        id: 'tutorial-slide-1',
+        type: 'tutorial',
+        title: t('rights.slide7.title'),
+        content: t('rights.slide7.content'),
+        image: '/images/tutorial-01.jpg'
+      },
+      {
+        id: 'tutorial-slide-2',
+        type: 'tutorial',
+        title: t('rights.slide8.title'),
+        content: t('rights.slide8.content'),
+        image: '/images/tutorial-02.jpg'
+      },
+      {
+        id: 'tutorial-slide-3',
+        type: 'tutorial',
+        title: t('rights.slide9.title'),
+        content: t('rights.slide9.content'),
+        image: '/images/tutorial-03.jpg'
+      },
+      {
+        id: 'tutorial-slide-4',
+        type: 'tutorial',
+        title: t('rights.slide10.title'),
+        content: t('rights.slide10.content'),
+        image: '/images/tutorial-04.jpg'
       }
     ];
   }, [t, translationsLoaded]);
@@ -548,7 +576,6 @@ const IEPSummarizationAndTranslation: React.FC = () => {
               <Card.Body>
                 {(() => {
                   const fullContent = document.summaries[lang];
-                  console.log("fullContent", fullContent);
                   const { truncated, needsTruncation } = truncateContent(fullContent);
                   const isExpanded = isSummaryExpanded[lang];
                   const contentToShow = needsTruncation && !isExpanded ? truncated : fullContent;
