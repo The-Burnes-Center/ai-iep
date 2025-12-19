@@ -191,7 +191,7 @@ export default function AboutApp({
       </div>
       
       </div>
-      <AIEPFooter footerLinks={publicFooterLinks} />
+      <AIEPFooter {...(!showBreadcrumbs && { footerLinks: publicFooterLinks })} />
     </>
   );
 };
