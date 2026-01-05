@@ -45,7 +45,7 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isPublic = false }) => {
     <div className="privacy-policy-page">
       <NavigationComponent />
       {/* Breadcrumbs */}
-      <div className="mt-3 text-start px-4">
+      <div className="mt-3 text-start px-4 breadcrumb-container">
         <Breadcrumb>
           <Breadcrumb.Item onClick={handleBackClick}>{t("privacyPolicy.breadcrumb.about")}</Breadcrumb.Item>
           <Breadcrumb.Item active>{t("privacyPolicy.breadcrumb.privacyPolicy")}</Breadcrumb.Item>
@@ -56,8 +56,8 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isPublic = false }) => {
         <Row className="mt-2">
           <Col>
             <Card className="privacy-policy-card">
-              <Row className="g-0">
-                <Col md={12} className="no-padding-inherit-privacy">
+              <Row  style={{ width: '100%', justifyContent: 'center' }}>
+                <Col  xs={12} md={8} lg={6} className='pb-4'>
   
                   {/* Main Heading */}
                   <h4 className="privacy-policy-title">{t('privacyPolicy.title')}</h4>
