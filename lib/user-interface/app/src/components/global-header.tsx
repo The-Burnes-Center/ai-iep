@@ -60,7 +60,7 @@ export default function GlobalHeader() {
   // When user signs out Auth.signOut() clears out all the tokens
   const handleSignOut = async () => {
     try {
-      navigate('/', { replace: true });
+      navigate('/login', { replace: true });
       await Auth.signOut();
       setAuthenticated(false);
     } catch (error) {

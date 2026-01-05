@@ -6,8 +6,8 @@ import './FrequentlyAskedQuestions.css';
 import { useLanguage } from '../common/language-context';
 
 const publicFooterLinks = [
-  { route: '/home', labelKey: 'footer.home' },
-  { route: '/', labelKey: 'footer.uploadIEP' },
+  { route: '/', labelKey: 'footer.home' },
+  { route: '/login', labelKey: 'footer.uploadIEP' },
   { route: '/faqs', labelKey: 'footer.faqs' },
   { route: '/about-the-project', labelKey: 'footer.aboutUs' },
 ]; 

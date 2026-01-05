@@ -27,7 +27,7 @@ export function ProtectedRoute() {
   // Redirect to login if not authenticated
   // Save the location they were trying to access
   if (!authenticated) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // User is authenticated, render the protected routes
