@@ -14,8 +14,8 @@ import './ProfileForms.css';
 import './AboutApp.css';
 
 const publicFooterLinks = [
-  { route: '/home', labelKey: 'footer.home' },
-  { route: '/', labelKey: 'footer.uploadIEP' },
+  { route: '/', labelKey: 'footer.home' },
+  { route: '/login', labelKey: 'footer.uploadIEP' },
   { route: '/faqs', labelKey: 'footer.faqs' },
   { route: '/about-the-project', labelKey: 'footer.aboutUs' },
 ];
@@ -45,6 +45,12 @@ export default function AboutApp({
   });
 
   const teamMembers = data || [];
+
+  const parentNavigator = [
+    {id: '1', first_name: 'Aracelli', last_name: 'Arellano', title: 'Innovate Parent Navigators – Bay Area', headshot: '/images/navigators/Aracelli_Arellano.png'},
+    {id: '2', first_name: 'Roberto', last_name: 'Guzman', title: 'Innovate Parent Navigators – Bay Area', headshot: '/images/navigators/Roberto_Guzman.png'},
+    {id: '3', first_name: 'Rosa', last_name: 'Mendoza', title: 'Innovate Parent Navigators – Bay Area', headshot: '/images/navigators/Rosa_Mendoza.png'},
+    {id: '4', first_name: 'Shan', last_name: 'Hong', title: 'Innovate Parent Navigators – Bay Area', headshot: '/images/navigators/Shan_Hong.png'}];
 
   const handleBackClick = () => {
     navigate('/support-center');
@@ -155,6 +161,23 @@ export default function AboutApp({
 
           <div className='section-header section-header--team'>
             <h5> </h5>
+          </div>
+
+          <div className='parent-navigators-list-container'>
+            {parentNavigator.map((member) => (
+              <div key={member.id} className='team-member-item'>
+                <div className='team-member-item-image'>
+                  <img 
+                    src={member.headshot}
+                    alt={`${member.first_name} ${member.last_name}`}
+                  />
+                </div>
+                <div className='team-member-item-content'>
+                  <h5>{member.first_name} {member.last_name}</h5>
+                  <p>{member.title}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
         <div className="about-app-partner-container">

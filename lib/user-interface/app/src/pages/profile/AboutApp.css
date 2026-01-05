@@ -50,11 +50,21 @@
   padding: 10px 10px 100px 10px;
   align-items: center;
   position: relative;
-}
-
-.team-members-list-container {
   background-color: #FF8724;
 }
+
+.parent-navigators-list-container
+{
+    display: flex;
+  flex-direction: column;
+  min-height: 100px;
+  width: 100%;
+  padding: 10px 10px 100px 10px;
+  align-items: center;
+  position: relative;
+  background-color: #FF8724;
+}
+
 
 .team-member-item {
   display: flex;
@@ -325,6 +335,13 @@ margin-top: 0px;
     flex-wrap: wrap;
     justify-content: center;
     align-items: stretch;
+  }
+
+  .parent-navigators-list-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;    
   }
 
   .team-member-item {
