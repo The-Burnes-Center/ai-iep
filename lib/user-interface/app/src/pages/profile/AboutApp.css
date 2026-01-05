@@ -62,7 +62,7 @@
   padding: 10px 10px 100px 10px;
   align-items: center;
   position: relative;
-  background-color: #FF8724;
+  background-color: #FFB522;
 }
 
 
@@ -160,6 +160,11 @@ margin-top: 0px;
   background: url('/images/yellow-pattern-stripe-mobile.png') center/cover;
   position: relative;
   margin-bottom: 2rem;
+}
+
+.section-header--parent-navigators {
+  background: url('/images/yellow-pattern-stripe-mobile.png') center/cover;
+  position: relative;
 }
 
 .section-header--innovate {
@@ -326,6 +331,11 @@ margin-top: 0px;
   }
 
   .section-header--about {
+    background: url('/images/yellow-pattern-stripe-desktop.png') center/cover;
+    position: relative;
+  }
+
+  .section-header--parent-navigators {
     background: url('/images/yellow-pattern-stripe-desktop.png') center/cover;
     position: relative;
   }

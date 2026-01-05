@@ -47,10 +47,23 @@ export default function AboutApp({
   const teamMembers = data || [];
 
   const parentNavigator = [
-    {id: '1', first_name: 'Aracelli', last_name: 'Arellano', title: 'Innovate Parent Navigators – Bay Area', headshot: '/images/navigators/Aracelli_Arellano.png'},
-    {id: '2', first_name: 'Roberto', last_name: 'Guzman', title: 'Innovate Parent Navigators – Bay Area', headshot: '/images/navigators/Roberto_Guzman.png'},
-    {id: '3', first_name: 'Rosa', last_name: 'Mendoza', title: 'Innovate Parent Navigators – Bay Area', headshot: '/images/navigators/Rosa_Mendoza.png'},
-    {id: '4', first_name: 'Shan', last_name: 'Hong', title: 'Innovate Parent Navigators – Bay Area', headshot: '/images/navigators/Shan_Hong.png'}];
+    {id: '1', first_name: 'Aracelli', last_name: 'Arellano', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Aracelli_Arellano.png'},
+    {id: '2', first_name: 'Roberto', last_name: 'Guzman', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Roberto_Guzman.png'},
+    {id: '3', first_name: 'Rosa', last_name: 'Mendoza', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Rosa_Mendoza.png'},
+    {id: '4', first_name: 'Shan', last_name: 'Hong', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Shan_Hong.png'},
+    {id: '5', first_name: 'Martha', last_name: 'Mejia', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Martha_Mejia.png'},
+    {id: '6', first_name: 'Noelia', last_name: 'Solval', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Noelia_Solval.png'},
+    {id: '7', first_name: 'Carmen', last_name: 'Rodriguez', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Carmen_Rodriguez.png'},
+    {id: '8', first_name: 'Aida', last_name: 'Vega', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Aida_Vega.png'},
+    {id: '9', first_name: 'Angel', last_name: 'Velasco', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Angel_Velasco.png'},
+    {id: '10', first_name: 'Dolores', last_name: 'Jauregi', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Dolores_Jauregi.png'},
+    {id: '11', first_name: 'Edwin', last_name: 'Gonzalez', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Edwin_Gonzalez.jpg'},
+    {id: '12', first_name: 'Gabriela', last_name: 'Lopez', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Gabriela_Lopez.jpg'},
+    {id: '13', first_name: 'Irma', last_name: 'Lopez', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Irma_Lopez.jpg'},
+    {id: '14', first_name: 'Maria', last_name: 'Pimentel', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Maria_Pimentel.jpg'},
+    {id: '15', first_name: 'Miriam', last_name: 'Merida', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Miriam_Merida.jpg'},
+    {id: '16', first_name: 'Nelly', last_name: 'Luna', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Nelly_Luna.jpg'},
+    {id: '17', first_name: 'Yolanda', last_name: 'Murrieta', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Yolanda_Murrieta.png'}];
 
   const handleBackClick = () => {
     navigate('/support-center');
@@ -138,6 +151,27 @@ export default function AboutApp({
 
       <div className='about-app-all-content-container'>
 
+      <div className='section-header section-header--parent-navigators'>
+          <h5>{t("about.parentNavigatorsTitle")}</h5>
+        </div>
+
+      <div className='parent-navigators-list-container'>
+            {parentNavigator.map((member) => (
+              <div key={member.id} className='team-member-item'>
+                <div className='team-member-item-image'>
+                  <img 
+                    src={member.headshot}
+                    alt={`${member.first_name} ${member.last_name}`}
+                  />
+                </div>
+                <div className='team-member-item-content'>
+                  <h5>{member.first_name} {member.last_name}</h5>
+                  <p>{member.title}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <div className='section-header section-header--team'>
             <h5>{t("about.theTeam")}</h5>
           </div>
@@ -161,23 +195,6 @@ export default function AboutApp({
 
           <div className='section-header section-header--team'>
             <h5> </h5>
-          </div>
-
-          <div className='parent-navigators-list-container'>
-            {parentNavigator.map((member) => (
-              <div key={member.id} className='team-member-item'>
-                <div className='team-member-item-image'>
-                  <img 
-                    src={member.headshot}
-                    alt={`${member.first_name} ${member.last_name}`}
-                  />
-                </div>
-                <div className='team-member-item-content'>
-                  <h5>{member.first_name} {member.last_name}</h5>
-                  <p>{member.title}</p>
-                </div>
-              </div>
-            ))}
           </div>
 
         <div className="about-app-partner-container">
