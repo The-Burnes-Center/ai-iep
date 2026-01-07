@@ -213,7 +213,7 @@
 }
 
 /* Media Queries */
-@media (max-width: 768px) {  
+@media (max-width: 1024px) {  
     .parent-rights-banner-container {
         min-height: 450px;
     }
@@ -257,7 +257,7 @@
 
 }
 
-@media (min-width: 769px) {  
+@media (min-width: 1025px) {  
     .parent-rights-banner-container { 
         min-height: 598px;
     }
