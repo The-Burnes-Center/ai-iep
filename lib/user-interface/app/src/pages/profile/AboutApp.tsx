@@ -151,7 +151,7 @@ export default function AboutApp({
 
       <div className='about-app-all-content-container'>
 
-      <div className='section-header section-header--parent-navigators'>
+      {/* <div className='section-header section-header--parent-navigators'>
           <h5>{t("about.parentNavigatorsTitle")}</h5>
         </div>
 
@@ -170,7 +170,7 @@ export default function AboutApp({
                 </div>
               </div>
             ))}
-          </div>
+          </div> */}
 
           <div className='section-header section-header--team'>
             <h5>{t("about.theTeam")}</h5>
