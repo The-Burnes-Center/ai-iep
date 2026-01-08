@@ -10,15 +10,17 @@
 
 1. [Project Overview](#project-overview)  
 2. [Features](#features)  
-3. [Architecture](#architecture)  
-4. [Prerequisites](#prerequisites)  
-5. [Getting Started](#getting-started)  
-6. [Project Structure](#project-structure)  
-7. [Deployment](#deployment)  
-8. [Testing](#testing)  
-9. [Technology Stack](#technology-stack)  
-10. [Contributing](#contributing)  
-11. [License](#license)  
+3. [User Interface Preview](#user-interface-preview)  
+4. [Data Privacy & Security](#data-privacy--security)  
+5. [Architecture](#architecture)  
+6. [Prerequisites](#prerequisites)  
+7. [Getting Started](#getting-started)  
+8. [Project Structure](#project-structure)  
+9. [Deployment](#deployment)  
+10. [Testing](#testing)  
+11. [Technology Stack](#technology-stack)  
+12. [Contributing](#contributing)  
+13. [License](#license)  
 
 ---
 
@@ -64,6 +66,67 @@ The platform is built as a serverless application using AWS CDK, providing a sca
 - **Encryption**: KMS-encrypted data at rest for S3, DynamoDB, and Lambda environment variables
 - **PII Protection**: Automatic redaction of sensitive information
 - **Secure Storage**: Encrypted S3 buckets for document storage
+
+---
+
+## User Interface Preview
+
+The following wireframes illustrate key features of the A-IEP document viewer:
+
+### Document Summary
+AI-generated summary providing a clear, parent-friendly overview of the IEP document.
+
+![Summary View](images/summary_skeleton_ui.jpg)
+
+### Key Insights
+Expandable insights highlighting important information from the IEP. Click on any insight to reveal detailed explanations.
+
+![Key Insights](images/key_insights_skeleton_ui.jpg)
+
+### Interactive Glossary
+Highlighted terms in the document can be clicked to open a glossary panel with plain-language definitions of educational terminology and abbreviations.
+
+![Glossary Feature](images/glossary_skeleton_ui.jpg)
+
+### Page References
+Each section shows the original page numbers where information was found, making it easy to locate content in the source IEP document.
+
+![Page References](images/page_no_skeleton_ui.jpg)
+
+---
+
+## Data Privacy & Security
+
+A-IEP is designed with privacy and security at its core. The following diagram illustrates how we protect your data throughout the document processing pipeline:
+
+![Data Privacy Flow - English](images/privacy-diagram-en.jpg)
+
+<details>
+<summary>Ver en español (View in Spanish)</summary>
+
+![Data Privacy Flow - Spanish](images/privacy-diagram-es.jpg)
+
+</details>
+
+### Security Measures
+
+All data is encrypted both in transit (over the internet) and at rest (on our servers). We use robust encryption methods, including our own AWS Key Management Service (KMS) key, to protect your information. Personally Identifiable Information (PII) is **automatically removed before any AI processing** takes place, using AWS Comprehend. The original IEP file is immediately deleted from our storage system after processing.
+
+### Access Controls
+
+Our software code is private and accessible only to our core development team. User accounts are managed through Amazon Cognito, a secure identity service, and we never have access to user passwords. Any sensitive keys or secrets used by the system are securely stored and encrypted.
+
+### Automatic PII Redaction
+
+There is no manual process required to remove personal data. PII is automatically detected and redacted from the document before it is analyzed. Only this redacted, non-identifiable text and summaries derived from it are used in the processing pipeline.
+
+### Accuracy & Confidentiality
+
+- The A-IEP tool generates **draft content intended for human review**
+- We do not retain original documents
+- All redacted data and system logs are encrypted
+- Our AI providers (OpenAI API and Mistral AI) **do not use your data to train their models**
+- We support complete data deletion requests (available in the Profile Screen)
 
 ---
 

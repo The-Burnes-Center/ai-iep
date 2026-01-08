@@ -50,11 +50,21 @@
   padding: 10px 10px 100px 10px;
   align-items: center;
   position: relative;
-}
-
-.team-members-list-container {
   background-color: #FF8724;
 }
+
+.parent-navigators-list-container
+{
+    display: flex;
+  flex-direction: column;
+  min-height: 100px;
+  width: 100%;
+  padding: 10px 10px 100px 10px;
+  align-items: center;
+  position: relative;
+  background-color: #FFB522;
+}
+
 
 .team-member-item {
   display: flex;
@@ -150,6 +160,11 @@ margin-top: 0px;
   background: url('/images/yellow-pattern-stripe-mobile.png') center/cover;
   position: relative;
   margin-bottom: 2rem;
+}
+
+.section-header--parent-navigators {
+  background: url('/images/yellow-pattern-stripe-mobile.png') center/cover;
+  position: relative;
 }
 
 .section-header--innovate {
@@ -320,11 +335,23 @@ margin-top: 0px;
     position: relative;
   }
 
+  .section-header--parent-navigators {
+    background: url('/images/yellow-pattern-stripe-desktop.png') center/cover;
+    position: relative;
+  }
+
   .team-members-list-container {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     align-items: stretch;
+  }
+
+  .parent-navigators-list-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;    
   }
 
   .team-member-item {
