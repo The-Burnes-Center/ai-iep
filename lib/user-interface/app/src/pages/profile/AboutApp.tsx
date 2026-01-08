@@ -150,28 +150,6 @@ export default function AboutApp({
         </Container>
 
       <div className='about-app-all-content-container'>
-
-      {/* <div className='section-header section-header--parent-navigators'>
-          <h5>{t("about.parentNavigatorsTitle")}</h5>
-        </div>
-
-      <div className='parent-navigators-list-container'>
-            {parentNavigator.map((member) => (
-              <div key={member.id} className='team-member-item'>
-                <div className='team-member-item-image'>
-                  <img 
-                    src={member.headshot}
-                    alt={`${member.first_name} ${member.last_name}`}
-                  />
-                </div>
-                <div className='team-member-item-content'>
-                  <h5>{member.first_name} {member.last_name}</h5>
-                  <p>{member.title}</p>
-                </div>
-              </div>
-            ))}
-          </div> */}
-
           <div className='section-header section-header--team'>
             <h5>{t("about.theTeam")}</h5>
           </div>
