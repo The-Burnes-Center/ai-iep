@@ -53,10 +53,9 @@
     background-color: #014620;
   }
 
-  /* Show spinner only on desktop with custom color */
+  /* Show spinner only on desktop */
   .desktop-only-spinner {
     display: block;
-    color: #F5F3EE;
     margin-bottom: 1rem;
   }
 

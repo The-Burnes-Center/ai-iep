@@ -1,6 +1,7 @@
 import React from 'react';
-import { Card, Alert, Spinner } from 'react-bootstrap';
+import { Card, Alert } from 'react-bootstrap';
 import LinearProgress from '@mui/material/LinearProgress';
+import { ClipLoader } from 'react-spinners';
 import ParentRightsCarousel from './ParentRightsCarousel';
 import './ProcessingModal.css';
 
@@ -57,9 +58,9 @@ const ProcessingModal: React.FC<ProcessingModalProps> = ({
           <Card className="processing-summary-loader-card">
             <Card.Body className="processing-summary-card-body pt-0 pb-0">
               <div className='loading-final-screen'>
-                <Spinner animation="border" role="status" className="desktop-only-spinner">
-                  <span className="visually-hidden">Loading...</span>
-                </Spinner>
+                <div className="desktop-only-spinner">
+                  <ClipLoader color="#F5F3EE" size={50} cssOverride={{ borderWidth: '5px' }} />
+                </div>
                 <h3>
                   {t('summary.processing.hangTight')}
                 </h3>
