@@ -65,3 +65,12 @@
     background-color: var(--dropdown-hover-bg);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
+
+  .language-login-dropdown .btn-outline-secondary:active,
+  .language-login-dropdown .btn-outline-secondary:focus,
+  .language-login-dropdown .btn-outline-secondary.show {
+    color: var(--dropdown-color) !important;
+    border: 1px solid var(--dropdown-border) !important;
+    background-color: var(--dropdown-bg) !important;
+    box-shadow: none !important;
+  }
