@@ -348,7 +348,7 @@ const FrequentlyAskedQuestions: React.FC<FrequentlyAskedQuestionsProps> = ({
                 <Col md={12} className="no-padding-inherit-faq">
                   <>
                     <h4 className="faqs-header mt-4 px-4">{getFaqHeaderText()}</h4>
-                    <Accordion defaultActiveKey="0" className="mb-3 faqs-accordion">
+                    <Accordion defaultActiveKey={null} className="mb-3 faqs-accordion">
                       {displayFaqs.map((faq) => (
                         <Accordion.Item key={faq.id} eventKey={faq.id}>
                           <Accordion.Header>
