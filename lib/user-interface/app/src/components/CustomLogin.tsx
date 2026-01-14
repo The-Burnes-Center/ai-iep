@@ -27,9 +27,10 @@ import LandingTopNavigation from './LandingTopNavigation';
 
 interface CustomLoginProps {
   showLogo?: boolean;
+  showLanguageDropdown?: boolean;
 }
 
-const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
+const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true, showLanguageDropdown = false }) => {
   // Get translation function and language setter from context
   const { t, language, setLanguage } = useLanguage();
   
@@ -657,6 +658,16 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
   if (passwordChangeRequired) {
     return (
       <>
+        {showLanguageDropdown && (
+          <div className="auth-mobile-language-dropdown">
+            <LanguageDropdown 
+              language={language}
+              languageOptions={languageOptions}
+              onLanguageChange={handleLanguageChange}
+              variant="secondary"
+            />
+          </div>
+        )}
         <AuthHeader title={t('auth.changePassword')} showLogo={showLogo} />
         
         <Form onSubmit={handleCompleteNewPassword}>
@@ -702,6 +713,17 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
   // Show forgot password form
   if (showForgotPassword) {
     return (
+      <>
+        {showLanguageDropdown && (
+          <div className="auth-mobile-language-dropdown">
+            <LanguageDropdown 
+              language={language}
+              languageOptions={languageOptions}
+              onLanguageChange={handleLanguageChange}
+              variant="secondary"
+            />
+          </div>
+        )}
         <ForgotPassword
           t={t}
           loading={loading}
@@ -726,6 +748,7 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
           handleForgotPassword={handleForgotPassword}
           handleResetPassword={handleResetPassword}
         />
+      </>
     );
   }
 
@@ -733,6 +756,16 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
   if (showSignUp) {
     return (
       <>
+        {showLanguageDropdown && (
+          <div className="auth-mobile-language-dropdown">
+            <LanguageDropdown 
+              language={language}
+              languageOptions={languageOptions}
+              onLanguageChange={handleLanguageChange}
+              variant="secondary"
+            />
+          </div>
+        )}
         <AuthHeader title={isSignUpComplete ? t('auth.verifyEmail') : t('auth.signUp')} showLogo={showLogo} />
           
           {!isSignUpComplete ? (
@@ -835,13 +868,17 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
   // Main login form with mobile login option
   return (
     <>
+      {showLanguageDropdown && (
+        <div className="auth-mobile-language-dropdown">
+          <LanguageDropdown 
+            language={language}
+            languageOptions={languageOptions}
+            onLanguageChange={handleLanguageChange}
+            variant="secondary"
+          />
+        </div>
+      )}
       <AuthHeader title={t('auth.signInHeader')} showLogo={showLogo} />
-
-      <LanguageDropdown 
-        language={language}
-        languageOptions={languageOptions}
-        onLanguageChange={handleLanguageChange}
-      />
 
       <LoginMethodToggle
         showMobileLogin={showMobileLogin}

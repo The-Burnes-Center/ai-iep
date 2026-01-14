@@ -1,9 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import LandingTopNavigation from './LandingTopNavigation';
 import CustomLogin from './CustomLogin';
 import './CustomLogin.css';
 import AIEPFooter from './AIEPFooter';
+
+/**
+ * Custom hook to detect if the user is on a desktop device
+ * Uses window.matchMedia for efficient, event-driven detection
+ * @param breakpoint - The minimum width (in px) to be considered desktop (default: 768)
+ */
+const useIsDesktop = (breakpoint: number = 768): boolean => {
+  const [isDesktop, setIsDesktop] = useState(() => 
+    typeof window !== 'undefined' ? window.innerWidth >= breakpoint : true
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(`(min-width: ${breakpoint}px)`);
+    
+    // Set initial value
+    setIsDesktop(mediaQuery.matches);
+
+    // Handler for media query changes
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsDesktop(e.matches);
+    };
+
+    // Add listener
+    mediaQuery.addEventListener('change', handleChange);
+
+    // Cleanup
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [breakpoint]);
+
+  return isDesktop;
+};
 
 const publicFooterLinks = [
   { route: '/', labelKey: 'footer.home' },
@@ -25,13 +56,15 @@ const publicFooterLinks = [
  * (e.g., modals, embedded components) by creating alternative wrappers.
  */
 const CustomLoginWrapper: React.FC = () => {
+  const isDesktop = useIsDesktop();
+  
   return (
     <>
       <LandingTopNavigation />
       <Container fluid className="login-container d-flex align-items-center justify-content-center">
         <Row className="w-100 justify-content-center">
           <Col xs={12} sm={8} md={6} lg={4}>
-            <CustomLogin showLogo={true} />
+            <CustomLogin showLogo={isDesktop} showLanguageDropdown={true} />
           </Col>
         </Row>
       </Container>

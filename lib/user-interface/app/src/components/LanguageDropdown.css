@@ -1,4 +1,26 @@
-.language-login-dropdown .dropdown-toggle {
+/* Default variant CSS variables */
+.language-login-dropdown {
+    --dropdown-color: #67B275;
+    --dropdown-border: #67B275;
+    --dropdown-bg: #014620;
+    --dropdown-hover-bg: #014620;
+    --dropdown-disabled-color: #67B275;
+    --dropdown-disabled-border: #67B275;
+    --dropdown-disabled-bg: #014620;
+  }
+
+  /* Secondary variant CSS variables */
+  .language-dropdown--secondary {
+    --dropdown-color: #1e1e1e;
+    --dropdown-border: #CBC6BC;
+    --dropdown-bg: #F5F3EE;
+    --dropdown-hover-bg: #E7E4DC;
+    --dropdown-disabled-color: #b3ada9;
+    --dropdown-disabled-border: #CBC6BC;
+    --dropdown-disabled-bg: #F5F3EE;
+  }
+
+  .language-login-dropdown .dropdown-toggle {
     padding: 0.5rem 1.2rem 0.4rem 1.2rem !important;
     font-family: akzidenz-grotesk-next-conden, sans-serif;
     font-weight: 400;
@@ -19,10 +41,10 @@
   }
   
   .language-login-dropdown .dropdown-toggle:disabled {
-    border: 1px solid #CBC6BC !important;
+    border: 1px solid var(--dropdown-disabled-border) !important;
     box-shadow: none;
-    color: #b3ada9 !important;
-    background-color: #F5F3EE;
+    color: var(--dropdown-disabled-color) !important;
+    background-color: var(--dropdown-disabled-bg);
     cursor: not-allowed !important;
   }
   
@@ -31,15 +53,24 @@
   }
   
   .language-login-dropdown .btn-outline-secondary {
-    color: #1e1e1e;
-    border: 1px solid #CBC6BC;
-    background-color: #F5F3EE;
+    color: var(--dropdown-color);
+    border: 1px solid var(--dropdown-border);
+    background-color: var(--dropdown-bg);
     box-shadow: none;
   }
   
   .language-login-dropdown .btn-outline-secondary:hover {
-    color: #1e1e1e;
-    border: 1px solid #CBC6BC;
-    background-color: #E7E4DC;
+    color: var(--dropdown-color);
+    border: 1px solid var(--dropdown-border);
+    background-color: var(--dropdown-hover-bg);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .language-login-dropdown .btn-outline-secondary:active,
+  .language-login-dropdown .btn-outline-secondary:focus,
+  .language-login-dropdown .btn-outline-secondary.show {
+    color: var(--dropdown-color) !important;
+    border: 1px solid var(--dropdown-border) !important;
+    background-color: var(--dropdown-bg) !important;
+    box-shadow: none !important;
   }

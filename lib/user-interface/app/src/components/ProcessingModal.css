@@ -3,6 +3,11 @@
   from IEPSummarizationAndTranslation.css handle everything
 */
 
+/* Hide spinner on mobile by default */
+.desktop-only-spinner {
+  display: none;
+}
+
 /* Desktop mode: Modal dialog effect (ONLY on desktop) */
 @media (min-width: 992px) and (min-height: 700px) {
   .processing-modal-wrapper {
@@ -46,6 +51,16 @@
 
   .processing-summary-loader-card {
     background-color: #014620;
+  }
+
+  /* Show spinner only on desktop */
+  .desktop-only-spinner {
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .loading-final-screen h3 {
+    padding: 1rem;
   }
 }
 

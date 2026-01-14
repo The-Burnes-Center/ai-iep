@@ -17,6 +17,12 @@
     width: 100%;
 }
 
+.hero-section-mobile-language-dropdown {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
 .hero-section-image-container {
     width: 100%;
     display: flex;
@@ -84,13 +90,17 @@
         flex-direction: row;
     }
 
+    .hero-section-mobile-language-dropdown {
+        display: none;
+    }
+
     .hero-section-image {
         max-height: 410px;
         padding-bottom: 0;
     }
 
     .hero-section-login-container-content {
-        width: 50%;
+        width: 65%;
         margin-top: 0;
     }
 }

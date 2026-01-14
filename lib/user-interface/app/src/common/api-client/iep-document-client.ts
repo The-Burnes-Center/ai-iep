@@ -80,16 +80,8 @@ export class IEPDocumentClient {
     return response.signedUrl;
   }
 
-  // Get URL for downloading a file
-  async getDownloadURL(documentUrl: string): Promise<string> {
-    // Extract the filename from the document URL
-    const fileName = documentUrl.split('/').pop() || '';
-    const response = await this.getSignedURL(fileName, 'download');
-    return response.signedUrl;
-  }
-
-  // Get all documents for the child
-  async getDocuments() {
+  // Get most recent processed document with its summary and sections
+  async getMostRecentDocumentWithSummary() {
     try {
       const childId = await this.getDefaultChildId();
       const auth = await Utils.authenticate();
@@ -106,22 +98,10 @@ export class IEPDocumentClient {
         throw new Error('Failed to get documents');
       }
       
-      return await response.json();
-    } catch (error) {
-      // console.error('Error fetching documents:', error);
-      throw error;
-    }
-  }
-
-  // Get most recent processed document with its summary and sections
-  async getMostRecentDocumentWithSummary() {
-    try {
-      const result = await this.getDocuments();
-      // console.log("Document API response:", result);
+      const result = await response.json();
       
       // If no document is found, return null
       if (!result || Object.keys(result).length === 0) {
-        // console.log("No document found");
         return null;
       }
       
