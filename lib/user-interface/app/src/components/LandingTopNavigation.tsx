@@ -4,15 +4,7 @@ import { useLanguage } from '../common/language-context';
 import { IconFileDescription, IconHelpCircle, IconInfoCircle, IconHome } from '@tabler/icons-react';
 import './LandingTopNavigation.css';
 
-interface LandingTopNavigationProps {
-  tutorialPhaseEnabled?: boolean;
-  tutorialPhase?:string;
-}
-
-const LandingTopNavigation: React.FC<LandingTopNavigationProps> = ({ 
-  tutorialPhaseEnabled = false,
-  tutorialPhase =''
-}) => {
+const LandingTopNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
@@ -46,53 +38,22 @@ const LandingTopNavigation: React.FC<LandingTopNavigationProps> = ({
 
   return (
     <div className="landing-top-navigation">
-      {tutorialPhaseEnabled ?
-      (
-
-        tutorialPhase === 'app-tutorial' || tutorialPhase === 'parent-rights' ? (
-        <div className="processing-line">
-          {t('navigation.processing') || 'Your document is being processed...'}
-        </div>
-        ) :
-        (<>
-        <div className="processing-header">
-          {t('navigation.processing') || 'Your document is being processed...'}
-        </div>
-        <div className="navigation-container">
-          {navigationItems.map((item, index) => {
-            const IconComponent = item.icon;
-            return (
-              <button
-                key={index}
-                className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
-                onClick={() => handleNavigation(item.route)}
-                aria-label={`Navigate to ${item.label}`}
-              >
-                <IconComponent size={24} stroke={1.5} />
-                <span className="nav-label">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        </>)
-      ) : (
-        <div className="navigation-container">
-          {navigationItems.map((item, index) => {
-            const IconComponent = item.icon;
-            return (
-              <button
-                key={index}
-                className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
-                onClick={() => handleNavigation(item.route)}
-                aria-label={`Navigate to ${item.label}`}
-              >
-                <IconComponent size={24} stroke={1.5} />
-                <span className="nav-label">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div className="navigation-container">
+        {navigationItems.map((item, index) => {
+          const IconComponent = item.icon;
+          return (
+            <button
+              key={index}
+              className={`nav-item ${location.pathname === item.route ? 'active' : ''}`}
+              onClick={() => handleNavigation(item.route)}
+              aria-label={`Navigate to ${item.label}`}
+            >
+              <IconComponent size={24} stroke={1.5} />
+              <span className="nav-label">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
