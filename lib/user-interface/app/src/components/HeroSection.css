@@ -17,6 +17,12 @@
     width: 100%;
 }
 
+.hero-section-mobile-language-dropdown {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
 .hero-section-image-container {
     width: 100%;
     display: flex;
@@ -82,6 +88,10 @@
 @media (min-width: 1025px) {
     .hero-section-content {
         flex-direction: row;
+    }
+
+    .hero-section-mobile-language-dropdown {
+        display: none;
     }
 
     .hero-section-image {
