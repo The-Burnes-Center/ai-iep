@@ -12,15 +12,17 @@ interface LanguageDropdownProps {
   language: string;
   languageOptions: LanguageOption[];
   onLanguageChange: (lang: SupportedLanguage) => void;
+  variant?: 'default' | 'secondary';
 }
 
 const LanguageDropdown: React.FC<LanguageDropdownProps> = ({ 
   language, 
   languageOptions, 
-  onLanguageChange 
+  onLanguageChange,
+  variant = 'default'
 }) => {
   return (
-    <div className="language-login-dropdown">
+    <div className={`language-login-dropdown${variant === 'secondary' ? ' language-dropdown--secondary' : ''}`}>
       <Dropdown>
         <Dropdown.Toggle variant="outline-secondary" size="sm">
           {languageOptions.find(opt => opt.value === language)?.label || 'Language'}
