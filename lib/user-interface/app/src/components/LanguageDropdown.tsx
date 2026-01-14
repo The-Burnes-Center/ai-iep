@@ -20,7 +20,7 @@ const LanguageDropdown: React.FC<LanguageDropdownProps> = ({
   onLanguageChange 
 }) => {
   return (
-    <div className="language-login-dropdown text-end mb-3">
+    <div className="language-login-dropdown">
       <Dropdown>
         <Dropdown.Toggle variant="outline-secondary" size="sm">
           {languageOptions.find(opt => opt.value === language)?.label || 'Language'}

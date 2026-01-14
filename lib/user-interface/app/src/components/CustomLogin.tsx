@@ -837,12 +837,6 @@ const CustomLogin: React.FC<CustomLoginProps> = ({ showLogo = true }) => {
     <>
       <AuthHeader title={t('auth.signInHeader')} showLogo={showLogo} />
 
-      <LanguageDropdown 
-        language={language}
-        languageOptions={languageOptions}
-        onLanguageChange={handleLanguageChange}
-      />
-
       <LoginMethodToggle
         showMobileLogin={showMobileLogin}
         onMobileLoginClick={() => setShowMobileLogin(true)}

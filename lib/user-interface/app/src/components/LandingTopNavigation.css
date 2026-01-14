@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  background-color: #00682F;
+  background-color: #014620;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   padding: 8px 0;
   padding-top: max(8px, env(safe-area-inset-top));
@@ -43,6 +43,21 @@
   margin: 0 auto;
 }
 
+/* Logo styles - hidden by default (mobile) */
+.landing-top-navigation .nav-logo {
+  display: none;
+}
+
+.landing-top-navigation .nav-logo img {
+  height: 40px;
+  width: auto;
+}
+
+/* Nav items center container - for desktop layout */
+.landing-top-navigation .nav-items-center {
+  display: contents;
+}
+
 .landing-top-navigation .nav-item {
   display: flex;
   flex-direction: column;
@@ -76,7 +91,7 @@
 
 .landing-top-navigation .nav-item.active {
   color: #F5F3EE;
-  background-color: #00682F;
+  background-color: #014620;
 }
 
 .landing-top-navigation .nav-item i {
@@ -140,7 +155,28 @@
 
 @media (min-width: 992px) and (min-height: 700px) {
   .landing-top-navigation .navigation-container {
-    max-width: 70%;
+    max-width: 90%;
+    justify-content: space-between;
+  }
+
+  /* Show logos on desktop */
+  .landing-top-navigation .nav-logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .landing-top-navigation .nav-logo img {
+    height: 44px;
+  }
+
+  /* Nav items center - use flex for proper centering */
+  .landing-top-navigation .nav-items-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7vw;
+    flex: 1;
   }
 }
 

@@ -19,10 +19,10 @@
   }
   
   .language-login-dropdown .dropdown-toggle:disabled {
-    border: 1px solid #CBC6BC !important;
+    border: 1px solid #67B275 !important;
     box-shadow: none;
-    color: #b3ada9 !important;
-    background-color: #F5F3EE;
+    color: #67B275 !important;
+    background-color: #014620;
     cursor: not-allowed !important;
   }
   
@@ -31,15 +31,15 @@
   }
   
   .language-login-dropdown .btn-outline-secondary {
-    color: #1e1e1e;
-    border: 1px solid #CBC6BC;
-    background-color: #F5F3EE;
+    color: #67B275;
+    border: 1px solid #67B275;
+    background-color: #014620;
     box-shadow: none;
   }
   
   .language-login-dropdown .btn-outline-secondary:hover {
-    color: #1e1e1e;
-    border: 1px solid #CBC6BC;
-    background-color: #E7E4DC;
+    color: #67B275;
+    border: 1px solid #67B275;
+    background-color: #014620;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
