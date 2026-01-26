@@ -53,7 +53,19 @@
   background-color: #FF8724;
 }
 
-.parent-navigators-list-container
+.parent-navigators-list-container-top-row
+{
+    display: flex;
+  flex-direction: column;
+  min-height: 100px;
+  width: 100%;
+  padding: 10px 10px 10px 10px;
+  align-items: center;
+  position: relative;
+  background-color: #FFB522;
+}
+
+.parent-navigators-list-container-bottom-row
 {
     display: flex;
   flex-direction: column;
@@ -116,50 +128,50 @@ margin-bottom: 1rem;
 
 .parent-navigator-item {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   background-color: #F5F3EE;
-  min-height: 100px;
-  width: 95%;
+  width: 90%;
   border-radius: 20px;
-  padding: 15px;
   margin: 10px;
   border: 1px solid #1E1E1E;
+  overflow: hidden;
 }
 
 .parent-navigator-item h5 {
-font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-font-weight: 500;
-font-size: 1.25rem;
-margin-bottom: 5px;
-margin-top: 0px;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  margin-top: 0px;
 }
 
 .parent-navigator-item p {
-font-family: 'akzidenz-grotesk-next-pro', sans-serif;
-font-weight: 400;
-font-size: 1.125rem;
-margin-bottom: 1rem;
+  font-family: 'akzidenz-grotesk-next-pro', sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  margin-bottom: 0;
+  color: #555;
 }
 
 .parent-navigator-item-content {
-  width: 70%;
+  width: 100%;
+  padding: 12px;
 }
 
 .parent-navigator-item-image {
-  width: 102px;
+  width: 100%;
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  margin-right: 15px;
+  justify-content: center;
+  align-items: center;
 }
 
 .parent-navigator-item-image img {
-  width: 102px;
-  height: 95px;
-  border-radius: 50%;
+  width: 100%;
+  min-height: 250px;
   object-fit: cover;
-  object-position: left top;
-  border: 1px solid #1E1E1E;
+  object-position: center top;
+  border: none;
+  border-radius: 0;
 }
 
 .section-header {
@@ -395,7 +407,14 @@ margin-top: 0px;
     align-items: stretch;
   }
 
-  .parent-navigators-list-container {
+  .parent-navigators-list-container-top-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;    
+  }
+
+  .parent-navigators-list-container-bottom-row {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
@@ -420,20 +439,11 @@ margin-top: 0px;
   }
 
   .parent-navigator-item {
-    width: calc(33.333% - 80px);
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    width: 250px;
   }
 
-  .parent-navigator-item-image {
-    margin-right: 0;
-    margin-bottom: 10px;
-    justify-content: center;
-  }
-
-  .parent-navigator-item-content {
-    width: 100%;
+  .parent-navigator-item-image img {
+    height: 200px;
   }
 
   .gov-lab-logo-container {

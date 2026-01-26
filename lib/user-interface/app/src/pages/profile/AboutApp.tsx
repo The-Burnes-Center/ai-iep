@@ -145,8 +145,24 @@ export default function AboutApp({
           <h5>{t("about.parentNavigatorsTitle")}</h5>
         </div>
 
-      <div className='parent-navigators-list-container'>
-            {parentNavigator.map((member) => (
+      <div className='parent-navigators-list-container-top-row'>
+            {parentNavigator.slice(0, 4).map((member) => (
+              <div key={member.id} className='parent-navigator-item'>
+                <div className='parent-navigator-item-image'>
+                  <img 
+                    src={member.headshot}
+                    alt={`${member.first_name} ${member.last_name}`}
+                  />
+                </div>
+                <div className='parent-navigator-item-content'>
+                  <h5>{member.first_name} {member.last_name}</h5>
+                  <p>{member.title}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className='parent-navigators-list-container-bottom-row'>
+            {parentNavigator.slice(4).map((member) => (
               <div key={member.id} className='parent-navigator-item'>
                 <div className='parent-navigator-item-image'>
                   <img 
