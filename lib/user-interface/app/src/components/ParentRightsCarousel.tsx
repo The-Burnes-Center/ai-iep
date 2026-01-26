@@ -89,6 +89,14 @@ export const defaultSlideData = [
       },
     ];
 
+// Preload tutorial images at module load time to prevent lag when navigating
+defaultSlideData
+  .filter(slide => slide.type === 'tutorial')
+  .forEach(slide => {
+    const img = new Image();
+    img.src = slide.image;
+  });
+
 export interface SlideData {
   id: string;
   type: 'privacy' | 'rights' | 'tutorial';
@@ -144,13 +152,13 @@ const ParentRightsCarousel: React.FC<ParentRightsCarouselProps> = ({ slides = de
             <h1>{headerGreenTitle}</h1>
             <img src={slides[activeIndex].image} className="slide-rights-image" alt={slides[activeIndex].title} /> 
           </div>
-        ) : slides[activeIndex].type === 'tutorial' ? (
-          <div key={slides[activeIndex].id} className="tutorial-card" style={{ '--tutorial-bg': `url(${slides[activeIndex].image})` } as React.CSSProperties}>
-          </div>
-        ) : (
+        ) : slides[activeIndex].type === 'rights' ? (
           <div className="parent-rights-card parent-rights-card--pink">
-            <h1>{headerPinkTitle}</h1>
-            <img src={slides[activeIndex].image} className="slide-rights-image" alt={slides[activeIndex].title} /> 
+          <h1>{headerPinkTitle}</h1>
+          <img src={slides[activeIndex].image} className="slide-rights-image" alt={slides[activeIndex].title} /> 
+        </div>
+        ) : (
+          <div key={slides[activeIndex].id} className="tutorial-card" style={{ '--tutorial-bg': `url(${slides[activeIndex].image})` } as React.CSSProperties}>
           </div>
         )
       }

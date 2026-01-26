@@ -150,7 +150,6 @@ export default function NavigationPanel() {
           href={`/chatbot/playground/${uuidv4()}`}
           data-alignment="right"
           className="new-chat-button"
-          style={{ textAlign: "right" }}
         >
           New session
         </RouterButton>
