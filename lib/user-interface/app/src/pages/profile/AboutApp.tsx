@@ -147,14 +147,14 @@ export default function AboutApp({
 
       <div className='parent-navigators-list-container'>
             {parentNavigator.map((member) => (
-              <div key={member.id} className='team-member-item'>
-                <div className='team-member-item-image'>
+              <div key={member.id} className='parent-navigator-item'>
+                <div className='parent-navigator-item-image'>
                   <img 
                     src={member.headshot}
                     alt={`${member.first_name} ${member.last_name}`}
                   />
                 </div>
-                <div className='team-member-item-content'>
+                <div className='parent-navigator-item-content'>
                   <h5>{member.first_name} {member.last_name}</h5>
                   <p>{member.title}</p>
                 </div>
