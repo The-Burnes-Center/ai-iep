@@ -53,17 +53,7 @@ export default function AboutApp({
     {id: '4', first_name: 'Shan', last_name: 'Hong', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Shan_Hong.png'},
     {id: '5', first_name: 'Martha', last_name: 'Mejia', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Martha_Mejia.png'},
     {id: '6', first_name: 'Noelia', last_name: 'Solval', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Noelia_Solval.png'},
-    {id: '7', first_name: 'Carmen', last_name: 'Rodriguez', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Carmen_Rodriguez.png'},
-    {id: '8', first_name: 'Aida', last_name: 'Vega', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Aida_Vega.png'},
-    {id: '9', first_name: 'Angel', last_name: 'Velasco', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Angel_Velasco.png'},
-    {id: '10', first_name: 'Dolores', last_name: 'Jauregi', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Dolores_Jauregi.png'},
-    {id: '11', first_name: 'Edwin', last_name: 'Gonzalez', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Edwin_Gonzalez.jpg'},
-    {id: '12', first_name: 'Gabriela', last_name: 'Lopez', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Gabriela_Lopez.jpg'},
-    {id: '13', first_name: 'Irma', last_name: 'Lopez', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Irma_Lopez.jpg'},
-    {id: '14', first_name: 'Maria', last_name: 'Pimentel', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Maria_Pimentel.jpg'},
-    {id: '15', first_name: 'Miriam', last_name: 'Merida', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Miriam_Merida.jpg'},
-    {id: '16', first_name: 'Nelly', last_name: 'Luna', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Nelly_Luna.jpg'},
-    {id: '17', first_name: 'Yolanda', last_name: 'Murrieta', title: 'Special Election Parent Navigators - LA', headshot: '/images/navigators/Yolanda_Murrieta.png'}];
+    {id: '7', first_name: 'Carmen', last_name: 'Rodriguez', title: 'Innovate Parent Navigators - Bay Area', headshot: '/images/navigators/Carmen_Rodriguez.png'}];
 
   const handleBackClick = () => {
     navigate('/support-center');
