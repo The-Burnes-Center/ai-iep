@@ -423,9 +423,6 @@ margin-top: 0px;
 
   .team-member-item {
     width: calc(33.333% - 80px);
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
   }
 
   .team-member-item-image {
@@ -436,6 +433,7 @@ margin-top: 0px;
 
   .team-member-item-content {
     width: 100%;
+    padding-left: 1rem;
   }
 
   .parent-navigator-item {
