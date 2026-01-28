@@ -1,0 +1,14 @@
+.landing-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* Desktop styles */
+@media (min-width: 992px) {
+  .landing-content > * {
+    width: 50%;
+  }
+}
