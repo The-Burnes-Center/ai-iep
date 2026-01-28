@@ -111,28 +111,31 @@ export default function AboutApp({
           <Row style={{ width: '100%', justifyContent: 'center' }}>
             <Col xs={12} md={8} lg={6}>
               <div className="profile-form">
-                <p className='about-text' dangerouslySetInnerHTML={{ __html: t("about.intro") }} />
-                <h4 className='about-app-header'>{t("about.theProblem")}</h4>
-                <p className='about-text'>{t("about.problemDescription")}</p>
+                <h4 className='about-app-header'>{t("about.aboutTheAiepTool")}</h4>
+                <p className='about-text'>{t("about.aiepDescription")}</p>
+                <p className='about-text'>{t("about.builtWith")}</p>
                 <ul className='about-app-list'>
-                  <li>{t("about.problemList.translate")}</li>
-                  <li>{t("about.problemList.simplify")}</li>
-                  <li>{t("about.problemList.summarize")}</li>
-                  <li>{t("about.problemList.conversation")}</li>
-                  <li>{t("about.problemList.recommendations")}</li>
+                  <li>{t("about.helpsFamilies.translate")}</li>
+                  <li>{t("about.helpsFamilies.understand")}</li>
+                  <li>{t("about.helpsFamilies.summaries")}</li>
+                  <li>{t("about.helpsFamilies.prepare")}</li>
                 </ul>
-                <p className='about-text'>{t("about.empowerFamilies")}</p>
+                <p className='about-text'>{t("about.ourGoal")}</p>
               
-                <h4 className='about-app-header'>{t("about.researchQuestions")}</h4>
-                <p className='about-text'>{t("about.researchDescription")}</p>
+                <h4 className='about-app-header'>{t("about.builtWithFamilies")}</h4>
+                <p className='about-text'>{t("about.developedBy")}</p>
+                <p className='about-text'>{t("about.parentNavigatorsIntro")}</p>
                 <ul className='about-app-list'>
-                  <li>{t("about.researchList.educate")}</li>
-                  <li>{t("about.researchList.codesign")}</li>
-                  <li>{t("about.researchList.amplify")}</li>
-                  <li>{t("about.researchList.translateInsights")}</li>
-                  <li>{t("about.researchList.equity")}</li>
+                  <li>{t("about.parentNavigatorsList.codesigned")}</li>
+                  <li>{t("about.parentNavigatorsList.tested")}</li>
+                  <li>{t("about.parentNavigatorsList.canvassers")}</li>
                 </ul>
-                <p className='about-text'>{t("about.projectOutcomes")}</p>
+                <p className='about-text'>{t("about.livedExperience")}</p>
+
+                <h4 className='about-app-header'>{t("about.partOfBiggerProject")}</h4>
+                <p className='about-text'>{t("about.biggerProjectDescription")}</p>
+                <p className='about-text'>{t("about.learnMoreProject")}</p>
+                <p className='about-text'>{t("about.supportedBy")}</p>
               </div>  
             </Col>
           </Row>
