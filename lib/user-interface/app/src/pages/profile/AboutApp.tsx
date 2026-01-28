@@ -133,7 +133,6 @@ export default function AboutApp({
                   <li>{t("about.researchList.equity")}</li>
                 </ul>
                 <p className='about-text'>{t("about.projectOutcomes")}</p>
-              
               </div>  
             </Col>
           </Row>
