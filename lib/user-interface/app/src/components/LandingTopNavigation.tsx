@@ -59,7 +59,7 @@ const LandingTopNavigation: React.FC = () => {
     <div className="landing-top-navigation">
       <div className="navigation-container">
         {/* Left logo - desktop only */}
-        <div className="nav-logo nav-logo-left">
+        <div className="nav-logo nav-logo-left" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
           <img src="/images/logo-v-white.svg" alt="AI IEP Logo" />
         </div>
 
