@@ -3,6 +3,7 @@ import './AIEPHub.css';
 import LandingContainer from './LandingContainer';
 import GreenSection from './GreenSection';
 import LandingHeroSection from './LandingHeroSection';
+import LandingCardSection from './LandingCardSection';
 import AIEPFooter from './AIEPFooter';
 import { useLanguage } from '../common/language-context';
 import { Container } from 'react-bootstrap';
@@ -37,6 +38,7 @@ export default function AIEPHub({ NavigationComponent }: AIEPHubProps) {
   return (
     <div>
       {NavigationComponent && <NavigationComponent />}
+      <LandingCardSection />
       <LandingHeroSection />
       <GreenSection />
       <LandingContainer />

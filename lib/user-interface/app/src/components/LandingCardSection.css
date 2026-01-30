@@ -1,0 +1,9 @@
+.landing-card-section {
+  padding: 40px 80px;
+}
+
+@media (max-width: 768px) {
+  .landing-card-section {
+    padding: 24px 16px;
+  }
+}
