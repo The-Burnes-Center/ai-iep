@@ -318,6 +318,7 @@
     "navigation.rights": "Derechos",
     "navigation.processing": "Su documento está siendo procesado...",
     "navigation.uploadIEP": "Cargar un IEP",
+    "navigation.hub": "Centro",
 
     "footer.tagline": "Diseñando IA\ncon y para\nlas comunidades",
     "footer.home": "Inicio",
@@ -550,5 +551,24 @@
     "landingContainer.research.item2": "¿Qué métodos de co-diseño son efectivos y respetuosos del tiempo y trabajo de las familias?",
     "landingContainer.research.item3": "¿Cómo pueden las perspectivas de la comunidad traducirse en decisiones técnicas y características reales?",
     "landingContainer.research.item4": "¿Aumentar la equidad en el diseño de IA para poblaciones históricamente excluidas?",
-    "landingContainer.research.conclusion": "Las percepciones de esta investigación informan no solo a AIEP, sino conversaciones más amplias sobre IA responsable en sistemas públicos."
+    "landingContainer.research.conclusion": "Las percepciones de esta investigación informan no solo a AIEP, sino conversaciones más amplias sobre IA responsable en sistemas públicos.",
+
+    "landingCards.aiepTool.top": "Prueba la",
+    "landingCards.aiepTool.middle": "Herramienta AIEP",
+    "landingCards.aiepTool.bottom": "para resumir o traducir tu IEP",
+    "landingCards.canvassing.top": "Accede a nuestros",
+    "landingCards.canvassing.middle": "Recursos de Difusión",
+    "landingCards.canvassing.bottom": "para apoyar a otras familias en el uso de la herramienta AIEP",
+    "landingCards.blog.top": "Lee nuestros artículos en el",
+    "landingCards.blog.middle": "Blog Reboot",
+    "landingCards.blog.bottom": "para mantenerte actualizado sobre el proyecto",
+    "landingCards.course.top": "Toma nuestro",
+    "landingCards.course.middle": "Curso de IA Cívica de 40 minutos",
+    "landingCards.course.bottom": "para aprender a usar la IA de manera segura para abordar las necesidades de la comunidad",
+    "landingCards.research.top": "Lee sobre nuestra",
+    "landingCards.research.middle": "Investigación",
+    "landingCards.research.bottom": "para entender nuestro enfoque de IA centrada en la comunidad",
+    "landingCards.playbook.top": "Lee nuestro",
+    "landingCards.playbook.middle": "Manual de Estrategias",
+    "landingCards.playbook.bottom": "para aprender a crear IA centrada en la comunidad"
   }

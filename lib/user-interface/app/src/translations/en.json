@@ -330,6 +330,7 @@
     "navigation.rights": "Rights",
     "navigation.processing": "Your document is being processed...",
     "navigation.uploadIEP": "Upload An IEP",
+    "navigation.hub": "Hub",
 
     "footer.tagline": "Designing AI\nwith and for\ncommunities",
     "footer.home": "Home",
@@ -562,5 +563,24 @@
     "landingContainer.research.item2": "What co-design methods are both effective and respectful of families' time and labor?",
     "landingContainer.research.item3": "How can community insights be translated into real technical decisions and features?",
     "landingContainer.research.item4": "Increase equity in AI design for historically excluded populations?",
-    "landingContainer.research.conclusion": "Insights from this research inform not only AIEP, but broader conversations about responsible AI in public systems."
+    "landingContainer.research.conclusion": "Insights from this research inform not only AIEP, but broader conversations about responsible AI in public systems.",
+
+    "landingCards.aiepTool.top": "Try the",
+    "landingCards.aiepTool.middle": "AIEP Tool",
+    "landingCards.aiepTool.bottom": "to summarize or translate your IEP",
+    "landingCards.canvassing.top": "Access our",
+    "landingCards.canvassing.middle": "Canvassing Resources",
+    "landingCards.canvassing.bottom": "to support other families in using the AIEP tool",
+    "landingCards.blog.top": "Read our articles on the",
+    "landingCards.blog.middle": "Reboot Blog",
+    "landingCards.blog.bottom": "to stay updated on the project",
+    "landingCards.course.top": "Take our",
+    "landingCards.course.middle": "40-minute Civic AI Course",
+    "landingCards.course.bottom": "to learn about using AI safely to address community needs",
+    "landingCards.research.top": "Read about our",
+    "landingCards.research.middle": "Research",
+    "landingCards.research.bottom": "to understand our approach to community-centered AI",
+    "landingCards.playbook.top": "Read our",
+    "landingCards.playbook.middle": "Playbook",
+    "landingCards.playbook.bottom": "to learn about creating community-centered AI"
   }

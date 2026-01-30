@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage, SupportedLanguage } from '../common/language-context';
-import { IconFileDescription, IconHelpCircle, IconInfoCircle, IconHome } from '@tabler/icons-react';
+import { IconFileDescription, IconHelpCircle, IconInfoCircle, IconHome, IconWorld } from '@tabler/icons-react';
 import LanguageDropdown from './LanguageDropdown';
 import './LandingTopNavigation.css';
 
@@ -33,6 +33,11 @@ const LandingTopNavigation: React.FC = () => {
       icon: IconFileDescription,
       label: t('navigation.uploadIEP') || 'Upload An IEP',
       route: '/login'
+    },
+    {
+      icon: IconWorld,
+      label: t('navigation.hub') || 'Hub',
+      route: '/aiep-hub'
     },
     {
       icon: IconHelpCircle,

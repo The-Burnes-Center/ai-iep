@@ -318,6 +318,7 @@
     "navigation.summary": "Tóm tắt",
     "navigation.support": "Hỗ trợ",
     "navigation.faqs": "Câu Hỏi Thường Gặp",
+    "navigation.hub": "Trung tâm",
     "navigation.account": "Tài khoản",
     "navigation.about": "Giới thiệu", 
     "navigation.rights": "Quyền lợi",
@@ -555,5 +556,24 @@
     "landingContainer.research.item2": "Những phương pháp đồng thiết kế nào vừa hiệu quả vừa tôn trọng thời gian và công sức của các gia đình?",
     "landingContainer.research.item3": "Làm thế nào những hiểu biết của cộng đồng có thể được chuyển thành các quyết định kỹ thuật và tính năng thực tế?",
     "landingContainer.research.item4": "Tăng cường công bằng trong thiết kế AI cho các nhóm dân số bị loại trừ trong lịch sử?",
-    "landingContainer.research.conclusion": "Những hiểu biết từ nghiên cứu này không chỉ thông tin cho AIEP, mà còn cho các cuộc trò chuyện rộng hơn về AI có trách nhiệm trong các hệ thống công cộng."
+    "landingContainer.research.conclusion": "Những hiểu biết từ nghiên cứu này không chỉ thông tin cho AIEP, mà còn cho các cuộc trò chuyện rộng hơn về AI có trách nhiệm trong các hệ thống công cộng.",
+
+    "landingCards.aiepTool.top": "Dùng thử",
+    "landingCards.aiepTool.middle": "Công cụ AIEP",
+    "landingCards.aiepTool.bottom": "để tóm tắt hoặc dịch IEP của bạn",
+    "landingCards.canvassing.top": "Truy cập",
+    "landingCards.canvassing.middle": "Tài nguyên Vận động",
+    "landingCards.canvassing.bottom": "để hỗ trợ các gia đình khác sử dụng công cụ AIEP",
+    "landingCards.blog.top": "Đọc bài viết của chúng tôi trên",
+    "landingCards.blog.middle": "Blog Reboot",
+    "landingCards.blog.bottom": "để cập nhật về dự án",
+    "landingCards.course.top": "Tham gia",
+    "landingCards.course.middle": "Khóa học AI Công dân 40 phút",
+    "landingCards.course.bottom": "để học cách sử dụng AI an toàn để giải quyết nhu cầu cộng đồng",
+    "landingCards.research.top": "Đọc về",
+    "landingCards.research.middle": "Nghiên cứu",
+    "landingCards.research.bottom": "của chúng tôi để hiểu cách tiếp cận AI lấy cộng đồng làm trung tâm",
+    "landingCards.playbook.top": "Đọc",
+    "landingCards.playbook.middle": "Sổ tay Hướng dẫn",
+    "landingCards.playbook.bottom": "của chúng tôi để học cách tạo AI lấy cộng đồng làm trung tâm"
 }

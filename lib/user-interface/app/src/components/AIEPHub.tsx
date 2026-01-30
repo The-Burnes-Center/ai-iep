@@ -38,8 +38,8 @@ export default function AIEPHub({ NavigationComponent }: AIEPHubProps) {
   return (
     <div>
       {NavigationComponent && <NavigationComponent />}
-      <LandingCardSection />
       <LandingHeroSection />
+      <LandingCardSection />
       <GreenSection />
       <LandingContainer />
       <AIEPFooter footerLinks={publicFooterLinks} />
