@@ -13,6 +13,8 @@ const LandingHeroSection = () => {
         <div className="landing-hero-project-by">
           <span className="landing-hero-project-by-text">{t('landingHero.projectBy')}</span>
           <div className="landing-hero-logos">
+            <img src="/images/the-govlab-logo.svg" alt="The GovLab logo" className="landing-hero-logo" style={{ height: '30px' }} />
+            <img src="/images/burnes-center-logo.svg" alt="Burnes Center logo" className="landing-hero-logo" style={{ height: '50px' }} />
             <img src="/images/innovate_logo.png" alt="Innovate logo" className="landing-hero-logo" />
           </div>
         </div>
